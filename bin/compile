@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+# config
+NODE_VERSION="0.4.4"
+NPM_VERSION="1.0.3"
+
+# parse and derive params
+BUILD_DIR=$1
+CACHE_DIR=$2
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+CACHE_STORE_DIR=$CACHE_DIR"/node_modules/$NPM_VERSION"
+CACHE_TARGET_DIR=$BUILD_DIR"/node_modules"
+
+# vendor directories
+VENDORED_NODE="$LP_DIR/vendor/node/node-$NODE_VERSION"
+VENDORED_NPM="$LP_DIR/vendor/npm/npm-$NPM_VERSION"
+
+# vendor node
+PATH="$BUILD_DIR/bin:$PATH"
+echo "-----> Vendoring node $NODE_VERSION"
+mkdir -p "$BUILD_DIR/bin"
+cp "$VENDORED_NODE" "$BUILD_DIR/bin/node"
+
+# unpack existing cache
+rm -rf $CACHE_TARGET_DIR
+if [ -d $CACHE_STORE_DIR ]; then
+  cp -a $CACHE_STORE_DIR $CACHE_TARGET_DIR
+fi
+
+# install dependencies with npm
+echo "-----> Installing dependencies with npm $NPM_VERSION"
+cd $BUILD_DIR
+HOME="$BUILD_DIR" $VENDORED_NODE $VENDORED_NPM/cli.js install 2>&1 | sed -u 's/^/       /'
+if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+  echo " !     Failed to install dependencies with npm"
+  exit 1
+else
+  echo "       Dependencies installed"
+fi
+
+# repack cache with new assets
+rm -rf $CACHE_STORE_DIR
+mkdir -p $(dirname $CACHE_STORE_DIR)
+cp -a $CACHE_TARGET_DIR $CACHE_STORE_DIR
