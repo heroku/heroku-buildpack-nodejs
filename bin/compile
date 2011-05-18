@@ -5,7 +5,7 @@
 set -e
 
 # config
-NODE_VERSION="0.4.4"
+NODE_VERSION="0.4.7"
 NPM_VERSION="1.0.3"
 
 # parse and derive params
