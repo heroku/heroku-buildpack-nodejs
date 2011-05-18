@@ -12,4 +12,4 @@ cd npm-$VERSION
 git checkout v$VERSION
 git submodule init
 git submodule update
-rm -rf .git
+find . -name ".git" -exec rm -rf {} ;
