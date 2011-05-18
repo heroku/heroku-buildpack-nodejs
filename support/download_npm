@@ -1,0 +1,15 @@
+#!/bin/sh
+VERSION=$1
+
+if [ "$VERSION" == "" ]; then
+  echo "usage: download_npm VERSION"
+  exit 1
+fi
+
+cd vendor/npm
+git clone https://github.com/isaacs/npm.git npm-$VERSION
+cd npm-$VERSION
+git checkout v$VERSION
+git submodule init
+git submodule update
+rm -rf .git
