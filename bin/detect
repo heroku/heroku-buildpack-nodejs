@@ -2,7 +2,7 @@
 # bin/use <build-dir>
 
 if [ -f $1/package.json ]; then
-  echo "Node" && exit 0
+  echo "Node.js" && exit 0
 else
   echo "no" && exit 1
 fi
