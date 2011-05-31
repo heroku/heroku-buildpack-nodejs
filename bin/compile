@@ -43,6 +43,8 @@ else
 fi
 
 # repack cache with new assets
-rm -rf $CACHE_STORE_DIR
-mkdir -p $(dirname $CACHE_STORE_DIR)
-cp -a $CACHE_TARGET_DIR $CACHE_STORE_DIR
+if [ -d $CACHE_TARGET_DIR ]; then
+  rm -rf $CACHE_STORE_DIR
+  mkdir -p $(dirname $CACHE_STORE_DIR)
+  cp -a $CACHE_TARGET_DIR $CACHE_STORE_DIR
+fi
