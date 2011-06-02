@@ -30,6 +30,8 @@ cp "$VENDORED_NODE/node" "$BUILD_DIR/bin/node"
 PATH="$LP_DIR/vendor/scons/scons-${SCONS_VERSION}:$PATH"
 PATH="$VENDORED_NODE:$PATH"
 export INCLUDE_PATH="$VENDORED_NODE/include"
+echo "IP:$INCLUDE_PATH"
+ls -la $INCLUDE_PATH
 
 # unpack existing cache
 rm -rf $CACHE_TARGET_DIR
