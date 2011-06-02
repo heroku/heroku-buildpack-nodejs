@@ -24,11 +24,12 @@ VENDORED_NPM="$LP_DIR/vendor/npm/npm-$NPM_VERSION"
 PATH="$BUILD_DIR/bin:$PATH"
 echo "-----> Vendoring node $NODE_VERSION"
 mkdir -p "$BUILD_DIR/bin"
-cp "$VENDORED_NODE" "$BUILD_DIR/bin/node"
+cp "$VENDORED_NODE/node" "$BUILD_DIR/bin/node"
 
 # setting up paths for building
 PATH="$LP_DIR/vendor/scons/scons-${SCONS_VERSION}:$PATH"
 PATH="$VENDORED_NODE:$PATH"
+export INCLUDE_PATH="$VENDORED_NODE/include"
 
 # unpack existing cache
 rm -rf $CACHE_TARGET_DIR
@@ -39,7 +40,7 @@ fi
 # install dependencies with npm
 echo "-----> Installing dependencies with npm $NPM_VERSION"
 cd $BUILD_DIR
-HOME="$BUILD_DIR" $VENDORED_NODE $VENDORED_NPM/cli.js install 2>&1 | sed -u 's/^/       /'
+HOME="$BUILD_DIR" $VENDORED_NODE/node $VENDORED_NPM/cli.js install 2>&1 | sed -u 's/^/       /'
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   echo " !     Failed to install dependencies with npm"
   exit 1
