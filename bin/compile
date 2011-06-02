@@ -30,8 +30,7 @@ cp "$VENDORED_NODE/node" "$BUILD_DIR/bin/node"
 PATH="$LP_DIR/vendor/scons/scons-${SCONS_VERSION}:$PATH"
 PATH="$VENDORED_NODE:$PATH"
 export INCLUDE_PATH="$VENDORED_NODE/include"
-echo "IP:$INCLUDE_PATH"
-ls -la $INCLUDE_PATH
+export CPATH="$INCLUDE_PATH"
 
 # unpack existing cache
 rm -rf $CACHE_TARGET_DIR
@@ -42,7 +41,7 @@ fi
 # install dependencies with npm
 echo "-----> Installing dependencies with npm $NPM_VERSION"
 cd $BUILD_DIR
-HOME="$BUILD_DIR" INCLUDE_PATH="$VENDORED_NODE/include" $VENDORED_NODE/node $VENDORED_NPM/cli.js install 2>&1 | sed -u 's/^/       /'
+HOME="$BUILD_DIR" $VENDORED_NODE/node $VENDORED_NPM/cli.js install 2>&1 | sed -u 's/^/       /'
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   echo " !     Failed to install dependencies with npm"
   exit 1
