@@ -29,7 +29,7 @@ cp "$VENDORED_NODE/node" "$BUILD_DIR/bin/node"
 # setting up paths for building
 PATH="$LP_DIR/vendor/scons/scons-${SCONS_VERSION}:$PATH"
 PATH="$VENDORED_NODE:$PATH"
-export CPATH="$VENDORED_NODE/include"
+export CPPPATH="$VENDORED_NODE/include"
 
 # unpack existing cache
 rm -rf $CACHE_TARGET_DIR
