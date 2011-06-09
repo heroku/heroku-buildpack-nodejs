@@ -6,7 +6,7 @@ set -e
 
 # config
 NODE_VERSION="0.4.7"
-NPM_VERSION="1.0.6"
+NPM_VERSION="1.0.8"
 SCONS_VERSION="1.2.0"
 
 # parse and derive params
