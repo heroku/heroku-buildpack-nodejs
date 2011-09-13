@@ -1,0 +1,60 @@
+{ "name" : "npm"
+, "description" : "A package manager for node"
+, "keywords" : [ "package manager", "modules", "install", "package.json" ]
+, "version" : "1.0.27"
+, "preferGlobal" : true
+, "config" : { "publishtest" : false }
+, "homepage" : "http://npmjs.org/"
+, "author" : "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)"
+, "repository" :
+  { "type" : "git"
+  , "url" : "https://github.com/isaacs/npm.git"
+  }
+, "bugs" :
+  { "mail" : "npm-@googlegroups.com"
+  , "web" : "http://github.com/isaacs/npm/issues"
+  }
+, "directories" : { "doc" : "./doc"
+                  , "man" : "./man1"
+                  , "lib" : "./lib"
+                  , "bin" : "./bin"
+                  }
+, "main" : "npm"
+, "bin" : { "npm" : "./bin/npm.js"
+          , "npm_g" : "./bin/npm.js"
+          , "npm-g" : "./bin/npm.js" }
+, "dependencies" :
+  { "semver" : "1"
+  , "ini" : "1"
+  , "slide" : "1"
+  , "abbrev" : "1"
+  , "graceful-fs" : "1"
+  , "minimatch" : "0"
+  , "nopt" : "1"
+  , "node-uuid" : "1.2"
+  , "proto-list": "1"
+  , "rimraf" : "1"
+  , "which" : "1" }
+, "bundleDependencies" :
+  [ "slide"
+  , "ini"
+  , "semver"
+  , "abbrev"
+  , "graceful-fs"
+  , "minimatch"
+  , "nopt"
+  , "node-uuid"
+  , "rimraf"
+  , "proto-list"
+  , "which" ]
+, "devDependencies" : { "ronn" : "" }
+, "engines" : { "node" : "0.4 || 0.5", "npm" : "1" }
+, "scripts" : { "test" : "./test/run.sh"
+              , "prepublish" : "make doc"
+              }
+, "licenses" :
+  [ { "type" : "MIT"
+    , "url" : "http://github.com/isaacs/npm/raw/master/LICENSE"
+    }
+  ]
+}
