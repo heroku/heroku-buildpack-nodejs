@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bin/use <build-dir>
+# bin/detect <build-dir>
 
 if [ -f $1/package.json ]; then
   echo "Node.js" && exit 0
