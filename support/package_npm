@@ -24,12 +24,11 @@ cd $tempdir &&
   cd npm &&
 
     # grab the right version
-    git checkout v${node_version} &&
+    git checkout v${npm_version} &&
     git submodule update --init --recursive &&
-    find . -name ".git" -exec rm -rf {} \;
 
     # package it up
-    tar czvf $tempdir/npm-${npm_version}.tgz *
+    tar czvf $tempdir/npm-${npm_version}.tgz * &&
 
     # upload npm to s3
     $basedir/s3 put language-pack-nodejs \
