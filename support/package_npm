@@ -15,21 +15,21 @@ basedir="$( cd -P "$( dirname "$0" )" && pwd )"
 tempdir="$( mktemp -t node_XXXX )"
 rm -rf $tempdir
 mkdir -p $tempdir
+cd $tempdir
 
-cd $tempdir &&
+# download npm
+git clone https://github.com/isaacs/npm.git
 
-  # download npm
-  git clone https://github.com/isaacs/npm.git &&
+# go into npm dir
+pushd npm
 
-  cd npm &&
+# grab the right version
+git checkout v${npm_version}
+git submodule update --init --recursive
 
-    # grab the right version
-    git checkout v${npm_version} &&
-    git submodule update --init --recursive &&
+# package it up
+tar czvf $tempdir/npm-${npm_version}.tgz *
 
-    # package it up
-    tar czvf $tempdir/npm-${npm_version}.tgz * &&
-
-    # upload npm to s3
-    $basedir/s3 put language-pack-nodejs \
-      npm-${npm_version}.tgz $tempdir/npm-${npm_version}.tgz
+# upload npm to s3
+$basedir/s3/s3 put language-pack-nodejs \
+  npm-${npm_version}.tgz $tempdir/npm-${npm_version}.tgz
