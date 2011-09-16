@@ -1,0 +1,36 @@
+#!/bin/sh
+
+set -e
+
+npm_version="$1"
+
+if [ "$npm_version" == "" ]; then
+  echo "usage: $0 VERSION"
+  exit 1
+fi
+
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
+
+# make a temp directory
+tempdir="$( mktemp -t node_XXXX )"
+rm -rf $tempdir
+mkdir -p $tempdir
+
+cd $tempdir &&
+
+  # download npm
+  git clone https://github.com/isaacs/npm.git &&
+
+  cd npm &&
+
+    # grab the right version
+    git checkout v${node_version} &&
+    git submodule update --init --recursive &&
+    find . -name ".git" -exec rm -rf {} \;
+
+    # package it up
+    tar czvf $tempdir/npm-${npm_version}.tgz *
+
+    # upload npm to s3
+    $basedir/s3 put language-pack-nodejs \
+      npm-${npm_version}.tgz $tempdir/npm-${npm_version}.tgz

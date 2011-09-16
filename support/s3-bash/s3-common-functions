@@ -1,0 +1,334 @@
+#! /usr/bin/env bash
+cat > /dev/null << EndOfLicence
+s3-bash
+Copyright 2007 Raphael James Cohn
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+in compliance with the License.
+You may obtain a copy of the License at
+ 
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ 	
+Unless required by applicable law or agreed to in writing, software distributed under the License
+is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+or implied. See the License for the specific language governing permissions and limitations under
+the License.
+EndOfLicence
+
+# Pragmas
+set -u
+set -e
+
+# Constants
+readonly version="0.02"
+readonly userSpecifiedDataErrorExitCode=1
+readonly invalidCommandLineOption=2
+readonly internalErrorExitCode=3
+readonly invalidEnvironmentExitCode=4
+readonly ipadXorByte=0x36
+readonly opadXorByte=0x5c
+
+# Command-like aliases
+readonly sha1="openssl dgst -sha1 -binary"
+readonly base64encode="openssl enc -base64 -e -in"
+readonly base64decode="openssl enc -base64 -d -in"
+
+# Globals
+declare -a temporaryFiles
+
+function base64EncodedMD5
+{
+	openssl dgst -md5 -binary "$1" | openssl enc -e -base64
+}
+
+function printErrorMessage
+{
+	printf "%s: %s\n" "$1" "$2" 1>&2
+}
+
+function printErrorHelpAndExit
+{
+	printErrorMessage "$weAreKnownAs" "$1"
+	printHelpAndExit $2
+}
+
+function checkProgramIsInEnvironment
+{
+	if [ ! -x "$(which $1)" ]; then
+		printErrorHelpAndExit "Environment Error: $1 not found on the path or not executable" $invalidEnvironmentExitCode
+	fi
+}
+
+# Do not use this from directly. Due to a bug in bash, array assignments do not work when the function is used with command substitution
+function createTemporaryFile
+{
+	local temporaryFile="$(mktemp "$temporaryDirectory/$$.$1.XXXXXXXX")" || printErrorHelpAndExit "Environment Error: Could not create a temporary file. Please check you /tmp folder permissions allow files and folders to be created and disc space." $invalidEnvironmentExitCode
+	local length="${#temporaryFiles[@]}"
+	temporaryFiles[$length]="$temporaryFile"
+}
+
+function mostRecentTemporaryFile
+{
+	local length="${#temporaryFiles[@]}"
+	local lastIndex
+	((lastIndex = --length))
+	echo "${temporaryFiles[$lastIndex]}"
+}
+
+function deleteTemporaryFile
+{
+	rm -f "$1" || printErrorHelpAndExit "Environment Error: Could not delete a temporary file ($1)." $invalidEnvironmentExitCode
+}
+
+function removeTemporaryFiles
+{
+	length="${#temporaryFiles[@]}"
+	if [ $length -eq 0 ]; then
+		return
+	fi
+	for temporaryFile in ${temporaryFiles[@]}; do
+		deleteTemporaryFile "$temporaryFile"
+	done
+	temporaryFiles=()
+	length="${#temporaryFiles[@]}"
+}
+
+function checkEnvironment
+{
+	programs=(openssl curl od dd printf sed awk sort mktemp rm grep cp ls env bash)
+	for program in "${programs[@]}"; do
+		checkProgramIsInEnvironment "$program"
+	done
+	
+	local temporaryFolder="${TMPDIR:-/tmp}"
+	if [ ! -x "$temporaryFolder" ]; then
+		printErrorHelpAndExit "Environment Error: The temporary directory ($temporaryFolder) does not exist. Please set the TMPDIR environment variable to your temporary directory" $invalidEnvironmentExitCode
+	fi
+	readonly temporaryDirectory="$temporaryFolder/s3-bash/$weAreKnownAs"
+	mkdir -p "$temporaryDirectory" || printErrorHelpAndExit "Environment Error: Could not create a temporary directory ($temporaryDiectory). Please check you /tmp folder permissions allow files and folders to be created and you have sufficient disc space" $invalidEnvironmentExitCode
+	
+	#Check we can create and delete temporary files
+	createTemporaryFile "check"
+	temporaryFileCheck="$(mostRecentTemporaryFile)"
+	echo "Checking we can write to temporary files. If this is still here then we could not delete temporary files." > "$temporaryFileCheck"
+	removeTemporaryFiles
+}
+
+function setErrorTraps
+{
+	trap "removeTemporaryFiles; exit $internalErrorExitCode" INT TERM EXIT
+}
+
+function unsetErrorTraps
+{
+	trap - INT TERM EXIT
+}
+
+function verifyUrl
+{
+	if [ -z "$url" ]; then
+		printErrorHelpAndExit "URL not specified" $userSpecifiedDataErrorExitCode
+	elif echo $url | grep -q http://; then
+		printErrorHelpAndExit "URL starts with http://" $userSpecifiedDataErrorExitCode
+	elif echo $url | grep -q https://; then
+		printErrorHelpAndExit "URL starts with https://" $userSpecifiedDataErrorExitCode
+	elif echo $url | grep -v ^/; then
+		printErrorHelpAndExit "URL does not start with /" $userSpecifiedDataErrorExitCode
+	fi
+}
+
+function appendHash
+{
+	local fileToHash="$1"
+	local fileToWriteTo="$2"
+	$sha1 "$fileToHash" >> "$fileToWriteTo"
+}
+
+function writeHash
+{
+	local fileToHash="$1"
+	local fileToWriteTo="$2"
+	$sha1 -out "$fileToWriteTo" "$fileToHash"
+}
+
+function checkAwsKey
+{
+	local originalKeyFile="$1"
+	local keySize="$(ls -l "$originalKeyFile" | awk '{ print $5 }')"
+	if [ ! $keySize -eq 40 ]; then
+		printErrorHelpAndExit "We do not understand Amazon AWS secret keys which are not 40 bytes long. Have you included a carriage return or line feed by mistake at the end of the secret key file?" $userSpecifiedDataErrorExitCode
+	fi
+}
+
+function padDecodedKeyTo
+{
+	local originalKeyFile="$1"
+	local keyFile="$2"
+	cp "$originalKeyFile" "$keyFile"
+	
+	local keySize=$(ls -l "$keyFile" | awk '{ print $5 }')
+	if [ $keySize -lt 64 ]; then
+		local zerosToWrite=$((64 - $keySize))
+		dd if=/dev/zero of=$keyFile bs=1 count=$zerosToWrite seek=$keySize 2> /dev/null
+	elif [ $keySize -gt 64 ]; then
+		echo "Warning: Support for hashing keys bigger than the SHA1 block size of 64 bytes is untested" 1>&2
+		writeHash "$originalKeyFile" "$keyFile"
+		local keySize=$(ls -l "$keyFile" | awk '{ print $5 }')
+		if [ $keySize -lt 64 ]; then
+			local zerosToWrite=$((64 - $keySize))
+			dd if=/dev/zero of=$keyFile bs=1 count=$zerosToWrite seek=$keySize 2> /dev/null
+		fi
+		exit 1
+	else
+		:
+	fi
+}
+
+function writeLongAsByte
+{
+	local byte="$1"
+	local file="$2"
+	printf "\\$(printf "%o" $byte)" >> "$file"
+}
+
+function readBytesAndXorAndWriteAsBytesTo
+{
+	local inputFile="$1"
+	local xorByte=$2
+	local outputFile="$3"
+	
+	od -v -A n -t uC "$inputFile" | awk '{ OFS="\n"; for (i = 1; i <= NF; i++) print $i }' |
+	while read byte; do
+		((xord = byte ^ xorByte))
+		writeLongAsByte $xord "$outputFile"
+	done
+}
+
+function writeHexByte
+{
+	local byte="$1"
+	local file="$2"
+	printf "\\$(printf "%o" 0x$byte)" >> "$file"
+}
+
+function writeHexString
+{
+	local hexString="$1"
+	for byte in $(echo $hexString | sed 's/../& /g'); do
+		writeHexByte "$byte" "$2"
+	done
+}
+
+function writeStringToSign
+{
+	local outputFile="$1"
+	echo $verb >> "$outputFile"
+	echo "$contentMD5" >> "$outputFile"
+	echo "$contentType" >> "$outputFile"
+	echo "$currentDateTime" >> "$outputFile"
+	
+	writeStringToSignAmazonHeaders "$outputFile"
+	
+	urlPath="$(echo "$url" | awk 'BEGIN { FS="[?]"} { print $1 }')"
+	urlQueryString="$(echo "$url" | awk 'BEGIN { FS="[?]"} { print $2 }')"
+	printf "$urlPath" >> "$outputFile"
+	if [ "$urlQueryString" = "acl" ] || [ "$urlQueryString" = "torrent" ]; then
+		printf "?" >> "$outputFile"
+		printf "$urlQueryString" >> "$outputFile"
+	fi
+}
+
+function writeStringToSignAmazonHeaders()
+{
+	local outputFile="$1"
+	
+	#Convert all headers to lower case
+	#sort
+	#Strip ": " to ":"
+	#Add LF to each header
+	awk 'BEGIN { FS=": " } NF == 2 { print tolower($1) ":" $2 }' "$amazonHeaderFile" | sort >> "$outputFile"
+	#TODO: RFC 2616, section 4.2 (combine repeated headers' values)
+	#TODO: Unfold long lines (not supported elsewhere)
+}
+
+function computeAwsAuthorizationHeader
+{
+	checkAwsKey "$awsAccessSecretKeyIdFile"
+	
+	createTemporaryFile "key"
+	local tempKeyFile="$(mostRecentTemporaryFile)"
+	
+	createTemporaryFile "ipad"
+	local ipadHashingFile="$(mostRecentTemporaryFile)"
+	
+	createTemporaryFile "opad"
+	local opadHashingFile="$(mostRecentTemporaryFile)"
+	
+	createTemporaryFile "HMAC-SHA1"
+	local hmacSha1File="$(mostRecentTemporaryFile)"
+
+	padDecodedKeyTo "$awsAccessSecretKeyIdFile" "$tempKeyFile"
+	readBytesAndXorAndWriteAsBytesTo "$tempKeyFile" ipadXorByte "$ipadHashingFile"
+
+	writeStringToSign "$ipadHashingFile"
+
+	readBytesAndXorAndWriteAsBytesTo "$tempKeyFile" opadXorByte "$opadHashingFile"
+	appendHash "$ipadHashingFile" "$opadHashingFile"
+	writeHash "$opadHashingFile" "$hmacSha1File"
+
+	local signature="$($base64encode "$hmacSha1File")"
+
+	echo "Authorization: AWS $awsAccessKeyId:$signature"
+}
+
+function writeAmazonHeadersForCurl
+{
+	if [ ! -e "$amazonHeaderFile" ]; then
+		printErrorHelpAndExit "Amazon Header file does not exist" $userSpecifiedDataErrorExitCode
+	elif grep -q ^X-Amz-Date: "$amazonHeaderFile"; then
+		printErrorHelpAndExit "X-Amz-Date header not allowed" $userSpecifiedDataErrorExitCode
+	fi
+	# Consider using sed...
+	awk 'BEGIN { ORS=" "; FS="\0" } { print "--header \"" $1 "\""}' "$amazonHeaderFile" >> "$1"
+}
+
+function runCurl
+{
+	local verbAndAnyData="$1"
+	local fullUrl="$protocol://s3.amazonaws.com$url"
+	createTemporaryFile "curl"
+	local tempCurlCommand="$(mostRecentTemporaryFile)"
+	local cleanUpCommand="rm -f "$tempCurlCommand""
+
+	echo "#! /usr/bin/env bash" >> "$tempCurlCommand"
+	printf "curl %s %s --dump-header \"%s\" " "$verbose" "$verbAndAnyData" "$dumpHeaderFile" >> "$tempCurlCommand"
+	writeAmazonHeadersForCurl "$tempCurlCommand"
+	printf " --header \"%s\"" "Date: $currentDateTime" >> "$tempCurlCommand"
+	printf " --header \"%s\"" "$authorizationHeader" >> "$tempCurlCommand"
+	if [ ! -z "$contentType" ]; then
+		printf " --header \"Content-Type: %s\"" "$contentType" >> "$tempCurlCommand"
+	fi
+	if [ ! -z "$contentMD5" ]; then
+		printf " --header \"Content-MD5: %s\"" "$contentMD5" >> "$tempCurlCommand"
+	fi
+	printf " \"%s\"\n" "$fullUrl" >> "$tempCurlCommand"
+	
+	unsetErrorTraps
+	exec env bash "$tempCurlCommand"
+}
+
+function initialise
+{
+	setErrorTraps
+	checkEnvironment
+}
+
+function main
+{
+	initialise
+	parseOptions "$@"
+	readonly currentDateTime="$(LC_TIME=C date "+%a, %d %h %Y %T %z")"
+	prepareToRunCurl
+	readonly authorizationHeader="$(computeAwsAuthorizationHeader)"
+	runCurl "$verbToPass"
+}

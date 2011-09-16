@@ -4,6 +4,13 @@
 # fail fast
 set -e
 
+mktmpdir() {
+  dir=$(mktemp -t node-$1-XXXX)
+  rm -rf $dir
+  mkdir -p $dir
+  echo $dir
+}
+
 # config
 NODE_VERSION="0.4.7"
 NPM_VERSION="1.0.27"
@@ -16,19 +23,30 @@ LP_DIR=`cd $(dirname $0); cd ..; pwd`
 CACHE_STORE_DIR=$CACHE_DIR"/node_modules/$NPM_VERSION"
 CACHE_TARGET_DIR=$BUILD_DIR"/node_modules"
 
+# s3 packages
+NODE_PACKAGE="http://language-pack-nodejs.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
+NPM_PACKAGE="http://language-pack-nodejs.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
+SCONS_PACKAGE="http://language-pack-nodejs.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
+
 # vendor directories
-VENDORED_NODE="$LP_DIR/vendor/node/node-$NODE_VERSION"
-VENDORED_NPM="$LP_DIR/vendor/npm/npm-$NPM_VERSION"
+VENDORED_NODE="$(mktmpdir node)"
+VENDORED_NPM="$(mktmpdir npm)"
+VENDORED_SCONS="$(mktmpdir scons)"
+
+# download and unpack packages
+echo "-----> Fetching Node.js binaries"
+mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
+mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM
+mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS
 
 # vendor node
 PATH="$BUILD_DIR/bin:$PATH"
 echo "-----> Vendoring node $NODE_VERSION"
 mkdir -p "$BUILD_DIR/bin"
-cp "$VENDORED_NODE/node" "$BUILD_DIR/bin/node"
+cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
 
 # setting up paths for building
-PATH="$LP_DIR/vendor/scons/scons-${SCONS_VERSION}:$PATH"
-PATH="$VENDORED_NODE:$PATH"
+PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
 INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"

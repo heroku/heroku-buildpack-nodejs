@@ -1,0 +1,223 @@
+#!/bin/bash
+# basic amazon s3 operations
+# Licensed under the terms of the GNU GPL v2
+# Copyright 2007 Victor Lowther <victor.lowther@gmail.com>
+
+set -e
+
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
+PATH="$basedir:$PATH"
+
+# print a message and bail
+die() {
+  echo $*
+  exit 1
+}
+
+# check to see if the variable name passed exists and holds a value.
+# Die if it does not.
+check_or_die() {
+  [[ ${!1} ]] || die "Environment variable ${1} is not set."
+}
+
+# check to see if we have all the needed S3 variables defined.
+# Bail if we do not.
+check_s3() {
+  local sak x
+  for x in S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
+    check_or_die ${x};
+  done
+  sak="$(echo -n $S3_SECRET_ACCESS_KEY | wc -c)"
+  (( ${sak%%[!0-9 ]*} == 40 )) || \
+    die "S3 Secret Access Key is not exactly 40 bytes long.  Please fix it."
+}
+# check to see if our external dependencies exist
+check_dep() {
+  local res=0
+  while [[ $# -ne 0 ]]; do
+    which "${1}" >& /dev/null || { res=1; echo "${1} not found."; }
+    shift
+  done
+  (( res == 0 )) || die "aborting."
+}
+
+check_deps() {
+  check_dep openssl date hmac cat grep curl
+  check_s3
+}
+
+urlenc() {
+  # $1 = string to url encode
+  # output is on stdout
+  # we don't urlencode everything, just enough stuff.
+  echo -n "${1}" |
+  sed 's/%/%25/g
+       s/ /%20/g
+       s/#/%23/g
+       s/\$/%24/g
+       s/\&/%26/g
+       s/+/%2b/g
+       s/,/%2c/g
+       s/:/%3a/g
+       s/;/%3b/g
+       s/?/%3f/g
+       s/@/%40/g
+       s/	/%09/g'
+}
+
+xmldec() {
+  # no parameters.
+  # accept input on stdin, put it on stdout.
+  # patches accepted to get more stuff
+  sed 's/\&quot;/\"/g
+       s/\&amp;/\&/g
+       s/\&lt;/</g
+       s/\&gt;/>/g'
+}
+
+## basic S3 functionality.  x-amz-header functionality is not implemented.
+# make an S3 signature string, which will be output on stdout.
+s3_signature_string() {
+  # $1 = HTTP verb
+  # $2 = date string, must be in UTC
+  # $3 = bucket name, if any
+  # $4 = resource path, if any
+  # $5 = content md5, if any
+  # $6 = content MIME type, if any
+  # $7 = canonicalized headers, if any
+  # signature string will be output on stdout
+  local verr="Must pass a verb to s3_signature_string!"
+  local verb="${1:?verr}"
+  local bucket="${3}"
+  local resource="${4}"
+  local derr="Must pass a date to s3_signature_string!"
+  local date="${2:?derr}"
+  local mime="${6}"
+  local md5="${5}"
+  local headers="${7}"
+  printf "%s\n%s\n%s\n%s\n%s\n%s%s" \
+    "${verb}" "${md5}" "${mime}" "${date}" \
+    "${headers}" "${bucket}" "${resource}" | \
+    hmac sha1 "${S3_SECRET_ACCESS_KEY}" | openssl base64 -e -a
+}
+
+# cheesy, but it is the best way to have multiple headers.
+curl_headers() {
+  # each arg passed will be output on its own line
+  local parms=$#
+  for ((;$#;)); do
+    echo "header = \"${1}\""
+    shift
+  done
+}
+
+s3_curl() {
+  # invoke curl to do all the heavy HTTP lifting
+  # $1 = method (one of GET, PUT, or DELETE. HEAD is not handled yet.)
+  # $2 = remote bucket.
+  # $3 = remote name
+  # $4 = local name.
+  local bucket remote date sig md5 arg inout headers
+  # header handling is kinda fugly, but it works.
+  bucket="${2:+/${2}}/" # slashify the bucket
+  remote="$(urlenc "${3}")" # if you don't, strange things may happen.
+  stdopts="--connect-timeout 10 --fail --silent"
+  [[ $CURL_S3_DEBUG == true ]] && stdopts="${stdopts} --show-error --fail"
+  case "${1}" in
+   GET) arg="-o" inout="${4:--}" # stdout if no $4
+	;;
+   PUT) [[ ${2} ]] || die "PUT can has bucket?"
+        if [[ ! ${3} ]]; then
+	  arg="-X PUT"
+	  headers[${#headers[@]}]="Content-Length: 0"
+	elif [[ -f ${4} ]]; then
+          md5="$(openssl dgst -md5 -binary "${4}"|openssl base64 -e -a)"
+	  arg="-T" inout="${4}"
+	  headers[${#headers[@]}]="x-amz-acl: public-read"
+	  headers[${#headers[@]}]="Expect: 100-continue"
+	else
+	  die "Cannot write non-existing file ${4}"
+        fi
+	;;
+   DELETE) arg="-X DELETE"
+           ;;
+   HEAD) arg="-I" ;;
+   *) die "Unknown verb ${1}.  It probably would not have worked anyways." ;;
+  esac
+  date="$(TZ=UTC date '+%a, %e %b %Y %H:%M:%S %z')"
+  sig=$(s3_signature_string ${1} "${date}" "${bucket}" "${remote}" "${md5}" "" "x-amz-acl:public-read")
+
+  headers[${#headers[@]}]="Authorization: AWS ${S3_ACCESS_KEY_ID}:${sig}"
+  headers[${#headers[@]}]="Date: ${date}"
+  [[ ${md5} ]] && headers[${#headers[@]}]="Content-MD5: ${md5}"
+    curl ${arg} "${inout}" ${stdopts} -o - -K <(curl_headers "${headers[@]}") \
+       "http://s3.amazonaws.com${bucket}${remote}"
+  return $?
+}
+
+s3_put() {
+  # $1 = remote bucket to put it into
+  # $2 = remote name to put
+  # $3 = file to put.  This must be present if $2 is.
+  s3_curl PUT "${1}" "${2}" "${3:-${2}}"
+  return $?
+}
+
+s3_get() {
+  # $1 = bucket to get file from
+  # $2 = remote file to get
+  # $3 = local file to get into. Will be overwritten if it exists.
+  #      If this contains a path, that path must exist before calling this.
+  s3_curl GET "${1}" "${2}" "${3:-${2}}"
+  return $?
+}
+
+s3_test() {
+  # same args as s3_get, but uses the HEAD verb instead of the GET verb.
+  s3_curl HEAD "${1}" "${2}" >/dev/null
+  return $?
+}
+
+# Hideously ugly, but it works well enough.
+s3_buckets() {
+  s3_get |grep -o '<Name>[^>]*</Name>' |sed 's/<[^>]*>//g' |xmldec
+  return $?
+}
+
+# this will only return the first thousand entries, alas
+# Mabye some kind soul can fix this without writing an XML parser in bash?
+# Also need to add xml entity handling.
+s3_list() {
+  # $1 = bucket to list
+  [ "x${1}" == "x" ] && return 1
+  s3_get "${1}" |grep -o '<Key>[^>]*</Key>' |sed 's/<[^>]*>//g'| xmldec
+  return $?
+}
+
+s3_delete() {
+  # $1 = bucket to delete from
+  # $2 = item to delete
+  s3_curl DELETE "${1}" "${2}"
+  return $?
+}
+
+# because this uses s3_list, it suffers from the same flaws.
+s3_rmrf() {
+  # $1 = bucket to delete everything from
+  s3_list "${1}" | while read f; do
+    s3_delete "${1}" "${f}";
+  done
+}
+
+check_deps
+case $1 in
+  put) shift; s3_put "$@" ;;
+  get) shift; s3_get "$@" ;;
+  rm) shift; s3_delete "$@" ;;
+  ls) shift; s3_list "$@" ;;
+  test) shift; s3_test "$@" ;;
+  buckets) s3_buckets ;;
+  rmrf) shift; s3_rmrf "$@" ;;
+  *) die "Unknown command ${1}."
+    ;;
+esac

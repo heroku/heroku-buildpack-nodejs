@@ -1,0 +1,119 @@
+#! /usr/bin/env bash
+cat > /dev/null << EndOfLicence
+s3-bash
+Copyright 2007 Raphael James Cohn
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+in compliance with the License.
+You may obtain a copy of the License at
+ 
+ 	http://www.apache.org/licenses/LICENSE-2.0
+ 	
+Unless required by applicable law or agreed to in writing, software distributed under the License
+is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+or implied. See the License for the specific language governing permissions and limitations under
+the License.
+EndOfLicence
+
+# Pragmas
+set -u
+set -e
+
+function printHelpAndExit
+{
+	exitCode=$1
+	printf "%s: version %s\n" "$weAreKnownAs" "$version"
+	printf "Part of s3-bash. Latest version is at %s\n" 'http://code.google.com/p/s3-bash/'
+	printf "Usage %s: -h\n" "$weAreKnownAs"
+	printf "Usage %s: [-vS] [-H file] [-a file] -k key -s file -T file url\n" "$weAreKnownAs"
+	printf " Option\tType\tRequirement\tDescription\n"
+	printf " -h\t\tprecedent\tprint this help\n"
+	printf " -v\t\toptional\tverbose output\n"
+	printf " -k\tstring\tmandatory\tAWS Access Key Id\n"
+	printf " -s\tfile\tmandatory\tAWS Secret Access Key Id File\n"
+	printf " -T\tfile\tmandatory\tFile (or stdin with -) to PUT\n"
+	printf " -S\t\toptional\tUse https\n"
+	printf " -H\tfile\toptional\tFile to write response headers to\n"
+	printf " -a\tfile\toptional\tFile to read Amazon custom headers from (X-Amz-Date is not allowed)\n"
+	printf " -c\tMIME\toptional\tMIME Content type. Default is text/plain\n"
+	printf " \turl\tmandatory\trelative url including bucket name and leading slash, eg /bucket/path/to/object?acl. Assumed to be already encoded\n"
+	printf "\n"
+	printf "Notes\n"
+	printf "Specify proxies using a ~/.curlrc file\n"
+	printf "Specify content to PUT using stdin using option -T -\n"
+	exit $exitCode
+}
+
+function parseOptions
+{
+	verbose=""
+	url=""
+	awsAccessKeyId=""
+	awsAccessSecretKeyIdFile=""
+	protocol="http"
+	fileToUpload=""
+	dumpHeaderFile="/dev/null"
+	amazonHeaderFile="/dev/null"
+	contentType="text/plain"
+	while getopts "hvk:s:SH:T:a:c:" optionName; do		
+		case "$optionName" in
+			h)	printHelpAndExit 0;;
+			v)	verbose="-v";;
+			k)	awsAccessKeyId="$OPTARG";;
+			s)	awsAccessSecretKeyIdFile="$OPTARG"
+				if [ ! -e "$awsAccessSecretKeyIdFile" ]; then
+					printErrorHelpAndExit "AWS Secret Key Id file does not exist" $userSpecifiedDataErrorExitCode
+				fi;;
+			S)	protocol="https";;
+			H)	dumpHeaderFile="$OPTARG";;
+			T)	fileToUpload="$OPTARG";;
+			a)	amazonHeaderFile="$OPTARG";;
+			c)	contentType="$OPTARG";;
+			[?])	printErrorHelpAndExit "Option not recognised" $userSpecifiedDataErrorExitCode;;
+		esac
+	done
+	if [ 1 -eq $OPTIND ]; then
+		printErrorHelpAndExit "Internal Error: parseOptions or a parent method in the call stack was not called with $"@"." $internalErrorExitCode
+	fi
+	let "toShift = $OPTIND - 1"
+	shift $toShift
+	if [ $# -eq 0 ]; then
+		printErrorHelpAndExit "URL not specified" $userSpecifiedDataErrorExitCode
+	fi
+	url="$1"
+	verifyUrl
+		
+	if [ -z "$awsAccessSecretKeyIdFile" ]; then
+		printErrorHelpAndExit "AWS Secret Access Key file not specified" $userSpecifiedDataErrorExitCode
+	elif [ -z "$awsAccessKeyId" ]; then
+		printErrorHelpAndExit "AWS Access Key Id not specified" $userSpecifiedDataErrorExitCode
+	elif [ -z "$fileToUpload" ]; then
+		printErrorHelpAndExit "File to upload not specified" $userSpecifiedDataErrorExitCode
+	fi
+}
+
+function prepareToRunCurl
+{
+	readonly verb="PUT"
+	if [ ! "-" = "$fileToUpload" ]; then
+		readonly contentMD5="$(base64EncodedMD5 "$fileToUpload")"
+		readonly verbToPass="-T \"$fileToUpload\""
+	else
+		readonly contentMD5=""
+		readonly verbToPass="-T -"
+	fi
+}
+
+readonly weAreKnownAs="$(basename $0)"
+readonly ourPath="$(dirname $0)"
+
+readonly commonFunctions="$ourPath/s3-common-functions"
+if [ -e "$commonFunctions" ]; then
+	source "$commonFunctions"
+else
+	version="Unknown"
+	invalidEnvironmentExitCode=4
+	printErrorHelpAndExit "$weAreKnownAs: Could not locate file s3-common-functions" $invalidEnvironmentExitCode
+fi
+
+main "$@"
