@@ -4,6 +4,9 @@ The Node.js Language Pack will run `npm install` on your app after setting
 up an appropriate environment of [node](http://github.com/joyent/node),
 [npm](https://github.com/isaacs/npm) and [SCons](http://www.scons.org).
 
+The `node_modules` directory will be cached between builds to allow for
+faster `npm install` time.
+
 ## Vendored Libraries
 
 The versions of node, npm and SCons used by the language pack are controlled
