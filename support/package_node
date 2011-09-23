@@ -35,7 +35,7 @@ tar xzvf node.tgz
 pushd node-v${node_version}
 
 # build and package nodejs for heroku
-heroku make -v -o $tempdir/node-${node_version}.tgz
+vulcan build -v -o $tempdir/node-${node_version}.tgz
 
 # upload nodejs to s3
 $basedir/aws/s3 put language-pack-nodejs \
