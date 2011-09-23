@@ -7,6 +7,12 @@ up an appropriate environment of [node](http://github.com/joyent/node),
 The `node_modules` directory will be cached between builds to allow for
 faster `npm install` time.
 
+## Usage
+
+Add this language pack to your `LANGUAGE_PACK_URL`.
+
+    heroku config:add LANGUAGE_PACK_URL="http://github.com/heroku/language-pack-nodejs.git"
+
 ## Vendored Libraries
 
 The versions of node, npm and SCons used by the language pack are controlled
