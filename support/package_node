@@ -38,7 +38,7 @@ pushd node-v${node_version}
 heroku make -v -o $tempdir/node-${node_version}.tgz
 
 # upload nodejs to s3
-$basedir/s3/s3 put language-pack-nodejs \
+$basedir/aws/s3 put language-pack-nodejs \
   nodejs-${node_version}.tgz $tempdir/node-${node_version}.tgz
 
 # go into scons
@@ -49,5 +49,5 @@ scons_version=$(ls | grep "scons-local" | cut -d- -f3)
 tar czvf $tempdir/scons-${scons_version}.tgz *
 
 # upload scons to s3
-$basedir/s3/s3 put language-pack-nodejs \
+$basedir/aws/s3 put language-pack-nodejs \
   scons-${scons_version}.tgz $tempdir/scons-${scons_version}.tgz
