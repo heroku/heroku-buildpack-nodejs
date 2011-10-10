@@ -31,5 +31,5 @@ git submodule update --init --recursive
 tar czvf $tempdir/npm-${npm_version}.tgz *
 
 # upload npm to s3
-$basedir/s3/s3 put language-pack-nodejs \
+$basedir/aws/s3 put language-pack-nodejs \
   npm-${npm_version}.tgz $tempdir/npm-${npm_version}.tgz
