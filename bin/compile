@@ -21,7 +21,7 @@ function indent() {
 
 # config
 NODE_VERSION="0.4.7"
-NPM_VERSION="1.0.27"
+NPM_VERSION="1.0.94"
 SCONS_VERSION="1.2.0"
 
 # parse and derive params
