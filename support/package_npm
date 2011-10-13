@@ -9,6 +9,21 @@ if [ "$npm_version" == "" ]; then
   exit 1
 fi
 
+if [ "$AWS_ID" == "" ]; then
+  echo "must set AWS_ID"
+  exit 1
+fi
+
+if [ "$AWS_SECRET" == "" ]; then
+  echo "must set AWS_SECRET"
+  exit 1
+fi
+
+if [ "$S3_BUCKET" == "" ]; then
+  echo "must set S3_BUCKET"
+  exit 1
+fi
+
 basedir="$( cd -P "$( dirname "$0" )" && pwd )"
 
 # make a temp directory
@@ -31,5 +46,5 @@ git submodule update --init --recursive
 tar czvf $tempdir/npm-${npm_version}.tgz *
 
 # upload npm to s3
-$basedir/aws/s3 put language-pack-nodejs \
+$basedir/aws/s3 put $S3_BUCKET \
   npm-${npm_version}.tgz $tempdir/npm-${npm_version}.tgz

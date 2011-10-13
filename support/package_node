@@ -9,13 +9,18 @@ if [ "$node_version" == "" ]; then
   exit 1
 fi
 
-if [ "$S3_ACCESS_KEY_ID" == "" ]; then
-  echo "must set S3_ACCESS_KEY_ID"
+if [ "$AWS_ID" == "" ]; then
+  echo "must set AWS_ID"
   exit 1
 fi
 
-if [ "$S3_SECRET_ACCESS_KEY" == "" ]; then
-  echo "must set S3_SECRET_ACCESS_KEY"
+if [ "$AWS_SECRET" == "" ]; then
+  echo "must set AWS_SECRET"
+  exit 1
+fi
+
+if [ "$S3_BUCKET" == "" ]; then
+  echo "must set S3_BUCKET"
   exit 1
 fi
 
@@ -38,7 +43,7 @@ pushd node-v${node_version}
 vulcan build -v -o $tempdir/node-${node_version}.tgz
 
 # upload nodejs to s3
-$basedir/aws/s3 put language-pack-nodejs \
+$basedir/aws/s3 put $S3_BUCKET \
   nodejs-${node_version}.tgz $tempdir/node-${node_version}.tgz
 
 # go into scons
@@ -49,5 +54,5 @@ scons_version=$(ls | grep "scons-local" | cut -d- -f3)
 tar czvf $tempdir/scons-${scons_version}.tgz *
 
 # upload scons to s3
-$basedir/aws/s3 put language-pack-nodejs \
+$basedir/aws/s3 put $S3_BUCKET \
   scons-${scons_version}.tgz $tempdir/scons-${scons_version}.tgz

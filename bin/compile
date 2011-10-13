@@ -23,6 +23,7 @@ function indent() {
 NODE_VERSION="0.4.7"
 NPM_VERSION="1.0.94"
 SCONS_VERSION="1.2.0"
+S3_BUCKET="language-pack-nodejs"
 
 # parse and derive params
 BUILD_DIR=$1
@@ -32,9 +33,9 @@ CACHE_STORE_DIR=$CACHE_DIR"/node_modules/$NPM_VERSION"
 CACHE_TARGET_DIR=$BUILD_DIR"/node_modules"
 
 # s3 packages
-NODE_PACKAGE="http://language-pack-nodejs.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
-NPM_PACKAGE="http://language-pack-nodejs.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
-SCONS_PACKAGE="http://language-pack-nodejs.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
+NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
+NPM_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
+SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
 
 # vendor directories
 VENDORED_NODE="$(mktmpdir node)"
