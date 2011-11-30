@@ -29,6 +29,10 @@ run_npm() {
 # clean up leaking environment
 unset GIT_DIR
 
+function manifest_versions() {
+  curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o -
+}
+
 # config
 NODE_VERSION="0.4.7"
 NPM_VERSION="1.0.94"
@@ -51,6 +55,9 @@ SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
 VENDORED_NODE="$(mktmpdir node)"
 VENDORED_NPM="$(mktmpdir npm)"
 VENDORED_SCONS="$(mktmpdir scons)"
+
+# determine node version
+echo "available versions of node: $(manifest_versions "nodejs")"
 
 # download and unpack packages
 echo "-----> Fetching Node.js binaries"
