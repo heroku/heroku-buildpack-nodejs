@@ -125,6 +125,7 @@ s3_curl() {
   [[ $CURL_S3_DEBUG == true ]] && stdopts="${stdopts} --show-error --fail"
   case "${1}" in
    GET) arg="-o" inout="${4:--}" # stdout if no $4
+	  headers[${#headers[@]}]="x-amz-acl: public-read"
 	;;
    PUT) [[ ${2} ]] || die "PUT can has bucket?"
         if [[ ! ${3} ]]; then
