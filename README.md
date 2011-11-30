@@ -29,6 +29,19 @@ Example usage:
 
 The buildpack will detect your app as Node.js if it has the file `package.json` in the root.  It will use NPM to install your dependencies, and vendors a version of the Node.js runtime into your slug.  The `node_modules` directory will be cached between builds to allow for faster NPM install time.
 
+Node.js and npm versions
+------------------------
+
+You can specify the versions of Node.js and npm your application requires using `package.json`
+
+    {
+      "name": "myapp",
+      "engines": {
+        "node": ">=0.4.7 <0.7.0",
+        "npm": ">=1.0.0"
+      }
+    }
+
 Hacking
 -------
 
