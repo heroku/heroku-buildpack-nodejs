@@ -42,7 +42,7 @@ First you'll need to build a Heroku-compatible version of Node.js:
 
     $ export AWS_ID=xxx AWS_SECRET=yyy S3_BUCKET=zzz
     $ s3 create $S3_BUCKET
-    $ support/package_node 0.5.8
+    $ support/package_nodejs 0.5.8
 
 Open `bin/compile` in your editor, and change the following lines:
 
