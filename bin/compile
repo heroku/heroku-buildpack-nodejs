@@ -4,11 +4,6 @@
 # fail fast
 set -e
 
-function error() {
-  echo " !     $*"
-  exit 1
-}
-
 function mktmpdir() {
   dir=$(mktemp -t node-$1-XXXX)
   rm -rf $dir
@@ -38,14 +33,7 @@ run_npm() {
 unset GIT_DIR
 
 function manifest_versions() {
-  curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o - | tr -s '\n' ' '
-}
-
-function resolve_versions() {
-  args=""
-  for version in $1; do args="${args} -v \"${version}\""; done
-  for version in $2; do args="${args} -r \"${version}\""; done
-  eval $LP_DIR/vendor/node-semver/bin/semver ${args} | tail -n1
+  curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o -
 }
 
 # config
@@ -125,6 +113,9 @@ SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
 VENDORED_NODE="$(mktmpdir node)"
 VENDORED_NPM="$(mktmpdir npm)"
 VENDORED_SCONS="$(mktmpdir scons)"
+
+# determine node version
+echo "available versions of node: $(manifest_versions "nodejs")"
 
 # download and unpack packages
 echo "-----> Fetching Node.js binaries"
