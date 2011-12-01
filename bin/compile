@@ -97,7 +97,7 @@ else
   RESOLVED_NPM=$(resolve_versions "${NPM_VERSIONS}" "${REQUESTED_NPM_VERSION}")
 
   if [ "${RESOLVED_NPM}" == "" ]; then
-    error "Requested Node.js version: ${REQUESTED_NPM_VERSION} does not match available versions: ${NPMJS_VERSIONS}"
+    error "Requested npm version: ${REQUESTED_NPM_VERSION} does not match available versions: ${NPMJS_VERSIONS}"
   else
     NPM_VERSION=${RESOLVED_NPM}
   fi
