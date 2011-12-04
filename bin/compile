@@ -20,7 +20,7 @@ function indent() {
 }
 
 # config
-NODE_VERSION="0.6.5"
+NODE_VERSION="0.6.4"
 NPM_VERSION="1.1.0-alpha-5"
 SCONS_VERSION="1.2.0"
 S3_BUCKET="jk-heroku-buildpack-nodejs"
