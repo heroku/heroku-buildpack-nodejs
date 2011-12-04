@@ -20,8 +20,8 @@ function indent() {
 }
 
 # config
-NODE_VERSION="0.6.4"
-NPM_VERSION="1.1.0-alpha-6"
+NODE_VERSION="0.6.5"
+NPM_VERSION="1.1.0-alpha-5"
 SCONS_VERSION="1.2.0"
 S3_BUCKET="jk-heroku-buildpack-nodejs"
 
@@ -44,14 +44,10 @@ VENDORED_SCONS="$(mktmpdir scons)"
 
 # download and unpack packages
 echo "-----> Fetching Node.js binaries"
-echo ": VENDORED_NODE $VENDORED_NODE"
-echo ": NODE_PACKAGE $NODE_PACKAGE"
-mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
-echo ": NPM_PACKAGE $NPM_PACKAGE"
-mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM
-echo ": SCONS_PACKAGE $SCONS_PACKAGE"
-mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS
-echo ": DONE..."
+mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE || { echo "Error downloading or extracting $NODE_PACKAGE"; exit 1; }
+mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM || { echo "Error downloading or extracting $NPM_PACKAGE"; exit 1; }
+mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS || { echo "Error downloading or extracting $SCONS_PACKAGE"; exit 1; }
+
 # vendor node into the slug
 PATH="$BUILD_DIR/bin:$PATH"
 echo "-----> Vendoring node $NODE_VERSION"
