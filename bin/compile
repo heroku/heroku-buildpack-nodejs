@@ -47,7 +47,9 @@ echo "-----> Fetching Node.js binaries"
 echo ": VENDORED_NODE $VENDORED_NODE"
 echo ": NODE_PACKAGE $NODE_PACKAGE"
 mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
+echo ": NPM_PACKAGE $NPM_PACKAGE"
 mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM
+echo ": SCONS_PACKAGE $SCONS_PACKAGE"
 mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS
 
 # vendor node into the slug
