@@ -51,7 +51,7 @@ echo ": NPM_PACKAGE $NPM_PACKAGE"
 mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM
 echo ": SCONS_PACKAGE $SCONS_PACKAGE"
 mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS
-
+echo ": DONE..."
 # vendor node into the slug
 PATH="$BUILD_DIR/bin:$PATH"
 echo "-----> Vendoring node $NODE_VERSION"
