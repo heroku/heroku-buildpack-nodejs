@@ -66,11 +66,8 @@ NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${DEFAULT_NODE_VERSION
 VENDORED_NODE="$(mktmpdir node)"
 echo "-----> Bootstraping Node.js"
 mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
-echo $VENDORED_NODE
-ls -la $VENDORED_NODE/bin
 OLDPATH="$PATH"
 PATH="$VENDORED_NODE/bin:$PATH"
-echo $PATH
 
 # determine available versions
 NODEJS_VERSIONS=$(manifest_versions "nodejs")
