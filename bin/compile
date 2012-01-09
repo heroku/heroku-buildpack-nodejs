@@ -62,6 +62,12 @@ LP_DIR=`cd $(dirname $0); cd ..; pwd`
 CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NPM_VERSION"
 CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
 
+# bootstrap node
+NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${DEFAULT_NODE_VERSION}.tgz"
+VENDORED_NODE="$(mktmpdir node)"
+echo "-----> Bootstraping Node.js"
+mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
+
 # determine available versions
 NODEJS_VERSIONS=$(manifest_versions "nodejs")
 NPM_VERSIONS=$(manifest_versions "npm")
