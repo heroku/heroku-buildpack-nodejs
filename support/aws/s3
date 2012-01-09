@@ -117,11 +117,13 @@ s3_curl() {
   # $2 = remote bucket.
   # $3 = remote name
   # $4 = local name.
+  # $5 = mime type
   local bucket remote date sig md5 arg inout headers
   # header handling is kinda fugly, but it works.
   bucket="${2:+/${2}}/" # slashify the bucket
   remote="$(urlenc "${3}")" # if you don't, strange things may happen.
   stdopts="--connect-timeout 10 --fail --silent"
+	mime="${5}"
   [[ $CURL_S3_DEBUG == true ]] && stdopts="${stdopts} --show-error --fail"
   case "${1}" in
    GET) arg="-o" inout="${4:--}" # stdout if no $4
@@ -146,7 +148,7 @@ s3_curl() {
    *) die "Unknown verb ${1}.  It probably would not have worked anyways." ;;
   esac
   date="$(TZ=UTC date '+%a, %e %b %Y %H:%M:%S %z')"
-  sig=$(s3_signature_string ${1} "${date}" "${bucket}" "${remote}" "${md5}" "" "x-amz-acl:public-read")
+  sig=$(s3_signature_string ${1} "${date}" "${bucket}" "${remote}" "${md5}" "${mime}" "x-amz-acl:public-read")
 
   headers[${#headers[@]}]="Authorization: AWS ${AWS_ID}:${sig}"
   headers[${#headers[@]}]="Date: ${date}"

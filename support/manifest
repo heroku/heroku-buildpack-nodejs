@@ -41,4 +41,4 @@ $basedir/aws/s3 ls $S3_BUCKET \
 
 # upload manifest to s3
 $basedir/aws/s3 put $S3_BUCKET \
-  manifest.${manifest_type}
+  manifest.${manifest_type} "" "text/plain"
