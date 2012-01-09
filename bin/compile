@@ -2,6 +2,7 @@
 # bin/compile <build-dir> <cache-dir>
 
 # fail fast
+set -x
 set -e
 
 function error() {
