@@ -49,7 +49,7 @@ To use this buildpack, fork it on Github.  Push up changes to your fork, then cr
 
 To change the vendored binaries for Node.js, NPM, and SCons, use the helper scripts in the `support/` subdirectory.  You'll need an S3-enabled AWS account and a bucket to store your binaries in.
 
-For example, you can change the vendored version of Node.js to v0.5.8.
+For example, you can change the default version of Node.js to v0.5.8.
 
 First you'll need to build a Heroku-compatible version of Node.js:
 
@@ -59,9 +59,9 @@ First you'll need to build a Heroku-compatible version of Node.js:
 
 Open `bin/compile` in your editor, and change the following lines:
 
-    NODE_VERSION="0.5.8"
-
+    DEFAULT_NODE_VERSION="0.5.8"
     S3_BUCKET=zzz
+:w
 
 Commit and push the changes to your buildpack to your Github fork, then push your sample app to Heroku to test.  You should see:
 
