@@ -68,7 +68,7 @@ VENDORED_NODE="$(mktmpdir node)"
 echo "-----> Bootstraping Node.js"
 mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
 echo $VENDORED_NODE
-ls -la $VENDORED_NODE
+ls -la $VENDORED_NODE/bin
 OLDPATH="$PATH"
 PATH="$VENDORED_NODE/bin:$PATH"
 echo $PATH
@@ -88,9 +88,6 @@ else
   REQUESTED_NPM_VERSION=""
 fi
 
-# reset path to undo bootstrapped node
-PATH="$OLDPATH"
-
 # resolve node version
 if [ "${REQUESTED_NODE_VERSION}" == "" ]; then
   NODE_VERSION=${DEFAULT_NODE_VERSION}
@@ -103,6 +100,7 @@ else
     NODE_VERSION=${RESOLVED_NODE}
   fi
 fi
+
 echo "-----> Using Node.js version: ${NODE_VERSION}"
 
 # resolve npm version
@@ -118,6 +116,9 @@ else
   fi
 fi
 echo "-----> Using npm version: ${NPM_VERSION}"
+
+# reset path to undo bootstrapped node
+PATH="$OLDPATH"
 
 # s3 packages
 NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
