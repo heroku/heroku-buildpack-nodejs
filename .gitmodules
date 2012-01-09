@@ -1,3 +1,0 @@
-[submodule "vendor/node-semver"]
-	path = vendor/node-semver
-	url = https://github.com/isaacs/node-semver.git
