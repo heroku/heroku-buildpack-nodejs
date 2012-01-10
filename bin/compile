@@ -19,6 +19,9 @@ function indent() {
   esac
 }
 
+# clean up leaking environment
+unset GIT_DIR
+
 # config
 NODE_VERSION="0.4.7"
 NPM_VERSION="1.0.94"
