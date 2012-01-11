@@ -64,22 +64,36 @@ export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
 # unpack existing cache
-rm -rf $CACHE_TARGET_DIR
 if [ -d $CACHE_STORE_DIR ]; then
-  cp -a $CACHE_STORE_DIR $CACHE_TARGET_DIR
+  mkdir -p $CACHE_TARGET_DIR
+  cp -R $CACHE_STORE_DIR/* $CACHE_TARGET_DIR/
 fi
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm $NPM_VERSION"
 cd $BUILD_DIR
+
 HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js prune 2>&1 | indent
+
+if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+  echo " !     Failed to prune dependencies with npm"
+  exit 1
+fi
+
 HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js install 2>&1 | indent
+
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   echo " !     Failed to install dependencies with npm"
   exit 1
-else
-  echo "       Dependencies installed"
 fi
+
+HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js rebuild 2>&1 | indent
+
+if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+  echo " !     Failed to rebuild dependencies with npm"
+  exit 1
+fi
+echo "       Dependencies installed"
 
 # repack cache with new assets
 if [ -d $CACHE_TARGET_DIR ]; then
