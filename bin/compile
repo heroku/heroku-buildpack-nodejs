@@ -38,11 +38,33 @@ function manifest_versions() {
   curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o - | tr -s '\n' ' '
 }
 
-function resolve_versions() {
-  args=""
-  for version in $1; do args="${args} -v \"${version}\""; done
-  for version in $2; do args="${args} -r \"${version}\""; done
-  eval vendor/node-semver/bin/semver ${args} | tail -r | head -n1
+function resolve_version() {
+  available_versions="$1"
+  requested_version="$2"
+  default_version="$3"
+
+  if [ "$2" == "" ]; then
+    echo $3
+  else
+    args=""
+    for version in $available_versions; do args="${args} -v \"${version}\""; done
+    for version in $requested_version; do args="${args} -r \"${version}\""; done
+    eval vendor/node-semver/bin/semver ${args} | tail -r | head -n1
+  fi
+}
+
+function package_engine_version() {
+  version=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines.$1)
+  if [ $? == 0 ]; then
+    echo $version
+  fi
+}
+
+function package_resolve_version() {
+  engine="$1"
+
+  resolved_version=$(resolve_version $engine_versions[$engine] $engine_requested[$engine] $engine_defaults[$engine])
+  echo "rv: ${resolved_version}"
 }
 
 # config
@@ -58,15 +80,23 @@ LP_DIR=`cd $(dirname $0); cd ..; pwd`
 CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NPM_VERSION"
 CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
 
-# determine available versions
-NODEJS_VERSIONS=$(manifest_versions "nodejs")
-NPM_VERSIONS=$(manifest_versions "npm")
+declare -A engine_versions
+declare -A engine_defaults
+declare -A engine_requested
+
+engine_versions["node"]=$(manifest_versions "node")
+engine_requested["node"]=$(package_engine_version "node")
+
+engine_versions["npm"]=$(manifest_versions "npm")
+engine_requested["npm"]=$(package_engine_version "npm")
+
+package_resolve_version "node"
+exit 1
 
 # determine requested versions
-engines=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines 2>&1)
+requested_engines=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines 2>&1)
 
-if [ $? == 0 ] && [ "$engines" != "" ]; then
-  REQUESTED_NODE_VERSION=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines.node)
+if [ $? == 0 ] && [ "$requested_engines" != "" ]; then
   REQUESTED_NPM_VERSION=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines.npm 2>&1)
 else
   REQUESTED_NODE_VERSION=""
