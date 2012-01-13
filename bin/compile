@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
-# fail fast
-set -e
-
 mktmpdir() {
   dir=$(mktemp -t node-$1-XXXX)
   rm -rf $dir
@@ -17,6 +14,16 @@ function indent() {
     Darwin) sed -l "$c";;
     *)      sed -u "$c";;
   esac
+}
+
+run_npm() {
+  command="$1"
+  HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js $command 2>&1 | indent
+
+  if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+    echo " !     Failed to $command dependencies with npm"
+    exit 1
+  fi
 }
 
 # clean up leaking environment
@@ -65,35 +72,31 @@ export CPPPATH="$INCLUDE_PATH"
 
 # unpack existing cache
 if [ -d $CACHE_STORE_DIR ]; then
+
+  TEMP_NODE_MODULES_DIR=$(mktmpdir node_modules)
+
+  # move existing node_modules out of the way
+  if [ -f $CACHE_TARGET_DIR ]; then
+    mv $CACHE_TARGET_DIR $TEMP_NODE_MODULES_DIR/
+  fi
+
   mkdir -p $CACHE_TARGET_DIR
   cp -R $CACHE_STORE_DIR/* $CACHE_TARGET_DIR/
+
+  # move existing node_modules back into place
+  if [ -d $TEMP_NODE_MODULES_DIR/node_modules ]; then
+    cp -R $TEMP_NODE_MODULES_DIR/node_modules/* $CACHE_TARGET_DIR/
+  fi
 fi
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm $NPM_VERSION"
+
 cd $BUILD_DIR
+run_npm install
+run_npm rebuild
 
-HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js prune 2>&1 | indent
-
-if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-  echo " !     Failed to prune dependencies with npm"
-  exit 1
-fi
-
-HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js install 2>&1 | indent
-
-if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-  echo " !     Failed to install dependencies with npm"
-  exit 1
-fi
-
-HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js rebuild 2>&1 | indent
-
-if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-  echo " !     Failed to rebuild dependencies with npm"
-  exit 1
-fi
-echo "       Dependencies installed"
+echo "Dependencies installed" | indent
 
 # repack cache with new assets
 if [ -d $CACHE_TARGET_DIR ]; then
