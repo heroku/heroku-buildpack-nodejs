@@ -73,23 +73,23 @@ export CPPPATH="$INCLUDE_PATH"
 # unpack existing cache
 if [ -d $CACHE_STORE_DIR ]; then
 
-  echo "unpacking cache"
+  # generate a place to put node_modules
   TEMP_NODE_MODULES_DIR=$(mktmpdir node_modules)
 
   # move existing node_modules out of the way
   if [ -d $CACHE_TARGET_DIR ]; then
-    echo "moving out"
     mv $CACHE_TARGET_DIR $TEMP_NODE_MODULES_DIR/
   fi
 
+  # copy the cached node_modules in
   mkdir -p $CACHE_TARGET_DIR
   cp -R $CACHE_STORE_DIR/* $CACHE_TARGET_DIR/
 
   # move existing node_modules back into place
   if [ -d $TEMP_NODE_MODULES_DIR/node_modules ]; then
-    echo "moving back"
     cp -R $TEMP_NODE_MODULES_DIR/node_modules/* $CACHE_TARGET_DIR/
   fi
+
 fi
 
 # install dependencies with npm
