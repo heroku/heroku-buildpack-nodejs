@@ -39,8 +39,8 @@ S3_BUCKET="heroku-buildpack-nodejs"
 BUILD_DIR=$1
 CACHE_DIR=$2
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
-CACHE_STORE_DIR=$CACHE_DIR"/node_modules/$NPM_VERSION"
-CACHE_TARGET_DIR=$BUILD_DIR"/node_modules"
+CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NPM_VERSION"
+CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
 
 # s3 packages
 NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
@@ -77,7 +77,7 @@ if [ -d $CACHE_STORE_DIR ]; then
   TEMP_NODE_MODULES_DIR=$(mktmpdir node_modules)
 
   # move existing node_modules out of the way
-  if [ -f $CACHE_TARGET_DIR ]; then
+  if [ -d $CACHE_TARGET_DIR ]; then
     echo "moving out"
     mv $CACHE_TARGET_DIR $TEMP_NODE_MODULES_DIR/
   fi
