@@ -86,7 +86,7 @@ function package_download() {
   mkdir -p $location
   package="http://${S3_BUCKET}.s3.amazonaws.com/$engine-$version.tgz"
   echo "downloading $engine $version"
-  curl $package -s -o - | tar xzvf - -C $location
+  curl $package -s -o - | tar xzf - -C $location
 }
 
 bootstrap_node=$(mktmpdir bootstrap_node)
