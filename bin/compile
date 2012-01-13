@@ -74,21 +74,21 @@ function package_engine_version() {
 function package_resolve_version() {
   engine="$1"
 
-  resolved_version=$(resolve_version $engine_versions[$engine] $engine_requested[$engine] $engine_defaults[$engine])
+  resolved_version=$(resolve_version $engine_versions[$engine] $engine_requests[$engine] $engine_defaults[$engine])
   echo "rv: ${resolved_version}"
 }
 
 declare -A engine_versions
 declare -A engine_defaults
-declare -A engine_requested
+declare -A engine_requests
 
 engine_versions["node"]=$(manifest_versions "node")
 engine_defaults["node"]="0.4.7"
-engine_requested["node"]=$(package_engine_version "node")
+engine_requests["node"]=$(package_engine_version "node")
 
 engine_versions["npm"]=$(manifest_versions "npm")
 engine_defaults["npm"]="1.0.94"
-engine_requested["npm"]=$(package_engine_version "npm")
+engine_requests["npm"]=$(package_engine_version "npm")
 
 package_resolve_version "node"
 exit 1
