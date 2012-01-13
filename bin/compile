@@ -75,7 +75,7 @@ function package_engine_version() {
 
 function package_resolve_version() {
   engine="$1"
-  resolved_version=$(resolve_version ${engine_versions[$engine]} ${engine_requests[$engine]} ${engine_defaults[$engine]})
+  resolved_version=$(resolve_version "${engine_versions[$engine]}" "${engine_requests[$engine]}" "${engine_defaults[$engine]}")
   echo "rv: ${resolved_version}"
 }
 
@@ -93,6 +93,7 @@ function package_download() {
 bootstrap_node=$(mktmpdir bootstrap_node)
 package_download "nodejs" "0.4.7" $bootstrap_node
 
+# make some associative arrays
 declare -A engine_versions
 declare -A engine_defaults
 declare -A engine_requests
