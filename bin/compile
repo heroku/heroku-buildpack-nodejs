@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
-# fail fast
-set -e
+# clean up leaking environment
+unset GIT_DIR
 
 function error() {
   echo " !     $*"
@@ -24,7 +24,7 @@ function indent() {
   esac
 }
 
-run_npm() {
+function run_npm() {
   command="$1"
   HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js $command 2>&1 | indent
 
@@ -33,9 +33,6 @@ run_npm() {
     exit 1
   fi
 }
-
-# clean up leaking environment
-unset GIT_DIR
 
 function manifest_versions() {
   curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o - | tr -s '\n' ' '
