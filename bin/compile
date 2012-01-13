@@ -4,6 +4,17 @@
 # clean up leaking environment
 unset GIT_DIR
 
+# config
+SCONS_VERSION="1.2.0"
+S3_BUCKET="heroku-buildpack-nodejs"
+
+# parse and derive params
+BUILD_DIR=$1
+CACHE_DIR=$2
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NPM_VERSION"
+CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
+
 function error() {
   echo " !     $*"
   exit 1
@@ -67,27 +78,16 @@ function package_resolve_version() {
   echo "rv: ${resolved_version}"
 }
 
-# config
-DEFAULT_NODE_VERSION="0.4.7"
-DEFAULT_NPM_VERSION="1.0.94"
-SCONS_VERSION="1.2.0"
-S3_BUCKET="heroku-buildpack-nodejs"
-
-# parse and derive params
-BUILD_DIR=$1
-CACHE_DIR=$2
-LP_DIR=`cd $(dirname $0); cd ..; pwd`
-CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NPM_VERSION"
-CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
-
 declare -A engine_versions
 declare -A engine_defaults
 declare -A engine_requested
 
 engine_versions["node"]=$(manifest_versions "node")
+engine_defaults["node"]="0.4.7"
 engine_requested["node"]=$(package_engine_version "node")
 
 engine_versions["npm"]=$(manifest_versions "npm")
+engine_defaults["npm"]="1.0.94"
 engine_requested["npm"]=$(package_engine_version "npm")
 
 package_resolve_version "node"
