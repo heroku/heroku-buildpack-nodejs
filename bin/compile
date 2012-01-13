@@ -73,6 +73,7 @@ export CPPPATH="$INCLUDE_PATH"
 # unpack existing cache
 if [ -d $CACHE_STORE_DIR ]; then
 
+  echo "unpacking cache"
   TEMP_NODE_MODULES_DIR=$(mktmpdir node_modules)
 
   # move existing node_modules out of the way
