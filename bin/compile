@@ -60,7 +60,7 @@ function resolve_version() {
     args=""
     for version in $available_versions; do args="${args} -v \"${version}\""; done
     for version in $requested_version; do args="${args} -r \"${version}\""; done
-    eval $VENDORED_NODE/bin/node $LP_DIR/vendor/node-semver/bin/semver ${args} | tail -r | head -n1
+    eval $bootstrap_node/bin/node $LP_DIR/vendor/node-semver/bin/semver ${args} | tail -r | head -n1
   fi
 }
 
@@ -77,6 +77,20 @@ function package_resolve_version() {
   resolved_version=$(resolve_version $engine_versions[$engine] $engine_requests[$engine] $engine_defaults[$engine])
   echo "rv: ${resolved_version}"
 }
+
+function package_download() {
+  engine="$1"
+  version="$2"
+  location="$3"
+
+  mkdir -p $location
+  package="http://${S3_BUCKET}.s3.amazonaws.com/$engine-$version.tgz"
+  echo "downloading $engine $version"
+  curl $package -s -o - | tar xzvf - -C $location
+}
+
+bootstrap_node=$(mktmpdir bootstrap_node)
+download_package "nodejs", "0.4.7", $bootstrap_node
 
 declare -A engine_versions
 declare -A engine_defaults
