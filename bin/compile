@@ -49,7 +49,7 @@ function resolve_version() {
     args=""
     for version in $available_versions; do args="${args} -v \"${version}\""; done
     for version in $requested_version; do args="${args} -r \"${version}\""; done
-    eval vendor/node-semver/bin/semver ${args} | tail -r | head -n1
+    eval $LP_DIR/vendor/node-semver/bin/semver ${args} | tail -r | head -n1
   fi
 }
 
