@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir>
 
+set -x
+
 # clean up leaking environment
 unset GIT_DIR
 
