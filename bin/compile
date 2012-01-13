@@ -75,8 +75,7 @@ function package_engine_version() {
 
 function package_resolve_version() {
   engine="$1"
-
-  resolved_version=$(resolve_version $engine_versions[$engine] $engine_requests[$engine] $engine_defaults[$engine])
+  resolved_version=$(resolve_version ${engine_versions[$engine]} ${engine_requests[$engine]} ${engine_defaults[$engine]})
   echo "rv: ${resolved_version}"
 }
 
