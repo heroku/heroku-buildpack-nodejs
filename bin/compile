@@ -90,7 +90,7 @@ function package_download() {
 }
 
 bootstrap_node=$(mktmpdir bootstrap_node)
-package_download "nodejs", "0.4.7", $bootstrap_node
+package_download "nodejs" "0.4.7" $bootstrap_node
 
 declare -A engine_versions
 declare -A engine_defaults
