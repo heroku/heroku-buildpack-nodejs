@@ -66,7 +66,6 @@ Open `bin/compile` in your editor, and change the following lines:
 
     DEFAULT_NODE_VERSION="0.6.7"
     S3_BUCKET=zzz
-:w
 
 Commit and push the changes to your buildpack to your Github fork, then push your sample app to Heroku to test.  You should see:
 
