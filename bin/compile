@@ -76,7 +76,12 @@ function package_engine_version() {
 function package_resolve_version() {
   engine="$1"
   resolved_version=$(resolve_version "${engine_versions[$engine]}" "${engine_requests[$engine]}" "${engine_defaults[$engine]}")
-  echo "rv: ${resolved_version}"
+
+  if [ "${resolved_version}" == "" ]; then
+    error "Requested engine $engine version: ${REQUESTED_NODE_VERSION} does not match available versions: ${engine_versions[$engine]}"
+  else
+    echo $resolved_version
+  fi
 }
 
 function package_download() {
@@ -107,46 +112,8 @@ engine_requests["node"]=$(package_engine_version "node")
 engine_versions["npm"]=$(manifest_versions "npm")
 engine_requests["npm"]=$(package_engine_version "npm")
 
-package_resolve_version "node"
-exit 1
-
-# determine requested versions
-requested_engines=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines 2>&1)
-
-if [ $? == 0 ] && [ "$requested_engines" != "" ]; then
-  REQUESTED_NPM_VERSION=$(cat $BUILD_DIR/package.json | $LP_DIR/vendor/json/json engines.npm 2>&1)
-else
-  REQUESTED_NODE_VERSION=""
-  REQUESTED_NPM_VERSION=""
-fi
-
-# resolve node version
-if [ "${REQUESTED_NODE_VERSION}" == "" ]; then
-  NODE_VERSION=${DEFAULT_NODE_VERSION}
-else
-  RESOLVED_NODE=$(resolve_versions "${NODEJS_VERSIONS}" "${REQUESTED_NODE_VERSION}")
-
-  if [ "${RESOLVED_NODE}" == "" ]; then
-    error "Requested Node.js version: ${REQUESTED_NODE_VERSION} does not match available versions: ${NODEJS_VERSIONS}"
-  else
-    NODE_VERSION=${RESOLVED_NODE}
-  fi
-fi
-echo "-----> Using Node.js version: ${NODE_VERSION}"
-
-# resolve npm version
-if [ "${REQUESTED_NPM_VERSION}" == "" ]; then
-  NPM_VERSION=${DEFAULT_NPM_VERSION}
-else
-  RESOLVED_NPM=$(resolve_versions "${NPM_VERSIONS}" "${REQUESTED_NPM_VERSION}")
-
-  if [ "${RESOLVED_NPM}" == "" ]; then
-    error "Requested Node.js version: ${REQUESTED_NPM_VERSION} does not match available versions: ${NPMJS_VERSIONS}"
-  else
-    NPM_VERSION=${RESOLVED_NPM}
-  fi
-fi
-echo "-----> Using npm version: ${NPM_VERSION}"
+NODE_VERSION=$(package_resolve_version "node")
+NPM_VERSION=$(package_resolve_version "npm")
 
 # s3 packages
 NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
@@ -160,9 +127,9 @@ VENDORED_SCONS="$(mktmpdir scons)"
 
 # download and unpack packages
 echo "-----> Fetching Node.js binaries"
-mkdir -p $VENDORED_NODE  && curl $NODE_PACKAGE -s -o -  | tar xzf - -C $VENDORED_NODE
-mkdir -p $VENDORED_NPM   && curl $NPM_PACKAGE -s -o -   | tar xzf - -C $VENDORED_NPM
-mkdir -p $VENDORED_SCONS && curl $SCONS_PACKAGE -s -o - | tar xzf - -C $VENDORED_SCONS
+package_download "nodejs", "${NODE_VERSION}", "${VENDORED_NODE}"
+package_download "npm", "${NPM_VERSION}", "${VENDORED_NPM}"
+package_download "scons", "${SCONS_VERSION}", "${VENDORED_SCONS}"
 
 # vendor node into the slug
 PATH="$BUILD_DIR/bin:$PATH"
