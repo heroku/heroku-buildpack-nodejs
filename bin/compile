@@ -95,7 +95,6 @@ function package_download() {
 
   mkdir -p $location
   package="http://${S3_BUCKET}.s3.amazonaws.com/$engine-$version.tgz"
-  echo "downloading $engine $version"
   curl $package -s -o - | tar xzf - -C $location
 }
 
@@ -171,15 +170,8 @@ fi
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
-cd $BUILD_DIR
-HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js prune 2>&1 | indent
-HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js install 2>&1 | indent
-if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-  error "Failed to install dependencies with npm"
-else
-  echo "       Dependencies installed"
-fi
-
+run_npm "install"
+run_npm "rebuild"
 echo "Dependencies installed" | indent
 
 # repack cache with new assets
