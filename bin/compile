@@ -84,7 +84,7 @@ function package_resolve_version() {
   resolved_version=$(resolve_version "${engine_versions[$engine]}" "${engine_requests[$engine]}" "${engine_defaults[$engine]}")
 
   if [ "${resolved_version}" == "" ]; then
-    error "Requested engine $engine version: ${REQUESTED_NODE_VERSION} does not match available versions: ${engine_versions[$engine]}"
+    error "Requested engine $engine version ${engine_requests[$engine]} does not match available versions: ${engine_versions[$engine]}"
   else
     echo $resolved_version
   fi
@@ -117,8 +117,12 @@ engine_requests["node"]=$(package_engine_version "node")
 engine_versions["npm"]=$(manifest_versions "npm")
 engine_requests["npm"]=$(package_engine_version "npm")
 
+echo "-----> Resolving engine versions"
 NODE_VERSION=$(package_resolve_version "node")
+echo "Using Node.js version: ${NODE_VERSION}" | indent
+
 NPM_VERSION=$(package_resolve_version "npm")
+echo "Using npm version: ${NPM_VERSION}" | indent
 
 # s3 packages
 NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
