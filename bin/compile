@@ -43,6 +43,8 @@ function indent() {
 
 function run_npm() {
   command="$1"
+
+  cd $BUILD_DIR
   HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js $command 2>&1 | indent
 
   if [ "${PIPESTATUS[*]}" != "0 0" ]; then
