@@ -30,10 +30,10 @@ run_npm() {
 unset GIT_DIR
 
 # config
-NODE_VERSION="0.4.7"
-NPM_VERSION="1.0.94"
+NODE_VERSION="0.6.7"
+NPM_VERSION="1.1.0"
 SCONS_VERSION="1.2.0"
-S3_BUCKET="heroku-buildpack-nodejs"
+S3_BUCKET="nyxnodebinaries"
 
 # parse and derive params
 BUILD_DIR=$1
