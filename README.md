@@ -1,7 +1,7 @@
 Heroku buildpack: Node.js
 =========================
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpack) for Node.js apps.
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
 It uses [NPM](http://npmjs.org/) and [SCons](http://www.scons.org/).
 
 Usage
