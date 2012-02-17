@@ -36,7 +36,7 @@ pushd $tempdir
 $basedir/aws/s3 ls $S3_BUCKET \
   | grep "^${manifest_type}"  \
   | sed -e "s/${manifest_type}-\([0-9.]*\)\\.tgz/\\1/" \
-  | awk 'BEGIN {FS="."} {printf("%03d.%03d.%03d %s\n",$1,$2,$3,$0)}' | sort -r | cut -d" " -f2
+  | awk 'BEGIN {FS="."} {printf("%03d.%03d.%03d %s\n",$1,$2,$3,$0)}' | sort -r | cut -d" " -f2 \
   > manifest.${manifest_type}
 
 # upload manifest to s3
