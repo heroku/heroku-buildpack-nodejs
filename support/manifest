@@ -1,0 +1,44 @@
+#!/bin/sh
+
+set -e
+
+manifest_type="$1"
+
+if [ "$manifest_type" == "" ]; then
+  echo "usage: $0 <nodejs|npm>"
+  exit 1
+fi
+
+if [ "$AWS_ID" == "" ]; then
+  echo "must set AWS_ID"
+  exit 1
+fi
+
+if [ "$AWS_SECRET" == "" ]; then
+  echo "must set AWS_SECRET"
+  exit 1
+fi
+
+if [ "$S3_BUCKET" == "" ]; then
+  echo "must set S3_BUCKET"
+  exit 1
+fi
+
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
+
+# make a temp directory
+tempdir="$( mktemp -t node_XXXX )"
+rm -rf $tempdir
+mkdir -p $tempdir
+pushd $tempdir
+
+# generate manifest
+$basedir/aws/s3 ls $S3_BUCKET \
+  | grep "^${manifest_type}"  \
+  | sed -e "s/${manifest_type}-\([0-9.]*\)\\.tgz/\\1/" \
+  | awk 'BEGIN {FS="."} {printf("%03d.%03d.%03d %s\n",$1,$2,$3,$0)}' | sort -r | cut -d" " -f2 \
+  > manifest.${manifest_type}
+
+# upload manifest to s3
+$basedir/aws/s3 put $S3_BUCKET \
+  manifest.${manifest_type} "" "text/plain"

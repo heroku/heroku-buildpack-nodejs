@@ -48,3 +48,6 @@ tar czvf $tempdir/npm-${npm_version}.tgz *
 # upload npm to s3
 $basedir/aws/s3 put $S3_BUCKET \
   npm-${npm_version}.tgz $tempdir/npm-${npm_version}.tgz
+
+# generate manifest
+$basedir/manifest npm
