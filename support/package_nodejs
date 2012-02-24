@@ -34,6 +34,12 @@ cd $tempdir
 
 # download and extract node
 curl http://nodejs.org/dist/v${node_version}/node-v${node_version}.tar.gz -o node.tgz
+
+# try old-style download url if it doesnt exist
+if [ "$(grep -i "404 not found" node.tgz)" != "" ]; then
+  curl http://nodejs.org/dist/node-v${node_version}.tar.gz -o node.tgz
+fi
+
 tar xzvf node.tgz
 
 # go into node dir
