@@ -36,6 +36,7 @@ You can specify the versions of Node.js and npm your application requires using 
 
     {
       "name": "myapp",
+      "version": "0.0.1",
       "engines": {
         "node": ">=0.4.7 <0.7.0",
         "npm": ">=1.0.0"
