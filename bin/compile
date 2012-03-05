@@ -179,7 +179,6 @@ fi
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
 run_npm "install"
-run_npm "rebuild"
 echo "Dependencies installed" | indent
 
 # repack cache with new assets
