@@ -26,7 +26,7 @@ testPackageJsonWithVersion() {
   assertCapturedSuccess
 }
 
-testPackageJsonWithNoVersion() {
+testPackageJsonWithoutVersion() {
   compile "package-json-noversion"
   assertCaptured "Using Node.js version: 0.4.7"
   assertCaptured "Using npm version: 1.0.106"
