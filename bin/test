@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+#
+# Create a Heroku app with the following buildpack:
+# https://github.com/ddollar/buildpack-test
+#
+# Push this buildpack to the Heroku app to run the tests
+#
+
+testDetectWithPackageJson() {
+  detect package-json-version
+  assertCaptured "Node.js"
+  assertCapturedSuccess
+}
+
+testDetectWithoutPackageJson() {
+  detect no-package-json
+  assertCapturedError 1 ""
+}
+
+testPackageJsonWithVersion() {
+  compile package-json-version
+  assertCaptured "Using Node.js version: 0.6.11"
+  assertCaptured "Using npm version: 1.1.9"
+  assertCapturedSuccess
+}
+
+testPackageJsonWithNoVersion() {
+  compile package-json-noversion
+  assertCaptured "Using Node.js version: 0.4.7"
+  assertCaptured "Using npm version: 1.0.106"
+  assertCapturedSuccess
+}
+
+## utils ########################################
+
+pushd $(dirname 0) >/dev/null
+BASE=$(pwd)
+popd >/dev/null
+
+source ${BASE}/vendor/test-utils/test-utils
+
+detect() {
+  capture ${BASE}/bin/detect ${BASE}/test/$1
+}
+
+compile() {
+  capture ${BASE}/bin/compile ${BASE}/test/$1
+}
+
+source ${BASE}/vendor/shunit2/shunit2
