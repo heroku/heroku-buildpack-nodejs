@@ -21,6 +21,7 @@ testDetectWithoutPackageJson() {
 
 testPackageJsonWithVersion() {
   compile "package-json-version"
+  assertNotCaptured "WARNING: No version of Node.js specified"
   assertCaptured "Using Node.js version: 0.6.11"
   assertCaptured "Using npm version: 1.1.9"
   assertCapturedSuccess
@@ -28,6 +29,7 @@ testPackageJsonWithVersion() {
 
 testPackageJsonWithoutVersion() {
   compile "package-json-noversion"
+  assertCaptured "WARNING: No version of Node.js specified"
   assertCaptured "Using Node.js version: 0.4.7"
   assertCaptured "Using npm version: 1.0.106"
   assertCapturedSuccess
