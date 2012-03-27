@@ -33,6 +33,13 @@ testPackageJsonWithoutVersion() {
   assertCapturedSuccess
 }
 
+testNothingCached() {
+  cache=$(mktmpdir)
+  compile "package-json-version" $cache
+  assertCapturedSuccess
+  assertEquals "0" "$(ls -1 $cache | wc -l)"
+}
+
 ## utils ########################################
 
 pushd $(dirname 0) >/dev/null
@@ -41,12 +48,19 @@ popd >/dev/null
 
 source ${BASE}/vendor/test-utils/test-utils
 
+mktmpdir() {
+  dir=$(mktemp -t testXXXXX)
+  rm -rf $dir
+  mkdir $dir
+  echo $dir
+}
+
 detect() {
   capture ${BASE}/bin/detect ${BASE}/test/$1
 }
 
 compile() {
-  capture ${BASE}/bin/compile ${BASE}/test/$1
+  capture ${BASE}/bin/compile ${BASE}/test/$1 $2
 }
 
 source ${BASE}/vendor/shunit2/shunit2
