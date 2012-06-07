@@ -172,3 +172,7 @@ echo "-----> Installing dependencies with npm"
 run_npm "install --production"
 run_npm "rebuild"
 echo "Dependencies installed" | indent
+
+echo "-----> Setting up .profile"
+mkdir -p $BUILD_DIR/.profile.d
+echo "PATH=\"/app/bin:/app/node_modules/.bin:$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
