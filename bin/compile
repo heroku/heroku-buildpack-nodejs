@@ -175,4 +175,4 @@ echo "Dependencies installed" | indent
 
 echo "-----> Setting up .profile"
 mkdir -p $BUILD_DIR/.profile.d
-echo "export PATH=\"/app/bin:/app/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
