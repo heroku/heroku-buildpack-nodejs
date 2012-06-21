@@ -35,6 +35,11 @@ testPackageJsonWithoutVersion() {
   assertCapturedSuccess
 }
 
+testPackageJsonWithInvalidVersion() {
+  compile "package-json-invalidversion"
+  assertCapturedError 1 "Requested engine npm version 1.1.5 does not"
+}
+
 testNothingCached() {
   cache=$(mktmpdir)
   compile "package-json-version" $cache
