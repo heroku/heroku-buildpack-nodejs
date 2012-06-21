@@ -113,8 +113,9 @@ assertCapturedError()
     assertTrue "Expected captured exit code to be <${expectedErrorCode}>; was <${RETURN}>" "[ ${RETURN} -eq ${expectedErrorCode} ]"
   fi
 
-  assertFileContains "Expected STD_OUT to contain error <${expectedErrorMsg}>" "${expectedErrorMsg}" "${STD_OUT}"
-  assertEquals       "STD_ERR should always be empty" "" "$(cat ${STD_ERR})"
+  if [ "${expectedErrorMsg}" != "" ]; then
+    assertFileContains "Expected STD_ERR to contain error <${expectedErrorMsg}>" "${expectedErrorMsg}" "${STD_ERR}"
+  fi
 }
 
 assertAppDetected()
