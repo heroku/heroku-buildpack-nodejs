@@ -20,7 +20,7 @@ CACHE_DIR=$2
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 function error() {
-  echo " !     $*"
+  echo " !     $*" >&2
   exit 1
 }
 
