@@ -124,6 +124,9 @@ if [ "${engine_requests["node"]}" == "" ]; then
   echo "WARNING: No version of Node.js specified in package.json, see:" | indent
   echo "https://devcenter.heroku.com/articles/nodejs-versions" | indent
   echo
+  echo "WARNING: The default version of Node.js and npm on Heroku will begin" | indent
+  echo "tracking the latest stable release starting August 1, 2012."  | indent
+  echo
 fi
 
 NODE_VERSION=$(package_resolve_version "node")
