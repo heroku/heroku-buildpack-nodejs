@@ -47,6 +47,13 @@ testNothingCached() {
   assertEquals "0" "$(ls -1 $cache | wc -l)"
 }
 
+testProfileCreated() {
+  compile "package-json-version"
+  assertCaptured "Building runtime environment"
+  assertFile "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" "profile.d/nodejs.sh"
+  assertCapturedSuccess
+}
+
 ## utils ########################################
 
 pushd $(dirname 0) >/dev/null
