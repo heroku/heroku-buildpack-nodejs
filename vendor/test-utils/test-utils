@@ -118,21 +118,6 @@ assertCapturedError()
   fi
 }
 
-assertAppDetected()
-{
-  expectedAppType=${1?"Must provide app type"}
-
-  assertCapturedSuccess
-  assertEquals "${expectedAppType}" "$(cat ${STD_OUT})"
-}
-
-assertNoAppDetected()
-{
-  assertEquals "1" "${RETURN}"
-  assertEquals "no" "$(cat ${STD_OUT})"
-  assertEquals "" "$(cat ${STD_ERR})"
-}
-
 _assertContains()
 {
   if [ 5 -eq $# ]; then
