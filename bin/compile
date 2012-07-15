@@ -125,7 +125,7 @@ if [ "${engine_requests["node"]}" == "" ]; then
   echo "https://devcenter.heroku.com/articles/nodejs-versions" | indent
   echo
   echo "WARNING: The default version of Node.js and npm on Heroku will begin" | indent
-  echo "tracking the latest stable release starting August 1, 2012."  | indent
+  echo "tracking the latest stable release starting September 1, 2012."  | indent
   echo
 fi
 
