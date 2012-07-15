@@ -66,8 +66,16 @@ detect() {
   capture ${BASE}/bin/detect ${BASE}/test/$1
 }
 
+COMPILE_DIR=""
+
 compile() {
-  capture ${BASE}/bin/compile ${BASE}/test/$1 $2
+  COMPILE_DIR=$(mktmpdir)
+  cp -r ${BASE}/test/$1/* ${COMPILE_DIR}/
+  capture ${BASE}/bin/compile ${COMPILE_DIR} $2
+}
+
+assertFile() {
+  assertEquals "$1" "$(cat ${COMPILE_DIR}/$2)"
 }
 
 source ${BASE}/vendor/shunit2/shunit2
