@@ -56,7 +56,10 @@ Further Information
 -------------------
 
 [Heroku: Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
+
 [Heroku: Getting Started with Node.js](https://devcenter.heroku.com/articles/nodejs)
+
 [Buildpacks: Heroku for Everything](http://blog.heroku.com/archives/2012/7/17/buildpacks/)
+
 [Grunt: a task-based command line build tool for JavaScript projects](http://gruntjs.com/)
 
