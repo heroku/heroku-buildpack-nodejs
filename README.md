@@ -1,73 +1,62 @@
-Heroku buildpack: Node.js
-=========================
+Heroku buildpack: Node.js with grunt support
+============================================
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
-It uses [NPM](http://npmjs.org/) and [SCons](http://www.scons.org/).
+This is a fork of [Heroku's official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs) with added [grunt](https://github.com/cowboy/grunt) support.
+Using this buildpack you do not need to commit the results of your grunt tasks (e.g. minification and concatination of files), keeping your repository clean. 
+
+After all the default Node.js and NPM build tasks have finished, the buildpack checks if a gruntfile (`grunt.js`) exists and executes the `heroku` task by running `grunt heroku`. For details about grunt and how to define tasks, check out the [offical documentation](https://github.com/cowboy/grunt). You must add grunt to the NPM dependencies in your `package.json` file.
+If no gruntfile exists, the buildpacks simply skips the grunt step and executes like the standard Node.js buildpack.
 
 Usage
 -----
 
-Example usage:
+Create a new app with this buildpack:
 
-    $ ls
-    Procfile  package.json  web.js
+    heroku create myapp --buildpack https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
 
-    $ heroku create --stack cedar --buildpack http://github.com/heroku/heroku-buildpack-nodejs.git
+Or add this buildpack to your current app:
 
-    $ git push heroku master
-    ...
-    -----> Heroku receiving push
-    -----> Fetching custom buildpack
-    -----> Node.js app detected
-    -----> Vendoring node 0.4.7
-    -----> Installing dependencies with npm 1.0.8
-           express@2.1.0 ./node_modules/express
-           ├── mime@1.2.2
-           ├── qs@0.3.1
-           └── connect@1.6.2
-           Dependencies installed
+    heroku config:add BUILDPACK_URL=https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
 
-The buildpack will detect your app as Node.js if it has the file `package.json` in the root.  It will use NPM to install your dependencies, and vendors a version of the Node.js runtime into your slug.  The `node_modules` directory will be cached between builds to allow for faster NPM install time.
+Create your Node.js app and add a gruntfile named  `grunt.js` with a `heroku` task:
 
-Node.js and npm versions
-------------------------
+    grunt.registerTask('heroku', 'clean less mincss');
 
-You can specify the versions of Node.js and npm your application requires using `package.json`
+Don't forget to add grunt to your dependencies in `package.json`. If your grunt tasks depend on other pre-defined tasks make sure to add these dependencies as well:
 
-    {
-      "name": "myapp",
-      "version": "0.0.1",
-      "engines": {
-        "node": ">=0.4.7 <0.7.0",
-        "npm": ">=1.0.0"
-      }
+    "dependencies": {
+        ...
+        "grunt": "*",
+        "grunt-contrib": "*",
+        "less": "*"
     }
 
-To list the available versions of Node.js and npm, see these manifests:
+Push to heroku
 
-http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs
-http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm
+    git push heroku master
+    ...
+    -----> Heroku receiving push
+    -----> Fetching custom buildpack... done
+    -----> Node.js app detected
+    -----> Resolving engine versions
+           Using Node.js version: 0.8.2
+           Using npm version: 1.1.41
+    -----> Fetching Node.js binaries
+    -----> Vendoring node into slug
+    -----> Installing dependencies with npm
+           ...
+           Dependencies installed
+    -----> Building runtime environment
+    -----> Found gruntfile, running grunt heroku task
+    Running "heroku" task
+    ...
+    -----> Discovering process types
 
-Hacking
--------
+Further Information
+-------------------
 
-To use this buildpack, fork it on Github.  Push up changes to your fork, then create a test app with `--buildpack <your-github-url>` and push to it.
+[Heroku: Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
+[Heroku: Getting Started with Node.js](https://devcenter.heroku.com/articles/nodejs)
+[Buildpacks: Heroku for Everything](http://blog.heroku.com/archives/2012/7/17/buildpacks/)
+[Grunt: a task-based command line build tool for JavaScript projects](http://gruntjs.com/)
 
-To change the vendored binaries for Node.js, NPM, and SCons, use the helper scripts in the `support/` subdirectory.  You'll need an S3-enabled AWS account and a bucket to store your binaries in.
-
-For example, you can change the default version of Node.js to v0.6.7.
-
-First you'll need to build a Heroku-compatible version of Node.js:
-
-    $ export AWS_ID=xxx AWS_SECRET=yyy S3_BUCKET=zzz
-    $ s3 create $S3_BUCKET
-    $ support/package_nodejs 0.6.7
-
-Open `bin/compile` in your editor, and change the following lines:
-
-    DEFAULT_NODE_VERSION="0.6.7"
-    S3_BUCKET=zzz
-
-Commit and push the changes to your buildpack to your Github fork, then push your sample app to Heroku to test.  You should see:
-
-    -----> Vendoring node 0.6.7
