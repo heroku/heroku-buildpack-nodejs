@@ -167,6 +167,12 @@ INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
+# add a vendored npm script to path so dependencies can run it
+npm_run=$(mktmpdir npm-run)
+echo -e "#!/bin/bash\ncd $BUILD_DIR; HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js \$@" > $npm_run/npm
+chmod 755 $npm_run/npm
+PATH="$npm_run:$PATH"
+
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
 run_npm "install --production"
