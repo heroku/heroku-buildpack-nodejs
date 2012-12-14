@@ -173,7 +173,9 @@ run_npm "install --production"
 run_npm "rebuild"
 
 # Run a custom heroku install script if it exists
-run_npm "run-script heroku-install"
+if [ -e ./heroku-deploy.sh ]
+    ./heroku-deploy.sh $BUILD_DIR $CACHE_DIR
+
 echo "Dependencies installed" | indent
 
 echo "-----> Building runtime environment"
