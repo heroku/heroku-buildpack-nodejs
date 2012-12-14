@@ -175,6 +175,7 @@ run_npm "rebuild"
 # Run a custom heroku install script if it exists
 if [ -e ./heroku-deploy.sh ]
     ./heroku-deploy.sh $BUILD_DIR $CACHE_DIR
+fi
 
 echo "Dependencies installed" | indent
 
