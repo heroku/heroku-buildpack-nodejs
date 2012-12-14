@@ -171,6 +171,9 @@ export CPPPATH="$INCLUDE_PATH"
 echo "-----> Installing dependencies with npm"
 run_npm "install --production"
 run_npm "rebuild"
+
+# Run a custom heroku install script if it exists
+run_npm "run-script heroku-install"
 echo "Dependencies installed" | indent
 
 echo "-----> Building runtime environment"
