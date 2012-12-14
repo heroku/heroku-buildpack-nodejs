@@ -1,5 +1,16 @@
+----
+CHANGES FROM HEROKU'S DEFAULT
+=============================
+
+* After `npm install`, `compile` will look for a script named `bin/heroku-deploy.sh`
+* if it exists, it is run with `bin/heroku-deploy.sh $BUILD_DIR $CACHE_DIR`
+
+Example Project: https://github.com/mostlygeek/heroku-app-custom-buildpack
+
+----
+
 Heroku buildpack: Node.js
-=========================
+-------------------------
 
 This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
 It uses [NPM](http://npmjs.org/) and [SCons](http://www.scons.org/).
