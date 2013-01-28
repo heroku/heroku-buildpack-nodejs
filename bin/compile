@@ -167,6 +167,17 @@ INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
+echo "-----> Expanding paths"
+export PKG_CONFIG_PATH="$(find ${BUILD_DIR}/vendor/ -type d -name "pkgconfig" | tr '\n' ':')${PKG_CONFIG_PATH}"
+NEW_CPATH=$(find ${BUILD_DIR}/vendor/ -type d -name "include" | xargs -I @@ -n 1 find @@ -maxdepth 1 -d | tr '\n' ':')
+export CPPPATH="${CPPPATH}:${NEW_CPATH}"
+export CPATH="${CPATH}:${NEW_CPATH}"
+export LIBRARY_PATH="$(find ${BUILD_DIR}/vendor/ -type d -name "lib" | tr '\n' ':')${LIBRARY_PATH}"
+echo "New PKG_CONFIG_PATH ${PKG_CONFIG_PATH}" | indent
+echo "New CPPPATH ${CPPPATH}" | indent
+echo "New CPATH ${CPATH}" | indent
+echo "New LIBRARY_PATH ${LIBRARY_PATH}" | indent
+
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
 run_npm "install --production"
