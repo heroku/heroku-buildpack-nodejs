@@ -1,11 +1,14 @@
 Heroku buildpack: Node.js with grunt support
 ============================================
 
-This is a fork of [Heroku's official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs) with added [grunt](https://github.com/cowboy/grunt) support.
-Using this buildpack you do not need to commit the results of your grunt tasks (e.g. minification and concatination of files), keeping your repository clean. 
+Supported Grunt version: 0.4. 
+See the Grunt [migration guide](https://github.com/gruntjs/grunt/wiki/Upgrading-from-0.3-to-0.4) if you are upgrading from 0.3.
 
-After all the default Node.js and NPM build tasks have finished, the buildpack checks if a gruntfile (`grunt.js`, `Gruntfile.js`, `Gruntfile.coffee`) exists and executes the `heroku` task by running `grunt heroku`. For details about grunt and how to define tasks, check out the [offical documentation](https://github.com/cowboy/grunt). You must add grunt to the NPM dependencies in your `package.json` file.
-If no gruntfile exists, the buildpacks simply skips the grunt step and executes like the standard Node.js buildpack.
+This is a fork of [Heroku's official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs) with added [Grunt](http://gruntjs.com/) support.
+Using this buildpack you do not need to commit the results of your Grunt tasks (e.g. minification and concatination of files), keeping your repository clean. 
+
+After all the default Node.js and NPM build tasks have finished, the buildpack checks if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`) exists and executes the `heroku` task by running `grunt heroku`. For details about grunt and how to define tasks, check out the [offical documentation](http://gruntjs.com/getting-started). You must add grunt to the NPM dependencies in your `package.json` file.
+If no Gruntfile exists, the buildpacks simply skips the grunt step and executes like the standard Node.js buildpack.
 
 Usage
 -----
@@ -18,7 +21,7 @@ Or add this buildpack to your current app:
 
     heroku config:add BUILDPACK_URL=https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
 
-Create your Node.js app and add a gruntfile named  `grunt.js` (also works with `Gruntfile.js` or `Gruntfile.coffee`) with a `heroku` task:
+Create your Node.js app and add a Gruntfile named  `Gruntfile.js` (or `Gruntfile.coffee` if you want to use CoffeeScript) with a `heroku` task:
 
     grunt.registerTask('heroku', 'clean less mincss');
 
@@ -62,4 +65,3 @@ Further Information
 [Buildpacks: Heroku for Everything](http://blog.heroku.com/archives/2012/7/17/buildpacks/)
 
 [Grunt: a task-based command line build tool for JavaScript projects](http://gruntjs.com/)
-
