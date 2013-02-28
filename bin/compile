@@ -60,15 +60,17 @@ function resolve_version() {
   requested_version="$2"
   default_version="$3"
 
+  args=""
+  for version in $available_versions; do args="${args} -v \"${version}\""; done
+
   if [ "$2" == "" ]; then
-    echo $3
+    args="${args} -r \"${default_version}\"";
   else
-    args=""
-    for version in $available_versions; do args="${args} -v \"${version}\""; done
-    for version in $requested_version; do args="${args} -r \"${version}\""; done
-    evaluated_version=$(eval $bootstrap_node/bin/node $LP_DIR/vendor/node-semver/bin/semver ${args} || echo "")
-    echo "$evaluated_version" | tail -n 1
+    args="${args} -r \"${requested_version}\"";
   fi
+
+  evaluated_versions=$(eval $bootstrap_node/bin/node $LP_DIR/vendor/node-semver/bin/semver ${args} || echo "")
+  echo "$evaluated_versions" | tail -n 1
 }
 
 function package_engine_version() {
@@ -123,9 +125,6 @@ if [ "${engine_requests["node"]}" == "" ]; then
   echo
   echo "WARNING: No version of Node.js specified in package.json, see:" | indent
   echo "https://devcenter.heroku.com/articles/nodejs-versions" | indent
-  echo
-  echo "WARNING: The default version of Node.js and npm on Heroku will begin" | indent
-  echo "tracking the latest stable release starting September 1, 2012."  | indent
   echo
 fi
 
