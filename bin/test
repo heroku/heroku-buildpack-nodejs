@@ -30,7 +30,7 @@ testPackageJsonWithVersion() {
 testPackageJsonWithoutVersion() {
   compile "package-json-noversion"
   assertCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.8"
+  assertCaptured "Using Node.js version: 0.10"
   assertCaptured "Using npm version: 1.2"
   assertCapturedSuccess
 }
