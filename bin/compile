@@ -101,6 +101,14 @@ function package_download() {
   curl $package -s -o - | tar xzf - -C $location
 }
 
+function cat_npm_debug_log() {
+  if [ -f $BUILD_DIR/npm-debug.log ]; then
+    cat $BUILD_DIR/npm-debug.log
+  fi
+}
+
+trap cat_npm_debug_log EXIT
+
 bootstrap_node=$(mktmpdir bootstrap_node)
 package_download "nodejs" "0.4.7" $bootstrap_node
 
