@@ -4,7 +4,6 @@
 
 ```
 gem install anvil-cli
-
 ```
 
 The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrapper for anvil.
