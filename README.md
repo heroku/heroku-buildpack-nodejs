@@ -12,7 +12,7 @@ Example usage:
     $ ls
     Procfile  package.json  web.js
 
-    $ heroku create --stack cedar --buildpack http://github.com/heroku/heroku-buildpack-nodejs.git
+    $ heroku create --buildpack http://github.com/heroku/heroku-buildpack-nodejs.git
 
     $ git push heroku master
     ...
@@ -48,10 +48,10 @@ To list the available versions of Node.js and npm, see these manifests:
 http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs
 http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm
 
-Hacking
--------
+Contributing
+------------
 
-To use this buildpack, fork it on Github.  Push up changes to your fork, then create a test app with `--buildpack <your-github-url>` and push to it.
+To use this buildpack, fork it on Github. Push up changes to your fork, then create a test app with `--buildpack <your-github-url>` and push to it.
 
 To change the vendored binaries for Node.js, NPM, and SCons, use the helper scripts in the `support/` subdirectory.  You'll need an S3-enabled AWS account and a bucket to store your binaries in.
 
@@ -71,3 +71,5 @@ Open `bin/compile` in your editor, and change the following lines:
 Commit and push the changes to your buildpack to your Github fork, then push your sample app to Heroku to test.  You should see:
 
     -----> Vendoring node 0.6.7
+
+For more info, see [CONTRIBUTING.md](CONTRIBUTING.md)
