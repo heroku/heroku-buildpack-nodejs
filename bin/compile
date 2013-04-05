@@ -168,6 +168,11 @@ echo "-----> Vendoring node into slug"
 mkdir -p "$BUILD_DIR/bin"
 cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
 
+# download/unpack GDAL binaries
+curl -L --compressd -O "https://s3.amazonaws.com/localdata-public/misc/downloads/gdal_heroku.tar.gz" &>/dev/null
+tar xzf gdal_heroku.tar.gz
+PATH="$BUILD_DIR/gdal/bin:$PATH"
+
 # setting up paths for building
 PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
 INCLUDE_PATH="$VENDORED_NODE/include"
