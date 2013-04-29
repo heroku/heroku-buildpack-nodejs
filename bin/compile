@@ -170,15 +170,12 @@ INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
-echo "make testDir"
-mkdir -p $BUILD_DIR/testDir
-
 # install compass
-# echo "-----> Installing Compass dependencies"
-# echo $BUILD_DIR
-# GEM_DIR="$BUILD_DIR/.gem/ruby/1.9.1"
-# echo $GEM_DIR
-# gem install compass --install-dir $GEM_DIR --no-user-install
+echo "-----> Installing Compass dependencies"
+echo $BUILD_DIR
+GEM_DIR="$BUILD_DIR/.gem/ruby/1.9.1"
+echo $GEM_DIR
+gem install compass --install-dir $GEM_DIR --no-user-install
 
 # # install dependencies with npm
 # echo "-----> Installing dependencies with npm"
