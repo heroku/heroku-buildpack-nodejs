@@ -19,10 +19,6 @@ BUILD_DIR=$1
 CACHE_DIR=$2
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
-echo $BUILD_DIR
-echo $CACHE_DIR
-echo $LP_DIR
-
 function error() {
   echo " !     $*" >&2
   exit 1
@@ -172,26 +168,25 @@ export CPPPATH="$INCLUDE_PATH"
 
 # install compass
 echo "-----> Installing Compass dependencies"
-echo $BUILD_DIR
 GEM_DIR="$BUILD_DIR/.gem/ruby/1.9.1"
-echo $GEM_DIR
-gem install compass --install-dir $GEM_DIR --no-user-install
+HOME="$BUILD_DIR" gem install compass --user-install
+PATH="$GEM_DIR/bin:$PATH"
 
-# # install dependencies with npm
-# echo "-----> Installing dependencies with npm"
-# run_npm "install --production"
-# run_npm "rebuild"
-# echo "Dependencies installed" | indent
+# install dependencies with npm
+echo "-----> Installing dependencies with npm"
+run_npm "install --production"
+run_npm "rebuild"
+echo "Dependencies installed" | indent
 
-# echo "-----> Building runtime environment"
-# mkdir -p $BUILD_DIR/.profile.d
-# echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
-# echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $BUILD_DIR/.profile.d/ruby.sh
+echo "-----> Building runtime environment"
+mkdir -p $BUILD_DIR/.profile.d
+echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $BUILD_DIR/.profile.d/ruby.sh
 
-# if [ -f $BUILD_DIR/grunt.js ] || [ -f $BUILD_DIR/Gruntfile.js ] || [ -f $BUILD_DIR/Gruntfile.coffee ]; then
-#   run_npm "install grunt-cli"
-#   echo "-----> Found Gruntfile, running grunt heroku task"
-#   $BUILD_DIR/node_modules/grunt-cli/bin/grunt heroku
-# else
-#   echo "-----> No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
-# fi
+if [ -f $BUILD_DIR/grunt.js ] || [ -f $BUILD_DIR/Gruntfile.js ] || [ -f $BUILD_DIR/Gruntfile.coffee ]; then
+  run_npm "install grunt-cli"
+  echo "-----> Found Gruntfile, running grunt heroku task"
+  $BUILD_DIR/node_modules/grunt-cli/bin/grunt heroku
+else
+  echo "-----> No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
+fi
