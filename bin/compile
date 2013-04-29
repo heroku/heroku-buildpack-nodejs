@@ -169,6 +169,7 @@ export CPPPATH="$INCLUDE_PATH"
 # install compass
 echo "-----> Installing Compass dependencies"
 GEM_DIR="$BUILD_DIR/.gem/ruby"
+mkdir -p $BUILD_DIR/.profile.d
 echo "export PATH=\"\$GEM_DIR/bin:\$PATH\"" > $BUILD_DIR/.profile.d/gem.sh
 gem install --install-dir $GEM_DIR compass
 
