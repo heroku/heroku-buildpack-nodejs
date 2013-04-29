@@ -166,6 +166,11 @@ INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
+# install compass
+echo "-----> Installing Compass dependencies"
+PATH="$HOME/.gem/ruby/1.9.1/bin:$PATH"
+gem install --install-dir --user-install compass
+
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
 run_npm "install --production"
