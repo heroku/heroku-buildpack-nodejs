@@ -172,6 +172,8 @@ GEM_DIR="$BUILD_DIR/.gem/ruby/1.9.1"
 PATH="$GEM_DIR/bin:$PATH"
 HOME="$BUILD_DIR" gem install compass --user-install
 echo "-----> Compass version"
+echo $PATH
+ls -al ./gem/ruby/1.9.1/bin
 compass --version
 
 # install dependencies with npm
