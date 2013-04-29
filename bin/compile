@@ -168,10 +168,8 @@ export CPPPATH="$INCLUDE_PATH"
 
 # install compass
 echo "-----> Installing Compass dependencies"
-GEM_DIR="$BUILD_DIR/.gem"
-#mkdir -p $BUILD_DIR/.profile.d
-#echo "export PATH=\"\$GEM_DIR/bin:\$PATH\"" > $BUILD_DIR/.profile.d/gem.sh
-gem install --install-dir $GEM_DIR compass
+GEM_DIR="$BUILD_DIR/.gem/ruby/1.9.1"
+gem install compass --install-dir $GEM_DIR --no-user-install
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
@@ -182,6 +180,7 @@ echo "Dependencies installed" | indent
 echo "-----> Building runtime environment"
 mkdir -p $BUILD_DIR/.profile.d
 echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $BUILD_DIR/.profile.d/ruby.sh
 
 if [ -f $BUILD_DIR/grunt.js ] || [ -f $BUILD_DIR/Gruntfile.js ] || [ -f $BUILD_DIR/Gruntfile.coffee ]; then
   run_npm "install grunt-cli"
