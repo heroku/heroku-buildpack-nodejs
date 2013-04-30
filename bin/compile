@@ -167,15 +167,10 @@ export CPATH="$INCLUDE_PATH"
 export CPPPATH="$INCLUDE_PATH"
 
 # install compass
-echo "-----> Installing Compass dependencies"
-export GEM_HOME=$BUILD_DIR/.gem/ruby/1.9.1
-PATH="$GEM_HOME/bin:$PATH"
-HOME="$BUILD_DIR" gem install compass --user-install --no-rdoc --no-ri
-echo "-----> Compass version"
-echo $PATH
-ls -al $BUILD_DIR/.gem/ruby/1.9.1/bin
-$(which ruby) $(which compass) --version
-# compass --version
+echo "-----> Installing Compass"
+GEM_HOME=$BUILD_DIR/.gem/ruby/1.9.1
+#PATH="$GEM_HOME/bin:$PATH"
+gem install compass --user-install --no-rdoc --no-ri
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
