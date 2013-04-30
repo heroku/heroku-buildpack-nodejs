@@ -174,9 +174,8 @@ HOME="$BUILD_DIR" gem install compass --user-install
 echo "-----> Compass version"
 echo $PATH
 ls -al $BUILD_DIR/.gem/ruby/1.9.1/bin
-which ruby
-which compass
-compass --version
+$(which ruby) $(which compass) --version
+# compass --version
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
