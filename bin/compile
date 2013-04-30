@@ -169,8 +169,9 @@ export CPPPATH="$INCLUDE_PATH"
 # install compass
 echo "-----> Installing Compass"
 GEM_HOME=$BUILD_DIR/.gem/ruby/1.9.1
-#PATH="$GEM_HOME/bin:$PATH"
+PATH="$GEM_HOME/bin:$PATH"
 gem install compass --user-install --no-rdoc --no-ri
+compass --version
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
