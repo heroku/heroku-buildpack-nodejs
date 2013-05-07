@@ -178,9 +178,8 @@ echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.
 
 if [ -f $BUILD_DIR/grunt.js ] || [ -f $BUILD_DIR/Gruntfile.js ] || [ -f $BUILD_DIR/Gruntfile.coffee ]; then
   run_npm "install grunt-cli"
+  run_npm "install grunt"
   echo "-----> Found Gruntfile, running grunt heroku task"
-  echo $NODE_ENV $BUILD_DIR
-  echo `ls -al`
   $BUILD_DIR/node_modules/grunt-cli/bin/grunt heroku:development
 else
   echo "-----> No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
