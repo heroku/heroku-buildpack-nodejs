@@ -132,7 +132,7 @@ echo "-----> Resolving engine versions"
 if [ "${engine_requests["node"]}" == "" ]; then
   echo
   echo "WARNING: No version of Node.js specified in package.json, see:" | indent
-  echo "https://devcenter.heroku.com/articles/nodejs-versions" | indent
+  echo "https://devcenter.heroku.com/articles/nodejs-support#versions" | indent
   echo
 fi
 
