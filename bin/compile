@@ -171,8 +171,8 @@ cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
 # setting up paths for building
 PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
 INCLUDE_PATH="$VENDORED_NODE/include"
-export CPATH="$INCLUDE_PATH"
-export CPPPATH="$INCLUDE_PATH"
+export CPATH="$INCLUDE_PATH:$CPATH"
+export CPPPATH="$INCLUDE_PATH:$CPPPATH"
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
