@@ -15,11 +15,11 @@ Usage
 
 Create a new app with this buildpack:
 
-    heroku create myapp --buildpack https://github.com/PetroFeed/heroku-buildpack-nodejs-grunt.git
+    heroku create myapp --buildpack https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
 
 Or add this buildpack to your current app:
 
-    heroku config:add BUILDPACK_URL=https://github.com/PetroFeed/heroku-buildpack-nodejs-grunt.git
+    heroku config:add BUILDPACK_URL=https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
 
 Add the sneaky option to enable config vars during compile:
 
