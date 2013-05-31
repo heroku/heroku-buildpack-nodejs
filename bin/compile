@@ -168,7 +168,8 @@ export CPPPATH="$INCLUDE_PATH"
 
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
-run_npm "install --production"
+# run_npm "install --production"
+run_npm "install"
 run_npm "rebuild"
 echo "Dependencies installed" | indent
 
@@ -177,9 +178,11 @@ mkdir -p $BUILD_DIR/.profile.d
 echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
 
 if [ -f $BUILD_DIR/grunt.js ] || [ -f $BUILD_DIR/Gruntfile.js ] || [ -f $BUILD_DIR/Gruntfile.coffee ]; then
+  # make sure that grunt and grunt-cli are installed locally
   run_npm "install grunt-cli"
-  echo "-----> Found Gruntfile, running grunt heroku task"
-  $BUILD_DIR/node_modules/grunt-cli/bin/grunt heroku
+  run_npm "install grunt"
+  echo "-----> Found Gruntfile, running grunt heroku:$NODE_ENV task"
+  $BUILD_DIR/node_modules/.bin/grunt heroku:$NODE_ENV
 else
   echo "-----> No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
 fi
