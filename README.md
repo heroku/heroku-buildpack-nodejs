@@ -15,15 +15,19 @@ Usage
 
 Create a new app with this buildpack:
 
-    `heroku create myapp --buildpack https://github.com/PetroFeed/heroku-buildpack-nodejs-grunt.git`
+    heroku create myapp --buildpack https://github.com/PetroFeed/heroku-buildpack-nodejs-grunt.git
 
 Or add this buildpack to your current app:
 
-    `heroku config:add BUILDPACK_URL=https://github.com/PetroFeed/heroku-buildpack-nodejs-grunt.git`
+    heroku config:add BUILDPACK_URL=https://github.com/PetroFeed/heroku-buildpack-nodejs-grunt.git
 
 Add the sneaky option to enable config vars during compile:
 
-    `heroku labs:enable user-env-compile -a myapp`
+    heroku labs:enable user-env-compile -a myapp
+
+Set the `NODE_ENV` environment variable (e.g. `development` or `production`):
+
+    heroku config:set NODE_ENV=production
 
 Create your Node.js app and add a Gruntfile named  `Gruntfile.js` (or `Gruntfile.coffee` if you want to use CoffeeScript, or `grunt.js` if you are using Grunt 0.3) with a `heroku` task:
 
