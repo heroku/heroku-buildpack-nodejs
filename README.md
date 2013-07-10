@@ -60,7 +60,7 @@ For more information about buildpacks and Node.js, see these Dev Center articles
 Hacking
 -------
 
-To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a test app with --buildpack <your-github-url> and push to it, or configure an existing app to use your buildpack:
+To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Heroku app to test it, or configure an existing app to use your buildpack:
 
 ```sh
 # Create a new Heroku app that uses your buildpack
