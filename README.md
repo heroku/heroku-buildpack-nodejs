@@ -57,7 +57,20 @@ For more information about buildpacks and Node.js, see these Dev Center articles
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 
-Contributing
-------------
+Hacking
+-------
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a test app with --buildpack <your-github-url> and push to it, or configure an existing app to use your buildpack:
+
+```sh
+# Create a new Heroku app that uses your buildpack
+heroku create --buildpack <your-github-url>
+
+# Configure an existing Heroku app to use your buildpack
+heroku config:set BUILDPACK_URL=<your-github-url>
+
+# You can also use a git branch!
+heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
+```
+
+For more detailed information about testing buildpacks, see [CONTRIBUTING.md](CONTRIBUTING.md)
