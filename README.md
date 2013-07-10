@@ -1,18 +1,17 @@
-Heroku buildpack: Node.js
-=========================
+Heroku Buildpack for Node.js
+============================
 
 This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
-It uses [NPM](http://npmjs.org/) and [SCons](http://www.scons.org/).
 
-Usage
------
+The buildpack will detect your app as Node.js if it has a `package.json` file in the root.  It will use npm to install your dependencies, and vendors a version of the Node.js runtime into your slug.
 
-Example usage:
+Example Usage
+-------------
 
     $ ls
     Procfile  package.json  web.js
 
-    $ heroku create --buildpack http://github.com/heroku/heroku-buildpack-nodejs.git
+    $ heroku create
 
     $ git push heroku master
     ...
@@ -27,49 +26,38 @@ Example usage:
            └── connect@1.6.2
            Dependencies installed
 
-The buildpack will detect your app as Node.js if it has the file `package.json` in the root.  It will use NPM to install your dependencies, and vendors a version of the Node.js runtime into your slug.  The `node_modules` directory will be cached between builds to allow for faster NPM install time.
-
 Node.js and npm versions
 ------------------------
 
 You can specify the versions of Node.js and npm your application requires using `package.json`
 
-    {
-      "name": "myapp",
-      "version": "0.0.1",
-      "engines": {
-        "node": ">=0.4.7 <0.7.0",
-        "npm": ">=1.0.0"
-      }
-    }
+```json
+{
+  "name": "myapp",
+  "version": "0.0.1",
+  "engines": {
+    "node": "~0.10.13",
+    "npm": "~1.3.2"
+  }
+}
+```
 
 To list the available versions of Node.js and npm, see these manifests:
 
-http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs
-http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm
+- [heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs)
+- [heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm)
+
+Documentation
+-------------
+
+For more information about buildpacks and Node.js, see these Dev Center articles:
+
+- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
+- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
+- [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
+- [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 
 Contributing
 ------------
 
-To use this buildpack, fork it on Github. Push up changes to your fork, then create a test app with `--buildpack <your-github-url>` and push to it.
-
-To change the vendored binaries for Node.js, NPM, and SCons, use the helper scripts in the `support/` subdirectory.  You'll need an S3-enabled AWS account and a bucket to store your binaries in.
-
-For example, you can change the default version of Node.js to v0.6.7.
-
-First you'll need to build a Heroku-compatible version of Node.js:
-
-    $ export AWS_ID=xxx AWS_SECRET=yyy S3_BUCKET=zzz
-    $ s3 create $S3_BUCKET
-    $ support/package_nodejs 0.6.7
-
-Open `bin/compile` in your editor, and change the following lines:
-
-    DEFAULT_NODE_VERSION="0.6.7"
-    S3_BUCKET=zzz
-
-Commit and push the changes to your buildpack to your Github fork, then push your sample app to Heroku to test.  You should see:
-
-    -----> Vendoring node 0.6.7
-
-For more info, see [CONTRIBUTING.md](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)
