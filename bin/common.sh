@@ -36,3 +36,9 @@ function indent() {
     *)      sed -u "$c";;
   esac
 }
+
+function cat_npm_debug_log() {
+  if [ -f $BUILD_DIR/npm-debug.log ]; then
+    cat $BUILD_DIR/npm-debug.log
+  fi
+}

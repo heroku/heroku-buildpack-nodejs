@@ -8,19 +8,21 @@ NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-l
 
 source $BIN_DIR/common.sh
 
+# Output debug info on exit
+trap cat_npm_debug_log EXIT
+
 status "Downloading node v$NODE_VERSION"
 echo "$NODE_URL" | indent
 tar_download $NODE_URL $BUILD_DIR
 
 status "Moving node and npm to build directory"
-mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/node
+mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/bin
 
 status "Making node and npm executable"
-chmod +x $BUILD_DIR/node/bin/*
+chmod +x $BUILD_DIR/bin/*
 
 status "Adding node and npm to the \$PATH"
-PATH=$PATH:$BUILD_DIR/node/bin
-echo "node version $NODE_VERSION has been installed" | indent
+PATH="$BUILD_DIR/bin:$PATH"
 
 status "Installing dependencies with npm"
 cd $BUILD_DIR
