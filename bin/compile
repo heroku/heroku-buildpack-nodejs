@@ -10,7 +10,7 @@ source $BIN_DIR/common.sh
 
 status "Downloading node v$NODE_VERSION"
 echo "$NODE_URL" | indent
-tar_download $NODE_URL
+tar_download $NODE_URL $BUILD_DIR
 
 status "Moving node and npm to build directory"
 mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/node
