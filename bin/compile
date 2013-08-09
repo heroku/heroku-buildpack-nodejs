@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-source support/helpers.sh
 
 BUILD_DIR=$1
 CACHE_DIR=$2
-NODE_VERSION='0.10.15'
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+NODE_VERSION="0.10.15"
 NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
+
+source $BIN_DIR/common.sh
 
 status "Downloading node v$NODE_VERSION"
 echo "$NODE_URL" | indent

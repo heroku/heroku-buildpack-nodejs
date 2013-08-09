@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # fail fast
 set -e
 
@@ -7,7 +9,6 @@ set -e
 function tar_download() {
   url="$1"
   location="$2"
-
   mkdir -p $location
   curl $url -s -o - | tar xzf - -C $location
 }
