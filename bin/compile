@@ -167,6 +167,11 @@ PATH="$BUILD_DIR/bin:$PATH"
 echo "-----> Vendoring node into slug"
 mkdir -p "$BUILD_DIR/bin"
 cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
+mkdir -p "$BUILD_DIR/vendor"
+cp -R "$VENDORED_NPM" "$BUILD_DIR/vendor/npm
+
+# rewrite npm's base path so it can be executed directly
+sed -i 's%node_modules/npm/bin/%%' "$BUILD_DIR/vendor/npm/bin/npm"
 
 # setting up paths for building
 PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
@@ -182,4 +187,4 @@ echo "Dependencies installed" | indent
 
 echo "-----> Building runtime environment"
 mkdir -p $BUILD_DIR/.profile.d
-echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/bin:\$HOME/vendor/npm/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
