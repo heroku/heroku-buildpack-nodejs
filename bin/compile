@@ -26,7 +26,7 @@ PATH=$PATH:$BUILD_DIR/node/bin
 
 status "Installing dependencies with npm"
 cd $BUILD_DIR
-npm install --production
+npm install --production | indent
 echo "Dependencies installed" | indent
 
 status "Building runtime environment"
