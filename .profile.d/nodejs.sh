@@ -1,0 +1,1 @@
+export PATH=$HOME/bin:$HOME/node_modules/.bin:$PATH
