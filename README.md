@@ -5,55 +5,30 @@ This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) fo
 
 The buildpack will detect your app as Node.js if it has a `package.json` file in the root.  It will use npm to install your dependencies, and vendors a version of the Node.js runtime into your slug.
 
-Example Usage
--------------
+Node.js Versions
+----------------
 
-    $ ls
-    Procfile  package.json  web.js
-
-    $ heroku create
-
-    $ git push heroku master
-    ...
-    -----> Heroku receiving push
-    -----> Fetching custom buildpack
-    -----> Node.js app detected
-    -----> Vendoring node 0.4.7
-    -----> Installing dependencies with npm 1.0.8
-           express@2.1.0 ./node_modules/express
-           ├── mime@1.2.2
-           ├── qs@0.3.1
-           └── connect@1.6.2
-           Dependencies installed
-
-Node.js and npm versions
-------------------------
-
-You can specify the versions of Node.js and npm your application requires using `package.json`
+You can specify the version of Node.js your application requires using `package.json`:
 
 ```json
 {
   "name": "myapp",
   "version": "0.0.1",
   "engines": {
-    "node": "~0.10.13",
-    "npm": "~1.3.2"
+    "node": "~0.10.15"
   }
 }
 ```
 
-To list the available versions of Node.js and npm, see these manifests:
-
-- [heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs)
-- [heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm)
+TODO: Link to versioning doc
 
 Documentation
 -------------
 
 For more information about buildpacks and Node.js, see these Dev Center articles:
 
-- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
 - [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
+- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 
