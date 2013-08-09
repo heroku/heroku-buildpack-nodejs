@@ -28,3 +28,7 @@ status "Installing dependencies with npm"
 cd $BUILD_DIR
 npm install --production
 echo "Dependencies installed" | indent
+
+status "Building runtime environment"
+mkdir -p $BUILD_DIR/.profile.d
+echo "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
