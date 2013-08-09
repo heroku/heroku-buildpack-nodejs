@@ -5,23 +5,6 @@ This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) fo
 
 The buildpack will detect your app as Node.js if it has a `package.json` file in the root.  It will use npm to install your dependencies, and vendors a version of the Node.js runtime into your slug.
 
-Node.js Versions
-----------------
-
-You can specify the version of Node.js your application requires using `package.json`:
-
-```json
-{
-  "name": "myapp",
-  "version": "0.0.1",
-  "engines": {
-    "node": "~0.10.15"
-  }
-}
-```
-
-TODO: Link to versioning doc
-
 Documentation
 -------------
 
