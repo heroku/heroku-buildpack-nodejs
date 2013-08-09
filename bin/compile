@@ -1,64 +1,26 @@
 #!/usr/bin/env bash
-
-set -e    # fail fast
-# set -x  # debug
+source support/helpers.sh
 
 BUILD_DIR=$1
 CACHE_DIR=$2
+NODE_VERSION='0.10.15'
+NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
 
-source support/helpers.sh
+status "Downloading node v$NODE_VERSION"
+echo "$NODE_URL" | indent
+tar_download $NODE_URL
 
-# download latest stable version of node
-# detect desired node version in package.json using semver
+status "Moving node and npm to build directory"
+mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/node
 
+status "Making node and npm executable"
+chmod +x $BUILD_DIR/node/bin/*
 
-# if !desired
-#   (cached) ? cached : latest-stable
-# else
-#   (latest-stable satisfies desired) ? latest-stable : download
+status "Adding node and npm to the \$PATH"
+PATH=$PATH:$BUILD_DIR/node/bin
+echo "node version $NODE_VERSION has been installed" | indent
 
-# if desired and cached are absent, use latest
-# if desired is absent and cache is present, use cached
-# if desired is ">" and differs from cached and latest-stable, download
-# if desired is specific and differs from cached and latest-stable, download
-
-semver.satisfies('0.10.15', '>=0.10.x')
-
-
-package="http://s3pository.heroku.com/$engine-$version.tgz"
-curl $package -s -o - | tar xzf - -C $location
-
-function cat_npm_debug_log() {
-  if [ -f $BUILD_DIR/npm-debug.log ]; then
-    cat $BUILD_DIR/npm-debug.log
-  fi
-}
-trap cat_npm_debug_log EXIT
-
-echo "-----> Resolving engine versions"
-
-NODE_VERSION=$(package_resolve_version "node")
-echo "Using node version: ${NODE_VERSION}" | indent
-
-# vendor directories
-VENDORED_NODE="$(mktmpdir node)"
-VENDORED_NPM="$(mktmpdir npm)"
-VENDORED_SCONS="$(mktmpdir scons)"
-
-echo "-----> Fetching node binary"
-
-echo "-----> Vendoring node binary into slug"
-PATH="$BUILD_DIR/bin:$PATH"
-mkdir -p "$BUILD_DIR/bin"
-cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
-
-# setting up paths for building
-PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
-INCLUDE_PATH="$VENDORED_NODE/include"
-export CPATH="$INCLUDE_PATH:$CPATH"
-export CPPPATH="$INCLUDE_PATH:$CPPPATH"
-
-echo "-----> Installing dependencies with npm"
-run_npm "install --production"
-run_npm "rebuild"
+status "Installing dependencies with npm"
+cd $BUILD_DIR
+npm install --production
 echo "Dependencies installed" | indent

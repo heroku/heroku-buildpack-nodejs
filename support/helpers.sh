@@ -1,6 +1,24 @@
+# fail fast
+set -e
+
+# debug
+# set -x
+
+function tar_download() {
+  url="$1"
+  location="$2"
+
+  mkdir -p $location
+  curl $url -s -o - | tar xzf - -C $location
+}
+
 function error() {
   echo " !     $*" >&2
   exit 1
+}
+
+function status() {
+  echo "-----> $*"
 }
 
 function mktmpdir() {
