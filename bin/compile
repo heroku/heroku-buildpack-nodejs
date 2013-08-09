@@ -16,13 +16,13 @@ echo "$NODE_URL" | indent
 tar_download $NODE_URL $BUILD_DIR
 
 status "Moving node and npm to build directory"
-mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/bin
+mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/node
 
 status "Making node and npm executable"
-chmod +x $BUILD_DIR/bin/*
+chmod +x $BUILD_DIR/node/bin/*
 
 status "Adding node and npm to the \$PATH"
-PATH="$BUILD_DIR/bin:$PATH"
+PATH=$PATH:$BUILD_DIR/node/bin
 
 status "Installing dependencies with npm"
 cd $BUILD_DIR
