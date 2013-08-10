@@ -3,24 +3,33 @@
 BUILD_DIR=$1
 CACHE_DIR=$2
 BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
-NODE_VERSION="0.10.15"
-NODE_URL="http://s3pository.heroku.com/node/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz"
+DEFAULT_VERSION="0.10.15"
+NODE_URL="http://s3pository.heroku.com/node/v$DEFAULT_VERSION/node-v$DEFAULT_VERSION-linux-x64.tar.gz"
 
 source $BIN_DIR/common.sh
 
 # Output debug info on exit
 trap cat_npm_debug_log EXIT
 
-status "Downloading node v$NODE_VERSION"
+status "Downloading node v$DEFAULT_VERSION"
 tar_download $NODE_URL $BUILD_DIR
 
 status "Adding node and npm to \$PATH"
-mv $BUILD_DIR/node-v$NODE_VERSION-linux-x64 $BUILD_DIR/node
+mv $BUILD_DIR/node-v$DEFAULT_VERSION-linux-x64 $BUILD_DIR/node
 chmod +x $BUILD_DIR/node/bin/*
 PATH=$PATH:$BUILD_DIR/node/bin
 
-status "Installing dependencies with npm"
 cd $BUILD_DIR
+
+# Is a node version present in package.json?
+DESIRED_VERSION=$(cat $BUILD_DIR/package.json | node $HOME/vendor/json engines.node 2>/dev/null)
+echo "DESIRED_VERSION: $DESIRED_VERSION"
+if [ "$DESIRED_VERSION" != "" ]
+  SATISFIED_VERSION=$(./semver $DEFAULT_VERSION -r $DESIRED_VERSION)
+  echo "SATISFIED_VERSION: $SATISFIED_VERSION"
+fi
+
+status "Installing dependencies with npm"
 npm install --production | indent
 echo "Dependencies installed" | indent
 
