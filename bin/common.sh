@@ -4,7 +4,7 @@
 set -e
 
 # debug
-# set -x
+set -x
 
 function tar_download() {
   url="$1"
