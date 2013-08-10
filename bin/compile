@@ -4,7 +4,7 @@ build_dir=$1
 cache_dir=$2
 lp_dir=$(cd $(dirname $0); cd ..; pwd)
 default_version="0.10.15"
-$node_url="http://s3pository.heroku.com/node/v$default_version/node-v$default_version-linux-x64.tar.gz"
+node_url="http://s3pository.heroku.com/node/v$default_version/node-v$default_version-linux-x64.tar.gz"
 
 source $lp_dir/bin/common.sh
 
@@ -12,7 +12,7 @@ source $lp_dir/bin/common.sh
 trap cat_npm_debug_log EXIT
 
 status "Downloading node v$default_version"
-tar_download $$node_url $build_dir
+tar_download $node_url $build_dir
 
 status "Adding node and npm to \$PATH"
 mv $build_dir/node-v$default_version-linux-x64 $build_dir/node
