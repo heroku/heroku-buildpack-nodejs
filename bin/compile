@@ -1,38 +1,38 @@
 #!/usr/bin/env bash
 
-BUILD_DIR=$1
-CACHE_DIR=$2
-LP_DIR=$(cd $(dirname $0); cd ..; pwd)
-DEFAULT_VERSION="0.10.15"
-NODE_URL="http://s3pository.heroku.com/node/v$DEFAULT_VERSION/node-v$DEFAULT_VERSION-linux-x64.tar.gz"
+build_dir=$1
+cache_dir=$2
+lp_dir=$(cd $(dirname $0); cd ..; pwd)
+default_version="0.10.15"
+$node_url="http://s3pository.heroku.com/node/v$default_version/node-v$default_version-linux-x64.tar.gz"
 
-source $LP_DIR/bin/common.sh
+source $lp_dir/bin/common.sh
 
 # Output debug info on exit
 trap cat_npm_debug_log EXIT
 
-status "Downloading node v$DEFAULT_VERSION"
-tar_download $NODE_URL $BUILD_DIR
+status "Downloading node v$default_version"
+tar_download $$node_url $build_dir
 
 status "Adding node and npm to \$PATH"
-mv $BUILD_DIR/node-v$DEFAULT_VERSION-linux-x64 $BUILD_DIR/node
-chmod +x $BUILD_DIR/node/bin/*
-PATH=$PATH:$BUILD_DIR/node/bin
+mv $build_dir/node-v$default_version-linux-x64 $build_dir/node
+chmod +x $build_dir/node/bin/*
+PATH=$PATH:$build_dir/node/bin
 
-cd $BUILD_DIR
+cd $build_dir
 
 # Is a node version present in package.json?
-# DESIRED_VERSION=$(cat $BUILD_DIR/package.json | node $LP_DIR/vendor/json engines.node 2>/dev/null)
-# echo "DESIRED_VERSION: $DESIRED_VERSION"
-# if [ "$DESIRED_VERSION" != "" ]; then
-#   SATISFIED_VERSION=$(node $LP_DIR/vendor/semver/bin/semver $DEFAULT_VERSION -r "$DESIRED_VERSION")
-#   echo "SATISFIED_VERSION: $SATISFIED_VERSION"
-# fi
+desired_version=$(cat $build_dir/package.json | node $lp_dir/vendor/json engines.node 2>/dev/null)
+echo "desired_version: $desired_version"
+if [ "$desired_version" != "" ]; then
+  default_satisfies=$(node $lp_dir/vendor/semver/bin/semver $default_version -r "$desired_version")
+  echo "default_satisfies: $default_satisfies"
+fi
 
 status "Installing dependencies with npm"
 npm install --production
 echo "Dependencies installed" | indent
 
 status "Building runtime environment"
-mkdir -p $BUILD_DIR/.profile.d
-echo "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+mkdir -p $build_dir/.profile.d
+echo "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
