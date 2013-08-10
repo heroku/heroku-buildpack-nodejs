@@ -2,11 +2,11 @@
 
 BUILD_DIR=$1
 CACHE_DIR=$2
-BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+LP_DIR=$(cd $(dirname $0); cd ..; pwd)
 DEFAULT_VERSION="0.10.15"
 NODE_URL="http://s3pository.heroku.com/node/v$DEFAULT_VERSION/node-v$DEFAULT_VERSION-linux-x64.tar.gz"
 
-source $BIN_DIR/common.sh
+source $LP_DIR/bin/common.sh
 
 # Output debug info on exit
 trap cat_npm_debug_log EXIT
@@ -22,10 +22,10 @@ PATH=$PATH:$BUILD_DIR/node/bin
 cd $BUILD_DIR
 
 # Is a node version present in package.json?
-DESIRED_VERSION=$(cat $BUILD_DIR/package.json | node $HOME/vendor/json engines.node 2>/dev/null)
+DESIRED_VERSION=$(cat $BUILD_DIR/package.json | node $LP_DIR/vendor/json engines.node 2>/dev/null)
 echo "DESIRED_VERSION: $DESIRED_VERSION"
 if [ "$DESIRED_VERSION" != "" ]
-  SATISFIED_VERSION=$(node $HOME/vendor/semver/bin/semver $DEFAULT_VERSION -r $DESIRED_VERSION)
+  SATISFIED_VERSION=$(node $LP_DIR/vendor/semver/bin/semver $DEFAULT_VERSION -r $DESIRED_VERSION)
   echo "SATISFIED_VERSION: $SATISFIED_VERSION"
 fi
 
