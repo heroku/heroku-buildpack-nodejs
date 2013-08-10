@@ -25,7 +25,7 @@ cd $BUILD_DIR
 DESIRED_VERSION=$(cat $BUILD_DIR/package.json | node $HOME/vendor/json engines.node 2>/dev/null)
 echo "DESIRED_VERSION: $DESIRED_VERSION"
 if [ "$DESIRED_VERSION" != "" ]
-  SATISFIED_VERSION=$(./semver $DEFAULT_VERSION -r $DESIRED_VERSION)
+  SATISFIED_VERSION=$(node $HOME/vendor/semver/bin/semver $DEFAULT_VERSION -r $DESIRED_VERSION)
   echo "SATISFIED_VERSION: $SATISFIED_VERSION"
 fi
 
