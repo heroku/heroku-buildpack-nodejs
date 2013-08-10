@@ -24,7 +24,7 @@ cd $BUILD_DIR
 # Is a node version present in package.json?
 DESIRED_VERSION=$(cat $BUILD_DIR/package.json | node $LP_DIR/vendor/json engines.node 2>/dev/null)
 echo "DESIRED_VERSION: $DESIRED_VERSION"
-if [ "$DESIRED_VERSION" != "" ]
+if [ "$DESIRED_VERSION" != "" ]; then
   SATISFIED_VERSION=$(node $LP_DIR/vendor/semver/bin/semver $DEFAULT_VERSION -r $DESIRED_VERSION)
   echo "SATISFIED_VERSION: $SATISFIED_VERSION"
 fi
