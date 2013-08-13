@@ -3,34 +3,31 @@
 build_dir=$1
 cache_dir=$2
 lp_dir=$(cd $(dirname $0); cd ..; pwd)
-default_version="0.10.15"
-node_url="http://s3pository.heroku.com/node/v$default_version/node-v$default_version-linux-x64.tar.gz"
+stable_version="0.10.15"
 
 source $lp_dir/bin/common.sh
 
 # Output debug info on exit
 trap cat_npm_debug_log EXIT
 
-status "Downloading node v$default_version"
-tar_download $node_url $build_dir
+download_node $stable_version
 
-status "Adding node and npm to \$PATH"
-mv $build_dir/node-v$default_version-linux-x64 $build_dir/node
-chmod +x $build_dir/node/bin/*
-PATH=$PATH:$build_dir/node/bin
+# cd $build_dir
 
-cd $build_dir
-
-# Is a node version present in package.json?
-desired_version=$(cat $build_dir/package.json | node $lp_dir/vendor/json engines.node 2>/dev/null)
-echo "desired_version: $desired_version"
-if [ "$desired_version" != "" ]; then
-  default_satisfies=$(node $lp_dir/vendor/semver/bin/semver $default_version -r "$desired_version")
-  echo "default_satisfies: $default_satisfies"
+# Is a node version specified in package.json?
+requested_version=$(cat $build_dir/package.json | node $lp_dir/vendor/json engines.node 2>/dev/null)
+# echo "requested_version: $requested_version"
+if test $requested_version; then
+  default_satisfies=$(node $lp_dir/vendor/semver/bin/semver $stable_version -r "$requested_version")
+  if ! test $default_satisfies; then
+    download_node $requested_version
+  fi
 fi
 
 status "Installing dependencies with npm"
+npm prune
 npm install --production
+npm rebuild
 echo "Dependencies installed" | indent
 
 status "Building runtime environment"

@@ -6,11 +6,37 @@ set -e
 # debug
 set -x
 
-function tar_download() {
-  url="$1"
-  location="$2"
-  mkdir -p $location
-  curl $url -s -o - | tar xzf - -C $location
+download_node() {
+  version="$1"
+
+  status "Downloading node $version"
+  node_url="http://s3pository.heroku.com/node/v$version/node-v$version-linux-x64.tar.gz"
+  curl $node_url -s -o - | tar xzf - -C $build_dir
+  mv $build_dir/node-v$version-linux-x64 $build_dir/node
+
+  status "Adding node and npm to \$PATH"
+  chmod +x $build_dir/node/bin/*
+  PATH=$PATH:$build_dir/node/bin
+}
+
+query_stable_version() {
+  curl -s http://nodejs.org/dist/ \
+    | egrep -o '[0-9]+\.[0-9]*[02468]\.[0-9]+' \
+    | sort -u -k 1,1n -k 2,2n -k 3,3n -t . \
+    | tail -n1
+}
+
+query_latest_version() {
+  curl -s http://nodejs.org/dist/ \
+    | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
+    | sort -u -k 1,1n -k 2,2n -k 3,3n -t . \
+    | tail -n1
+}
+
+all_versions() {
+  curl -s http://nodejs.org/dist/ \
+  | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
+  | sort -u -k 1,1n -k 2,2n -k 3,3n -t .
 }
 
 function error() {
