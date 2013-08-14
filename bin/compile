@@ -11,7 +11,6 @@ set -e
 unset GIT_DIR
 
 # config
-SCONS_VERSION="1.2.0"
 S3_BUCKET="heroku-buildpack-nodejs"
 
 # parse and derive params
@@ -149,18 +148,15 @@ CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
 # s3 packages
 NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
 NPM_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
-SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
 
 # vendor directories
 VENDORED_NODE="$(mktmpdir node)"
 VENDORED_NPM="$(mktmpdir npm)"
-VENDORED_SCONS="$(mktmpdir scons)"
 
 # download and unpack packages
 echo "-----> Fetching Node.js binaries"
 package_download "nodejs" "${NODE_VERSION}" "${VENDORED_NODE}"
 package_download "npm" "${NPM_VERSION}" "${VENDORED_NPM}"
-package_download "scons" "${SCONS_VERSION}" "${VENDORED_SCONS}"
 
 # vendor node into the slug
 PATH="$BUILD_DIR/bin:$PATH"
@@ -169,7 +165,7 @@ mkdir -p "$BUILD_DIR/bin"
 cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
 
 # setting up paths for building
-PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
+PATH="$VENDORED_NODE/bin:$PATH"
 INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH:$CPATH"
 export CPPPATH="$INCLUDE_PATH:$CPPPATH"
