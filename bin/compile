@@ -191,10 +191,12 @@ run_npm "rebuild"
 echo "Dependencies installed" | indent
 
 # cache node_modules
-echo "-----> Caching node_modules"
-rm -rf $CACHE_STORE_DIR
-mkdir -p $(dirname $CACHE_STORE_DIR)
-cp -r $CACHE_TARGET_DIR $CACHE_STORE_DIR
+if [ -d $CACHE_TARGET_DIR ]; then
+  echo "-----> Caching node_modules"
+  rm -rf $CACHE_STORE_DIR
+  mkdir -p $(dirname $CACHE_STORE_DIR)
+  cp -r $CACHE_TARGET_DIR $CACHE_STORE_DIR
+fi
 
 # build .profile.d/nodejs.sh
 echo "-----> Building runtime environment"
