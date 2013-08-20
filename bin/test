@@ -78,7 +78,7 @@ COMPILE_DIR=""
 compile() {
   COMPILE_DIR=$(mktmpdir)
   cp -r ${BASE}/test/$1/* ${COMPILE_DIR}/
-  capture ${BASE}/bin/compile ${COMPILE_DIR} $2
+  capture ${BASE}/bin/compile ${COMPILE_DIR} ${2:-$(mktmpdir)}
 }
 
 assertFile() {
