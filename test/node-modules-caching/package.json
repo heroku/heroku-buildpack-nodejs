@@ -1,0 +1,13 @@
+{
+  "name": "myapp",
+  "version": "0.0.1",
+
+  "engines": {
+    "node": "0.10.15",
+    "npm": "1.3.5"
+  },
+
+  "dependencies": {
+    "express": "latest"
+  }
+}

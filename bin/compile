@@ -174,12 +174,31 @@ INCLUDE_PATH="$VENDORED_NODE/include"
 export CPATH="$INCLUDE_PATH:$CPATH"
 export CPPPATH="$INCLUDE_PATH:$CPPPATH"
 
+# restore node_modules cache
+if [ -d $CACHE_STORE_DIR ]; then
+  echo "-----> Restoring node_modules cache"
+  if [ -d $CACHE_TARGET_DIR ]; then
+    cp -r $CACHE_STORE_DIR/* $CACHE_TARGET_DIR/
+  else
+    cp -r $CACHE_STORE_DIR $CACHE_TARGET_DIR
+  fi
+fi
+
 # install dependencies with npm
 echo "-----> Installing dependencies with npm"
 run_npm "install --production"
 run_npm "rebuild"
 echo "Dependencies installed" | indent
 
+# cache node_modules
+if [ -d $CACHE_TARGET_DIR ]; then
+  echo "-----> Caching node_modules"
+  rm -rf $CACHE_STORE_DIR
+  mkdir -p $(dirname $CACHE_STORE_DIR)
+  cp -r $CACHE_TARGET_DIR $CACHE_STORE_DIR
+fi
+
+# build .profile.d/nodejs.sh
 echo "-----> Building runtime environment"
 mkdir -p $BUILD_DIR/.profile.d
 echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
