@@ -34,6 +34,5 @@ You can specify the versions of Node.js and npm your application requires using 
 
 To list the available versions of Node.js and npm, see these manifests:
 
-- [node.js verions](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs)
-- [npm versions](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm)
-
+- [node.js verions](http://cloudcontrolled.com.packages.s3.amazonaws.com/buildpack-nodejs/manifest.nodejs)
+- [npm.js verions](http://cloudcontrolled.com.packages.s3.amazonaws.com/buildpack-nodejs/manifest.npm)

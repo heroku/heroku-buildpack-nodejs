@@ -10,9 +10,11 @@ set -e
 # clean up leaking environment
 unset GIT_DIR
 
+
 # config
 SCONS_VERSION="1.2.0"
-S3_BUCKET="heroku-buildpack-nodejs"
+BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
+source "${BIN_DIR}/../conf/${PAAS_VENDOR}-env.properties"
 
 # parse and derive params
 BUILD_DIR=$1
@@ -52,7 +54,7 @@ function run_npm() {
 }
 
 function manifest_versions() {
-  curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o - | tr -s '\n' ' '
+  curl "${PACKAGE_PATH}/manifest.${1}" -s -o - | tr -s '\n' ' '
 }
 
 function resolve_version() {
@@ -97,7 +99,7 @@ function package_download() {
   location="$3"
 
   mkdir -p $location
-  package="http://${S3_BUCKET}.s3.amazonaws.com/$engine-$version.tgz"
+  package="${PACKAGE_PATH}/$engine-$version.tgz"
   curl $package -s -o - | tar xzf - -C $location
 }
 
@@ -146,9 +148,9 @@ CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NODE_VERSION/$NPM_VERSION"
 CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
 
 # s3 packages
-NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
-NPM_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
-SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
+NODE_PACKAGE="${PACKAGE_PATH}/nodejs-${NODE_VERSION}.tgz"
+NPM_PACKAGE="${PACKAGE_PATH}/npm-${NPM_VERSION}.tgz"
+SCONS_PACKAGE="${PACKAGE_PATH}/scons-${SCONS_VERSION}.tgz"
 
 # vendor directories
 VENDORED_NODE="$(mktmpdir node)"
