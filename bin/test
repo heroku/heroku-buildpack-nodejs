@@ -19,17 +19,17 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
-testPackageJsonWithVersion() {
+testPackageJsonWithVersion() {s
   compile "package-json-version"
-  assertNotCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using node 0.10.17"
+  assertNotCaptured "WARNING: No node version specified"
+  assertCaptured "Using node 0.10"
   assertCapturedSuccess
 }
 
 testPackageJsonWithoutVersion() {
   compile "package-json-noversion"
-  assertCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.10"
+  assertCaptured "WARNING: No node version specified"
+  assertCaptured "Using node 0.10"
   assertCapturedSuccess
 }
 
@@ -48,7 +48,7 @@ testProfileCreated() {
 testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "node-modules-caching" $cache
-  assertEquals "1" "$(ls -1 $cache/node_modules/0.10.15/1.3.5 | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node_modules/0.10.17 | wc -l)"
 }
 
 ## utils ########################################
