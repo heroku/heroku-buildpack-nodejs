@@ -2,34 +2,88 @@
 
 build_dir=$1
 cache_dir=$2
-lp_dir=$(cd $(dirname $0); cd ..; pwd)
-stable_version="0.10.15"
+bp_dir=$(cd $(dirname $0); cd ..; pwd)
+stable_version="0.10.17"
 
-source $lp_dir/bin/common.sh
+source $bp_dir/bin/common.sh
 
 # Output debug info on exit
 trap cat_npm_debug_log EXIT
 
-download_node $stable_version
-
-# cd $build_dir
+status "Downloading node $stable_version"
+download_and_install_node $stable_version
 
 # Is a node version specified in package.json?
-requested_version=$(cat $build_dir/package.json | node $lp_dir/vendor/json engines.node 2>/dev/null)
-# echo "requested_version: $requested_version"
+requested_version=$(cat $build_dir/package.json | node $bp_dir/vendor/json engines.node 2>/dev/null)
+
+# Give a warning if no node engine is specified
+if ! test $requested_version; then
+  echo
+  echo "WARNING: No version of Node.js specified in package.json, see:" | indent
+  echo "https://devcenter.heroku.com/articles/nodejs-support#versions" | indent
+  echo
+fi
+
 if test $requested_version; then
-  default_satisfies=$(node $lp_dir/vendor/semver/bin/semver $stable_version -r "$requested_version")
+
+  # Does the already-downloaded stable version of node satisfy the requested version?
+  default_satisfies=$(node $bp_dir/vendor/semver/bin/semver -v $stable_version -r "$requested_version" || echo "")
+
   if ! test $default_satisfies; then
-    download_node $requested_version
+    status "Using node $stable_version"
+  else
+    # Find all available versions from nodejs.org/dist
+    available_versions=""
+    for version in query_all_versions; do
+      available_versions="${available_versions} -v \"${version}\""
+    done
+
+    # Determine which available versions satisfy the requested version
+    # https://github.com/isaacs/node-semver/blob/master/bin/semver
+    evaluated_versions=$(node $bp_dir/vendor/semver/bin/semver $available_versions -r "$requested_version" || echo "")
+    newest_matching_version=$("$evaluated_versions" | tail -n 1)
+
+    if test $newest_matching_version; then
+      status "Using node $newest_matching_version"
+      download_and_install_node $newest_matching_version
+    else
+      error "Requested node version ${requested_version} not found among available versions: ${available_versions}"
+    fi
+
   fi
 fi
 
-status "Installing dependencies with npm"
-npm prune
+# Configure cache directories
+cache_store_dir="$cache_dir/node_modules/$NODE_VERSION/$NPM_VERSION"
+cache_target_dir="$build_dir/node_modules"
+
+# Restore node_modules cache
+if [ -d $cache_store_dir ]; then
+  status "Restoring node_modules cache"
+  if [ -d $cache_target_dir ]; then
+    cp -r $cache_store_dir/* $cache_target_dir/
+  else
+    cp -r $cache_store_dir $cache_target_dir
+  fi
+  status "Pruning unused dependencies"
+  npm prune
+fi
+
+# Install dependencies
+status "Installing dependencies"
 npm install --production
 npm rebuild
 echo "Dependencies installed" | indent
 
+# Cache node_modules for future builds
+if [ -d $cache_target_dir ]; then
+  status "Caching node_modules for future builds"
+  rm -rf $cache_store_dir
+  mkdir -p $(dirname $cache_store_dir)
+  cp -r $cache_target_dir $cache_store_dir
+fi
+
+# Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh

@@ -22,8 +22,7 @@ testDetectWithoutPackageJson() {
 testPackageJsonWithVersion() {
   compile "package-json-version"
   assertNotCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.6.11"
-  assertCaptured "Using npm version: 1.1.9"
+  assertCaptured "Using node 0.10.17"
   assertCapturedSuccess
 }
 
@@ -31,27 +30,25 @@ testPackageJsonWithoutVersion() {
   compile "package-json-noversion"
   assertCaptured "WARNING: No version of Node.js specified"
   assertCaptured "Using Node.js version: 0.10"
-  assertCaptured "Using npm version: 1.3"
   assertCapturedSuccess
 }
 
 testPackageJsonWithInvalidVersion() {
   compile "package-json-invalidversion"
-  assertCapturedError 1 "Requested engine npm version 1.1.5 does not"
-}
-
-testNothingCached() {
-  cache=$(mktmpdir)
-  compile "package-json-version" $cache
-  assertCapturedSuccess
-  assertEquals "0" "$(ls -1 $cache | wc -l)"
+  assertCapturedError 1 "Requested node version 5.0 not found"
 }
 
 testProfileCreated() {
   compile "package-json-version"
   assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+  assertFile "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
   assertCapturedSuccess
+}
+
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+  compile "node-modules-caching" $cache
+  assertEquals "1" "$(ls -1 $cache/node_modules/0.10.15/1.3.5 | wc -l)"
 }
 
 ## utils ########################################
@@ -78,7 +75,7 @@ COMPILE_DIR=""
 compile() {
   COMPILE_DIR=$(mktmpdir)
   cp -r ${BASE}/test/$1/* ${COMPILE_DIR}/
-  capture ${BASE}/bin/compile ${COMPILE_DIR} $2
+  capture ${BASE}/bin/compile ${COMPILE_DIR} ${2:-$(mktmpdir)}
 }
 
 assertFile() {

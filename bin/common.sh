@@ -4,9 +4,9 @@
 set -e
 
 # debug
-set -x
+# set -x
 
-download_node() {
+download_and_install_node() {
   version="$1"
 
   status "Downloading node $version"
@@ -33,13 +33,15 @@ query_latest_version() {
     | tail -n1
 }
 
-all_versions() {
+query_all_versions() {
   curl -s http://nodejs.org/dist/ \
   | egrep -o '[0-9]+\.[0-9]+\.[0-9]+' \
   | sort -u -k 1,1n -k 2,2n -k 3,3n -t .
 }
 
-function error() {
+
+
+error() {
   echo " !     $*" >&2
   exit 1
 }
