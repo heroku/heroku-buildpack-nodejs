@@ -3,14 +3,14 @@
 build_dir=$1
 cache_dir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
-stable_version="0.10.17"
+stable_version="0.10.18"
 
 source $bp_dir/bin/common.sh
 
 # Output debug info on exit
 trap cat_npm_debug_log EXIT
 
-status "Downloading node $stable_version"
+status "Downloading node version $stable_version"
 download_and_install_node $stable_version
 
 # Is a node version specified in package.json?
@@ -18,19 +18,18 @@ requested_version=$(cat $build_dir/package.json | node $bp_dir/vendor/json engin
 
 # Give a warning if no node engine is specified
 if ! test $requested_version; then
+  node_version=$stable_version
   echo
-  echo "WARNING: No version of Node.js specified in package.json, see:" | indent
+  echo "WARNING: No node version specified in package.json, see:" | indent
   echo "https://devcenter.heroku.com/articles/nodejs-support#versions" | indent
   echo
-fi
 
-if test $requested_version; then
-
+else
   # Does the already-downloaded stable version of node satisfy the requested version?
   default_satisfies=$(node $bp_dir/vendor/semver/bin/semver -v $stable_version -r "$requested_version" || echo "")
 
   if ! test $default_satisfies; then
-    status "Using node $stable_version"
+    status "Using node version $stable_version"
   else
     # Find all available versions from nodejs.org/dist
     available_versions=""
@@ -41,23 +40,24 @@ if test $requested_version; then
     # Determine which available versions satisfy the requested version
     # https://github.com/isaacs/node-semver/blob/master/bin/semver
     evaluated_versions=$(node $bp_dir/vendor/semver/bin/semver $available_versions -r "$requested_version" || echo "")
-    newest_matching_version=$("$evaluated_versions" | tail -n 1)
 
-    if test $newest_matching_version; then
-      status "Using node $newest_matching_version"
-      download_and_install_node $newest_matching_version
+    # Use the latest of the evaluated versions
+    node_version=$("$evaluated_versions" | tail -n 1)
+
+    if test $node_version; then
+      status "Using node version $node_version"
+      download_and_install_node $node_version
     else
       error "Requested node version ${requested_version} not found among available versions: ${available_versions}"
     fi
-
   fi
 fi
 
 # Configure cache directories
-cache_store_dir="$cache_dir/node_modules/$NODE_VERSION/$NPM_VERSION"
+cache_store_dir="$cache_dir/node_modules/$node_version"
 cache_target_dir="$build_dir/node_modules"
 
-# Restore node_modules cache
+# Restore node_modules from cache, if present
 if [ -d $cache_store_dir ]; then
   status "Restoring node_modules cache"
   if [ -d $cache_target_dir ]; then
@@ -65,7 +65,7 @@ if [ -d $cache_store_dir ]; then
   else
     cp -r $cache_store_dir $cache_target_dir
   fi
-  status "Pruning unused dependencies"
+  status "Pruning any unused dependencies"
   npm prune
 fi
 
@@ -73,7 +73,6 @@ fi
 status "Installing dependencies"
 npm install --production
 npm rebuild
-echo "Dependencies installed" | indent
 
 # Cache node_modules for future builds
 if [ -d $cache_target_dir ]; then
