@@ -62,31 +62,30 @@ cache_store_dir="$cache_dir/node_modules/$node_version"
 cache_target_dir="$build_dir/node_modules"
 
 # Restore node_modules from cache, if present
-# if [ -d $cache_store_dir ]; then
-#   status "Restoring node_modules cache"
-#   if [ -d $cache_target_dir ]; then
-#     cp -r $cache_store_dir/* $cache_target_dir/
-#   else
-#     cp -r $cache_store_dir $cache_target_dir
-#   fi
-#   status "Pruning any unused dependencies"
-#   npm prune
-# fi
-
-cd $build_dir
+if [ -d $cache_store_dir ]; then
+  status "Restoring node_modules cache"
+  if [ -d $cache_target_dir ]; then
+    cp -r $cache_store_dir/* $cache_target_dir/
+  else
+    cp -r $cache_store_dir $cache_target_dir
+  fi
+  status "Pruning any unused dependencies"
+  npm prune
+fi
 
 # Install dependencies
 status "Installing dependencies"
+cd $build_dir
 npm install --production
 npm rebuild
 
 # Cache node_modules for future builds
-# if [ -d $cache_target_dir ]; then
-#   status "Caching node_modules for future builds"
-#   rm -rf $cache_store_dir
-#   mkdir -p $(dirname $cache_store_dir)
-#   cp -r $cache_target_dir $cache_store_dir
-# fi
+if [ -d $cache_target_dir ]; then
+  status "Caching node_modules for future builds"
+  rm -rf $cache_store_dir
+  mkdir -p $(dirname $cache_store_dir)
+  cp -r $cache_target_dir $cache_store_dir
+fi
 
 # Update the PATH
 status "Building runtime environment"

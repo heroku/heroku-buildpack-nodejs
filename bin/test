@@ -51,11 +51,11 @@ testProfileCreated() {
   assertCapturedSuccess
 }
 
-# testNodeModulesCached() {
-#   cache=$(mktmpdir)
-#   compile "node-modules-caching" $cache
-#   assertEquals "1" "$(ls -1 $cache/node_modules/0.10.17 | wc -l)"
-# }
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+  compile "node-modules-caching" $cache
+  assertEquals "1" "$(ls -1 $cache/node_modules/0.10.18 | wc -l)"
+}
 
 ## utils ########################################
 
