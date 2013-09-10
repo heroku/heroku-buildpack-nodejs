@@ -44,12 +44,12 @@ testPackageJsonWithUnstableVersion() {
 #   assertCapturedError 1 "Requested node version 5.0 not found"
 # }
 
-# testProfileCreated() {
-#   compile "package-json-version"
-#   assertCaptured "Building runtime environment"
-#   assertFile "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
-#   assertCapturedSuccess
-# }
+testProfileCreated() {
+  compile "package-json-stable-version"
+  assertCaptured "Building runtime environment"
+  assertFile "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+  assertCapturedSuccess
+}
 
 # testNodeModulesCached() {
 #   cache=$(mktmpdir)
