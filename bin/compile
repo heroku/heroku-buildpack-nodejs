@@ -35,6 +35,7 @@ else
 
   if test $default_satisfies; then
     status "Using latest stable node version $stable_version"
+    node_version=$stable_version
   else
     # Find all available versions from nodejs.org/dist
     args=""
