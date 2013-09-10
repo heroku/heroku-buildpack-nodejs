@@ -10,7 +10,15 @@ If you don't specify a version of node, the latest stable version will be used.
 About this Refactor
 -------------------
 
-This branch of the buildpack is intended to replace the official buildpack once it has been vetted by some users. Here's a summary of the differences between the current official buildpack and this _diet_ version:
+This branch of the buildpack is intended to replace the [official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs#readme) once it has been tested by some users. To use this buildpack for your node app, simply change your BUILDPACK_URL [config var](https://devcenter.heroku.com/articles/config-vars) and push your app to heroku.
+
+```
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#diet -a my-node-app
+git commit -am "fakeout" --allow-empty
+git push heroku
+```
+
+Here's a summary of the differences between the current official buildpack and this _diet_ version:
 
 The old buildpack:
 
