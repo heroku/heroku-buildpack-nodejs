@@ -1,5 +1,5 @@
 {
-  "name": "myapp",
+  "name": "myapp-using-unstable-node",
   "version": "0.0.1",
   "description": "It's a fake app",
   "repository" : {
@@ -7,6 +7,6 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "5.0"
+    "node": "0.11.5"
   }
 }

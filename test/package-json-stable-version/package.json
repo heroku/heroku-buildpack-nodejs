@@ -7,6 +7,6 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "5.0"
+    "node": "0.10.x"
   }
 }

@@ -1,4 +1,9 @@
 {
   "name": "myapp",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "description": "It's a fake app with no engine specified",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  }
 }

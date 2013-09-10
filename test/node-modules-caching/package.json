@@ -1,6 +1,11 @@
 {
   "name": "myapp",
   "version": "0.0.1",
+  "description": "It's a fake app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
   "engines": {
     "node": "0.10.15",
     "npm": "1.3.5"
