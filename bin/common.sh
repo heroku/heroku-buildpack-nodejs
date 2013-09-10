@@ -39,8 +39,6 @@ query_all_versions() {
   | sort -u -k 1,1n -k 2,2n -k 3,3n -t .
 }
 
-
-
 error() {
   echo " !     $*" >&2
   exit 1
