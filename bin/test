@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
-
-#
-# Create a Heroku app with the following buildpack:
-# https://github.com/ddollar/buildpack-test
-#
-# Push this Node.js buildpack to that Heroku app to
-# run the tests
-#
+# See CONTRIBUTING.md for info on running these tests.
 
 testDetectWithPackageJson() {
   detect "package-json-stable-version"

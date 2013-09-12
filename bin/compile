@@ -30,23 +30,25 @@ if ! test $requested_version; then
 
 else
   # Does the already-downloaded stable version of node satisfy the requested version?
-  default_satisfies=$(node $bp_dir/vendor/semver/bin/semver -v "${stable_version}" -r "${requested_version}" || echo "")
+  default_satisfies=$(node $bp_dir/vendor/semver/bin/semver -v "$stable_version" -r "$requested_version" || echo "")
 
   if test $default_satisfies; then
     status "Latest stable node v$stable_version satisfies engines.node: $requested"
     node_version=$stable_version
   else
-    # Find all available versions from nodejs.org/dist
+    # Fetch all versions of node from nodejs.org/dist and format them into
+    # a string that the semver binary will appreciate.
+    # e.g. semver -v "0.10.0" -v "0.10.1" -v "0.10.2" -r ">0.8"
+    # See https://github.com/isaacs/node-semver/blob/master/bin/semver
     args=""
     for version in $(query_all_versions); do args="${args} -v \"${version}\""; done
     args="${args} -r \"${requested_version}\""
 
-    # Determine which available versions satisfy the requested version
-    # https://github.com/isaacs/node-semver/blob/master/bin/semver
-    evaluated_versions=$(eval node $bp_dir/vendor/semver/bin/semver ${args} || echo "")
+    # Find all versions that satisfy.
+    satisfying_versions=$(eval $bp_dir/vendor/semver/bin/semver ${args})
 
-    # Use the latest of the evaluated versions
-    node_version=$(echo $evaluated_versions | tail -n 1)
+    # Use the latest one.
+    node_version=$(echo "$satisfying_versions" | tail -n 1)
 
     if test $node_version; then
       status "Downloading and installing node v$version"
@@ -62,9 +64,9 @@ cache_store_dir="$cache_dir/node_modules/$node_version"
 cache_target_dir="$build_dir/node_modules"
 
 # Restore node_modules from cache, if present
-if [ -d $cache_store_dir ]; then
+if test -d $cache_store_dir; then
   status "Restoring node_modules cache"
-  if [ -d $cache_target_dir ]; then
+  if test -d $cache_target_dir; then
     cp -r $cache_store_dir/* $cache_target_dir/
   else
     cp -r $cache_store_dir $cache_target_dir
@@ -80,7 +82,7 @@ npm install --production | indent
 npm rebuild | indent
 
 # Cache node_modules for future builds
-if [ -d $cache_target_dir ]; then
+if test -d $cache_target_dir; then
   status "Caching node_modules for future builds"
   rm -rf $cache_store_dir
   mkdir -p $(dirname $cache_store_dir)
