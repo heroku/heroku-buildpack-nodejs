@@ -8,12 +8,12 @@ set -e
 
 download_and_install_node() {
   version="$1"
-  status "Downloading and installing node v$version"
   node_url="http://s3pository.heroku.com/node/v$version/node-v$version-linux-x64.tar.gz"
   curl $node_url -s -o - | tar xzf - -C $build_dir
-  mv $build_dir/node-v$version-linux-x64 $build_dir/node
-  chmod +x $build_dir/node/bin/*
-  PATH=$PATH:$build_dir/node/bin
+  mkdir -p $build_dir/vendor
+  mv $build_dir/node-v$version-linux-x64 $build_dir/vendor/node
+  chmod +x $build_dir/vendor/node/bin/*
+  PATH=$PATH:$build_dir/vendor/node/bin
 }
 
 query_stable_version() {

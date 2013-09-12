@@ -12,15 +12,12 @@ source $bp_dir/bin/common.sh
 
 # Bootstrap the build process with latest stable version of node
 # We'll use it to parse package.json and do semver detection
+status "Bootstrapping node v$version"
 download_and_install_node $stable_version
 
 # Is a node version specified in package.json?
-determine_requested_version() {
-  # https://github.com/trentm/json
-  v=$(cat $build_dir/package.json | node $bp_dir/vendor/json engines.node 2>/dev/null)
-  if [ $? == 0 ]; then echo $v; fi
-}
-requested_version=$(determine_requested_version)
+# https://github.com/trentm/json
+requested_version=$(cat $build_dir/package.json | $bp_dir/vendor/json engines.node)
 
 # Give a warning if engines.node is unspecified
 if ! test $requested_version; then
@@ -52,6 +49,7 @@ else
     node_version=$(echo $evaluated_versions | tail -n 1)
 
     if test $node_version; then
+      status "Downloading and installing node v$version"
       download_and_install_node $node_version
     else
       error "node ${requested_version} not found among available versions on nodejs.org/dist"
@@ -92,4 +90,4 @@ fi
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
-echo "export PATH=\"\$HOME/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/vendor/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
