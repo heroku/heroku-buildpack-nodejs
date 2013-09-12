@@ -8,7 +8,7 @@ stable_version="0.10.18"
 source $bp_dir/bin/common.sh
 
 # Output debug info on exit
-trap cat_npm_debug_log EXIT
+# trap cat_npm_debug_log EXIT
 
 # Bootstrap the build process with latest stable version of node
 # We'll use it to parse package.json and do semver detection
@@ -16,6 +16,7 @@ download_and_install_node $stable_version
 
 # Is a node version specified in package.json?
 determine_requested_version() {
+  # https://github.com/trentm/json
   v=$(cat $build_dir/package.json | node $bp_dir/vendor/json engines.node 2>/dev/null)
   if [ $? == 0 ]; then echo $v; fi
 }
@@ -28,14 +29,14 @@ if ! test $requested_version; then
   echo "WARNING: No node version specified in package.json, see:" | indent
   echo "https://devcenter.heroku.com/articles/nodejs-support#versions" | indent
   echo
-  status "Defaulting to node v$stable_version (latest stable)"
+  status "Defaulting to latest stable node, v$stable_version"
 
 else
   # Does the already-downloaded stable version of node satisfy the requested version?
   default_satisfies=$(node $bp_dir/vendor/semver/bin/semver -v "${stable_version}" -r "${requested_version}" || echo "")
 
   if test $default_satisfies; then
-    status "Using node v$stable_version"
+    status "Latest stable node v$stable_version satisfies engines.node: $requested"
     node_version=$stable_version
   else
     # Find all available versions from nodejs.org/dist
@@ -53,7 +54,7 @@ else
     if test $node_version; then
       download_and_install_node $node_version
     else
-      error "Requested node version ${requested_version} not found among available versions on nodejs.org/dist"
+      error "node ${requested_version} not found among available versions on nodejs.org/dist"
     fi
   fi
 fi

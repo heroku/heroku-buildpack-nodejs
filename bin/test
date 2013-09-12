@@ -8,41 +8,41 @@
 # run the tests
 #
 
-# testDetectWithPackageJson() {
-#   detect "package-json-stable-version"
-#   assertCaptured "Node.js"
-#   assertCapturedSuccess
-# }
+testDetectWithPackageJson() {
+  detect "package-json-stable-version"
+  assertCaptured "Node.js"
+  assertCapturedSuccess
+}
 
-# testDetectWithoutPackageJson() {
-#   detect "no-package-json"
-#   assertCapturedError 1 ""
-# }
+testDetectWithoutPackageJson() {
+  detect "no-package-json"
+  assertCapturedError 1 ""
+}
 
 testPackageJsonWithoutVersion() {
   compile "package-json-noversion"
   assertCaptured "WARNING: No node version specified"
-  assertCaptured "Using latest stable node"
+  assertCaptured "Defaulting to latest stable node"
   assertCapturedSuccess
 }
 
 testPackageJsonWithStableVersion() {
   compile "package-json-stable-version"
   assertNotCaptured "WARNING: No node version specified"
-  assertCaptured "Using latest stable node"
+  assertCaptured "satisfies engines.node"
   assertCapturedSuccess
 }
 
 testPackageJsonWithUnstableVersion() {
   compile "package-json-unstable-version"
-  assertCaptured "Using node version 0.11"
+  assertCaptured "Downloading and installing node v0.11"
   assertCapturedSuccess
 }
 
-# testPackageJsonWithInvalidVersion() {
-#   compile "package-json-invalidversion"
-#   assertCapturedError 1 "Requested node version 5.0 not found"
-# }
+testPackageJsonWithInvalidVersion() {
+  compile "package-json-invalidversion"
+  assertCapturedError 1 "not found among available versions"
+}
 
 testProfileCreated() {
   compile "package-json-stable-version"
