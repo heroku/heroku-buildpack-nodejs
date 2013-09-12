@@ -8,13 +8,10 @@ set -e
 
 download_and_install_node() {
   version="$1"
-
-  status "Downloading node $version"
+  status "Downloading and installing node v$version"
   node_url="http://s3pository.heroku.com/node/v$version/node-v$version-linux-x64.tar.gz"
   curl $node_url -s -o - | tar xzf - -C $build_dir
   mv $build_dir/node-v$version-linux-x64 $build_dir/node
-
-  status "Adding node and npm to \$PATH"
   chmod +x $build_dir/node/bin/*
   PATH=$PATH:$build_dir/node/bin
 }
@@ -44,18 +41,15 @@ error() {
   exit 1
 }
 
-function status() {
+status() {
   echo "-----> $*"
 }
 
-function mktmpdir() {
-  dir=$(mktemp -t node-$1-XXXX)
-  rm -rf $dir
-  mkdir -p $dir
-  echo $dir
-}
 
-function indent() {
+# sed -l basically makes sed replace and buffer through stdin to stdout
+# so you get updates while the command runs and dont wait for the end
+# e.g. npm install | indent
+indent() {
   c='s/^/       /'
   case $(uname) in
     Darwin) sed -l "$c";;
@@ -64,7 +58,5 @@ function indent() {
 }
 
 function cat_npm_debug_log() {
-  if [ -f $BUILD_DIR/npm-debug.log ]; then
-    cat $BUILD_DIR/npm-debug.log
-  fi
+  [ -f $build_dir/npm-debug.log ] && cat $build_dir/npm-debug.log
 }
