@@ -30,12 +30,13 @@ if ! test $requested_version; then
 
 else
   # Does the already-downloaded stable version of node satisfy the requested version?
-  default_satisfies=$(node $bp_dir/vendor/semver/bin/semver -v "$stable_version" -r "$requested_version" || echo "")
+  default_satisfies=$($bp_dir/vendor/semver/bin/semver -v "$stable_version" -r "$requested_version" || echo "")
 
   if test $default_satisfies; then
-    status "Latest stable node v$stable_version satisfies engines.node: $requested"
+    status "Latest stable node v$stable_version satisfies engines.node: $requested_version"
     node_version=$stable_version
   else
+
     # Fetch all versions of node from nodejs.org/dist and format them into
     # a string that the semver binary will appreciate.
     # e.g. semver -v "0.10.0" -v "0.10.1" -v "0.10.2" -r ">0.8"
@@ -45,7 +46,7 @@ else
     args="${args} -r \"${requested_version}\""
 
     # Find all versions that satisfy.
-    satisfying_versions=$(eval $bp_dir/vendor/semver/bin/semver ${args})
+    satisfying_versions=$(eval $bp_dir/vendor/semver/bin/semver ${args} || echo "")
 
     # Use the latest one.
     node_version=$(echo "$satisfying_versions" | tail -n 1)

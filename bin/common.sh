@@ -3,8 +3,7 @@
 # fail fast
 set -e
 
-# Uncomment the line below to enable debugging when
-# working on the buildpack
+# Uncomment the line below to enable debugging
 # set -x
 
 download_and_install_node() {
