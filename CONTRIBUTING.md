@@ -12,7 +12,7 @@ The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrap
 heroku plugins:install https://github.com/ddollar/heroku-anvil
 ```
 
-The [ddollar/test buildpack](https://github.com/ddollar/buildpack-test) is for testing things: it runs `bin/test` on your app.
+The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bin/test` on your app/buildpack.
 
 ```
 heroku build -b ddollar/test # -b can also point to a local directory
