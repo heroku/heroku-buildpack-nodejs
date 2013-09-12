@@ -72,14 +72,14 @@ if [ -d $cache_store_dir ]; then
     cp -r $cache_store_dir $cache_target_dir
   fi
   status "Pruning any unused dependencies"
-  npm prune
+  npm prune | indent
 fi
 
 # Install dependencies
 status "Installing dependencies"
 cd $build_dir
-npm install --production
-npm rebuild
+npm install --production | indent
+npm rebuild | indent
 
 # Cache node_modules for future builds
 if [ -d $cache_target_dir ]; then
