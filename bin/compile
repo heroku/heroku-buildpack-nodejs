@@ -12,7 +12,7 @@ source $bp_dir/bin/common.sh
 
 # Bootstrap the build process with latest stable version of node
 # We'll use it to parse package.json and do semver detection
-status "Bootstrapping node v$version"
+status "Bootstrapping node v$stable_version"
 download_and_install_node $stable_version
 
 # Is a node version specified in package.json?
