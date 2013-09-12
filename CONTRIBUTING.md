@@ -18,42 +18,6 @@ The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bi
 heroku build -b ddollar/test # -b can also point to a local directory
 ```
 
-## Compiling new versions of node and npm using Vulcan
-
-Install [vulcan](https://github.com/heroku/vulcan) and create your own build server. Use any
-app name you want and vulcan will remember it in a `~/.vulcan` config file.
-
-```
-gem install vulcan
-vulcan create builder-bob
-```
-
-Store your S3 credentials in `~/.aws/`
-
-```
-mkdir -p ~/.aws
-echo 'YOUR_AWS_KEY' > ~/.aws/key-nodejs.access
-echo 'YOUR_AWS_SECRET' > ~/.aws/key-nodejs.secret
-```
-
-Add a credentials exporter to your `.bash_profile` or `.bashrc`
-
-```
-setup_nodejs_env () {
-  export AWS_ID=$(cat ~/.aws/key-nodejs.access)
-  export AWS_SECRET=$(cat ~/.aws/key-nodejs.secret)
-  export S3_BUCKET="heroku-buildpack-nodejs"
-}
-```
-
-Build:
-
-```
-setup_nodejs_env
-support/package_nodejs <node-version>
-support/package_npm <npm-version>
-```
-
 ## Publishing buildpack updates
 
 ```
@@ -72,3 +36,4 @@ heroku buildpacks:publish heroku/nodejs
 
 - Run `npm info npm version` to find out the latest available version of npm.
 - Follow [@nodejs](https://twitter.com/nodejs) and [@npmjs](https://twitter.com/npmjs) on Twitter.
+- Find node-npm version pairings at [nodejs.org/dist/npm-versions.txt](http://nodejs.org/dist/npm-versions.txt)
