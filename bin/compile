@@ -64,23 +64,23 @@ fi
 cache_store_dir="$cache_dir/node_modules/$node_version"
 cache_target_dir="$build_dir/node_modules"
 
-# Restore node_modules from cache, if present
-if test -d $cache_store_dir; then
-  status "Restoring node_modules cache"
+cd $build_dir
+
+# Restore node_modules from cache if package.json unchanged.
+if test -d $cache_store_dir && diff $cache_store_dir/package.json $build_dir/package.json >/dev/null; then
+  status "package.json unchanged; restoring node_modules from cache"
   if test -d $cache_target_dir; then
     cp -r $cache_store_dir/* $cache_target_dir/
   else
     cp -r $cache_store_dir $cache_target_dir
   fi
-  status "Pruning any unused dependencies"
-  npm prune | indent
+else
+  # Install dependencies anew
+  status "Installing dependencies"
+  npm install --production | indent
+  status "Rebuilding dependencies"
+  npm rebuild | indent
 fi
-
-# Install dependencies
-status "Installing dependencies"
-cd $build_dir
-npm install --production | indent
-npm rebuild | indent
 
 # Cache node_modules for future builds
 if test -d $cache_target_dir; then
