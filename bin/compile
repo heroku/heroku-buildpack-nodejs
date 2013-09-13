@@ -60,15 +60,19 @@ else
   fi
 fi
 
-# Configure cache directories
-cache_store_dir="$cache_dir/node_modules/$node_version"
-cache_target_dir="$build_dir/node_modules"
-
+# Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# Restore node_modules from cache if package.json unchanged.
-if test -d $cache_store_dir && diff $cache_store_dir/package.json $build_dir/package.json >/dev/null; then
-  status "package.json unchanged; restoring node_modules from cache"
+# Configure cache directories
+package_checksum=$(cat $build_dir/package.json | md5sum | awk '{print $1}')
+cache_store_dir="$cache_dir/node_modules/$node_version/$package_checksum"
+cache_target_dir="$build_dir/node_modules"
+
+# Restore node_modules from cache if resolved node version and
+# package.json match the previous build
+if test -d $cache_store_dir; then
+  status "package.json and node version unchanged since last build"
+  status "Restoring node_modules from cache"
   if test -d $cache_target_dir; then
     cp -r $cache_store_dir/* $cache_target_dir/
   else
