@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 build_dir=$1
-cache_dir=$2
+cache_basedir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 stable_version="0.10.18"
 
@@ -51,10 +51,8 @@ else
     # Use the latest one.
     node_version=$(echo "$satisfying_versions" | tail -n 1)
 
-    if test $node_version; then
-      status "Downloading and installing node v$version"
-      download_and_install_node $node_version
-    else
+    # Bail if no matching version was found
+    if ! test $node_version; then
       error "node ${requested_version} not found among available versions on nodejs.org/dist"
     fi
   fi
@@ -63,35 +61,35 @@ fi
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# Configure cache directories
+# Configure cache directory
 package_checksum=$(cat $build_dir/package.json | md5sum | awk '{print $1}')
-cache_store_dir="$cache_dir/node_modules/$node_version/$package_checksum"
-cache_target_dir="$build_dir/node_modules"
+cache_dir="$cache_basedir/$node_version/$package_checksum"
 
-# Restore node_modules from cache if resolved node version and
-# package.json match the previous build
-if test -d $cache_store_dir; then
+# Restore from cache if node and package.json haven't changed
+if test -d $cache_dir; then
   status "package.json and node version unchanged since last build"
-  status "Restoring node_modules from cache"
-  if test -d $cache_target_dir; then
-    cp -r $cache_store_dir/* $cache_target_dir/
-  else
-    cp -r $cache_store_dir $cache_target_dir
-  fi
+  status "Restoring node v$node_version and node_modules from cache"
+  test -d $cache_dir/node_modules && cp -r $cache_dir/node_modules $build_dir/
+  cp -r $cache_dir/vendor/node $build_dir/vendor/
 else
-  # Install dependencies anew
+
+  if [ $stable_version != $node_version ]; then
+    status "Downloading and installing node v$version"
+    download_and_install_node $node_version
+  fi
+
   status "Installing dependencies"
   npm install --production | indent
+
   status "Rebuilding dependencies"
   npm rebuild | indent
-fi
 
-# Cache node_modules for future builds
-if test -d $cache_target_dir; then
-  status "Caching node_modules for future builds"
-  rm -rf $cache_store_dir
-  mkdir -p $(dirname $cache_store_dir)
-  cp -r $cache_target_dir $cache_store_dir
+  status "Caching node and node_modules for future builds"
+  rm -rf $cache_dir
+  mkdir -p $cache_dir
+  mkdir -p $cache_dir/vendor
+  test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
+  cp -r $build_dir/vendor/node $cache_dir/vendor/
 fi
 
 # Update the PATH
