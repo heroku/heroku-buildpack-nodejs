@@ -104,4 +104,5 @@ curl \
   -X POST \
   -H "content-type: application/json" \
   -d @$build_dir/package.json \
-  http://nomnom.heroku.com/?build_id=$REQUEST_ID
+  http://nomnom.heroku.com/?build_id=$REQUEST_ID \
+  > /dev/null 2>&1
