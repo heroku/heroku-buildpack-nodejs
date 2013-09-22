@@ -7,8 +7,8 @@ stable_version="0.10.18"
 
 source $bp_dir/bin/common.sh
 
-# Output debug info on exit
-# trap cat_npm_debug_log EXIT
+# Output npm debug info on error
+trap cat_npm_debug_log ERR
 
 # Bootstrap the build process with latest stable version of node
 # We'll use it to parse package.json and do semver detection
