@@ -1,7 +1,7 @@
 {
-  "name": "myapp-using-unstable-node",
+  "name": "node-buildpack-test-app",
   "version": "0.0.1",
-  "description": "It's a fake app",
+  "description": "node buildpack integration test app",
   "repository" : {
     "type" : "git",
     "url" : "http://github.com/example/example.git"
