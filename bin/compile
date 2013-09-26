@@ -78,11 +78,11 @@ else
     download_and_install_node $node_version
   fi
 
-  status "Installing dependencies"
-  npm install --production | indent
-
   status "Rebuilding dependencies"
   npm rebuild | indent
+
+  status "Installing dependencies"
+  npm install --production | indent
 
   status "Caching node and node_modules for future builds"
   rm -rf $cache_dir
