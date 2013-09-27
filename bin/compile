@@ -49,6 +49,10 @@ function run_npm() {
 
   if [ "${PIPESTATUS[*]}" != "0 0" ]; then
     echo " !     Failed to $command dependencies with npm"
+    if [ ! -z $BUILDPACK_RETRY_VERBOSE ]; then
+      echo " ! Relaunching the command in verbose mode to help debugging"
+      run_npm "--verbose $command"
+    fi
     exit 1
   fi
 }
