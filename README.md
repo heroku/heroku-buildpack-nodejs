@@ -7,7 +7,7 @@ See the Grunt [migration guide](https://github.com/gruntjs/grunt/wiki/Upgrading-
 This is a fork of [Heroku's official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs) with added [Grunt](http://gruntjs.com/) support.
 Using this buildpack you do not need to commit the results of your Grunt tasks (e.g. minification and concatination of files), keeping your repository clean.
 
-After all the default Node.js and NPM build tasks have finished, the buildpack checks if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`or `grunt.js`) exists and executes the `heroku` task by running `grunt heroku`. For details about grunt and how to define tasks, check out the [offical documentation](http://gruntjs.com/getting-started). You must add grunt to the NPM dependencies in your `package.json` file.
+After all the default Node.js and npm build tasks have finished, the buildpack checks if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`or `grunt.js`) exists and executes the `heroku` task by running `grunt heroku`. For details about grunt and how to define tasks, check out the [offical documentation](http://gruntjs.com/getting-started). You must add grunt to the npm dependencies in your `package.json` file.
 If no Gruntfile exists, the buildpacks simply skips the grunt step and executes like the standard Node.js buildpack.
 
 Usage
@@ -66,6 +66,16 @@ Push to heroku
     Running "heroku" task
     ...
     -----> Discovering process types
+    
+Debugging
+---------
+
+npm can be run with a verbose flag to help debugging if something fails when installing the dependencies. 
+
+* if the `VERBOSE` environment variable is set, npm is always run with verbose logging.
+* if `BUILDPACK_RETRY_VERBOSE` is set, npm is relaunched in verbose mode if npm failed.
+
+Thanks to [mackwic](https://github.com/mackwic) for these extensions.
 
 Further Information
 -------------------
