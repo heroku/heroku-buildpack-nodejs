@@ -3,7 +3,7 @@
 build_dir=$1
 cache_basedir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
-stable_version="0.10.18"
+stable_version="0.10.20"
 
 source $bp_dir/bin/common.sh
 
