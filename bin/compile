@@ -41,12 +41,18 @@ function indent() {
 
 function run_npm() {
   command="$1"
+  
+  [ ! -z $VERBOSE ] && command="--verbose $command"
 
   cd $BUILD_DIR
   HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js $command 2>&1 | indent
 
   if [ "${PIPESTATUS[*]}" != "0 0" ]; then
     echo " !     Failed to $command dependencies with npm"
+    if [ ! -z $BUILDPACK_RETRY_VERBOSE ]; then
+      echo " ! Relaunching the command in verbose mode to help debugging"
+      run_npm "--verbose $command"
+    fi
     exit 1
   fi
 }
