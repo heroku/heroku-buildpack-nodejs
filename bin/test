@@ -40,31 +40,30 @@ testStableVersion() {
   assertCapturedSuccess
 }
 
-# testUnstableVersion() {
-#   compile "unstable-version"
-#   assertCaptured "Resolved node version for >0.11.0 is 0.11"
-
-#   assertCapturedSuccess
-# }
+testUnstableVersion() {
+  compile "unstable-version"
+  assertCaptured "Resolved node version for >0.11.0 is 0.11"
+  assertCapturedSuccess
+}
 
 # testInvalidVersion() {
 #   compile "invalid-node-version"
 #   assertCapturedError 1 "not found among available versions"
 # }
 
-# testProfileCreated() {
-#   compile "stable-node"
-#   assertCaptured "Building runtime environment"
-#   assertFile "export PATH=\"\$HOME/vendor/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
-#   assertCapturedSuccess
-# }
+testProfileCreated() {
+  compile "stable-node"
+  assertCaptured "Building runtime environment"
+  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+  assertCapturedSuccess
+}
 
-# testNodeModulesCached() {
-#   cache=$(mktmpdir)
-#   compile "caching" $cache
-#   assertCaptured "Caching node"
-#   assertEquals "1" "$(ls -1 $cache/0.10.18 | wc -l)"
-# }
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+  compile "caching" $cache
+  assertCaptured "Caching node"
+  assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+}
 
 # Pending
 
