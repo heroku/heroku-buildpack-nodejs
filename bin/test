@@ -21,15 +21,17 @@ testNoVersion() {
 
 testDangerousRangeStar() {
   compile "dangerous-range-star"
-  assertCaptured "PRO TIP: Don't use semver ranges like *"
-
+  assertCaptured "PRO TIP: Avoid using semver ranges like '*'"
+  assertCaptured "Requested node range:  *"
+  assertCaptured "Resolved node version: 0.10"
   assertCapturedSuccess
 }
 
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
-  assertCaptured "PRO TIP: Don't use semver ranges starting with >"
-  assertCaptured "Resolved node version for >"
+  assertCaptured "PRO TIP: Avoid using semver ranges starting with '>'"
+  assertCaptured "Requested node range:  >"
+  assertCaptured "Resolved node version: 0.10."
   assertCapturedSuccess
 }
 
@@ -42,13 +44,19 @@ testStableVersion() {
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Resolved node version for >0.11.0 is 0.11"
+  assertCaptured "Requested node range:  >0.11.0"
+  assertCaptured "Resolved node version: 0.11."
   assertCapturedSuccess
 }
 
 # testInvalidVersion() {
 #   compile "invalid-node-version"
 #   assertCapturedError 1 "not found among available versions"
+# }
+
+# testInvalidVersion() {
+#   compile "invalid-dependency"
+#   assertCapturedError 1 "not in the npm registry"
 # }
 
 testProfileCreated() {
