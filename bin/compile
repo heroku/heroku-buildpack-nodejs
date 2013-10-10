@@ -1,34 +1,55 @@
 #!/usr/bin/env bash
 
+# fail fast
+set -e
+
+# enable debugging
+# set -x
+
+# Configure directories
 build_dir=$1
 cache_basedir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
+# Load some convenience functions like status() echo(), indent
 source $bp_dir/bin/common.sh
 
 # Output npm debug info on error
 trap cat_npm_debug_log ERR
 
-# Is a node version specified in package.json?
-semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/json engines.node)
+# Look in package.json's engines.node field for a semver range
+semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 
-# Resolve node version using a service
-node_version=$(curl --silent https://node-semver-service.heroku.com/${semver_range})
-
-# Warn if engines.node is unspecified
-if ! test $semver_range; then
-  echo
-  echo "WARNING: No node version specified in package.json, see:" | indent
-  echo "https://devcenter.heroku.com/articles/nodejs-support#versions" | indent
-  echo
-  status "Defaulting to latest stable node, v$node_version"
+# Recommend using semver ranges in a safe manner
+if [ "$semver_range" == "null" ]; then
+  protip "Specify a node version in package.json"
+  semver_range=""
+elif [ "$semver_range" == "*" ]; then
+  protip "Don't use semver ranges like *"
+elif [ ${semver_range:0:1} == ">" ]; then
+  protip "Don't use semver ranges starting with >"
 fi
 
-# TODO: Warn if engines.node is "*" or ">foo"
+# Resolve node version using semver.io
+semver_url=http://semver.io/node/$semver_range
+node_version=$(curl --silent $semver_url)
 
-# Download and install node
+if [ "$semver_range" == "" ]; then
+  status "Defaulting to latest stable node: $node_version"
+else
+  status "Resolved node version for $semver_range is $node_version"
+fi
+
+# Download node from Heroku's S3 mirror of nodejs.org/dist
 status "Downloading and installing node v$node_version"
-download_and_install_node $node_version
+node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
+curl $node_url -s -o - | tar xzf - -C $build_dir
+
+# Move node into ./vendor and make it executable
+mkdir -p $build_dir/vendor
+mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
+chmod +x $build_dir/vendor/node/bin/*
+PATH=$PATH:$build_dir/vendor/node/bin
 
 # Run subsequent node/npm commands from the build path
 cd $build_dir
@@ -37,7 +58,7 @@ cd $build_dir
 package_checksum=$(cat $build_dir/package.json | md5sum | awk '{print $1}')
 cache_dir="$cache_basedir/$package_checksum"
 
-# Restore from cache package.json hasn't changed
+# Restore from cache if package.json hasn't changed
 if test -d $cache_dir; then
   status "package.json unchanged since last build"
   status "Restoring node_modules from cache"
@@ -54,7 +75,7 @@ else
   status "Caching node_modules for future builds"
   rm -rf $cache_dir
   mkdir -p $cache_dir
-  mkdir -p $cache_dir/vendor
+  # mkdir -p $cache_dir/vendor
   test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
   # cp -r $build_dir/vendor/node $cache_dir/vendor/
 fi

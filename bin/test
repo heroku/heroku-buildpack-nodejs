@@ -2,7 +2,7 @@
 # See CONTRIBUTING.md for info on running these tests.
 
 testDetectWithPackageJson() {
-  detect "package-json-stable-version"
+  detect "stable-node"
   assertCaptured "Node.js"
   assertCapturedSuccess
 }
@@ -12,44 +12,59 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
-testPackageJsonWithoutVersion() {
-  compile "package-json-noversion"
-  assertCaptured "WARNING: No node version specified"
+testNoVersion() {
+  compile "no-version"
+  assertCaptured "PRO TIP: Specify a node version in package.json"
   assertCaptured "Defaulting to latest stable node"
   assertCapturedSuccess
 }
 
-testPackageJsonWithStableVersion() {
-  compile "package-json-stable-version"
-  assertNotCaptured "WARNING: No node version specified"
-  assertCaptured "satisfies engines.node"
+testDangerousRangeStar() {
+  compile "dangerous-range-star"
+  assertCaptured "PRO TIP: Don't use semver ranges like *"
+
   assertCapturedSuccess
 }
 
-testPackageJsonWithUnstableVersion() {
-  compile "package-json-unstable-version"
-  assertCaptured "Downloading and installing node v0.11"
+testDangerousRangeGreaterThan() {
+  compile "dangerous-range-greater-than"
+  assertCaptured "PRO TIP: Don't use semver ranges starting with >"
+  assertCaptured "Resolved node version for >"
   assertCapturedSuccess
 }
 
-testPackageJsonWithInvalidVersion() {
-  compile "package-json-invalidversion"
-  assertCapturedError 1 "not found among available versions"
-}
-
-testProfileCreated() {
-  compile "package-json-stable-version"
-  assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/vendor/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+testStableVersion() {
+  compile "stable-node"
+  assertNotCaptured "PRO TIP"
+  assertCaptured "Resolved node version"
   assertCapturedSuccess
 }
 
-testNodeModulesCached() {
-  cache=$(mktmpdir)
-  compile "node-modules-caching" $cache
-  assertCaptured "Caching node"
-  assertEquals "1" "$(ls -1 $cache/0.10.18 | wc -l)"
-}
+# testUnstableVersion() {
+#   compile "unstable-version"
+#   assertCaptured "Resolved node version for >0.11.0 is 0.11"
+
+#   assertCapturedSuccess
+# }
+
+# testInvalidVersion() {
+#   compile "invalid-node-version"
+#   assertCapturedError 1 "not found among available versions"
+# }
+
+# testProfileCreated() {
+#   compile "stable-node"
+#   assertCaptured "Building runtime environment"
+#   assertFile "export PATH=\"\$HOME/vendor/node/bin:$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+#   assertCapturedSuccess
+# }
+
+# testNodeModulesCached() {
+#   cache=$(mktmpdir)
+#   compile "caching" $cache
+#   assertCaptured "Caching node"
+#   assertEquals "1" "$(ls -1 $cache/0.10.18 | wc -l)"
+# }
 
 # Pending
 
