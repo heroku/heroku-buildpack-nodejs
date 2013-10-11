@@ -1,0 +1,12 @@
+#!/bin/sh
+# bin/release <build-dir>
+
+build_dir=$1
+
+if [ ! -e $build_dir/Procfile ]; then
+  cat << EOF
+---
+default_process_types:
+  web: npm start
+EOF
+fi
