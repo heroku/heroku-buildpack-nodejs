@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# fail fast
+set -e
+set -o pipefail
+
 build_dir=$1
 cache_basedir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
