@@ -1,59 +1,54 @@
 Heroku Buildpack for Node.js
 ============================
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. It will detect your app as Node.js if it has a `package.json` file in the root. It uses npm to install your dependencies, and vendors a version of the Node.js runtime into your slug.
 
-The buildpack will detect your app as Node.js if it has a `package.json` file in the root.  It will use npm to install your dependencies, and vendors a version of the Node.js runtime into your slug.
+If you specify a version of node in the [`engines` field of your package.json](https://npmjs.org/doc/json.html#engines), the buildpack will attempt to find the specified version on [nodejs.org/dist](http://nodejs.org/dist/) and download it from our S3 caching proxy.
 
-Example Usage
--------------
+If you don't specify a version of node, the latest stable version will be used.
 
-    $ ls
-    Procfile  package.json  web.js
+About this Refactor
+-------------------
 
-    $ heroku create
+This branch of the buildpack is intended to replace the [official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs#readme) once it has been tested by some users. To use this buildpack for your node app, simply change your BUILDPACK_URL [config var](https://devcenter.heroku.com/articles/config-vars) and push your app to heroku.
 
-    $ git push heroku master
-    ...
-    -----> Heroku receiving push
-    -----> Fetching custom buildpack
-    -----> Node.js app detected
-    -----> Vendoring node 0.4.7
-    -----> Installing dependencies with npm 1.0.8
-           express@2.1.0 ./node_modules/express
-           ├── mime@1.2.2
-           ├── qs@0.3.1
-           └── connect@1.6.2
-           Dependencies installed
-
-Node.js and npm versions
-------------------------
-
-You can specify the versions of Node.js and npm your application requires using `package.json`
-
-```json
-{
-  "name": "myapp",
-  "version": "0.0.1",
-  "engines": {
-    "node": "~0.10.13",
-    "npm": "~1.3.2"
-  }
-}
+```
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#diet -a my-node-app
+git commit -am "fakeout" --allow-empty
+git push heroku
 ```
 
-To list the available versions of Node.js and npm, see these manifests:
+Here's a summary of the differences between the current official buildpack and this _diet_ version:
 
-- [heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs)
-- [heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm](http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm)
+The old buildpack:
+
+- Contains a lot of code for compiling node and npm binaries and moving them to S3. This code is orthogonal to the core function of the buildpack, and is only used internally by Node maintainers at Heroku.
+- Downloads and compiles node and npm separately.
+- Requires manual intervention each time a new version of node or npm is released.
+- Does not support pre-release versions of node.
+- Uses SCONS to support really old versions of node and npm.
+- Maintains S3 manifests of our hand-compiled versions of node and npm.
+- Does not cache anything.
+
+The new buildpack:
+
+- Uses the latest stable version of node and npm by default.
+- Allows any recent version of node to be used, including pre-release versions, as soon as they become available on [nodejs.org/dist](http://nodejs.org/dist/).
+- Uses the version of npm that comes bundled with node instead of downloading and compiling them separately. npm has been bundled with node since [v0.6.3 (Nov 2011)](http://blog.nodejs.org/2011/11/25/node-v0-6-3/). This effectively means that node versions `<0.6.3` are no longer supported, and that the `engines.npm` field in package.json is now ignored.
+- Makes use of an s3 caching proxy of nodejs.org for faster downloads of the node binaries.
+- Makes fewer HTTP requests when resolving node versions.
+- Uses an updated version of [node-semver](https://github.com/isaacs/node-semver) for dependency resolution.
+- No longer depends on SCONS.
+- Caches the `node_modules` directory across builds.
+- Runs `npm prune` after restoring cached modules, to ensure that any modules formerly used by your app aren't needlessly installed and/or compiled.
 
 Documentation
 -------------
 
 For more information about buildpacks and Node.js, see these Dev Center articles:
 
-- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
 - [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
+- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 

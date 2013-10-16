@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
-
-#
-# Create a Heroku app with the following buildpack:
-# https://github.com/ddollar/buildpack-test
-#
-# Push this Node.js buildpack to that Heroku app to
-# run the tests
-#
+# See CONTRIBUTING.md for info on running these tests.
 
 testDetectWithPackageJson() {
-  detect "package-json-version"
+  detect "stable-node"
   assertCaptured "Node.js"
   assertCapturedSuccess
 }
@@ -19,40 +12,79 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
-testPackageJsonWithVersion() {
-  compile "package-json-version"
-  assertNotCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.6.11"
-  assertCaptured "Using npm version: 1.1.9"
+testNoVersion() {
+  compile "no-version"
+  assertCaptured "PRO TIP: Specify a node version in package.json"
+  assertCaptured "Defaulting to latest stable node"
   assertCapturedSuccess
 }
 
-testPackageJsonWithoutVersion() {
-  compile "package-json-noversion"
-  assertCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.10"
-  assertCaptured "Using npm version: 1.3"
+testDangerousRangeStar() {
+  compile "dangerous-range-star"
+  assertCaptured "PRO TIP: Avoid using semver ranges like '*'"
+  assertCaptured "Requested node range:  *"
+  assertCaptured "Resolved node version: 0.10"
   assertCapturedSuccess
 }
 
-testPackageJsonWithInvalidVersion() {
-  compile "package-json-invalidversion"
-  assertCapturedError 1 "Requested engine npm version 1.1.5 does not"
+testDangerousRangeGreaterThan() {
+  compile "dangerous-range-greater-than"
+  assertCaptured "PRO TIP: Avoid using semver ranges starting with '>'"
+  assertCaptured "Requested node range:  >"
+  assertCaptured "Resolved node version: 0.10."
+  assertCapturedSuccess
 }
 
-testNothingCached() {
-  cache=$(mktmpdir)
-  compile "package-json-version" $cache
+testStableVersion() {
+  compile "stable-node"
+  assertNotCaptured "PRO TIP"
+  assertCaptured "Resolved node version"
   assertCapturedSuccess
-  assertEquals "0" "$(ls -1 $cache | wc -l)"
 }
+
+testUnstableVersion() {
+  compile "unstable-version"
+  assertCaptured "Requested node range:  >0.11.0"
+  assertCaptured "Resolved node version: 0.11."
+  assertCapturedSuccess
+}
+
+# testInvalidVersion() {
+#   compile "invalid-node-version"
+#   assertCapturedError 1 "not found among available versions"
+# }
+
+# testInvalidVersion() {
+#   compile "invalid-dependency"
+#   assertCapturedError 1 "not in the npm registry"
+# }
 
 testProfileCreated() {
-  compile "package-json-version"
+  compile "stable-node"
   assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
   assertCapturedSuccess
 }
+
+testInvalidDependency() {
+  compile "invalid-dependency"
+  assertCapturedError 1 "not in the npm registry"
+}
+
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+  compile "caching" $cache
+  assertCaptured "Caching node"
+  assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+}
+
+# Pending
+
+# testNodeBinariesAddedToPath() {
+# }
+
+# testNodeModulesRestoredFromCache() {
+# }
 
 ## utils ########################################
 
@@ -78,7 +110,7 @@ COMPILE_DIR=""
 compile() {
   COMPILE_DIR=$(mktmpdir)
   cp -r ${BASE}/test/$1/* ${COMPILE_DIR}/
-  capture ${BASE}/bin/compile ${COMPILE_DIR} $2
+  capture ${BASE}/bin/compile ${COMPILE_DIR} ${2:-$(mktmpdir)}
 }
 
 assertFile() {
