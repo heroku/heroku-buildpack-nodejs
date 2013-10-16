@@ -66,6 +66,11 @@ testProfileCreated() {
   assertCapturedSuccess
 }
 
+testInvalidDependency() {
+  compile "invalid-dependency"
+  assertCapturedError 1 "not in the npm registry"
+}
+
 testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
