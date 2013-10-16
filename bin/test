@@ -49,16 +49,6 @@ testUnstableVersion() {
   assertCapturedSuccess
 }
 
-# testInvalidVersion() {
-#   compile "invalid-node-version"
-#   assertCapturedError 1 "not found among available versions"
-# }
-
-# testInvalidVersion() {
-#   compile "invalid-dependency"
-#   assertCapturedError 1 "not in the npm registry"
-# }
-
 testProfileCreated() {
   compile "stable-node"
   assertCaptured "Building runtime environment"
@@ -78,7 +68,7 @@ testNodeModulesCached() {
   assertEquals "1" "$(ls -1 $cache/ | wc -l)"
 }
 
-# Pending
+# Pending Tests
 
 # testNodeBinariesAddedToPath() {
 # }
@@ -86,13 +76,35 @@ testNodeModulesCached() {
 # testNodeModulesRestoredFromCache() {
 # }
 
-## utils ########################################
+# TODO: Figure out how to test stuff like script hooks
+# when restoring node_modules from cache
+# testScriptHooks() {
+#   compile "script-hooks"
+#   assertCaptured "trigger script hooks"
+#   assertCaptured "preinstall hook message"
+#   assertCapturedSuccess
+# }
+
+# testWithoutScriptHooks() {
+#   compile "no-script-hooks"
+#   assertNotCaptured "trigger script hooks"
+#   assertCapturedSuccess
+# }
+
+# testInvalidVersion() {
+#   compile "invalid-node-version"
+#   assertCapturedError 1 "not found among available versions"
+# }
+
+
+
+# Utils
 
 pushd $(dirname 0) >/dev/null
-BASE=$(pwd)
+bp_dir=$(pwd)
 popd >/dev/null
 
-source ${BASE}/vendor/test-utils/test-utils
+source ${bp_dir}/vendor/test-utils/test-utils
 
 mktmpdir() {
   dir=$(mktemp -t testXXXXX)
@@ -102,19 +114,19 @@ mktmpdir() {
 }
 
 detect() {
-  capture ${BASE}/bin/detect ${BASE}/test/$1
+  capture ${bp_dir}/bin/detect ${bp_dir}/test/$1
 }
 
-COMPILE_DIR=""
+compile_dir=""
 
 compile() {
-  COMPILE_DIR=$(mktmpdir)
-  cp -r ${BASE}/test/$1/* ${COMPILE_DIR}/
-  capture ${BASE}/bin/compile ${COMPILE_DIR} ${2:-$(mktmpdir)}
+  compile_dir=$(mktmpdir)
+  cp -r ${bp_dir}/test/$1/* ${compile_dir}/
+  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)}
 }
 
 assertFile() {
-  assertEquals "$1" "$(cat ${COMPILE_DIR}/$2)"
+  assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
-source ${BASE}/vendor/shunit2/shunit2
+source ${bp_dir}/vendor/shunit2/shunit2
