@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
 
-# fail fast
-set -e
-
-# enable debugging
-# set -x
+set -e            # fail fast
+set -o pipefail   # don't ignore piped exit codes
+# set -x          # enable debugging
 
 # Configure directories
 build_dir=$1
