@@ -37,7 +37,8 @@ testDangerousRangeGreaterThan() {
 
 testStableVersion() {
   compile "stable-node"
-  assertNotCaptured "PRO TIP"
+  assertNotCaptured "PRO TIP: Avoid using semver"
+  assertNotCaptured "PRO TIP: Specify"
   assertCaptured "Resolved node version"
   assertCapturedSuccess
 }
@@ -68,6 +69,13 @@ testNodeModulesCached() {
   assertEquals "1" "$(ls -1 $cache/ | wc -l)"
 }
 
+testShrinkwrap() {
+  compile "shrinkwrap"
+  assertCaptured "Found npm-shrinkwrap.json"
+  assertNotCaptured "PRO TIP: Use npm shrinkwrap"
+  assertCapturedSuccess
+}
+
 # Pending Tests
 
 # testNodeBinariesAddedToPath() {
@@ -95,8 +103,6 @@ testNodeModulesCached() {
 #   compile "invalid-node-version"
 #   assertCapturedError 1 "not found among available versions"
 # }
-
-
 
 # Utils
 

@@ -1,0 +1,10 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "dependencies": {
+    "euclidean-distance": {
+      "version": "0.1.0",
+      "from": "euclidean-distance@*"
+    }
+  }
+}
