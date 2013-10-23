@@ -59,7 +59,8 @@ testProfileCreated() {
 
 testInvalidDependency() {
   compile "invalid-dependency"
-  assertCapturedError 1 "not in the npm registry"
+  assertCaptured "not in the npm registry"
+  assertCapturedError 1 ""
 }
 
 testNodeModulesCached() {

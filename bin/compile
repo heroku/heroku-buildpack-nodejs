@@ -74,10 +74,10 @@ if test -d $cache_dir; then
 fi
 
 status "Installing dependencies"
-npm install --production | indent
+npm install --production 2>&1 | indent
 
 status "Pruning unused dependencies"
-npm prune | indent
+npm prune 2>&1 | indent
 
 status "Caching node_modules for future builds"
 rm -rf $cache_dir
