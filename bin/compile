@@ -86,6 +86,10 @@ else
   test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
 fi
 
+status "Cleaning up node-gyp and npm artifacts"
+rm -rf "$build_dir/.node-gyp"
+rm -rf "$build_dir/.npm"
+
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
