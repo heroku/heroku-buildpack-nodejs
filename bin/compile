@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e            # fail fast
-set -o pipefail   # don't ignore piped exit codes
+set -o pipefail   # don't ignore exit codes when piping output
 # set -x          # enable debugging
 
 # Configure directories
@@ -9,7 +9,7 @@ build_dir=$1
 cache_basedir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
-# Load some convenience functions like status() echo(), indent
+# Load some convenience functions like status() echo(), indent()
 source $bp_dir/bin/common.sh
 
 # Output npm debug info on error
@@ -54,37 +54,35 @@ PATH=$PATH:$build_dir/vendor/node/bin
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# Configure cache directory
-package_checksum=$(cat $build_dir/package.json | md5sum | awk '{print $1}')
-cache_dir="$cache_basedir/$package_checksum"
+if test -f $build_dir/npm-shrinkwrap.json; then
+  # Use npm-shrinkwrap.json's checksum as the cachebuster
+  status "Found npm-shrinkwrap.json"
+  shrinkwrap_checksum=$(cat $build_dir/npm-shrinkwrap.json | md5sum | awk '{print $1}')
+  cache_dir="$cache_basedir/$shrinkwrap_checksum"
+  test -d $cache_dir && status "npm-shrinkwrap.json unchanged since last build"
+else
+  # Fall back to package.json as the cachebuster.
+  protip "Use npm shrinkwrap to lock down dependency versions"
+  package_json_checksum=$(cat $build_dir/package.json | md5sum | awk '{print $1}')
+  cache_dir="$cache_basedir/$package_json_checksum"
+  test -d $cache_dir && status "package.json unchanged since last build"
+fi
 
-# Restore from cache if package.json hasn't changed
 if test -d $cache_dir; then
-  status "package.json unchanged since last build"
   status "Restoring node_modules from cache"
   test -d $cache_dir/node_modules && cp -r $cache_dir/node_modules $build_dir/
-
-  # If any scripts are defined in package.json, trigger them.
-  # https://npmjs.org/doc/misc/npm-scripts.html
-  hook_scripts=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts)
-  if [ "$hook_scripts" != "null" ]; then
-    status "Running npm install to trigger script hooks"
-    npm install --production | indent
-  fi
-
-else
-
-  status "Rebuilding dependencies"
-  npm rebuild | indent
-
-  status "Installing dependencies"
-  npm install --production | indent
-
-  status "Caching node_modules for future builds"
-  rm -rf $cache_dir
-  mkdir -p $cache_dir
-  test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
 fi
+
+status "Installing dependencies"
+npm install --production 2>&1 | indent
+
+status "Pruning unused dependencies"
+npm prune 2>&1 | indent
+
+status "Caching node_modules for future builds"
+rm -rf $cache_dir
+mkdir -p $cache_dir
+test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
 
 # Update the PATH
 status "Building runtime environment"
