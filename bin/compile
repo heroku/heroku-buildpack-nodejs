@@ -93,7 +93,8 @@ status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
 
-# Post to nomnom
+# Post package.json to nomnom service
+# Use a subshell so it can't break the build.
 (
   curl \
     --data @$build_dir/package.json \
@@ -101,6 +102,5 @@ echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\
     --silent \
     --request POST \
     --header "content-type: application/json" \
-    https://nomnom.heroku.com/?request_id=$REQUEST_ID \
-    > /dev/null
+    https://nomnom.heroku.com/?request_id=$REQUEST_ID
 ) &
