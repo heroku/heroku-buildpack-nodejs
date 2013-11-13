@@ -19,7 +19,7 @@ trap cat_npm_debug_log ERR
 semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 
 # Resolve node version using semver.io
-semver_url=http://semver.io/node/$semver_range
+semver_url=http://semver.io/node/resolve/$semver_range
 node_version=$(curl --silent $semver_url)
 
 # Recommend using semver ranges in a safe manner
