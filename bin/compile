@@ -9,7 +9,7 @@ build_dir=$1
 cache_basedir=$2
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
-# Load some convenience functions like status() echo(), indent()
+# Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
 
 # Output npm debug info on error
@@ -73,6 +73,7 @@ if test -d $cache_dir; then
   test -d $cache_dir/node_modules && cp -r $cache_dir/node_modules $build_dir/
 fi
 
+# Make npm output to STDOUT instead of its default STDERR
 status "Installing dependencies"
 npm install --production 2>&1 | indent
 
@@ -94,7 +95,7 @@ mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
 
 # Post package.json to nomnom service
-# Use a subshell so it can't break the build.
+# Use a subshell so failures won't break the build.
 (
   curl \
     --data @$build_dir/package.json \
