@@ -80,6 +80,17 @@ status "Cleaning up node-gyp and npm artifacts"
 rm -rf "$build_dir/.node-gyp"
 rm -rf "$build_dir/.npm"
 
+# Add npm start to Procfile if necessary
+if [ ! -e $build_dir/Procfile ]; then
+  npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
+
+  # If a start script is declared, add it to a Procfile
+  if [ "$npm_start" != "null" ]; then
+    status "No Procfile present; adding npm start script to Procfile"
+    echo "web: $npm_start" > $build_dir/Procfile
+  fi
+fi
+
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
