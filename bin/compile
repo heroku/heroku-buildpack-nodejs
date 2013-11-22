@@ -89,6 +89,13 @@ status "Cleaning up node-gyp and npm artifacts"
 rm -rf "$build_dir/.node-gyp"
 rm -rf "$build_dir/.npm"
 
+# Add package.json processes to Procfile
+processes=$(cat $build_dir/package.json | $bp_dir/vendor/jq '.processes.production')
+if [[ $processes != "null" ]]; then
+  status "Adding processes from package.json to Procfile"
+  echo $processes | $bp_dir/vendor/jq -r '. as $in | keys[] | "\(.): \($in[.])"' >> Procfile
+fi
+
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
