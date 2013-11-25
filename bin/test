@@ -70,10 +70,10 @@ testNodeModulesCached() {
   assertEquals "1" "$(ls -1 $cache/ | wc -l)"
 }
 
-testShrinkwrap() {
-  compile "shrinkwrap"
-  assertCaptured "Found npm-shrinkwrap.json"
-  assertNotCaptured "PRO TIP: Use npm shrinkwrap"
+testModulesCheckedIn() {
+  compile "modules-checked-in"
+  assertCaptured "Using existing node_modules directory"
+  assertCaptured "Rebuilding any native dependencies"
   assertCapturedSuccess
 }
 
