@@ -35,6 +35,13 @@ testDangerousRangeGreaterThan() {
   assertCapturedSuccess
 }
 
+testRangeWithSpace() {
+  compile "range-with-space"
+  assertCaptured "Requested node range:  >= 0.8.x"
+  assertCaptured "Resolved node version: 0.10."
+  assertCapturedSuccess
+}
+
 testStableVersion() {
   compile "stable-node"
   assertNotCaptured "PRO TIP: Avoid using semver"
