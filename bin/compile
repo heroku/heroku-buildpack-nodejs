@@ -1,185 +1,98 @@
 #!/usr/bin/env bash
-# bin/compile <build-dir> <cache-dir>
 
-# fail fast
-set -e
+set -e            # fail fast
+set -o pipefail   # don't ignore exit codes when piping output
+# set -x          # enable debugging
 
-# debug
-# set -x
+# Configure directories
+build_dir=$1
+cache_dir=$2
+bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
-# clean up leaking environment
-unset GIT_DIR
+# Load some convenience functions like status(), echo(), and indent()
+source $bp_dir/bin/common.sh
 
-# config
-SCONS_VERSION="1.2.0"
-S3_BUCKET="heroku-buildpack-nodejs"
+# Output npm debug info on error
+trap cat_npm_debug_log ERR
 
-# parse and derive params
-BUILD_DIR=$1
-CACHE_DIR=$2
-LP_DIR=`cd $(dirname $0); cd ..; pwd`
+# Look in package.json's engines.node field for a semver range
+semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 
-function error() {
-  echo " !     $*" >&2
-  exit 1
-}
+# Resolve node version using semver.io
+node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" http://semver.io/node/resolve)
 
-function mktmpdir() {
-  dir=$(mktemp -t node-$1-XXXX)
-  rm -rf $dir
-  mkdir -p $dir
-  echo $dir
-}
-
-function indent() {
-  c='s/^/       /'
-  case $(uname) in
-    Darwin) sed -l "$c";;
-    *)      sed -u "$c";;
-  esac
-}
-
-function run_npm() {
-  command="$1"
-
-  cd $BUILD_DIR
-  HOME="$BUILD_DIR" $VENDORED_NODE/bin/node $VENDORED_NPM/cli.js $command 2>&1 | indent
-
-  if [ "${PIPESTATUS[*]}" != "0 0" ]; then
-    echo " !     Failed to $command dependencies with npm"
-    exit 1
-  fi
-}
-
-function manifest_versions() {
-  curl "http://${S3_BUCKET}.s3.amazonaws.com/manifest.${1}" -s -o - | tr -s '\n' ' '
-}
-
-function resolve_version() {
-  available_versions="$1"
-  requested_version="$2"
-  default_version="$3"
-
-  args=""
-  for version in $available_versions; do args="${args} -v \"${version}\""; done
-
-  if [ "$2" == "" ]; then
-    args="${args} -r \"${default_version}\"";
-  else
-    args="${args} -r \"${requested_version}\"";
-  fi
-
-  evaluated_versions=$(eval $bootstrap_node/bin/node $LP_DIR/vendor/node-semver/bin/semver ${args} || echo "")
-  echo "$evaluated_versions" | tail -n 1
-}
-
-function package_engine_version() {
-  version=$(cat $BUILD_DIR/package.json | $bootstrap_node/bin/node $LP_DIR/vendor/json/json engines.$1 2>/dev/null)
-  if [ $? == 0 ]; then
-    echo $version | sed -e 's/\([<>=]\) /\1/g'
-  fi
-}
-
-function package_resolve_version() {
-  engine="$1"
-  resolved_version=$(resolve_version "${engine_versions[$engine]}" "${engine_requests[$engine]}" "${engine_defaults[$engine]}")
-
-  if [ "${resolved_version}" == "" ]; then
-    error "Requested engine $engine version ${engine_requests[$engine]} does not match available versions: ${engine_versions[$engine]}"
-  else
-    echo $resolved_version
-  fi
-}
-
-function package_download() {
-  engine="$1"
-  version="$2"
-  location="$3"
-
-  mkdir -p $location
-  package="http://${S3_BUCKET}.s3.amazonaws.com/$engine-$version.tgz"
-  curl $package -s -o - | tar xzf - -C $location
-}
-
-function cat_npm_debug_log() {
-  if [ -f $BUILD_DIR/npm-debug.log ]; then
-    cat $BUILD_DIR/npm-debug.log
-  fi
-}
-
-trap cat_npm_debug_log EXIT
-
-bootstrap_node=$(mktmpdir bootstrap_node)
-package_download "nodejs" "0.4.7" $bootstrap_node
-
-# make some associative arrays
-declare -A engine_versions
-declare -A engine_defaults
-declare -A engine_requests
-
-engine_defaults["node"]="0.10.x"
-engine_defaults["npm"]="1.3.x"
-
-engine_versions["node"]=$(manifest_versions "nodejs")
-engine_requests["node"]=$(package_engine_version "node")
-
-engine_versions["npm"]=$(manifest_versions "npm")
-engine_requests["npm"]=$(package_engine_version "npm")
-
-echo "-----> Resolving engine versions"
-
-# add a warning if no version of node specified
-if [ "${engine_requests["node"]}" == "" ]; then
-  echo
-  echo "WARNING: No version of Node.js specified in package.json, see:" | indent
-  echo "https://devcenter.heroku.com/articles/nodejs-support#versions" | indent
-  echo
+# Recommend using semver ranges in a safe manner
+if [ "$semver_range" == "null" ]; then
+  protip "Specify a node version in package.json"
+  semver_range=""
+elif [ "$semver_range" == "*" ]; then
+  protip "Avoid using semver ranges like '*' in engines.node"
+elif [ ${semver_range:0:1} == ">" ]; then
+  protip "Avoid using semver ranges starting with '>' in engines.node"
 fi
 
-NODE_VERSION=$(package_resolve_version "node")
-echo "Using Node.js version: ${NODE_VERSION}" | indent
+# Output info about requested range and resolved node version
+if [ "$semver_range" == "" ]; then
+  status "Defaulting to latest stable node: $node_version"
+else
+  status "Requested node range:  $semver_range"
+  status "Resolved node version: $node_version"
+fi
 
-NPM_VERSION=$(package_resolve_version "npm")
-echo "Using npm version: ${NPM_VERSION}" | indent
+# Download node from Heroku's S3 mirror of nodejs.org/dist
+status "Downloading and installing node"
+node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
+curl $node_url -s -o - | tar xzf - -C $build_dir
 
-# cache directories
-CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NODE_VERSION/$NPM_VERSION"
-CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
+# Move node into ./vendor and make it executable
+mkdir -p $build_dir/vendor
+mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
+chmod +x $build_dir/vendor/node/bin/*
+PATH=$PATH:$build_dir/vendor/node/bin
 
-# s3 packages
-NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
-NPM_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
-SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
+# Run subsequent node/npm commands from the build path
+cd $build_dir
 
-# vendor directories
-VENDORED_NODE="$(mktmpdir node)"
-VENDORED_NPM="$(mktmpdir npm)"
-VENDORED_SCONS="$(mktmpdir scons)"
+# If node_modules directory is checked into source control then
+# rebuild any native deps. Otherwise, restore from the build cache.
+if test -d $build_dir/node_modules; then
+  status "Using existing node_modules directory"
+  status "Rebuilding any native dependencies"
+  npm rebuild 2>&1 | indent
+elif test -d $cache_dir/node_modules; then
+  status "Restoring node_modules from cache"
+  cp -r $cache_dir/node_modules $build_dir/
+fi
 
-# download and unpack packages
-echo "-----> Fetching Node.js binaries"
-package_download "nodejs" "${NODE_VERSION}" "${VENDORED_NODE}"
-package_download "npm" "${NPM_VERSION}" "${VENDORED_NPM}"
-package_download "scons" "${SCONS_VERSION}" "${VENDORED_SCONS}"
+# Make npm output to STDOUT instead of its default STDERR
+status "Installing dependencies"
+npm install --production 2>&1 | indent
 
-# vendor node into the slug
-PATH="$BUILD_DIR/bin:$PATH"
-echo "-----> Vendoring node into slug"
-mkdir -p "$BUILD_DIR/bin"
-cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
+status "Pruning unused dependencies"
+npm prune 2>&1 | indent
 
-# setting up paths for building
-PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
-INCLUDE_PATH="$VENDORED_NODE/include"
-export CPATH="$INCLUDE_PATH:$CPATH"
-export CPPPATH="$INCLUDE_PATH:$CPPPATH"
+status "Caching node_modules directory for future builds"
+rm -rf $cache_dir
+mkdir -p $cache_dir
+test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
 
-# install dependencies with npm
-echo "-----> Installing dependencies with npm"
-run_npm "install --production"
-run_npm "rebuild"
-echo "Dependencies installed" | indent
+status "Cleaning up node-gyp and npm artifacts"
+rm -rf "$build_dir/.node-gyp"
+rm -rf "$build_dir/.npm"
 
-echo "-----> Building runtime environment"
-mkdir -p $BUILD_DIR/.profile.d
-echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
+# Update the PATH
+status "Building runtime environment"
+mkdir -p $build_dir/.profile.d
+echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
+
+# Post package.json to nomnom service
+# Use a subshell so failures won't break the build.
+(
+  curl \
+    --data @$build_dir/package.json \
+    --fail \
+    --silent \
+    --request POST \
+    --header "content-type: application/json" \
+    https://nomnom.heroku.com/?request_id=$REQUEST_ID
+) &
