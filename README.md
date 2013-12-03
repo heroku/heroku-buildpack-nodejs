@@ -1,12 +1,13 @@
 Heroku Buildpack for Node.js
 ============================
 
-This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, **update this README** to explain what your fork does and why it's special.
+This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
+
 
 How it Works
 ------------
 
-Here's a high-level overview of how this buildpack works:
+Here's an overview of what this buildpack does:
 
 - Uses the [semver.io](http://semver.io) webservice to find the latest version of node that satisfies the [engines.node semver range](https://npmjs.org/doc/json.html#engines) in your package.json.
 - Allows any recent version of node to be used, including [pre-release versions](http://semver.io/node.json).
@@ -33,6 +34,19 @@ For more information about using Node.js and buildpacks on Heroku, see these Dev
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 
+
+Legacy Compatibility
+--------------------
+
+For most Node.js apps this buildpack should work just fine. If, however, you're unable to deploy using this new version of the buildpack, you can get your app working again by using the legacy branch:
+
+```
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#legacy -a my-app
+git commit -am "empty" --allow-empty # force a git commit
+git push heroku master
+```
+
+Then please open a support ticket at [help.heroku.com](https://help.heroku.com/) so we can diagnose and get your app running on the default buildpack.
 
 Hacking
 -------
