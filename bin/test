@@ -79,7 +79,7 @@ testNodeModulesCached() {
 
 testModulesCheckedIn() {
   compile "modules-checked-in"
-  assertCaptured "Using existing node_modules directory"
+  assertCaptured "Found existing node_modules directory; skipping cache"
   assertCaptured "Rebuilding any native dependencies"
   assertCapturedSuccess
 }
