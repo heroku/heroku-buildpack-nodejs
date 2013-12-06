@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# See CONTRIBUTING.md for info on running these tests.
+# See README.md for info on running these tests.
 
 testDetectWithPackageJson() {
   detect "stable-node"
