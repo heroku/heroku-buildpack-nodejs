@@ -56,11 +56,11 @@ cd $build_dir
 # If node_modules directory is checked into source control then
 # rebuild any native deps. Otherwise, restore from the build cache.
 if test -d $build_dir/node_modules; then
-  status "Using existing node_modules directory"
+  status "Found existing node_modules directory; skipping cache"
   status "Rebuilding any native dependencies"
   npm rebuild 2>&1 | indent
 elif test -d $cache_dir/node_modules; then
-  status "Restoring node_modules from cache"
+  status "Restoring node_modules directory from cache"
   cp -r $cache_dir/node_modules $build_dir/
 fi
 
