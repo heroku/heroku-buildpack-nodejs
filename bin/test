@@ -84,6 +84,13 @@ testModulesCheckedIn() {
   assertCapturedSuccess
 }
 
+testUserConfig() {
+  compile "userconfig"
+  assertCaptured "https://www.google.com/"
+  assertCaptured "registry error"
+  assertCapturedError 1 ""
+}
+
 # Pending Tests
 
 # testNodeBinariesAddedToPath() {
@@ -135,7 +142,7 @@ compile_dir=""
 
 compile() {
   compile_dir=$(mktmpdir)
-  cp -r ${bp_dir}/test/$1/* ${compile_dir}/
+  cp -r ${bp_dir}/test/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)}
 }
 

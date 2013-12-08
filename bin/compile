@@ -66,7 +66,7 @@ fi
 
 # Make npm output to STDOUT instead of its default STDERR
 status "Installing dependencies"
-npm install --production 2>&1 | indent
+npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
 
 status "Pruning dependencies not specified in package.json"
 npm prune 2>&1 | indent
