@@ -9,8 +9,8 @@ How it Works
 
 Here's an overview of what this buildpack does:
 
-- Uses the [semver.io](http://semver.io) webservice to find the latest version of node that satisfies the [engines.node semver range](https://npmjs.org/doc/json.html#engines) in your package.json.
-- Allows any recent version of node to be used, including [pre-release versions](http://semver.io/node.json).
+- Uses the [semver.io](https://semver.io) webservice to find the latest version of node that satisfies the [engines.node semver range](https://npmjs.org/doc/json.html#engines) in your package.json.
+- Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).
 - Uses an [S3 caching proxy](https://github.com/heroku/s3pository#readme) of nodejs.org for faster downloads of the node binary.
 - Discourages use of dangerous semver ranges like `*` and `>0.10`.
 - Uses the version of `npm` that comes bundled with `node`.
