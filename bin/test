@@ -91,6 +91,19 @@ testUserConfig() {
   assertCapturedError 1 ""
 }
 
+testProcfileAbsentNpmStartPresent() {
+  compile "procfile-absent-npm-start-present"
+  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertFile "web: npm start" "Procfile"
+  assertCapturedSuccess
+}
+
+testProcfileAbsentNpmStartAbsent() {
+  compile "procfile-absent-npm-start-absent"
+  assertCaptured "Create a Procfile or specify a start script in package.json"
+  assertCapturedSuccess
+}
+
 # Pending Tests
 
 # testNodeBinariesAddedToPath() {

@@ -80,6 +80,19 @@ status "Cleaning up node-gyp and npm artifacts"
 rm -rf "$build_dir/.node-gyp"
 rm -rf "$build_dir/.npm"
 
+# If Procfile is absent, try to create one using `npm start`
+if [ ! -e $build_dir/Procfile ]; then
+  npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
+
+  if [ "$npm_start" == "null" ]; then
+    status "Procfile not found and npm start script is undefined"
+    protip "Create a Procfile or specify a start script in package.json"
+  else
+    status "No Procfile found; Adding npm start to new Procfile"
+    echo "web: npm start" > $build_dir/Procfile
+  fi
+fi
+
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
