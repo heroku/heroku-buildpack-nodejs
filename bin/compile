@@ -17,19 +17,17 @@ source $bp_dir/bin/common.sh
 # Output npm debug info on error
 trap cat_npm_debug_log ERR
 
-(
 if [ "$env_file" ]; then
   status "before:"
   env
 
   status "Here's your env_file:"
   status "$env_file"
-  export $(cat $env_file)
+  export $(egrep -v "^(PATH|foo)" $env_file)
 
   status "after:"
   env
 fi
-)
 
 # Look in package.json's engines.node field for a semver range
 semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
