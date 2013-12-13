@@ -2,7 +2,7 @@
 
 set -e            # fail fast
 set -o pipefail   # don't ignore exit codes when piping output
-# set -x          # enable debugging
+set -x            # enable debugging
 
 # Configure directories
 build_dir=$1
@@ -16,7 +16,7 @@ if [ "$env_file" ]; then
   env
 
   status "Here's your env_file:"
-  status $env_file
+  status "$env_file"
   source $env_file
 
   status "after:"
