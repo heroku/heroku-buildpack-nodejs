@@ -84,12 +84,14 @@ rm -rf "$build_dir/.npm"
 if [ ! -e $build_dir/Procfile ]; then
   npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
 
-  if [ "$npm_start" == "null" ]; then
-    status "Procfile not found and npm start script is undefined"
-    protip "Create a Procfile or specify a start script in package.json"
-  else
+  # If `scripts.start` is set in package.json, or a server.js file
+  # is present in the app root, then create a default Procfile
+  if [ "$npm_start" != "null" ] || [ -f $build_dir/server.js ]; then
     status "No Procfile found; Adding npm start to new Procfile"
     echo "web: npm start" > $build_dir/Procfile
+  else
+    status "Procfile not found and npm start script is undefined"
+    protip "Create a Procfile or specify a start script in package.json"
   fi
 fi
 
