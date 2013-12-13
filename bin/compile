@@ -7,7 +7,21 @@ set -o pipefail   # don't ignore exit codes when piping output
 # Configure directories
 build_dir=$1
 cache_dir=$2
+env_file=$3
+
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
+
+if [ "$env_file" ]; then
+  status "before:"
+  env
+
+  status "Here's your env_file:"
+  status $env_file
+  source $env_file
+
+  status "after:"
+  env
+fi
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
