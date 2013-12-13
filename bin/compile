@@ -23,7 +23,7 @@ if [ "$env_file" ]; then
 
   status "Here's your env_file:"
   status "$env_file"
-  export $(egrep -v "^(PATH|foo)" $env_file)
+  export $(egrep -v "^(PATH)" $env_file)
 
   status "after:"
   env
