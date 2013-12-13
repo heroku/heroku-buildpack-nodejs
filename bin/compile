@@ -65,6 +65,11 @@ elif test -d $cache_dir/node_modules; then
 
   status "Pruning cached dependencies not specified in package.json"
   npm prune 2>&1 | indent
+
+  if test $NPM_REBUILD; then
+    status "npm rebuild requested"
+    npm rebuild 2>&1 | indent
+  fi
 fi
 
 # Make npm output to STDOUT instead of its default STDERR
