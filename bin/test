@@ -104,6 +104,23 @@ testProcfileAbsentNpmStartAbsent() {
   assertCapturedSuccess
 }
 
+testProcfileAbsentNpmStartPresent() {
+  compile "procfile-absent-npm-start-present"
+  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertFile "web: npm start" "Procfile"
+  assertCapturedSuccess
+}
+
+testEnvfileNotImported() {
+  compile "stable-node"
+  assertNotCaptured "Importing application config vars"
+}
+
+testEnvfileImported() {
+  compileWithEnv "stable-node"
+  assertCaptured "Importing application config vars"
+}
+
 # Pending Tests
 
 # testNodeBinariesAddedToPath() {
@@ -132,6 +149,8 @@ testProcfileAbsentNpmStartAbsent() {
 #   assertCapturedError 1 "not found among available versions"
 # }
 
+
+
 # Utils
 
 pushd $(dirname 0) >/dev/null
@@ -157,6 +176,13 @@ compile() {
   compile_dir=$(mktmpdir)
   cp -r ${bp_dir}/test/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)}
+}
+
+compileWithEnv() {
+  compile_dir=$(mktmpdir)
+  env_file="FOO=1;BAR=2;"
+  cp -r ${bp_dir}/test/$1/. ${compile_dir}
+  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir) $env_file}
 }
 
 assertFile() {
