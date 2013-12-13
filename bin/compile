@@ -11,6 +11,12 @@ env_file=$3
 
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
+# Load some convenience functions like status(), echo(), and indent()
+source $bp_dir/bin/common.sh
+
+# Output npm debug info on error
+trap cat_npm_debug_log ERR
+
 if [ "$env_file" ]; then
   status "before:"
   env
@@ -22,12 +28,6 @@ if [ "$env_file" ]; then
   status "after:"
   env
 fi
-
-# Load some convenience functions like status(), echo(), and indent()
-source $bp_dir/bin/common.sh
-
-# Output npm debug info on error
-trap cat_npm_debug_log ERR
 
 # Look in package.json's engines.node field for a semver range
 semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
