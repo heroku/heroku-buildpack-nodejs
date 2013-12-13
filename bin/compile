@@ -24,7 +24,7 @@ if [ "$env_file" ]; then
 
   status "Here's your env_file:"
   status "$env_file"
-  source $env_file
+  export $(cat $env_file)
 
   status "after:"
   env
