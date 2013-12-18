@@ -87,3 +87,5 @@ The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bi
 ```
 heroku build -b ddollar/test # -b can also point to a local directory
 ```
+
+For more info on testing, see [Best Practices for Testing Buildpacks](https://discussion.heroku.com/t/best-practices-for-testing-buildpacks/294) on the Heroku discussion forum.
