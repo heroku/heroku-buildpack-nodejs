@@ -121,36 +121,6 @@ testEnvfileImported() {
   assertCaptured "Importing application config vars"
 }
 
-# Pending Tests
-
-# testNodeBinariesAddedToPath() {
-# }
-
-# testNodeModulesRestoredFromCache() {
-# }
-
-# TODO: Figure out how to test stuff like script hooks
-# when restoring node_modules from cache
-# testScriptHooks() {
-#   compile "script-hooks"
-#   assertCaptured "trigger script hooks"
-#   assertCaptured "preinstall hook message"
-#   assertCapturedSuccess
-# }
-
-# testWithoutScriptHooks() {
-#   compile "no-script-hooks"
-#   assertNotCaptured "trigger script hooks"
-#   assertCapturedSuccess
-# }
-
-# testInvalidVersion() {
-#   compile "invalid-node-version"
-#   assertCapturedError 1 "not found among available versions"
-# }
-
-
-
 # Utils
 
 pushd $(dirname 0) >/dev/null
