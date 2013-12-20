@@ -114,11 +114,15 @@ testProcfileAbsentNpmStartPresent() {
 testEnvfileNotImported() {
   compile "stable-node"
   assertNotCaptured "Importing application config vars"
+  assertCapturedSuccess
 }
 
 testEnvfileImported() {
-  compileWithEnv "stable-node"
+  env_file=$(mktemp)
+  echo "FOO=1" > $env_file
+  compile "stable-node" "$(mktmpdir)" $env_file
   assertCaptured "Importing application config vars"
+  assertCapturedSuccess
 }
 
 # Utils
@@ -145,14 +149,7 @@ compile_dir=""
 compile() {
   compile_dir=$(mktmpdir)
   cp -r ${bp_dir}/test/$1/. ${compile_dir}
-  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)}
-}
-
-compileWithEnv() {
-  compile_dir=$(mktmpdir)
-  env_file="FOO=1;BAR=2;"
-  cp -r ${bp_dir}/test/$1/. ${compile_dir}
-  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir) $env_file}
+  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
 assertFile() {
