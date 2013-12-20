@@ -60,7 +60,7 @@ testUnstableVersion() {
 testProfileCreated() {
   compile "stable-node"
   assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";export NODE_ENV=${NODE_ENV:-production}" ".profile.d/nodejs.sh"
   assertCapturedSuccess
 }
 
