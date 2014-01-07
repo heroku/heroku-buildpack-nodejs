@@ -104,6 +104,27 @@ testProcfileAbsentNpmStartAbsent() {
   assertCapturedSuccess
 }
 
+testProcfileAbsentNpmStartPresent() {
+  compile "procfile-absent-npm-start-present"
+  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertFile "web: npm start" "Procfile"
+  assertCapturedSuccess
+}
+
+testEnvfileNotImported() {
+  compile "stable-node"
+  assertNotCaptured "Importing application config vars"
+  assertCapturedSuccess
+}
+
+testEnvfileImported() {
+  env_file=$(mktemp)
+  echo "FOO=1" > $env_file
+  compile "stable-node" "$(mktmpdir)" $env_file
+  assertCaptured "Importing application config vars"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd $(dirname 0) >/dev/null
@@ -128,7 +149,7 @@ compile_dir=""
 compile() {
   compile_dir=$(mktmpdir)
   cp -r ${bp_dir}/test/$1/. ${compile_dir}
-  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)}
+  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
 assertFile() {
