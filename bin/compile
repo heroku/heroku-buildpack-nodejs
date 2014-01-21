@@ -7,7 +7,7 @@ set -o pipefail   # don't ignore exit codes when piping output
 # Configure directories
 build_dir=$1
 cache_dir=$2
-env_file=$3
+env_dir=$3
 
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
@@ -71,9 +71,9 @@ fi
 
 # Scope config var availability only to `npm install`
 (
-  if [ "$env_file" ]; then
-    status "Importing application config vars"
-    export $(egrep -v "^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)" "$env_file")
+  if [ -d "$env_dir" ]; then
+    status "Exporting config vars to environment"
+    export_env_dir $env_dir
   fi
 
   status "Installing dependencies"
