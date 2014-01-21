@@ -111,9 +111,9 @@ testProcfileAbsentNpmStartPresent() {
   assertCapturedSuccess
 }
 
-testEnvfileNotImported() {
+testEnvDirNotImported() {
   compile "stable-node"
-  assertNotCaptured "Importing application config vars"
+  assertNotCaptured "Exporting config vars to environment"
   assertCapturedSuccess
 }
 
