@@ -1,7 +1,14 @@
-Heroku Buildpack for Node.js
-============================
+Heroku buildpack: Node.js with grunt support
+============================================
 
-This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
+Supported Grunt versions: 0.3 and 0.4.
+See the Grunt [migration guide](https://github.com/gruntjs/grunt/wiki/Upgrading-from-0.3-to-0.4) if you are upgrading from 0.3.
+
+This is a fork of [Heroku's official Node.js buildpack](https://github.com/heroku/heroku-buildpack-nodejs) with added [Grunt](http://gruntjs.com/) support.
+Using this buildpack you do not need to commit the results of your Grunt tasks (e.g. minification and concatination of files), keeping your repository clean.
+
+After all the default Node.js and npm build tasks have finished, the buildpack checks if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`or `grunt.js`) exists and executes the `heroku` task by running `grunt heroku`. For details about grunt and how to define tasks, check out the [offical documentation](http://gruntjs.com/getting-started). You must add grunt to the npm dependencies in your `package.json` file.
+If no Gruntfile exists, the buildpacks simply skips the grunt step and executes like the standard Node.js buildpack.
 
 
 How it Works
@@ -20,12 +27,75 @@ Here's an overview of what this buildpack does:
 - Runs `npm rebuild` if `node_modules` is checked into version control.
 - Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
 - Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
+- Runs `grunt` if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`or `grunt.js`) is found.
 
-For more technical details, see the [heavily-commented compile script](https://github.com/heroku/heroku-buildpack-nodejs/blob/master/bin/compile).
+For more technical details, see the [heavily-commented compile script](https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt/blob/master/bin/compile).
 
+Usage
+-----
 
-Documentation
--------------
+Create a new app with this buildpack:
+
+    heroku create myapp --buildpack https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
+
+Or add this buildpack to your current app:
+
+    heroku config:add BUILDPACK_URL=https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt.git
+
+Set the `NODE_ENV` environment variable (e.g. `development` or `production`):
+
+    heroku config:set NODE_ENV=production
+
+Create your Node.js app and add a Gruntfile named  `Gruntfile.js` (or `Gruntfile.coffee` if you want to use CoffeeScript, or `grunt.js` if you are using Grunt 0.3) with a `heroku` task:
+
+    grunt.registerTask('heroku:development', 'clean less mincss');
+    
+or
+
+    grunt.registerTask('heroku:production', 'clean less mincss uglify');
+
+Don't forget to add grunt to your dependencies in `package.json`. If your grunt tasks depend on other pre-defined tasks make sure to add these dependencies as well:
+
+    "dependencies": {
+        ...
+        "grunt": "*",
+        "grunt-contrib": "*",
+        "less": "*"
+    }
+
+Push to heroku
+
+    git push heroku master
+    ...
+    -----> Heroku receiving push
+    -----> Fetching custom buildpack... done
+    -----> Node.js app detected
+    -----> Resolving engine versions
+           Using Node.js version: 0.8.2
+           Using npm version: 1.1.41
+    -----> Fetching Node.js binaries
+    -----> Vendoring node into slug
+    -----> Installing dependencies with npm
+           ...
+           Dependencies installed
+    -----> Building runtime environment
+    -----> Found gruntfile, running grunt heroku task
+    Running "heroku" task
+    ...
+    -----> Discovering process types
+
+Debugging
+---------
+
+npm can be run with a verbose flag to help debugging if something fails when installing the dependencies. 
+
+* if the `VERBOSE` environment variable is set, npm is always run with verbose logging.
+* if `BUILDPACK_RETRY_VERBOSE` is set, npm is relaunched in verbose mode if npm failed.
+
+Thanks to [mackwic](https://github.com/mackwic) for these extensions.
+
+Further Information
+-------------------
 
 For more information about using Node.js and buildpacks on Heroku, see these Dev Center articles:
 
@@ -33,59 +103,4 @@ For more information about using Node.js and buildpacks on Heroku, see these Dev
 - [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
-
-
-Legacy Compatibility
---------------------
-
-For most Node.js apps this buildpack should work just fine. If, however, you're unable to deploy using this new version of the buildpack, you can get your app working again by using the legacy branch:
-
-```
-heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#legacy -a my-app
-git commit -am "empty" --allow-empty # force a git commit
-git push heroku master
-```
-
-Then please open a support ticket at [help.heroku.com](https://help.heroku.com/) so we can diagnose and get your app running on the default buildpack.
-
-Hacking
--------
-
-To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Heroku app to test it, or configure an existing app to use your buildpack:
-
-```
-# Create a new Heroku app that uses your buildpack
-heroku create --buildpack <your-github-url>
-
-# Configure an existing Heroku app to use your buildpack
-heroku config:set BUILDPACK_URL=<your-github-url>
-
-# You can also use a git branch!
-heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
-```
-
-For more detailed information about testing buildpacks, see [CONTRIBUTING.md](CONTRIBUTING.md)
-
-
-Testing
--------
-
-[Anvil](https://github.com/ddollar/anvil) is a generic build server for Heroku.
-
-```
-gem install anvil-cli
-```
-
-The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrapper for anvil.
-
-```
-heroku plugins:install https://github.com/ddollar/heroku-anvil
-```
-
-The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bin/test` on your app/buildpack.
-
-```
-heroku build -b ddollar/test # -b can also point to a local directory
-```
-
-For more info on testing, see [Best Practices for Testing Buildpacks](https://discussion.heroku.com/t/best-practices-for-testing-buildpacks/294) on the Heroku discussion forum.
+- [Grunt: a task-based command line build tool for JavaScript projects](http://gruntjs.com/)
