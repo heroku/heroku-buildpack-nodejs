@@ -55,6 +55,25 @@ PATH=$PATH:$build_dir/vendor/node/bin
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
+is_gruntfile_present= [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ];
+if $is_gruntfile_present; then
+  status "Found Gruntfile"
+  status "Augmenting package.json with grunt and grunt-cli"
+  # Do this because we want to cache it with other node_modules. Otherwise it will be pruned.
+  # It doesn't matter if grunt and/or grunt-cli is already there
+  awk '{ if ( $0 ~ /"dependencies".*/ ) {
+              printf "%s\n%s\n%s\n", $0, "\"grunt-cli\": \"*\",", "\"grunt\": \"*\",";
+         } else {
+              print $0;
+         }
+    }' package.json > tmp-package.json;
+  cp tmp-package.json package.json;
+  rm tmp-package.json;
+else
+  status "No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
+fi
+
+
 # If node_modules directory is checked into source control then
 # rebuild any native deps. Otherwise, restore from the build cache.
 if test -d $build_dir/node_modules; then
@@ -127,92 +146,46 @@ if [ ! -e $build_dir/Procfile ]; then
   fi
 fi
 
-# Update the PATH
+# install compass
+status "Installing Compass"
+export GEM_HOME=$build_dir/.gem/ruby/1.9.1
+PATH="$GEM_HOME/bin:$PATH"
+if test -d $cache_dir/ruby/.gem; then
+  status "Restoring ruby gems directory from cache"
+  cp -r $cache_dir/ruby/.gem $build_dir
+  HOME=$build_dir gem update compass --user-install --no-rdoc --no-ri
+else
+  HOME=$build_dir gem install compass --user-install --no-rdoc --no-ri
+fi
+
+# cache ruby gems compass
+rm -rf $cache_dir/ruby
+mkdir -p $cache_dir/ruby
+
+# If app has a gems directory, cache it.
+if test -d $build_dir/.gem; then
+  status "Caching ruby gems directory for future builds"
+  cp -r $build_dir/.gem $cache_dir/ruby
+fi
+
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $build_dir/.profile.d/ruby.sh
 
 # Check and run Grunt
 (
-  if [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ]; then
+  if $is_gruntfile_present; then
     # get the env vars
     if [ -d "$env_dir" ]; then
       status "Exporting config vars to environment"
       export_env_dir $env_dir
     fi
 
-    # make sure that grunt and grunt-cli are installed locally
-    npm install grunt-cli
-    npm install grunt
-    echo "-----> Found Gruntfile, running grunt heroku:$NODE_ENV task"
+    status "Running grunt heroku:$NODE_ENV task"
     $build_dir/node_modules/.bin/grunt heroku:$NODE_ENV
-  else
-    echo "-----> No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
   fi
 )
-
-NODE_VERSION=$(package_resolve_version "node")
-echo "Using Node.js version: ${NODE_VERSION}" | indent
-
-NPM_VERSION=$(package_resolve_version "npm")
-echo "Using npm version: ${NPM_VERSION}" | indent
-
-# cache directories
-CACHE_STORE_DIR="$CACHE_DIR/node_modules/$NODE_VERSION/$NPM_VERSION"
-CACHE_TARGET_DIR="$BUILD_DIR/node_modules"
-
-# s3 packages
-NODE_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/nodejs-${NODE_VERSION}.tgz"
-NPM_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/npm-${NPM_VERSION}.tgz"
-SCONS_PACKAGE="http://${S3_BUCKET}.s3.amazonaws.com/scons-${SCONS_VERSION}.tgz"
-
-# vendor directories
-VENDORED_NODE="$(mktmpdir node)"
-VENDORED_NPM="$(mktmpdir npm)"
-VENDORED_SCONS="$(mktmpdir scons)"
-
-# download and unpack packages
-echo "-----> Fetching Node.js binaries"
-package_download "nodejs" "${NODE_VERSION}" "${VENDORED_NODE}"
-package_download "npm" "${NPM_VERSION}" "${VENDORED_NPM}"
-package_download "scons" "${SCONS_VERSION}" "${VENDORED_SCONS}"
-
-# vendor node into the slug
-PATH="$BUILD_DIR/bin:$PATH"
-echo "-----> Vendoring node into slug"
-mkdir -p "$BUILD_DIR/bin"
-cp "$VENDORED_NODE/bin/node" "$BUILD_DIR/bin/node"
-
-# setting up paths for building
-PATH="$VENDORED_SCONS:$VENDORED_NODE/bin:$PATH"
-INCLUDE_PATH="$VENDORED_NODE/include"
-export CPATH="$INCLUDE_PATH"
-export CPPPATH="$INCLUDE_PATH"
-
-# install compass
-echo "-----> Installing Compass"
-export GEM_HOME=$BUILD_DIR/.gem/ruby/1.9.1
-PATH="$GEM_HOME/bin:$PATH"
-HOME=$BUILD_DIR gem install compass --user-install --no-rdoc --no-ri
-
-# install dependencies with npm
-echo "-----> Installing dependencies with npm"
-run_npm "install --production"
-run_npm "rebuild"
-echo "Dependencies installed" | indent
-
-echo "-----> Building runtime environment"
-mkdir -p $BUILD_DIR/.profile.d
-echo "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $BUILD_DIR/.profile.d/nodejs.sh
-echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $BUILD_DIR/.profile.d/ruby.sh
-
-if [ -f $BUILD_DIR/grunt.js ] || [ -f $BUILD_DIR/Gruntfile.js ] || [ -f $BUILD_DIR/Gruntfile.coffee ]; then
-  run_npm "install grunt-cli"
-  echo "-----> Found Gruntfile, running grunt heroku task"
-  $BUILD_DIR/node_modules/grunt-cli/bin/grunt heroku
-else
-  echo "-----> No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
-fi
 
 # Post package.json to nomnom service
 # Use a subshell so failures won't break the build.
