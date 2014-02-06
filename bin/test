@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
-
-#
-# Create a Heroku app with the following buildpack:
-# https://github.com/ddollar/buildpack-test
-#
-# Push this Node.js buildpack to that Heroku app to
-# run the tests
-#
+# See README.md for info on running these tests.
 
 testDetectWithPackageJson() {
-  detect "package-json-version"
+  detect "stable-node"
   assertCaptured "Node.js"
   assertCapturedSuccess
 }
@@ -19,48 +12,127 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
-testPackageJsonWithVersion() {
-  compile "package-json-version"
-  assertNotCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.6.11"
-  assertCaptured "Using npm version: 1.1.9"
+testNoVersion() {
+  compile "no-version"
+  assertCaptured "PRO TIP: Specify a node version in package.json"
+  assertCaptured "Defaulting to latest stable node"
   assertCapturedSuccess
 }
 
-testPackageJsonWithoutVersion() {
-  compile "package-json-noversion"
-  assertCaptured "WARNING: No version of Node.js specified"
-  assertCaptured "Using Node.js version: 0.10"
-  assertCaptured "Using npm version: 1.2"
+testDangerousRangeStar() {
+  compile "dangerous-range-star"
+  assertCaptured "PRO TIP: Avoid using semver ranges like '*'"
+  assertCaptured "Requested node range:  *"
+  assertCaptured "Resolved node version: 0.10"
   assertCapturedSuccess
 }
 
-testPackageJsonWithInvalidVersion() {
-  compile "package-json-invalidversion"
-  assertCapturedError 1 "Requested engine npm version 1.1.5 does not"
+testDangerousRangeGreaterThan() {
+  compile "dangerous-range-greater-than"
+  assertCaptured "PRO TIP: Avoid using semver ranges starting with '>'"
+  assertCaptured "Requested node range:  >"
+  assertCaptured "Resolved node version: 0.10."
+  assertCapturedSuccess
 }
 
-testNothingCached() {
-  cache=$(mktmpdir)
-  compile "package-json-version" $cache
+testRangeWithSpace() {
+  compile "range-with-space"
+  assertCaptured "Requested node range:  >= 0.8.x"
+  assertCaptured "Resolved node version: 0.10."
   assertCapturedSuccess
-  assertEquals "0" "$(ls -1 $cache | wc -l)"
+}
+
+testStableVersion() {
+  compile "stable-node"
+  assertNotCaptured "PRO TIP: Avoid using semver"
+  assertNotCaptured "PRO TIP: Specify"
+  assertCaptured "Resolved node version"
+  assertCapturedSuccess
+}
+
+testUnstableVersion() {
+  compile "unstable-version"
+  assertCaptured "Requested node range:  >0.11.0"
+  assertCaptured "Resolved node version: 0.11."
+  assertCapturedSuccess
 }
 
 testProfileCreated() {
-  compile "package-json-version"
+  compile "stable-node"
   assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" ".profile.d/nodejs.sh"
+  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" ".profile.d/nodejs.sh"
   assertCapturedSuccess
 }
 
-## utils ########################################
+testInvalidDependency() {
+  compile "invalid-dependency"
+  assertCaptured "not in the npm registry"
+  assertCapturedError 1 ""
+}
+
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+  compile "caching" $cache
+  assertCaptured "Caching node"
+  assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+}
+
+testModulesCheckedIn() {
+  compile "modules-checked-in"
+  assertCaptured "Found existing node_modules directory; skipping cache"
+  assertCaptured "Rebuilding any native dependencies"
+  assertCapturedSuccess
+}
+
+testUserConfig() {
+  compile "userconfig"
+  assertCaptured "https://www.google.com/"
+  assertCaptured "registry error"
+  assertCapturedError 1 ""
+}
+
+testProcfileAbsentNpmStartPresent() {
+  compile "procfile-absent-npm-start-present"
+  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertFile "web: npm start" "Procfile"
+  assertCapturedSuccess
+}
+
+testProcfileAbsentNpmStartAbsent() {
+  compile "procfile-absent-npm-start-absent"
+  assertCaptured "Create a Procfile or specify a start script in package.json"
+  assertCapturedSuccess
+}
+
+testProcfileAbsentNpmStartPresent() {
+  compile "procfile-absent-npm-start-present"
+  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertFile "web: npm start" "Procfile"
+  assertCapturedSuccess
+}
+
+testEnvDirNotImported() {
+  compile "stable-node"
+  assertNotCaptured "Exporting config vars to environment"
+  assertCapturedSuccess
+}
+
+testEnvDirExported() {
+  env_dir=$(mktmpdir)
+  echo "chicken" > $env_dir/birds
+  echo "koi" > $env_dir/fish
+  compile "stable-node" "$(mktmpdir)" $env_dir
+  assertCaptured "Exporting config vars to environment"
+  assertCapturedSuccess
+}
+
+# Utils
 
 pushd $(dirname 0) >/dev/null
-BASE=$(pwd)
+bp_dir=$(pwd)
 popd >/dev/null
 
-source ${BASE}/vendor/test-utils/test-utils
+source ${bp_dir}/vendor/test-utils/test-utils
 
 mktmpdir() {
   dir=$(mktemp -t testXXXXX)
@@ -70,19 +142,19 @@ mktmpdir() {
 }
 
 detect() {
-  capture ${BASE}/bin/detect ${BASE}/test/$1
+  capture ${bp_dir}/bin/detect ${bp_dir}/test/$1
 }
 
-COMPILE_DIR=""
+compile_dir=""
 
 compile() {
-  COMPILE_DIR=$(mktmpdir)
-  cp -r ${BASE}/test/$1/* ${COMPILE_DIR}/
-  capture ${BASE}/bin/compile ${COMPILE_DIR} $2
+  compile_dir=$(mktmpdir)
+  cp -r ${bp_dir}/test/$1/. ${compile_dir}
+  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
 assertFile() {
-  assertEquals "$1" "$(cat ${COMPILE_DIR}/$2)"
+  assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
-source ${BASE}/vendor/shunit2/shunit2
+source ${bp_dir}/vendor/shunit2/shunit2

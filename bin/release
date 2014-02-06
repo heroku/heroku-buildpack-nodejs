@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
-
-cat <<EOF
----
-config_vars:
-  PATH: bin:node_modules/.bin:/usr/local/bin:/usr/bin:/bin
+cat << EOF
+addons: []
+default_process_types: {}
 EOF
