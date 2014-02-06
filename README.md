@@ -28,6 +28,7 @@ Here's an overview of what this buildpack does:
 - Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
 - Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
 - Runs `grunt` if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`or `grunt.js`) is found.
+- Installs `compass`.
 
 For more technical details, see the [heavily-commented compile script](https://github.com/mbuchetics/heroku-buildpack-nodejs-grunt/blob/master/bin/compile).
 
@@ -75,6 +76,7 @@ Push to heroku
            Using npm version: 1.1.41
     -----> Fetching Node.js binaries
     -----> Vendoring node into slug
+    -----> Installing Compass
     -----> Installing dependencies with npm
            ...
            Dependencies installed
@@ -104,3 +106,4 @@ For more information about using Node.js and buildpacks on Heroku, see these Dev
 - [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 - [Grunt: a task-based command line build tool for JavaScript projects](http://gruntjs.com/)
+- [Compass: SCSS with batteries](http://compass-style.org/)
