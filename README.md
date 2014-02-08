@@ -28,7 +28,8 @@ Here's an overview of what this buildpack does:
 - Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
 - Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
 - Runs `grunt` if a Gruntfile (`Gruntfile.js`, `Gruntfile.coffee`or `grunt.js`) is found.
-- Installs `compass`.
+- Doesn't install grunt-cli every time.
+- Installs `compass`, caching it for future use.
 
 For more technical details, see the [heavily-commented compile script](https://github.com/soswow/heroku-buildpack-nodejs-grunt-compass/blob/master/bin/compile).
 
@@ -68,23 +69,27 @@ Push to heroku
 
     git push heroku master
     ...
-    -----> Heroku receiving push
-    -----> Fetching custom buildpack... done
+    ----> Fetching custom git buildpack... done
     -----> Node.js app detected
-    -----> Resolving engine versions
-           Using Node.js version: 0.8.2
-           Using npm version: 1.1.41
-    -----> Fetching Node.js binaries
-    -----> Vendoring node into slug
+    -----> Requested node range:  0.10.x
+    -----> Resolved node version: 0.10.25
+    -----> Downloading and installing node
+    -----> Found Gruntfile
+    -----> Augmenting package.json with grunt and grunt-cli
+    -----> Restoring node_modules directory from cache
+    -----> Pruning cached dependencies not specified in package.json
+           npm WARN package.json mealgen@0.0.0 No repository field.
+    -----> Installing dependencies
+           npm WARN package.json mealgen@0.0.0 No repository field.
+    -----> Caching node_modules directory for future builds
+    -----> Cleaning up node-gyp and npm artifacts
     -----> Installing Compass
-    -----> Installing dependencies with npm
-           ...
-           Dependencies installed
+    -----> Restoring ruby gems directory from cache
+    Updating installed gems
+    Nothing to update
+    -----> Caching ruby gems directory for future builds
     -----> Building runtime environment
-    -----> Found gruntfile, running grunt heroku task
-    Running "heroku" task
-    ...
-    -----> Discovering process types
+    -----> Running grunt heroku: task
 
 Debugging
 ---------
