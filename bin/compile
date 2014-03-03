@@ -7,7 +7,7 @@ set -o pipefail   # don't ignore exit codes when piping output
 # Configure directories
 build_dir=$1
 cache_dir=$2
-env_file=$3
+env_dir=$3
 
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
@@ -61,19 +61,32 @@ if test -d $build_dir/node_modules; then
   status "Found existing node_modules directory; skipping cache"
   status "Rebuilding any native dependencies"
   npm rebuild 2>&1 | indent
-elif test -d $cache_dir/node_modules; then
+elif test -d $cache_dir/node/node_modules; then
   status "Restoring node_modules directory from cache"
-  cp -r $cache_dir/node_modules $build_dir/
+  cp -r $cache_dir/node/node_modules $build_dir/
 
   status "Pruning cached dependencies not specified in package.json"
   npm prune 2>&1 | indent
+
+  if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
+    status "Node version changed since last build; rebuilding dependencies"
+    npm rebuild 2>&1 | indent
+  fi
+
+fi
+
+# Handle npm's new cert bug
+# http://blog.npmjs.org/post/78085451721/npms-self-signed-certificate-is-no-more
+if [ ! -f "$build_dir/.npmrc" ]; then
+  status "Writing a custom .npmrc to circumvent npm bugs"
+  echo "ca=" > "$build_dir/.npmrc"
 fi
 
 # Scope config var availability only to `npm install`
 (
-  if [ "$env_file" ]; then
-    status "Importing application config vars"
-    export $(egrep -v "^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)" "$env_file")
+  if [ -d "$env_dir" ]; then
+    status "Exporting config vars to environment"
+    export_env_dir $env_dir
   fi
 
   status "Installing dependencies"
@@ -81,10 +94,26 @@ fi
   NODE_ENV=development npm install --userconfig $build_dir/.npmrc 2>&1 | indent
 )
 
-status "Caching node_modules directory for future builds"
-rm -rf $cache_dir/node_modules
-mkdir -p $cache_dir
-test -d $build_dir/node_modules && cp -r $build_dir/node_modules $cache_dir/
+# Persist goodies like node-version in the slug
+mkdir -p $build_dir/.heroku
+
+# Save resolved node version in the slug for later reference
+echo $node_version > $build_dir/.heroku/node-version
+
+# Purge node-related cached content, being careful not to purge the top-level
+# cache, for the sake of heroku-buildpack-multi apps.
+rm -rf $cache_dir/node_modules # (for apps still on the older caching strategy)
+rm -rf $cache_dir/node
+mkdir -p $cache_dir/node
+
+# If app has a node_modules directory, cache it.
+if test -d $build_dir/node_modules; then
+  status "Caching node_modules directory for future builds"
+  cp -r $build_dir/node_modules $cache_dir/node
+fi
+
+# Copy goodies to the cache
+cp -r $build_dir/.heroku $cache_dir/node
 
 status "Cleaning up node-gyp and npm artifacts"
 rm -rf "$build_dir/.node-gyp"

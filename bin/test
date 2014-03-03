@@ -111,17 +111,18 @@ testProcfileAbsentNpmStartPresent() {
   assertCapturedSuccess
 }
 
-testEnvfileNotImported() {
+testEnvDirNotImported() {
   compile "stable-node"
-  assertNotCaptured "Importing application config vars"
+  assertNotCaptured "Exporting config vars to environment"
   assertCapturedSuccess
 }
 
-testEnvfileImported() {
-  env_file=$(mktemp)
-  echo "FOO=1" > $env_file
-  compile "stable-node" "$(mktmpdir)" $env_file
-  assertCaptured "Importing application config vars"
+testEnvDirExported() {
+  env_dir=$(mktmpdir)
+  echo "chicken" > $env_dir/birds
+  echo "koi" > $env_dir/fish
+  compile "stable-node" "$(mktmpdir)" $env_dir
+  assertCaptured "Exporting config vars to environment"
   assertCapturedSuccess
 }
 
