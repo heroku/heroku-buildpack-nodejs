@@ -1,11 +1,47 @@
 Heroku Buildpack for Node.js
 ============================
 
-This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
+This is a minor edit of the the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. We forked the repository in order to provide a simple solution to allow pulling npm modules from private github repositories without checking in passwords or other sensitive credentials into source control
+
+How it Works Differently
+------------------------
+
+Prior to executing npm install, it finds your package.json and performs a simple string replacement on tokens placed
+into the file with values from environment variables set through the heroku config system.
+
+I.E.: 
+
+* Use the github tools to generate a token that is granted access to private repos, get something like fea1d33bb73544c7a1f7c75ec12279eb
+* Use the heroku toolbelt to set the token as a configuration value for your app: 
+
+```
+heroku config:set GITHUB_TOKEN=fea1d33bb73544c7a1f7c75ec12279eb --app my-app
+```
+
+And if your package.json is this:
+
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-private-module": "git+https://${HEROKU_CONFIG_GITHUB_TOKEN}:x-oauth-basic@github.com/me/my_private_module.git"
+  }
+}
+
+it becomes:
+
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "dependencies": {
+    "my-private-module": "git+https://fea1d33bb73544c7a1f7c75ec12279eb:x-oauth-basic@github.com/me/my_private_module.git"
+  }
+}
 
 
-How it Works
-------------
+
+How it Works Identically to the Official Buildpack
+--------------------------------------------------
 
 Here's an overview of what this buildpack does:
 
