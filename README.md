@@ -20,6 +20,7 @@ heroku config:set GITHUB_TOKEN=fea1d33bb73544c7a1f7c75ec12279eb --app my-app
 
 And if your package.json is this:
 
+```json
 {
   "name": "my-app",
   "version": "1.0.0",
@@ -27,9 +28,11 @@ And if your package.json is this:
     "my-private-module": "git+https://${HEROKU_CONFIG_GITHUB_TOKEN}:x-oauth-basic@github.com/me/my_private_module.git"
   }
 }
+```
 
 it becomes:
 
+```json
 {
   "name": "my-app",
   "version": "1.0.0",
@@ -37,7 +40,7 @@ it becomes:
     "my-private-module": "git+https://fea1d33bb73544c7a1f7c75ec12279eb:x-oauth-basic@github.com/me/my_private_module.git"
   }
 }
-
+```
 
 
 How it Works Identically to the Official Buildpack
