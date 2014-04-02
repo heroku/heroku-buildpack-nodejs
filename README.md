@@ -5,42 +5,15 @@ This is a minor edit of the the official [Heroku buildpack](http://devcenter.her
 
 How it Works Differently
 ------------------------
+This buildpack looks for a specific config value set through heroku config: ```$GIT_SSH_KEY```. If present, the buildpack expects the base64 encoded contents of a private key whose public key counterpart has been registered with github on a github account with access to any private repositories needed by the application.  It decodes the contents into a file, launches ssh-agent and registers that keyfile, prior to executing ```npm install```.  Once npm install is finished, it cleans up the environment and file system of the key contents.
 
-Prior to executing npm install, it finds your package.json and performs a simple string replacement on tokens placed
-into the file with values from environment variables set through the heroku config system.
+How to Use:
+-----------
+* Generate a key: ```ssh-keygen -t rsa -C "your_email@example.com"``` (Enter no passphrase. This buildpack does not support keys with passphrases)
+* Add the public key to github: ```pbcopy < ~/.ssh/id_rsa.pub``` and paste the results into the github admin
+* Add the private key to your heroku app's config: ```cat id_rsa | base64 | pbcopy```, then ```heroku config:set GIT_SSH_KEY=<paste_here> --app your-app-name```
+* Setup your app to use this buildpack as described below
 
-I.E.: 
-
-* Use the github tools to generate a token that is granted access to private repos, get something like fea1d33bb73544c7a1f7c75ec12279eb
-* Use the heroku toolbelt to set the token as a configuration value for your app: 
-
-```
-heroku config:set GITHUB_TOKEN=fea1d33bb73544c7a1f7c75ec12279eb --app my-app
-```
-
-And if your package.json is this:
-
-```json
-{
-  "name": "my-app",
-  "version": "1.0.0",
-  "dependencies": {
-    "my-private-module": "git+https://${HEROKU_CONFIG_GITHUB_TOKEN}:x-oauth-basic@github.com/me/my_private_module.git"
-  }
-}
-```
-
-it becomes:
-
-```json
-{
-  "name": "my-app",
-  "version": "1.0.0",
-  "dependencies": {
-    "my-private-module": "git+https://fea1d33bb73544c7a1f7c75ec12279eb:x-oauth-basic@github.com/me/my_private_module.git"
-  }
-}
-```
 
 
 How it Works Identically to the Official Buildpack
