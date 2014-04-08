@@ -1,11 +1,23 @@
 Heroku Buildpack for Node.js
 ============================
 
-This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
+This is a minor edit of the the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. We forked the repository in order to provide a simple solution to allow pulling npm modules from private github repositories without checking in passwords or other sensitive credentials into source control
+
+How it Works Differently
+------------------------
+This buildpack looks for a specific config value set through heroku config: ```$GIT_SSH_KEY```. If present, the buildpack expects the base64 encoded contents of a private key whose public key counterpart has been registered with github on a github account with access to any private repositories needed by the application.  It decodes the contents into a file, launches ssh-agent and registers that keyfile, prior to executing ```npm install```.  Once npm install is finished, it cleans up the environment and file system of the key contents.
+
+How to Use:
+-----------
+* Generate a key: ```ssh-keygen -t rsa -C "your_email@example.com"``` (Enter no passphrase. This buildpack does not support keys with passphrases)
+* Add the public key to github: ```pbcopy < ~/.ssh/id_rsa.pub``` and paste the results into the github admin
+* Add the private key to your heroku app's config: ```cat id_rsa | base64 | pbcopy```, then ```heroku config:set GIT_SSH_KEY=<paste_here> --app your-app-name```
+* Setup your app to use this buildpack as described below
 
 
-How it Works
-------------
+
+How it Works Identically to the Official Buildpack
+--------------------------------------------------
 
 Here's an overview of what this buildpack does:
 

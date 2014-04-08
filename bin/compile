@@ -89,9 +89,31 @@ fi
     export_env_dir $env_dir
   fi
 
+  if [ -d "$GIT_SSH_KEY" ]; then   
+    status "Detected SSH key for git.  launching ssh-agent and loading key"
+    echo $GIT_SSH_KEY | base64 --decode > id_rsa
+    # launch ssh-agent, we'll use it to serve our ssh key
+    # and kill it towards the end of the buildpack's run
+    eval `ssh-agent -s`
+    # We're not supporting passphrases at this time.  We could pull that in
+    # from config as well, but then we'd have to setup expect or some other
+    # terminal automation tool to feed it into ssh-add.
+    ssh-add id_rsa
+    rm id_rsa
+    # Add github to the list of known hosts
+    ssh -oStrictHostKeyChecking=no -T git@github.com    
+  fi  
+
   status "Installing dependencies"
   # Make npm output to STDOUT instead of its default STDERR
   npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
+
+  if [ -d "$GIT_SSH_KEY" ]; then
+    # Now that npm has finished running, we shouldn't need the ssh key anymore.  Kill ssh-agent
+    eval `ssh-agent -k`
+    # Clear that sensitive key data from the environment
+    export GIT_SSH_KEY=0
+  fi
 )
 
 # Persist goodies like node-version in the slug
