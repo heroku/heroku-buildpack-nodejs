@@ -89,7 +89,8 @@ fi
     export_env_dir $env_dir
   fi
 
-  if [ -d "$GIT_SSH_KEY" ]; then    
+  if [ -d "$GIT_SSH_KEY" ]; then   
+    status "Detected SSH key for git.  launching ssh-agent and loading key"
     echo $GIT_SSH_KEY | base64 --decode > id_rsa
     # launch ssh-agent, we'll use it to serve our ssh key
     # and kill it towards the end of the buildpack's run
