@@ -50,7 +50,7 @@ curl $node_url -s -o - | tar xzf - -C $build_dir
 mkdir -p $build_dir/vendor
 mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
 chmod +x $build_dir/vendor/node/bin/*
-PATH=$PATH:$build_dir/vendor/node/bin
+PATH=$build_dir/vendor/node/bin:$PATH
 
 # Run subsequent node/npm commands from the build path
 cd $build_dir
