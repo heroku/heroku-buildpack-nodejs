@@ -53,6 +53,7 @@ chmod +x $build_dir/vendor/node/bin/*
 PATH=$build_dir/vendor/node/bin:$PATH
 
 # install our productionified npm
+status "Installing npm-production as npm"
 mv $build_dir/vendor/node/bin/npm $build_dir/vendor/node/bin/npm.orig
 install $bp_dir/vendor/npm-production/npm $build_dir/vendor/node/bin
 
