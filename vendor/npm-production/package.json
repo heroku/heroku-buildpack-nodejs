@@ -5,7 +5,7 @@
     "coffee-script": "*"
   },
   "scripts": {
-    "pretest": "echo '#!/usr/bin/env node' > npm && ./node_modules/.bin/coffee -p npm.coffee >> npm && chmod a+x npm",
+    "pretest": "echo '#!/usr/bin/env node' > npm-production && ./node_modules/.bin/coffee -p npm-production.coffee >> npm-production && chmod a+x npm-production",
     "test": "/usr/bin/true"
   }
 }
