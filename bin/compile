@@ -54,7 +54,7 @@ PATH=$build_dir/vendor/node/bin:$PATH
 
 # install our productionified npm
 status "Installing npm-production as npm"
-mv $build_dir/vendor/node/bin/npm $build_dir/vendor/node/bin/npm.orig
+mv $build_dir/vendor/node/bin/npm $build_dir/vendor/node/bin/npm.real
 install $bp_dir/vendor/npm-production/npm $build_dir/vendor/node/bin
 
 # Run subsequent node/npm commands from the build path
