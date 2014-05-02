@@ -53,9 +53,8 @@ chmod +x $build_dir/vendor/node/bin/*
 PATH=$build_dir/vendor/node/bin:$PATH
 
 # install our productionified npm
-status "Installing npm-production as npm"
-mv $build_dir/vendor/node/bin/npm $build_dir/vendor/node/bin/npm.real
-install $bp_dir/vendor/npm-production/npm $build_dir/vendor/node/bin
+status "Installing npm-production"
+install $bp_dir/vendor/npm-production/npm-production $build_dir/vendor/node/bin
 
 # Run subsequent node/npm commands from the build path
 cd $build_dir
@@ -71,7 +70,7 @@ elif test -d $cache_dir/node/node_modules; then
   cp -r $cache_dir/node/node_modules $build_dir/
 
   status "Pruning cached dependencies not specified in package.json"
-  npm prune 2>&1 | indent
+  npm-production prune 2>&1 | indent
 
   if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
     status "Node version changed since last build; rebuilding dependencies"
@@ -96,7 +95,7 @@ fi
 
   status "Installing dependencies"
   # Make npm output to STDOUT instead of its default STDERR
-  npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
+  npm-production install --userconfig $build_dir/.npmrc --production 2>&1 | indent
 )
 
 # Persist goodies like node-version in the slug

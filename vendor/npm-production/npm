@@ -40,8 +40,7 @@
         }
         return _results;
       })();
-      console.log("pruning using: `npm rm " + (modulesToPrune.join(' ')) + "`");
-      npm = spawn('npm.real', ['rm'].concat(__slice.call(modulesToPrune)), {
+      npm = spawn('npm', ['rm'].concat(__slice.call(process.argv.slice(3)), __slice.call(modulesToPrune)), {
         stdio: 'inherit'
       });
       return npm.on('close', function(code) {
@@ -64,8 +63,7 @@
       console.log('installing pruned npm-shrinkwrap.json\n');
       fs.renameSync('./.pruned-npm-shrinkwrap.json', './npm-shrinkwrap.json');
       try {
-        console.log('installing using: `npm install --production`');
-        npm = spawn('npm.real', ['install', '--production'], {
+        npm = spawn('npm', ['install'].concat(__slice.call(process.argv.slice(3))), {
           stdio: 'inherit'
         });
         return npm.on('close', function(code) {
@@ -99,7 +97,7 @@
       });
       break;
     default:
-      npm = spawn('npm.real', process.argv.slice(2), {
+      npm = spawn('npm', process.argv.slice(2), {
         stdio: 'inherit'
       });
       npm.on('close', function(code) {

@@ -24,8 +24,7 @@ commands =
 
   prune: (shrinkwrap, cb) ->
     modulesToPrune = (dir for dir in fs.readdirSync('./node_modules') when dir[0] isnt '.' and !shrinkwrap.dependencies[dir])
-    console.log "pruning using: `npm rm #{modulesToPrune.join ' '}`"
-    npm = spawn 'npm.real', ['rm', modulesToPrune...], {stdio: 'inherit'}
+    npm = spawn 'npm', ['rm', process.argv[3..]..., modulesToPrune...], {stdio: 'inherit'}
     npm.on 'close', (code) ->
       cb code isnt 0 and new Error("non-zero exit code #{code}") or null
 
@@ -44,8 +43,7 @@ commands =
     fs.renameSync './.pruned-npm-shrinkwrap.json', './npm-shrinkwrap.json'
 
     try
-      console.log 'installing using: `npm install --production`'
-      npm = spawn 'npm.real', ['install', '--production'], {stdio: 'inherit'}
+      npm = spawn 'npm', ['install', process.argv[3..]...], {stdio: 'inherit'}
       npm.on 'close', (code) ->
         cleanup()
         cb code isnt 0 and new Error("non-zero exit code #{code}") or null
@@ -67,7 +65,7 @@ switch command
       process.exit err? and 1 or 0
 
   else # passthru
-    npm = spawn 'npm.real', process.argv[2..], {stdio: 'inherit'}
+    npm = spawn 'npm', process.argv[2..], {stdio: 'inherit'}
     npm.on 'close', (code) ->
       process.exit code
 
