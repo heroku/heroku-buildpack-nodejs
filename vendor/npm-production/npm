@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+(function() {
+  var buildPrunedShrinkwrap, command, commands, fs, npm, path, shrinkwrap, spawn, _ref,
+    __slice = [].slice;
+
+  fs = require('fs');
+
+  path = require('path');
+
+  spawn = require('child_process').spawn;
+
+  buildPrunedShrinkwrap = function() {
+    var config, devDependencies, name, prunedShrinkwrapDependencies, shrinkwrap, _ref;
+    devDependencies = JSON.parse(fs.readFileSync('./package.json')).devDependencies;
+    shrinkwrap = JSON.parse(fs.readFileSync('./npm-shrinkwrap.json'));
+    prunedShrinkwrapDependencies = {};
+    _ref = shrinkwrap.dependencies;
+    for (name in _ref) {
+      config = _ref[name];
+      if (!devDependencies[name]) {
+        prunedShrinkwrapDependencies[name] = config;
+      }
+    }
+    shrinkwrap.dependencies = prunedShrinkwrapDependencies;
+    return shrinkwrap;
+  };
+
+  commands = {
+    prune: function(shrinkwrap, cb) {
+      var dir, modulesToPrune, npm;
+      modulesToPrune = (function() {
+        var _i, _len, _ref, _results;
+        _ref = fs.readdirSync('./node_modules');
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dir = _ref[_i];
+          if (dir[0] !== '.' && !shrinkwrap.dependencies[dir]) {
+            _results.push(dir);
+          }
+        }
+        return _results;
+      })();
+      console.log("pruning using: `npm rm " + (modulesToPrune.join(' ')) + "`");
+      npm = spawn('npm.orig', ['rm'].concat(__slice.call(modulesToPrune)), {
+        stdio: 'inherit'
+      });
+      return npm.on('close', function(code) {
+        return cb(code !== 0 && new Error("non-zero exit code " + code) || null);
+      });
+    },
+    install: function(shrinkwrap, cb) {
+      var cleanup, e, npm;
+      cleanup = function() {
+        var e;
+        try {
+          console.log('restoring original npm-shrinkwrap.json');
+          return fs.renameSync('./.full-npm-shrinkwrap.json', './npm-shrinkwrap.json');
+        } catch (_error) {
+          e = _error;
+        }
+      };
+      fs.writeFileSync('./.pruned-npm-shrinkwrap.json', JSON.stringify(shrinkwrap, null, '  '));
+      fs.renameSync('./npm-shrinkwrap.json', './.full-npm-shrinkwrap.json');
+      console.log('installing pruned npm-shrinkwrap.json\n');
+      fs.renameSync('./.pruned-npm-shrinkwrap.json', './npm-shrinkwrap.json');
+      try {
+        console.log('installing using: `npm install --production`');
+        npm = spawn('npm.orig', ['install', '--production'], {
+          stdio: 'inherit'
+        });
+        return npm.on('close', function(code) {
+          cleanup();
+          return cb(code !== 0 && new Error("non-zero exit code " + code) || null);
+        });
+      } catch (_error) {
+        e = _error;
+        cleanup();
+        throw e;
+      }
+    }
+  };
+
+
+  /* MAIN */
+
+  command = (_ref = process.argv[2]) != null ? _ref.toLowerCase() : void 0;
+
+  switch (command) {
+    case 'prune':
+    case 'install':
+      console.log("npm-production is handling `npm " + command + "`");
+      shrinkwrap = buildPrunedShrinkwrap();
+      commands[command](shrinkwrap, function(err) {
+        var _ref1;
+        if (err != null) {
+          console.error((_ref1 = err.stack) != null ? _ref1 : err);
+        }
+        return process.exit((err != null) && 1 || 0);
+      });
+      break;
+    default:
+      npm = spawn('npm.orig', process.argv.slice(2), {
+        stdio: 'inherit'
+      });
+      npm.on('close', function(code) {
+        return process.exit(code);
+      });
+  }
+
+}).call(this);

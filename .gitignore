@@ -1,2 +1,3 @@
 .anvil
 .DS_Store
+/vendor/npm-production/node_modules
