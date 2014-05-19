@@ -1,11 +1,9 @@
-Heroku Buildpack for Node.js
-============================
+# Heroku Buildpack for Node.js
 
 This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
 
 
-How it Works
-------------
+## How it Works
 
 Here's an overview of what this buildpack does:
 
@@ -24,8 +22,7 @@ Here's an overview of what this buildpack does:
 For more technical details, see the [heavily-commented compile script](https://github.com/heroku/heroku-buildpack-nodejs/blob/master/bin/compile).
 
 
-Documentation
--------------
+## Documentation
 
 For more information about using Node.js and buildpacks on Heroku, see these Dev Center articles:
 
@@ -36,57 +33,54 @@ For more information about using Node.js and buildpacks on Heroku, see these Dev
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 
 
-Legacy Compatibility
---------------------
+## Legacy Compatibility
 
 For most Node.js apps this buildpack should work just fine. If, however, you're unable to deploy using this new version of the buildpack, you can get your app working again by using the legacy branch:
 
-```
-heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#legacy -a my-app
-git commit -am "empty" --allow-empty # force a git commit
-git push heroku master
+```bash
+$ heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#legacy -a my-app
+$ git commit -am "empty" --allow-empty # force a git commit
+$ git push heroku master
 ```
 
 Then please open a support ticket at [help.heroku.com](https://help.heroku.com/) so we can diagnose and get your app running on the default buildpack.
 
-Hacking
--------
+## Hacking
 
 To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Heroku app to test it, or configure an existing app to use your buildpack:
 
-```
+```bash
 # Create a new Heroku app that uses your buildpack
-heroku create --buildpack <your-github-url>
+$ heroku create --buildpack <your-github-url>
 
 # Configure an existing Heroku app to use your buildpack
-heroku config:set BUILDPACK_URL=<your-github-url>
+$ heroku config:set BUILDPACK_URL=<your-github-url>
 
 # You can also use a git branch!
-heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
+$ heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
 ```
 
 For more detailed information about testing buildpacks, see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 
-Testing
--------
+## Testing
 
 [Anvil](https://github.com/ddollar/anvil) is a generic build server for Heroku.
 
-```
-gem install anvil-cli
+```bash
+$ gem install anvil-cli
 ```
 
 The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrapper for anvil.
 
-```
-heroku plugins:install https://github.com/ddollar/heroku-anvil
+```bash
+$ heroku plugins:install https://github.com/ddollar/heroku-anvil
 ```
 
 The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bin/test` on your app/buildpack.
 
-```
-heroku build -b ddollar/test # -b can also point to a local directory
+```bash
+$ heroku build -b ddollar/test # -b can also point to a local directory
 ```
 
 For more info on testing, see [Best Practices for Testing Buildpacks](https://discussion.heroku.com/t/best-practices-for-testing-buildpacks/294) on the Heroku discussion forum.
