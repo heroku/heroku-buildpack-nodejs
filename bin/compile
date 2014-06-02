@@ -17,6 +17,12 @@ source $bp_dir/bin/common.sh
 # Output npm debug info on error
 trap cat_npm_debug_log ERR
 
+# Make config vars avaiable to the build
+if [ -d "$env_dir" ]; then
+  status "Exporting config vars to environment"
+  export_env_dir $env_dir
+fi
+
 # Look in package.json's engines.node field for a semver range
 semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 
@@ -82,17 +88,9 @@ if [ ! -f "$build_dir/.npmrc" ]; then
   echo "ca=" > "$build_dir/.npmrc"
 fi
 
-# Scope config var availability only to `npm install`
-(
-  if [ -d "$env_dir" ]; then
-    status "Exporting config vars to environment"
-    export_env_dir $env_dir
-  fi
-
-  status "Installing dependencies"
-  # Make npm output to STDOUT instead of its default STDERR
-  npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
-)
+status "Installing dependencies"
+# Make npm output to STDOUT instead of its default STDERR
+npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
 
 # Persist goodies like node-version in the slug
 mkdir -p $build_dir/.heroku
