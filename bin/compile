@@ -41,9 +41,8 @@ else
   status "Resolved node version: $node_version"
 fi
 
-# Download node from Heroku's S3 mirror of nodejs.org/dist
 status "Downloading and installing node"
-node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
+node_url=http://nodejs.org/dist/v$node_version/node-v$node_version-linux-x64.tar.gz
 curl $node_url -s -o - | tar xzf - -C $build_dir
 
 # Move node (and npm) into ./vendor and make them executable
@@ -68,7 +67,7 @@ elif test -d $cache_dir/node/node_modules; then
   status "Pruning cached dependencies not specified in package.json"
   npm prune 2>&1 | indent
 
-  if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
+  if test -f $cache_dir/node/.paasprovider/node-version && [ $(cat $cache_dir/node/.paasprovider/node-version) != "$node_version" ]; then
     status "Node version changed since last build; rebuilding dependencies"
     npm rebuild 2>&1 | indent
   fi
@@ -88,10 +87,10 @@ fi
 )
 
 # Persist goodies like node-version in the slug
-mkdir -p $build_dir/.heroku
+mkdir -p $build_dir/.paasprovider
 
 # Save resolved node version in the slug for later reference
-echo $node_version > $build_dir/.heroku/node-version
+echo $node_version > $build_dir/.paasprovider/node-version
 
 # Purge node-related cached content, being careful not to purge the top-level
 # cache, for the sake of heroku-buildpack-multi apps.
@@ -106,7 +105,7 @@ if test -d $build_dir/node_modules; then
 fi
 
 # Copy goodies to the cache
-cp -r $build_dir/.heroku $cache_dir/node
+cp -r $build_dir/.paasprovider $cache_dir/node
 
 status "Cleaning up node-gyp and npm artifacts"
 rm -rf "$build_dir/.node-gyp"
@@ -131,16 +130,3 @@ fi
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
-
-# Post package.json to nomnom service
-# Use a subshell so failures won't break the build.
-(
-  curl \
-    --data @$build_dir/package.json \
-    --fail \
-    --silent \
-    --request POST \
-    --header "content-type: application/json" \
-    https://nomnom.heroku.com/?request_id=$REQUEST_ID \
-    > /dev/null
-) &
