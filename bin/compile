@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e            # fail fast
-set -o pipefail   # don't ignore exit codes when piping output
+set -o pipefail   # do not ignore exit codes when piping output
 # set -x          # enable debugging
 
 # Configure directories
@@ -14,11 +14,17 @@ bp_dir=$(cd $(dirname $0); cd ..; pwd)
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
 
+# Load meteo framework related functions
+source $bp_dir/bin/meteor.sh
+
 # Output npm debug info on error
 trap cat_npm_debug_log ERR
 
 # Look in package.json's engines.node field for a semver range
-semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
+semver_range=null
+if test -e $build_dir/package.json; then
+  semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
+fi
 
 # Resolve node version using semver.io
 node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
@@ -72,7 +78,12 @@ elif test -d $cache_dir/node/node_modules; then
     status "Node version changed since last build; rebuilding dependencies"
     npm rebuild 2>&1 | indent
   fi
+fi
 
+# Demeteorize app if required
+if test -d "$build_dir/.meteor"; then
+  status "Meteor app detected"
+  demeteorize_app $node_version $build_dir $cache_dir
 fi
 
 # Scope config var availability only to `npm install`
@@ -131,16 +142,3 @@ fi
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
-
-# Post package.json to nomnom service
-# Use a subshell so failures won't break the build.
-(
-  curl \
-    --data @$build_dir/package.json \
-    --fail \
-    --silent \
-    --request POST \
-    --header "content-type: application/json" \
-    https://nomnom.heroku.com/?request_id=$REQUEST_ID \
-    > /dev/null
-) &
