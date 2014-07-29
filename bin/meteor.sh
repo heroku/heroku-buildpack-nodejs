@@ -1,5 +1,5 @@
 create_mongo_profile() {
-  $build_dir=$1
+  build_dir=$1
 
   if [ "x$MONGOHQ_URL" != "x" ] ; then
     MONGO_URL=$MONGOHQ_URL
