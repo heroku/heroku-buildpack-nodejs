@@ -8,8 +8,10 @@ set -o pipefail   # don't ignore exit codes when piping output
 build_dir=$1
 cache_dir=$2
 env_dir=$3
-
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
+
+# Fix leak
+unset GIT_DIR
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
