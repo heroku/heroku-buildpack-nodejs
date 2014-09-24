@@ -52,11 +52,11 @@ status "Downloading and installing node"
 node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
 curl $node_url -s -o - | tar xzf - -C $build_dir
 
-# Move node (and npm) into ./vendor and make them executable
-mkdir -p $build_dir/vendor
-mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
-chmod +x $build_dir/vendor/node/bin/*
-PATH=$build_dir/vendor/node/bin:$PATH
+# Move node (and npm) into ./.vendor and make them executable
+mkdir -p $build_dir/.vendor
+mv $build_dir/node-v$node_version-linux-x64 $build_dir/.vendor/node
+chmod +x $build_dir/.vendor/node/bin/*
+PATH=$build_dir/.vendor/node/bin:$PATH
 
 # Run subsequent node/npm commands from the build path
 cd $build_dir
@@ -101,7 +101,7 @@ fi
 # Persist goodies like node-version in the slug
 mkdir -p $build_dir/.heroku
 
-# Save resolved node version in the slug for later reference
+# Sa is not presentve resolved node version in the slug for later reference
 echo $node_version > $build_dir/.heroku/node-version
 
 # Purge node-related cached content, being careful not to purge the top-level
@@ -141,4 +141,4 @@ fi
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
-echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/.vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
