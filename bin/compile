@@ -61,6 +61,12 @@ PATH=$build_dir/.vendor/node/bin:$PATH
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
+# Demeteorize app if required
+if test -d "$build_dir/.meteor"; then
+  status "Meteor app detected"
+  demeteorize_app $node_version $build_dir $cache_dir
+fi
+
 # If node_modules directory is checked into source control then
 # rebuild any native deps. Otherwise, restore from the build cache.
 if test -d $build_dir/node_modules; then
@@ -78,12 +84,6 @@ elif test -d $cache_dir/node/node_modules; then
     status "Node version changed since last build; rebuilding dependencies"
     npm rebuild 2>&1 | indent
   fi
-fi
-
-# Demeteorize app if required
-if test -d "$build_dir/.meteor"; then
-  status "Meteor app detected"
-  demeteorize_app $node_version $build_dir $cache_dir
 fi
 
 # Scope config var availability only to `npm install`

@@ -1,3 +1,14 @@
+create_meteor_profile() {
+  build_dir=$1
+
+  mkdir -p "$build_dir"/.profile.d
+  cat > "$build_dir"/.profile.d/meteor.sh <<EOF
+  #!/bin/sh
+
+  export PATH=\$PATH:$HOME/.meteor-install/bin
+EOF
+}
+
 create_mongo_profile() {
   build_dir=$1
 
@@ -15,15 +26,32 @@ create_mongo_profile() {
 EOF
 }
 
-demeteorize_app() {
-  node_version=$1
+install_meteor() {
+  meteor_home=$1
   build_dir=$2
   cache_dir=$3
 
-  meteor_temp=$(mktempdir meteor)
-  METEOR_HOME=$(pwd)/$meteor_temp
-  curl -Ls https://install.meteor.com | HOME=$METEOR_HOME PREFIX=$build_dir/.vendor/node /bin/sh | indent
-  status "Meteor installed"
+  if [ -d "$cache_dir/meteor" ] ; then
+    cp -r "$cache_dir/meteor" "$build_dir/.meteor-install"
+    local cached_meteor_version=$(cat "$cache_dir/meteor-version")
+  fi
+
+  [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(cat "$build_dir/.meteor/release")
+
+  if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
+    curl -Ls https://install.meteor.com | sed -e "s+/usr/local+$meteor_home+" | HOME=$meteor_home /bin/sh | indent
+    status "Meteor installed → $meteor_version"
+  else
+    status "Meteor installed from cache → $meteor_version"
+  fi
+}
+
+install_meteorite_deps() {
+  build_dir=$1
+  cache_dir=$2
+
+  [ -d "$cache_dir/meteorite" ] && cp -r "$cache_dir/meteorite" "$build_dir/.meteorite"
+  [ -d "$cache_dir/meteorite-packages" ] && cp -r "$cache_dir/meteorite-packages" "$build_dir/packages"
 
   if [ -e "$build_dir/smart.json" ] ; then
     if [ ! -e "$build_dir/smart.lock" ] ; then
@@ -34,23 +62,50 @@ demeteorize_app() {
     mrt install | indent
     status "Meteorite packaged installed"
   fi
+}
 
-  npm  install -g demeteorizer | indent
+install_demeteorizer() {
+  npm install -g demeteorizer | indent
   status "Demeteorizer installed"
+}
 
-  HOME=$METEOR_HOME PREFIX=$build_dir/.vendor/node demeteorizer -o "$build_dir/demeteorized" | indent
+demeteorize_app() {
+  node_version=$1
+  build_dir=$2
+  cache_dir=$3
+
+  meteor_home="$build_dir/.meteor-install"
+  [ -e "$build_dir/.meteor/release" ] && meteor_version=$(cat "$build_dir/.meteor/release")
+
+  install_meteor "$meteor_home" "$build_dir" "$cache_dir"
+  export PATH=$PATH:${meteor_home}/bin
+
+  install_meteorite_deps "$build_dir" "$cache_dir"
+  install_demeteorizer
+
+  HOME=$meteor_home demeteorizer -o "$build_dir/demeteorized" | indent
 
   if [ ! -e "$build_dir/Procfile" ] ; then
     echo "web: cd demeteorized && npm start" > "$build_dir/Procfile"
   fi
 
-  if [ ! -d "$build_dir/node_modules" ] ; then
-    mkdir "$build_dir/node_modules"
+  ln -s "demeteorized/package.json" "package.json"
+
+  status "Caching meteor runtime for future builds"
+  rm -rf "$cache_dir/meteor"
+  cp -r "$build_dir/.meteor-install" "$cache_dir/meteor"
+  echo $meteor_version > "$cache_dir/meteor-version"
+
+  if [ -d "$build_dir/.meteorite" ] ; then
+    status "Caching meteorite packages for future builds"
+    rm -rf "$cache_dir/meteorite"
+    rm -rf "$cache_dir/meteorite-packages"
+    cp -r "$build_dir/packages" "$cache_dir/meteorite-packages"
+    cp -r "$build_dir/.meteorite" "$cache_dir/meteorite"
   fi
-  ln -s "$build_dir/node_modules" "$build_dir/demeteorized/node_modules"
-  ln -s "$build_dir/demeteorized/package.json" "$build_dir/package.json"
 
   status "Application demeteorized"
 
+  create_meteor_profile $build_dir
   create_mongo_profile $build_dir
 }
