@@ -5,7 +5,7 @@ create_meteor_profile() {
   cat > "$build_dir"/.profile.d/meteor.sh <<EOF
   #!/bin/sh
 
-  export PATH=\$PATH:$HOME/.meteor-install/bin
+  export PATH=\$PATH:$METEOR_HOME/bin
 EOF
 }
 
@@ -27,19 +27,21 @@ EOF
 }
 
 install_meteor() {
-  meteor_home=$1
+  METEOR_HOME=$1
   build_dir=$2
   cache_dir=$3
 
+  [ -d "$METEOR_HOME" ] || mkdir -p $METEOR_HOME
+
   if [ -d "$cache_dir/meteor" ] ; then
-    cp -r "$cache_dir/meteor" "$build_dir/.meteor-install"
+    cp -r "$cache_dir/meteor" "$metehor_home"
     local cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
   [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(cat "$build_dir/.meteor/release")
 
   if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
-    curl -Ls https://install.meteor.com | sed -e "s+/usr/local+$meteor_home+" | HOME=$meteor_home /bin/sh | indent
+    curl -Ls https://install.meteor.com | sed -e "s+/usr/local+$METEOR_HOME+" | HOME=$METEOR_HOME /bin/sh | indent
     status "Meteor installed → $meteor_version"
   else
     status "Meteor installed from cache → $meteor_version"
@@ -74,16 +76,16 @@ demeteorize_app() {
   build_dir=$2
   cache_dir=$3
 
-  meteor_home="$build_dir/.meteor-install"
+  METEOR_HOME="$build_dir/.meteor-install"
   [ -e "$build_dir/.meteor/release" ] && meteor_version=$(cat "$build_dir/.meteor/release")
 
-  install_meteor "$meteor_home" "$build_dir" "$cache_dir"
-  export PATH=$PATH:${meteor_home}/bin
+  install_meteor "$METEOR_HOME" "$build_dir" "$cache_dir"
+  export PATH=$PATH:${METEOR_HOME}/bin
 
   install_meteorite_deps "$build_dir" "$cache_dir"
   install_demeteorizer
 
-  HOME=$meteor_home demeteorizer -o "$build_dir/demeteorized" | indent
+  HOME=$METEOR_HOME demeteorizer -o "$build_dir/demeteorized" | indent
 
   if [ ! -e "$build_dir/Procfile" ] ; then
     echo "web: cd demeteorized && npm start" > "$build_dir/Procfile"
@@ -93,7 +95,7 @@ demeteorize_app() {
 
   status "Caching meteor runtime for future builds"
   rm -rf "$cache_dir/meteor"
-  cp -r "$build_dir/.meteor-install" "$cache_dir/meteor"
+  cp -r "$METEOR_HOME" "cache_dir/meteor"
   echo $meteor_version > "$cache_dir/meteor-version"
 
   if [ -d "$build_dir/.meteorite" ] ; then
