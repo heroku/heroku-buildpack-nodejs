@@ -95,7 +95,7 @@ demeteorize_app() {
 
   status "Caching meteor runtime for future builds"
   rm -rf "$cache_dir/meteor"
-  cp -r "$METEOR_HOME" "cache_dir/meteor"
+  cp -r "$METEOR_HOME" "$cache_dir/meteor"
   echo $meteor_version > "$cache_dir/meteor-version"
 
   if [ -d "$build_dir/.meteorite" ] ; then
