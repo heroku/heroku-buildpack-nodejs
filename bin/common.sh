@@ -7,6 +7,10 @@ status() {
   echo "-----> $*"
 }
 
+mktempdir() {
+  mktemp -d $1_XXXX
+}
+
 protip() {
   echo
   echo "PRO TIP: $*" | indent
