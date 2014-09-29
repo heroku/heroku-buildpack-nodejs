@@ -34,7 +34,7 @@ install_meteor() {
   [ -d "$METEOR_HOME" ] || mkdir -p $METEOR_HOME
 
   if [ -d "$cache_dir/meteor" ] ; then
-    cp -r "$cache_dir/meteor" "$metehor_home"
+    cp -r "$cache_dir/meteor" "$meteor_home"
     local cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
