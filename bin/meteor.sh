@@ -67,7 +67,7 @@ install_meteorite_deps() {
 }
 
 install_demeteorizer() {
-  npm install -g demeteorizer | indent
+  npm install -g 'onmodulus/demeteorizer' | indent
   status "Demeteorizer installed"
 }
 
