@@ -21,7 +21,7 @@ Here's an overview of what this buildpack does:
 - Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
 - Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
 
-For more technical details, see the [heavily-commented compile script](https://github.com/Appsdeck/appsdeck-buildpack-nodejs/blob/master/bin/compile).
+For more technical details, see the [heavily-commented compile script](https://github.com/Scalingo/appsdeck-buildpack-nodejs/blob/master/bin/compile).
 
 
 Documentation
