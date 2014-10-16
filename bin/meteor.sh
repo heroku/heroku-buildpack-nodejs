@@ -27,14 +27,12 @@ EOF
 }
 
 install_meteor() {
-  METEOR_HOME=$1
-  build_dir=$2
-  cache_dir=$3
-
-  [ -d "$METEOR_HOME" ] || mkdir -p $METEOR_HOME
+  build_dir=$1
+  cache_dir=$2
 
   if [ -d "$cache_dir/meteor" ] ; then
-    cp -r ${cache_dir}/meteor/{.meteor,bin} "$METEOR_HOME"
+    [ -d "$METEOR_HOME" ] && rm -fr $METEOR_HOME
+    cp -r "${cache_dir}/meteor" "$METEOR_HOME"
     local cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
@@ -79,7 +77,7 @@ demeteorize_app() {
   METEOR_HOME="$build_dir/.meteor-install"
   [ -e "$build_dir/.meteor/release" ] && meteor_version=$(cat "$build_dir/.meteor/release")
 
-  install_meteor "$METEOR_HOME" "$build_dir" "$cache_dir"
+  install_meteor "$build_dir" "$cache_dir"
   export PATH=$PATH:${METEOR_HOME}/bin
 
   install_meteorite_deps "$build_dir" "$cache_dir"
