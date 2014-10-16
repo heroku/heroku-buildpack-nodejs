@@ -26,6 +26,7 @@ install_meteor() {
   [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(cat "$build_dir/.meteor/release")
 
   if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
+    mkdir -p "$METEOR_HOME"
     curl -Ls https://install.meteor.com | sed -e "s+/usr/local+$METEOR_HOME+" | HOME=$METEOR_HOME /bin/sh | indent
     status "Meteor installed → $meteor_version"
   else
