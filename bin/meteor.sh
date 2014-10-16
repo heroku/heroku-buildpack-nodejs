@@ -9,23 +9,6 @@ create_meteor_profile() {
 EOF
 }
 
-create_mongo_profile() {
-  build_dir=$1
-
-  if [ "x$MONGOHQ_URL" != "x" ] ; then
-    MONGO_URL=$MONGOHQ_URL
-  elif [ "x$APPSDECK_MONGO_URL" != "x" ] ; then
-    MONGO_URL=$APPSDECK_MONGO_URL
-  fi
-
-  mkdir -p "$build_dir"/.profile.d
-  cat > "$build_dir"/.profile.d/mongo.sh <<EOF
-  #!/bin/sh
-
-  export MONGO_URL=\$MONGO_URL
-EOF
-}
-
 install_meteor() {
   build_dir=$1
   cache_dir=$2
@@ -107,5 +90,4 @@ demeteorize_app() {
   status "Application demeteorized"
 
   create_meteor_profile $build_dir
-  create_mongo_profile $build_dir
 }
