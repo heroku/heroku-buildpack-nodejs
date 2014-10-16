@@ -9,6 +9,10 @@ create_meteor_profile() {
 EOF
 }
 
+clean_meteor_installation() {
+  rm -rf "$METEOR_HOME"
+}
+
 install_meteor() {
   build_dir=$1
   cache_dir=$2
@@ -90,4 +94,5 @@ demeteorize_app() {
   status "Application demeteorized"
 
   create_meteor_profile $build_dir
+  clean_meteor_installation
 }
