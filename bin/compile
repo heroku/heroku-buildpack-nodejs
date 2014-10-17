@@ -57,6 +57,24 @@ PATH=$build_dir/vendor/node/bin:$PATH
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
+is_gruntfile_present= [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ];
+if $is_gruntfile_present; then
+  status "Found Gruntfile"
+  status "Augmenting package.json with grunt and grunt-cli"
+  # Do this because we want to cache it with other node_modules. Otherwise it will be pruned.
+  # It doesn't matter if grunt and/or grunt-cli is already there
+  awk '{ if ( $0 ~ /"dependencies".*/ ) {
+              printf "%s\n%s\n%s\n", $0, "\"grunt-cli\": \"*\",", "\"grunt\": \"*\",";
+         } else {
+              print $0;
+         }
+    }' package.json > tmp-package.json;
+  cp tmp-package.json package.json;
+  rm tmp-package.json;
+else
+  status "No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
+fi
+
 # If node_modules directory is checked into source control then
 # rebuild any native deps. Otherwise, restore from the build cache.
 if test -d $build_dir/node_modules; then
@@ -77,6 +95,40 @@ elif test -d $cache_dir/node/node_modules; then
 
 fi
 
+is_bower_present= [ -f $build_dir/bower.json ];
+if $is_bower_present; then
+
+  # Get bower install directory
+  if [ -f $build_dir/.bowerrc ]; then
+    bower_dir=$(cat $build_dir/.bowerrc | $bp_dir/vendor/jq -r .directory)
+    if [ "$bower_dir" == "null" ]; then
+      unset bower_dir
+    fi
+  fi
+  bower_dir=${bower_dir:=bower_components}
+
+  status "Found bower.json - Updating bower locally"
+
+  # Update / Install bower
+  if [ -e node_modules/.bin/bower ]; then
+    npm update bower 2>&1 | indent
+  else
+    npm install bower 2>&1 | indent
+  fi
+
+  # Copy bower components from cache unless bower components are checked into source control
+  if [ -d $build_dir/$bower_dir ]; then
+    status "Found existing $bower_dir directory; skipping cache"
+  elif [ -d $cache_dir/bower ]; then
+    status "Restoring $bower_dir directory from cache"
+    cp -r $cache_dir/bower $build_dir/$bower_dir
+
+    status "Pruning cached dependencies not specified in bower.json"
+    node_modules/.bin/bower prune 2>&1 | indent
+  fi
+  
+fi
+
 # Scope config var availability only to `npm install`
 (
   if [ -d "$env_dir" ]; then
@@ -86,7 +138,12 @@ fi
 
   status "Installing dependencies"
   # Make npm output to STDOUT instead of its default STDERR
-  npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
+  npm install --userconfig $build_dir/.npmrc 2>&1 | indent
+
+  if $is_bower_present; then
+    status "Installing bower dependencies"
+    node_modules/.bin/bower install 2>&1 | indent
+  fi
 )
 
 # Persist goodies like node-version in the slug
@@ -105,6 +162,18 @@ mkdir -p $cache_dir/node
 if test -d $build_dir/node_modules; then
   status "Caching node_modules directory for future builds"
   cp -r $build_dir/node_modules $cache_dir/node
+fi
+
+# Purge bower cache
+rm -rf $cache_dir/bower
+mkdir -p $cache_dir/bower
+
+# If app has bower directory, cache it.
+if $is_bower_present; then
+  if test -d $build_dir/$bower_dir; then
+    status "Caching $bower_dir directory for future builds"
+    cp -r $build_dir/$bower_dir/. $cache_dir/bower
+  fi
 fi
 
 # Copy goodies to the cache
@@ -129,10 +198,47 @@ if [ ! -e $build_dir/Procfile ]; then
   fi
 fi
 
+# Install compass
+status "Installing Compass"
+export GEM_HOME=$build_dir/.gem/ruby/1.9.1
+PATH="$GEM_HOME/bin:$PATH"
+if test -d $cache_dir/ruby/.gem; then
+  status "Restoring ruby gems directory from cache"
+  cp -r $cache_dir/ruby/.gem $build_dir
+  HOME=$build_dir gem update compass --user-install --no-rdoc --no-ri
+else
+  HOME=$build_dir gem install compass --user-install --no-rdoc --no-ri
+fi
+
+# Empty gems cache
+rm -rf $cache_dir/ruby
+mkdir -p $cache_dir/ruby
+
+# Cache gems
+if test -d $build_dir/.gem; then
+  status "Caching ruby gems directory for future builds"
+  cp -r $build_dir/.gem $cache_dir/ruby
+fi
+
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $build_dir/.profile.d/ruby.sh
+
+# Check and run Grunt
+(
+  if $is_gruntfile_present; then
+    # get the env vars
+    if [ -d "$env_dir" ]; then
+      status "Exporting config vars to environment"
+      export_env_dir $env_dir
+    fi
+
+    status "Running grunt heroku:$NODE_ENV task"
+    $build_dir/node_modules/.bin/grunt heroku:$NODE_ENV
+  fi
+)
 
 # Post package.json to nomnom service
 # Use a subshell so failures won't break the build.
