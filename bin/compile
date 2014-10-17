@@ -57,6 +57,24 @@ PATH=$build_dir/vendor/node/bin:$PATH
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
+is_gruntfile_present= [ -f $build_dir/grunt.js ] || [ -f $build_dir/Gruntfile.js ] || [ -f $build_dir/Gruntfile.coffee ];
+if $is_gruntfile_present; then
+  status "Found Gruntfile"
+  status "Augmenting package.json with grunt and grunt-cli"
+  # Do this because we want to cache it with other node_modules. Otherwise it will be pruned.
+  # It doesn't matter if grunt and/or grunt-cli is already there
+  awk '{ if ( $0 ~ /"dependencies".*/ ) {
+              printf "%s\n%s\n%s\n", $0, "\"grunt-cli\": \"*\",", "\"grunt\": \"*\",";
+         } else {
+              print $0;
+         }
+    }' package.json > tmp-package.json;
+  cp tmp-package.json package.json;
+  rm tmp-package.json;
+else
+  status "No Gruntfile (grunt.js, Gruntfile.js, Gruntfile.coffee) found"
+fi
+
 # If node_modules directory is checked into source control then
 # rebuild any native deps. Otherwise, restore from the build cache.
 if test -d $build_dir/node_modules; then
@@ -86,7 +104,7 @@ fi
 
   status "Installing dependencies"
   # Make npm output to STDOUT instead of its default STDERR
-  npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
+  npm install --userconfig $build_dir/.npmrc 2>&1 | indent
 )
 
 # Persist goodies like node-version in the slug
@@ -133,6 +151,20 @@ fi
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+
+# Check and run Grunt
+(
+  if $is_gruntfile_present; then
+    # get the env vars
+    if [ -d "$env_dir" ]; then
+      status "Exporting config vars to environment"
+      export_env_dir $env_dir
+    fi
+
+    status "Running grunt heroku:$NODE_ENV task"
+    $build_dir/node_modules/.bin/grunt heroku:$NODE_ENV
+  fi
+)
 
 # Post package.json to nomnom service
 # Use a subshell so failures won't break the build.
