@@ -24,6 +24,9 @@ trap cat_npm_debug_log ERR
 semver_range=null
 if test -e $build_dir/package.json; then
   semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
+elif test -e $build_dir/.node-version; then
+  # For meteor which doesn't have any package.json
+  semver_range=$(cat $build_dir/.node-version)
 fi
 
 # Resolve node version using semver.io
