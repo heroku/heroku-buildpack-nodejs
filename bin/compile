@@ -147,10 +147,33 @@ if [ ! -e $build_dir/Procfile ]; then
   fi
 fi
 
+# Install compass
+status "Installing Compass"
+export GEM_HOME=$build_dir/.gem/ruby/1.9.1
+PATH="$GEM_HOME/bin:$PATH"
+if test -d $cache_dir/ruby/.gem; then
+  status "Restoring ruby gems directory from cache"
+  cp -r $cache_dir/ruby/.gem $build_dir
+  HOME=$build_dir gem update compass --user-install --no-rdoc --no-ri
+else
+  HOME=$build_dir gem install compass --user-install --no-rdoc --no-ri
+fi
+
+# Empty gems cache
+rm -rf $cache_dir/ruby
+mkdir -p $cache_dir/ruby
+
+# Cache gems
+if test -d $build_dir/.gem; then
+  status "Caching ruby gems directory for future builds"
+  cp -r $build_dir/.gem $cache_dir/ruby
+fi
+
 # Update the PATH
 status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"\$HOME/.gem/ruby/1.9.1/bin:\$PATH\"" > $build_dir/.profile.d/ruby.sh
 
 # Check and run Grunt
 (
