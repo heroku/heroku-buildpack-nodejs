@@ -146,3 +146,9 @@ echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\
     https://nomnom.heroku.com/?request_id=$REQUEST_ID \
     > /dev/null
 ) &
+
+# Run a custom heroku install script if it exists
+if [ -e ./bin/heroku-deploy.sh ]
+then
+    ./bin/heroku-deploy.sh $build_dir $cache_dir;
+fi

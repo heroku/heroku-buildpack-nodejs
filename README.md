@@ -1,90 +1,84 @@
-Heroku Buildpack for Node.js
-============================
+----
+CHANGES FROM HEROKU'S DEFAULT
+=============================
 
-This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
+* After `npm install`, `compile` will look for a script named `bin/heroku-deploy.sh`
+* if it exists, it is run with `bin/heroku-deploy.sh $BUILD_DIR $CACHE_DIR`
 
+Example Project: https://github.com/mostlygeek/heroku-app-custom-buildpack
 
-How it Works
-------------
+----
 
-Here's an overview of what this buildpack does:
+Heroku buildpack: Node.js
+-------------------------
 
-- Uses the [semver.io](https://semver.io) webservice to find the latest version of node that satisfies the [engines.node semver range](https://npmjs.org/doc/json.html#engines) in your package.json.
-- Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).
-- Uses an [S3 caching proxy](https://github.com/heroku/s3pository#readme) of nodejs.org for faster downloads of the node binary.
-- Discourages use of dangerous semver ranges like `*` and `>0.10`.
-- Uses the version of `npm` that comes bundled with `node`.
-- Puts `node` and `npm` on the `PATH` so they can be executed with [heroku run](https://devcenter.heroku.com/articles/one-off-dynos#an-example-one-off-dyno).
-- Caches the `node_modules` directory across builds for fast deploys.
-- Doesn't use the cache if `node_modules` is checked into version control.
-- Runs `npm rebuild` if `node_modules` is checked into version control.
-- Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
-- Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
+It uses [NPM](http://npmjs.org/) and [SCons](http://www.scons.org/).
 
-For more technical details, see the [heavily-commented compile script](https://github.com/heroku/heroku-buildpack-nodejs/blob/master/bin/compile).
+Usage
+-----
 
+Example usage:
 
-Documentation
--------------
+    $ ls
+    Procfile  package.json  web.js
 
-For more information about using Node.js and buildpacks on Heroku, see these Dev Center articles:
+    $ heroku create --stack cedar --buildpack http://github.com/mostlygeek/heroku-buildpack-nodejs.git
 
-- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
-- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
-- [10 Habits of a Happy Node Hacker](https://blog.heroku.com/archives/2014/3/11/node-habits)
-- [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
-- [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
+    $ git push heroku master
+    ...
+    -----> Heroku receiving push
+    -----> Fetching custom buildpack
+    -----> Node.js app detected
+    -----> Vendoring node 0.4.7
+    -----> Installing dependencies with npm 1.0.8
+           express@2.1.0 ./node_modules/express
+           ├── mime@1.2.2
+           ├── qs@0.3.1
+           └── connect@1.6.2
+           Dependencies installed
 
+The buildpack will detect your app as Node.js if it has the file `package.json` in the root.  It will use NPM to install your dependencies, and vendors a version of the Node.js runtime into your slug.  The `node_modules` directory will be cached between builds to allow for faster NPM install time.
 
-Legacy Compatibility
---------------------
+Node.js and npm versions
+------------------------
 
-For most Node.js apps this buildpack should work just fine. If, however, you're unable to deploy using this new version of the buildpack, you can get your app working again by using the legacy branch:
+You can specify the versions of Node.js and npm your application requires using `package.json`
 
-```
-heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#legacy -a my-app
-git commit -am "empty" --allow-empty # force a git commit
-git push heroku master
-```
+    {
+      "name": "myapp",
+      "version": "0.0.1",
+      "engines": {
+        "node": ">=0.4.7 <0.7.0",
+        "npm": ">=1.0.0"
+      }
+    }
 
-Then please open a support ticket at [help.heroku.com](https://help.heroku.com/) so we can diagnose and get your app running on the default buildpack.
+To list the available versions of Node.js and npm, see these manifests:
+
+http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.nodejs
+http://heroku-buildpack-nodejs.s3.amazonaws.com/manifest.npm
 
 Hacking
 -------
 
-To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Heroku app to test it, or configure an existing app to use your buildpack:
+To use this buildpack, fork it on Github.  Push up changes to your fork, then create a test app with `--buildpack <your-github-url>` and push to it.
 
-```
-# Create a new Heroku app that uses your buildpack
-heroku create --buildpack <your-github-url>
+To change the vendored binaries for Node.js, NPM, and SCons, use the helper scripts in the `support/` subdirectory.  You'll need an S3-enabled AWS account and a bucket to store your binaries in.
 
-# Configure an existing Heroku app to use your buildpack
-heroku config:set BUILDPACK_URL=<your-github-url>
+For example, you can change the default version of Node.js to v0.6.7.
 
-# You can also use a git branch!
-heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
-```
+First you'll need to build a Heroku-compatible version of Node.js:
 
+    $ export AWS_ID=xxx AWS_SECRET=yyy S3_BUCKET=zzz
+    $ s3 create $S3_BUCKET
+    $ support/package_nodejs 0.6.7
 
-Testing
--------
+Open `bin/compile` in your editor, and change the following lines:
 
-[Anvil](https://github.com/ddollar/anvil) is a generic build server for Heroku.
+    DEFAULT_NODE_VERSION="0.6.7"
+    S3_BUCKET=zzz
 
-```
-gem install anvil-cli
-```
+Commit and push the changes to your buildpack to your Github fork, then push your sample app to Heroku to test.  You should see:
 
-The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrapper for anvil.
-
-```
-heroku plugins:install https://github.com/ddollar/heroku-anvil
-```
-
-The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bin/test` on your app/buildpack.
-
-```
-heroku build -b ddollar/test # -b can also point to a local directory
-```
-
-For more info on testing, see [Best Practices for Testing Buildpacks](https://discussion.heroku.com/t/best-practices-for-testing-buildpacks/294) on the Heroku discussion forum.
+    -----> Vendoring node 0.6.7
