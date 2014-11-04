@@ -5,7 +5,7 @@ create_meteor_profile() {
   cat > "$build_dir"/.profile.d/meteor.sh <<EOF
   #!/bin/sh
 
-  export PATH=\$PATH:$METEOR_HOME/bin
+  export PATH=\$PATH:$HOME/$(dirname $METEOR_HOME)/.meteor
 EOF
 }
 
@@ -13,21 +13,57 @@ clean_meteor_installation() {
   rm -rf "$METEOR_HOME"
 }
 
+## Install meteor distribution
+# Params: install_meteor $release
+# Install directory is .vendor/meteor
+install_meteor_dist() {
+  release=$1
+
+  if echo $release | grep -q "@" ; then
+    release=$(echo $release | cut -d '@' -f2)
+  fi
+
+  linux_arch=$(uname -m)
+  if [ "${linux_arch}" = "i686" ] ; then
+    PLATFORM="os.linux.x86_32"
+  elif [ "${linux_arch}" = "x86_64" ] ; then
+    platform="os.linux.x86_64"
+  else
+    echo "Unusable architecture: ${linux_arch}"
+    echo "Meteor only supports i686 and x86_64 for now."
+    exit 1
+  fi
+  trap "echo Installation failed." EXIT
+
+  # If you already have a tropohouse/warehouse, we do a clean install here:
+  if [ -e "$METEOR_HOME/.meteor" ]; then
+    echo "Removing your existing Meteor installation."
+    rm -rf "$METEOR_HOME/.meteor"
+  fi
+
+  tarball_url="https://d3sqy0vbqsdhku.cloudfront.net/packages-bootstrap/${release}/meteor-bootstrap-${platform}.tar.gz"
+
+  status "Downloading Meteor distribution"
+  curl --silent --fail "${tarball_url}" | tar -xzf - -C "${METEOR_HOME}" -o
+
+  status "Meteor ${release} has been installed."
+}
+
 install_meteor() {
   build_dir=$1
   cache_dir=$2
 
   if [ -d "$cache_dir/meteor" ] ; then
-    [ -d "$METEOR_HOME" ] && rm -fr $METEOR_HOME
-    cp -r "${cache_dir}/meteor" "$METEOR_HOME"
+    [ -d "$METEOR_HOME" ] && rm -fr "${METEOR_HOME}"
+    cp -r "${cache_dir}/meteor" "${METEOR_HOME}"
     local cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
   [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(cat "$build_dir/.meteor/release")
 
   if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
-    mkdir -p "$METEOR_HOME"
-    curl -Ls https://install.meteor.com | sed -e "s+/usr/local+$METEOR_HOME+" | HOME=$METEOR_HOME /bin/sh | indent
+    mkdir -p ${METEOR_HOME}
+    install_meteor_dist $meteor_version
     status "Meteor installed → $meteor_version"
   else
     status "Meteor installed from cache → $meteor_version"
@@ -66,7 +102,7 @@ demeteorize_app() {
   [ -e "$build_dir/.meteor/release" ] && meteor_version=$(cat "$build_dir/.meteor/release")
 
   install_meteor "$build_dir" "$cache_dir"
-  export PATH=$PATH:${METEOR_HOME}/bin
+  export PATH=$PATH:${METEOR_HOME}/.meteor
 
   install_meteorite_deps "$build_dir" "$cache_dir"
   install_demeteorizer
