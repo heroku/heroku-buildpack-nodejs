@@ -33,7 +33,6 @@ install_meteor_dist() {
     echo "Meteor only supports i686 and x86_64 for now."
     exit 1
   fi
-  trap "echo Installation failed." EXIT
 
   # If you already have a tropohouse/warehouse, we do a clean install here:
   if [ -e "$METEOR_HOME/.meteor" ]; then
