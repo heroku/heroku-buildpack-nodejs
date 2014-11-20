@@ -61,31 +61,31 @@ install $bp_dir/vendor/npm-production/npm-production $build_dir/vendor/node/bin
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# If node_modules directory is checked into source control then
-# rebuild any native deps. Otherwise, restore from the build cache.
-if test -d $build_dir/node_modules; then
-  status "Found existing node_modules directory; skipping cache"
-  status "Rebuilding any native dependencies"
-  npm rebuild 2>&1 | indent
-elif test -d $cache_dir/node/node_modules; then
-  status "Restoring node_modules directory from cache"
-  cp -r $cache_dir/node/node_modules $build_dir/
-
-  status "Pruning cached dependencies not specified in package.json"
-  npm-production prune 2>&1 | indent
-
-  if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
-    status "Node version changed since last build; rebuilding dependencies"
-    npm rebuild 2>&1 | indent
-  fi
-
-fi
-
-# Scope config var availability only to `npm install`
+# Scope config-var availability to all npm commands (so env-based npm credentials are available)
 (
   if [ -d "$env_dir" ]; then
     status "Exporting config vars to environment"
     export_env_dir $env_dir
+  fi
+
+  # If node_modules directory is checked into source control then
+  # rebuild any native deps. Otherwise, restore from the build cache.
+  if test -d $build_dir/node_modules; then
+    status "Found existing node_modules directory; skipping cache"
+    status "Rebuilding any native dependencies"
+    npm rebuild 2>&1 | indent
+  elif test -d $cache_dir/node/node_modules; then
+    status "Restoring node_modules directory from cache"
+    cp -r $cache_dir/node/node_modules $build_dir/
+  
+    status "Pruning cached dependencies not specified in package.json"
+    npm-production prune 2>&1 | indent
+  
+    if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
+      status "Node version changed since last build; rebuilding dependencies"
+      npm rebuild 2>&1 | indent
+    fi
+  
   fi
 
   status "Installing dependencies"
