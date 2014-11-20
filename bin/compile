@@ -8,8 +8,10 @@ set -o pipefail   # don't ignore exit codes when piping output
 build_dir=$1
 cache_dir=$2
 env_dir=$3
-
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
+
+# Fix leak
+unset GIT_DIR
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
@@ -77,13 +79,6 @@ elif test -d $cache_dir/node/node_modules; then
     npm rebuild 2>&1 | indent
   fi
 
-fi
-
-# Handle npm's new cert bug
-# http://blog.npmjs.org/post/78085451721/npms-self-signed-certificate-is-no-more
-if [ ! -f "$build_dir/.npmrc" ]; then
-  status "Writing a custom .npmrc to circumvent npm bugs"
-  echo "ca=" > "$build_dir/.npmrc"
 fi
 
 # Scope config var availability only to `npm install`
