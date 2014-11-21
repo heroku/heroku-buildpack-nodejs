@@ -109,7 +109,7 @@ demeteorize_app() {
   HOME=$METEOR_HOME demeteorizer -o "$build_dir/demeteorized" | indent
 
   if [ ! -e "$build_dir/Procfile" ] ; then
-    echo "web: cd demeteorized && npm start" > "$build_dir/Procfile"
+    echo "web: node demeteorized/main.js" > "$build_dir/Procfile"
   fi
 
   ln -s "demeteorized/package.json" "package.json"
