@@ -11,6 +11,7 @@ env_dir=$3
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 
 # Fix leak
+status "Resetting git environment"
 unset GIT_DIR
 
 # Load some convenience functions like status(), echo(), and indent()
