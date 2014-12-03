@@ -22,36 +22,18 @@ trap cat_npm_debug_log ERR
 
 # Look in package.json's engines.node field for a semver range
 semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
-
-# Resolve node version using semver.io
-node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
-
-# Recommend using semver ranges in a safe manner
-if [ "$semver_range" == "null" ]; then
-  protip "Specify a node version in package.json"
-  semver_range=""
-elif [ "$semver_range" == "*" ]; then
-  protip "Avoid using semver ranges like '*' in engines.node"
-elif [ ${semver_range:0:1} == ">" ]; then
-  protip "Avoid using semver ranges starting with '>' in engines.node"
-fi
+node_version=$semver_range
 
 # Output info about requested range and resolved node version
-if [ "$semver_range" == "" ]; then
-  status "Defaulting to latest stable node: $node_version"
-else
-  status "Requested node range:  $semver_range"
-  status "Resolved node version: $node_version"
-fi
-
-# Download node from Heroku's S3 mirror of nodejs.org/dist
-status "Downloading and installing node"
-node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
-curl $node_url -s -o - | tar xzf - -C $build_dir
+# Download io.js
+status "Downloading and installing io.js"
+node_url="https://dl.dropboxusercontent.com/u/70306/iojs-linux-x64.tar.gz"
+curl "https://dl.dropboxusercontent.com/u/70306/iojs-linux-x64.tar.gz" -s -o - | tar xzf - -C $build_dir
 
 # Move node (and npm) into ./vendor and make them executable
 mkdir -p $build_dir/vendor
-mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
+status $build_dir/iojs
+mv $build_dir/iojs $build_dir/vendor/node
 chmod +x $build_dir/vendor/node/bin/*
 PATH=$build_dir/vendor/node/bin:$PATH
 
@@ -71,10 +53,13 @@ elif test -d $cache_dir/node/node_modules; then
   status "Pruning cached dependencies not specified in package.json"
   npm prune 2>&1 | indent
 
-  if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
-    status "Node version changed since last build; rebuilding dependencies"
-    npm rebuild 2>&1 | indent
-  fi
+  # if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
+  #   status "Node version changed since last build; rebuilding dependencies"
+  #   npm rebuild 2>&1 | indent
+  # fi
+
+  status "Node version ignored; rebuilding dependencies"
+  npm rebuild 2>&1 | indent
 
 fi
 
@@ -85,9 +70,12 @@ fi
     export_env_dir $env_dir
   fi
 
+  status "WARNING: setting npm registry to http://registry.npmjs.org/"
+  npm config set registry "http://registry.npmjs.org/"
+
   status "Installing dependencies"
   # Make npm output to STDOUT instead of its default STDERR
-  npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
+  npm install | indent
 )
 
 # Persist goodies like node-version in the slug

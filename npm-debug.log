@@ -1,0 +1,21 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node',
+1 verbose cli   '/Users/jmonster/Desktop/iojs/bin/npm',
+1 verbose cli   'install' ]
+2 info using npm@2.1.6
+3 info using node@v0.11.15-pre
+4 error install Couldn't read dependencies
+5 verbose stack Error: ENOENT, open '/Users/jmonster/Desktop/heroku-buildpack-iojs/package.json'
+5 verbose stack     at Error (native)
+6 verbose cwd /Users/jmonster/Desktop/heroku-buildpack-iojs
+7 error Darwin 14.0.0
+8 error argv "/usr/local/bin/node" "/Users/jmonster/Desktop/iojs/bin/npm" "install"
+9 error node v0.11.15-pre
+10 error npm  v2.1.6
+11 error path /Users/jmonster/Desktop/heroku-buildpack-iojs/package.json
+12 error code ENOPACKAGEJSON
+13 error errno -2
+14 error package.json ENOENT, open '/Users/jmonster/Desktop/heroku-buildpack-iojs/package.json'
+14 error package.json This is most likely not a problem with npm itself.
+14 error package.json npm can't find a package.json file in your current directory.
+15 verbose exit [ -2, true ]
