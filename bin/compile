@@ -58,12 +58,19 @@ PATH=$build_dir/vendor/node/bin:$PATH
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# If node_modules directory is checked into source control then
-# rebuild any native deps. Otherwise, restore from the build cache.
+
 if test -d $build_dir/node_modules; then
   status "Found existing node_modules directory; skipping cache"
   status "Rebuilding any native dependencies"
   npm rebuild 2>&1 | indent
+
+elif test -f $build_dir/.no-cache; then
+  status "Found .no-cache file; ignoring cache"
+
+  # Purge node/ directory instead of the entire cache,
+  # for the sake of apps using multiple buildpacks
+  rm -rf $cache_dir/node
+
 elif test -d $cache_dir/node/node_modules; then
   status "Restoring node_modules directory from cache"
   cp -r $cache_dir/node/node_modules $build_dir/
@@ -95,6 +102,11 @@ mkdir -p $build_dir/.heroku
 
 # Save resolved node version in the slug for later reference
 echo $node_version > $build_dir/.heroku/node-version
+
+# If an old build cache exists, explicitly let the user know it's being purged.
+if test -d $cache_dir/node; then
+  status "Purging cache from previous build"
+fi
 
 # Purge node-related cached content, being careful not to purge the top-level
 # cache, for the sake of heroku-buildpack-multi apps.
