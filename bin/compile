@@ -31,6 +31,7 @@ fi
 
 # Resolve node version using semver.io
 if [ -z "${http_proxy}" ]; then
+  status "Not using proxy"
   node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
 else 
   status "Using proxy: $http_proxy"
