@@ -24,13 +24,13 @@ trap cat_npm_debug_log ERR
 semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 
 #Load proxy environment if available
-if [ -d "$env_dir" ]; then
+if [ -d "${env_dir}" ]; then
   status "Exporting config vars to environment"
   export_env_dir $env_dir '(HTTP_PROXY|HTTPS_PROXY|NO_PROXY)$'
 fi
 
 # Resolve node version using semver.io
-if [ -z "$http_proxy" ]; then
+if [ -z "${http_proxy}" ]; then
   node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
 else 
   status "Using proxy: $http_proxy"
@@ -60,7 +60,7 @@ status "Downloading and installing node"
 node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
 
 # Scope config var availability only to `curl for proxy settings`
-if [ -z "$http_proxy" ]; then
+if [ -z "${http_proxy}" ]; then
   curl $node_url -s -o - | tar xzf - -C $build_dir
 else 
   status "Using proxy: $http_proxy"
@@ -156,7 +156,7 @@ echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\
 # Post package.json to nomnom service
 # Use a subshell so failures won't break the build.
 # Only publish if not behind proxy
-if [ -z "$http_proxy" ]; then
+if [ -z "${http_proxy}" ]; then
   (
     curl \
       --data @$build_dir/package.json \
