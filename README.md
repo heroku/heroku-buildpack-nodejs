@@ -36,6 +36,18 @@ For more information about using Node.js and buildpacks on Heroku, see these Dev
 - [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
 
 
+Try npm@next
+------------
+
+Soon, you'll be able ot specify an npm version alongside your node version (engines.npm).
+For now, if you'd like to test out the latest version of npm, you can use the #npm-next branch:
+
+```
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-node#npm-next
+git commit -am 'npm@next' --allow-empty
+git push heroku master
+```
+
 Legacy Compatibility
 --------------------
 
