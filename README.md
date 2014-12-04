@@ -9,6 +9,7 @@ How it Works
 
 Here's an overview of what this buildpack does:
 
+- Is proxy aware and uses case insensitive http_proxy, https_proxy, and no_proxy environment variables.
 - Uses the [semver.io](https://semver.io) webservice to find the latest version of node that satisfies the [engines.node semver range](https://npmjs.org/doc/json.html#engines) in your package.json.
 - Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).
 - Uses an [S3 caching proxy](https://github.com/heroku/s3pository#readme) of nodejs.org for faster downloads of the node binary.
@@ -19,7 +20,7 @@ Here's an overview of what this buildpack does:
 - Doesn't use the cache if `node_modules` is checked into version control.
 - Runs `npm rebuild` if `node_modules` is checked into version control.
 - Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
-- Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
+- Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies. 
 
 For more technical details, see the [heavily-commented compile script](https://github.com/heroku/heroku-buildpack-nodejs/blob/master/bin/compile).
 
