@@ -25,7 +25,8 @@ semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 
 # Resolve node version using semver.io
 status $env_dir $semver_range
-node_version=`proxy_curl $env_dir --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve`
+#node_version=$(proxy_curl $env_dir --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
+proxy_curl $env_dir --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve | status
 
 # Recommend using semver ranges in a safe manner
 if [ "$semver_range" == "null" ]; then
