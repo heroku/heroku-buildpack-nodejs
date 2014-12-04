@@ -69,7 +69,7 @@ elif test -d $cache_dir/node/node_modules; then
   cp -r $cache_dir/node/node_modules $build_dir/
 
   status "Pruning cached dependencies not specified in package.json"
-  npm prune 2>&1 | indent
+  npm prune --production 2>&1 | indent
 
   if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
     status "Node version changed since last build; rebuilding dependencies"
