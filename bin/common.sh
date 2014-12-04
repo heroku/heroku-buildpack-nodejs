@@ -51,6 +51,7 @@ proxy_curl(){
   fi
   
   if [ -z "$http_proxy" ]; then
+    status "curl $*"
     curl $*
   else 
     status "Using proxy for curl: $http_proxy"
