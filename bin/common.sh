@@ -46,6 +46,8 @@ proxy_curl(){
   status 'in proxy_curl'
   env_dir=$1 
   shift 1
+  
+  status $env_dir
   if [ -d "$env_dir" ]; then
     status "Exporting config vars to environment"
     export_env_dir $env_dir '(HTTP_PROXY)$'
