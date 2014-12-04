@@ -32,7 +32,6 @@ curl "https://dl.dropboxusercontent.com/u/70306/iojs-linux-x64.tar.gz" -s -o - |
 
 # Move node (and npm) into ./vendor and make them executable
 mkdir -p $build_dir/vendor
-status $build_dir/iojs
 mv $build_dir/iojs $build_dir/vendor/node
 chmod +x $build_dir/vendor/node/bin/*
 PATH=$build_dir/vendor/node/bin:$PATH
