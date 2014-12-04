@@ -27,6 +27,7 @@ semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
 if [ -d "${env_dir}" ]; then
   status "Exporting config vars to environment"
   export_env_dir $env_dir '(HTTP_PROXY|HTTPS_PROXY|NO_PROXY)$'
+  status $http_proxy $https_proxy
 fi
 
 # Resolve node version using semver.io
