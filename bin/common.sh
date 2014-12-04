@@ -43,6 +43,7 @@ export_env_dir() {
 }
 
 proxy_curl(){
+  status 'in proxy_curl'
   env_dir=$1 
   shift 1
   if [ -d "$env_dir" ]; then
