@@ -39,7 +39,7 @@ For more information about using Node.js and buildpacks on Heroku, see these Dev
 Try npm@next
 ------------
 
-Soon, you'll be able ot specify an npm version alongside your node version (engines.npm).
+Soon, you'll be able to specify an npm version alongside your node version (engines.npm).
 For now, if you'd like to test out the latest version of npm, you can use the #npm-next branch:
 
 ```
