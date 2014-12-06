@@ -10,9 +10,7 @@
     "hashish": "*"
   },
   "engines": {
-    "node": "~0.10.0"
-  },
-  "scripts": {
-    "start": "node foo.js"
+    "node": "~0.10.0",
+    "npm": "2.1.11"
   }
 }

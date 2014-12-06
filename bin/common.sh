@@ -8,9 +8,11 @@ status() {
 }
 
 protip() {
+  tip=$1
+  url=$2
   echo
-  echo "PRO TIP: $*" | indent
-  echo "See https://devcenter.heroku.com/articles/nodejs-support" | indent
+  echo "PRO TIP: $tip" | indent
+  echo "See ${url:-https://devcenter.heroku.com/articles/nodejs-support}" | indent
   echo
 }
 
@@ -27,6 +29,13 @@ indent() {
 
 cat_npm_debug_log() {
   test -f $build_dir/npm-debug.log && cat $build_dir/npm-debug.log
+}
+
+tail_error_log() {
+  echo ""
+  echo " !     Build failure:"
+  echo ""
+  tail -n 500 $logfile | indent
 }
 
 export_env_dir() {

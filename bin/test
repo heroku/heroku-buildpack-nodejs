@@ -14,53 +14,64 @@ testDetectWithoutPackageJson() {
 
 testNoVersion() {
   compile "no-version"
-  assertCaptured "PRO TIP: Specify a node version in package.json"
-  assertCaptured "Defaulting to latest stable node"
+  assertCaptured "PRO TIP: You should specify a node version in package.json"
+  assertCaptured "Node version (unspecified) requested in package.json"
+  assertCaptured "Resolving node version (latest stable) via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
+  assertCapturedSuccess
+}
+
+testSpecificVersion() {
+  compile "specific-version"
+  assertNotCaptured "semver.io"
+  assertCaptured "Downloading and installing node 0.10.29"
   assertCapturedSuccess
 }
 
 testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "PRO TIP: Avoid using semver ranges like '*'"
-  assertCaptured "Requested node range:  *"
-  assertCaptured "Resolved node version: 0.10"
+  assertCaptured "Node version * requested in package.json"
+  assertCaptured "Resolving node version * via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
 }
 
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "PRO TIP: Avoid using semver ranges starting with '>'"
-  assertCaptured "Requested node range:  >"
-  assertCaptured "Resolved node version: 0.10."
+  assertCaptured "Resolving node version >0.4 via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
-  assertCaptured "Requested node range:  >= 0.8.x"
-  assertCaptured "Resolved node version: 0.10."
+  assertCaptured "Resolving node version >= 0.8.x via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
 }
 
 testStableVersion() {
   compile "stable-node"
-  assertNotCaptured "PRO TIP: Avoid using semver"
-  assertNotCaptured "PRO TIP: Specify"
-  assertCaptured "Resolved node version"
+  assertNotCaptured "PRO TIP:"
+  assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
 }
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Requested node range:  >0.11.0"
-  assertCaptured "Resolved node version: 0.11."
+  assertCaptured "Resolving node version >0.11.0 via semver.io"
+  assertCaptured "Downloading and installing node 0.11"
   assertCapturedSuccess
 }
 
 testProfileCreated() {
   compile "stable-node"
   assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" ".profile.d/nodejs.sh"
+  assertFileContains $'export PATH="$HOME/.heroku/node/bin:$HOME/bin:$HOME/node_modules/.bin:$PATH\";' "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains $'npm_config_production=true' "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains $'export NODE_HOME=' "${compile_dir}/.profile.d/nodejs.sh"
   assertCapturedSuccess
 }
 
@@ -73,58 +84,128 @@ testInvalidDependency() {
 testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
-  assertCaptured "Caching node"
+  assertCaptured "Caching node_modules for future builds"
   assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+}
+
+testBuildWithCache() {
+  cache=$(mktmpdir)
+  compile "stable-node" $cache
+  assertCaptured "node_modules cache is empty"
+  assertCaptured "Caching node_modules for future builds"
+  assertCapturedSuccess
+  compile "stable-node" $cache
+  assertCaptured "node_modules exists in cache"
+  assertCaptured "Restoring node_modules from cache"
+  assertCapturedSuccess
 }
 
 testModulesCheckedIn() {
   compile "modules-checked-in"
-  assertCaptured "Found existing node_modules directory; skipping cache"
+  assertCaptured "Found existing node_modules directory; skipping cache and installation"
   assertCaptured "Rebuilding any native dependencies"
   assertCapturedSuccess
 }
 
 testUserConfig() {
   compile "userconfig"
-  assertCaptured "https://www.google.com/"
+  assertCaptured "www.google.com"
   assertCaptured "registry error"
   assertCapturedError 1 ""
 }
 
 testProcfileAbsentNpmStartPresent() {
   compile "procfile-absent-npm-start-present"
-  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertCaptured "App will start via npm start"
+  assertCaptured "No Procfile found; Adding 'web: npm start' to new Procfile"
   assertFile "web: npm start" "Procfile"
   assertCapturedSuccess
 }
 
 testProcfileAbsentNpmStartAbsent() {
   compile "procfile-absent-npm-start-absent"
-  assertCaptured "Create a Procfile or specify a start script in package.json"
+  assertCaptured "No start mechanism found"
+  assertNotCaptured "new Procfile"
   assertCapturedSuccess
 }
 
-testProcfileAbsentNpmStartPresent() {
-  compile "procfile-absent-npm-start-present"
-  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+testProcfileAbsentServerPresent() {
+  compile "procfile-absent-server-present"
+  assertCaptured "App will start via server.js"
+  assertCaptured "No Procfile found; Adding 'web: npm start' to new Procfile"
   assertFile "web: npm start" "Procfile"
   assertCapturedSuccess
 }
 
-testEnvDirNotImported() {
-  compile "stable-node"
-  assertNotCaptured "Exporting config vars to environment"
+testEnvVars() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/npm_config_production
+  compile "stable-node" "$(mktmpdir)" $env_dir
+  assertCaptured "npm_config_production=false"
   assertCapturedSuccess
 }
 
-testEnvDirExported() {
+testNoEnvVars() {
   env_dir=$(mktmpdir)
-  echo "chicken" > $env_dir/birds
-  echo "koi" > $env_dir/fish
   compile "stable-node" "$(mktmpdir)" $env_dir
-  assertCaptured "Exporting config vars to environment"
+  assertCaptured "npm_config_production=true"
   assertCapturedSuccess
 }
+
+testNodeHome() {
+  compile "stable-node"
+  assertFileContains "export NODE_HOME=" "${compile_dir}/.profile.d/nodejs.sh"
+  assertCapturedSuccess
+}
+
+testMultiExport() {
+  compile "stable-node"
+  assertFileContains "export NODE_HOME=" "${bp_dir}/export"
+  assertCapturedSuccess
+}
+
+testNoDevDependencies() {
+  compile "dev-dependencies"
+  assertNotCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testDevDependencies() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/npm_config_production
+  compile "dev-dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testNpmUpdate() {
+  cache=$(mktmpdir)
+  compile "npm-update-1" $cache
+  assertCaptured "lodash@1.0.0"
+  assertCapturedSuccess
+  compile "npm-update-1" $cache
+  assertCaptured "lodash@1.0.0"
+  assertCapturedSuccess
+  compile "npm-update-2" $cache
+  assertCaptured "lodash@1.3.1"
+  assertCapturedSuccess
+}
+
+testShrinkwrap() {
+  compile "shrinkwrap"
+  assertCaptured "express@4.10.4"
+  assertCaptured "mime-db@1.2.0"
+  assertCaptured "etag@1.5.1"
+  assertCaptured "lodash@2.4.1"
+  assertNotCaptured "mocha"
+  assertCapturedSuccess
+}
+
+testNpmVersionSpecific() {
+  compile "npm-version-specific"
+  assertCapturedSuccess
+}
+
 
 # Utils
 
