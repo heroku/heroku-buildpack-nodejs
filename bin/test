@@ -121,7 +121,7 @@ testProcfile() {
 testProcfileAbsentNpmStartPresent() {
   compile "procfile-absent-npm-start-present"
   assertCaptured "Start mechanism:     npm start"
-  assertCaptured "No Procfile found; Adding 'web: npm start' to new Procfile"
+  assertCaptured "Adding 'web: npm start' to new Procfile"
   assertFile "web: npm start" "Procfile"
   assertCapturedSuccess
 }
@@ -230,7 +230,7 @@ testNpmVersionSpecific() {
 
 testProfileExport() {
   compile "stable-node"
-  assertCaptured "Building runtime environment"
+  assertCaptured "Creating runtime environment"
   assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertCapturedSuccess
