@@ -11,14 +11,16 @@ git push heroku master
 
 ## What can I do with Yoga?
 
-- Specify a version of npm  with `engines.npm` and avoid those pre-2.0 bugs!
-- Set `BUILD_CLEAN` to control `node_modules` caching between deploys
-- Set `NPM_CONFIG_PRODUCTION` to control `devDependencies` installation
-- Get clean output on success and concise debugging info on failure - no more 20,000-line logs
-- Go crazy with `.npmrc` configs
-- Export `NODE_HOME` and `PATH` for better integration with multiple buildpacks
+- [Specify an npm version](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#specify-an-npm-version)
+- [Enable or disable node_modules caching](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#enable-or-disable-node_modules-caching)
+- [Enable or disable devDependencies installation](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#enable-or-disable-devdependencies-installation)
+- [Configure npm with .npmrc](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#configure-npm-with-npmrc)
+- [Chain node with multiple buildpacks](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#chain-node-with-multiple-buildpacks)
 
-## Use
+Yoga also outputs minimal but useful messages on success and concise debug information on error.
+No more 20,000-line error logs!
+
+## Stretch
 
 ### Specify a node version
 
@@ -46,6 +48,8 @@ Default: the
 Set engines.npm in package.json to the semver range
 (or specific version) of npm you'd like to use.
 (It's a good idea to make this the same version you use during development)
+
+Since 'npm 2' shipped several major bugfixes, you might try:
 
 ```json
 "engines": {
