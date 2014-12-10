@@ -15,8 +15,14 @@ git push heroku master
 - Set `NPM_CONFIG_PRODUCTION` to control `devDependencies` installation
 - Get clean output on success and concise debugging info on failure - no more 20,000-line logs
 - Go crazy with `.npmrc` configs
-- Export NODE_HOME and PATH for better integration with multiple buildpacks
-- Soon: specify io.js as your node engine
+- Export `NODE_HOME` and `PATH` for better integration with multiple buildpacks
+
+## Roadmap
+
+The next features in the pipeline include:
+
+- Specifying io.js as your node engine
+- Providing proxy settings for your locked-down enterprise environment
 
 ## Feedback
 
