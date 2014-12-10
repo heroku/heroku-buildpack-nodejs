@@ -1,6 +1,7 @@
 # Heroku Node.js Buildpack: Yoga
 
-Preview the next version of the node buildpack: yoga. It's powerful and flexible.
+Preview the next version of the node buildpack: yoga.
+It's the most powerful and flexible Node buildpack yet.
 
 ```shell
 heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#yoga
@@ -16,6 +17,106 @@ git push heroku master
 - Get clean output on success and concise debugging info on failure - no more 20,000-line logs
 - Go crazy with `.npmrc` configs
 - Export `NODE_HOME` and `PATH` for better integration with multiple buildpacks
+
+## Use
+
+### Specify a node version
+
+Set engines.node in package.json to the semver range
+(or specific version) of node you'd like to use.
+(It's a good idea to make this the same version you use during development)
+
+```json
+  "engines": {
+    "node": "0.11.x"
+  }
+```
+
+```json
+"engines": {
+  "node": "0.10.33"
+}
+```
+
+Default: the
+[latest stable version.](http://semver.io/node)
+
+### Specify an npm version
+
+Set engines.npm in package.json to the semver range
+(or specific version) of npm you'd like to use.
+(It's a good idea to make this the same version you use during development)
+
+```json
+"engines": {
+  "npm": "2.x"
+}
+```
+
+```json
+"engines": {
+  "npm": "^2.1.0"
+}
+```
+
+Default: the version of npm bundled with your node install (varies).
+
+### Enable or disable node_modules caching
+
+Sometimes it's necessary to be able to build without any cache present.
+
+Caching node_modules between builds can dramatically speed up build times.
+However, `npm install` doesn't automatically update already installed modules
+as long as they fall within acceptable semver ranges.
+
+```shell
+heroku config:set BUILD_CLEAN=true
+git commit -am 'build' --allow-empty
+git push heroku master
+heroku config:unset BUILD_CLEAN
+```
+
+Default: `BUILD_CLEAN` defaults to false
+
+### Enable or disable devDependencies installation
+
+During local development, `npm install` installs all dependencies
+and all devDependencies (test frameworks, build tools, etc).
+This is usually something you want to avoid in production, so
+npm has a 'production' config that can be set through the environment:
+
+To install *dependencies only:*
+
+```shell
+heroku config:set NPM_CONFIG_PRODUCTION=true
+```
+
+To install *dependencies and devDependencies:*
+
+```shell
+heroku config:set NPM_CONFIG_PRODUCTION=false
+```
+
+Default: `NPM_CONFIG_PRODUCTION` defaults to true on Heroku
+
+### Configure npm with .npmrc
+
+Sometimes, a project needs custom npm behavior to set up proxies,
+use a different registry, etc. For such behavior,
+just include an `.npmrc` file in the root of your project:
+
+```
+# .npmrc
+registry = 'https://custom-registry.com/'
+```
+
+### Chain Node with multiple buildpacks
+
+Frequently, Node is paired with other platforms like Ruby or PHP
+through Heroku's Multi Buildpack. In order to use node in
+another environment, specify this buildpack first in your .buildpacks file.
+This buildpack automatically exports node, npm, and any node_modules binaries
+into the `$PATH` for easy use in subsequent buildpacks.
 
 ## Roadmap
 
