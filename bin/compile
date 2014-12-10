@@ -6,7 +6,7 @@ set -e            # fail fast
 set -o pipefail   # don't ignore exit codes when piping output
 # set -x          # enable debugging
 
-bp_version="64"
+bp_version="63-rc"
 
 # Configure directories
 build_dir=$1
