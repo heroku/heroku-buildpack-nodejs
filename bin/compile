@@ -20,7 +20,7 @@ logfile=/tmp/node-log.txt
 source $bp_dir/bin/common.sh
 
 # Output version
-status "Node.js Buildpack v$bp_version"
+head "Node.js Buildpack v$bp_version"
 
 # Avoid GIT_DIR leak from previous build steps
 unset GIT_DIR
@@ -72,31 +72,31 @@ test -d $cache_dir/node/node_modules && modules_cached=true || modules_cached=fa
 ####### Provide debugging info and feedback
 
 echo ""
-status "Node engine:         ${node_engine:-unspecified}"
-status "Npm engine:          ${npm_engine:-default}"
-status "Start mechanism:     ${start_method:-none}"
-status "node_modules source: ${modules_source:-none}"
-status "node_modules cached: $modules_cached"
+info "Node engine:         ${node_engine:-unspecified}"
+info "Npm engine:          ${npm_engine:infolt}"
+info "Start mechanism:     ${start_method:-none}"
+info "node_modules source: ${modules_source:-none}"
+info "node_modules cached: $modules_cached"
 
 echo ""
 
-status "NPM_CONFIG_PRODUCTION=$NPM_CONFIG_PRODUCTION"
-status "BUILD_CLEAN=$BUILD_CLEAN"
+info "NPM_CONFIG_PRODUCTION=$NPM_CONFIG_PRODUCTION"
+info "BUILD_CLEAN=$BUILD_CLEAN"
 
 source $bp_dir/bin/warnings.sh
 
 ####### Vendor in binaries
 
-echo ""
+head "Installing binaries"
 
 # Resolve non-specific node versions using semver.io
 if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  status "Resolving node version ${node_engine:-(latest stable)} via semver.io..."
+  info "Resolving node version ${node_engine:-(latest stable)} via semver.io..."
   node_engine=$(curl --silent --get --data-urlencode "range=${node_engine}" https://semver.io/node/resolve)
 fi
 
 # Download node from Heroku's S3 mirror of nodejs.org/dist
-status "Downloading and installing node $node_engine..."
+info "Downloading and installing node $node_engine..."
 node_url="http://s3pository.heroku.com/node/v$node_engine/node-v$node_engine-linux-x64.tar.gz"
 curl $node_url -s -o - | tar xzf - -C /tmp
 
@@ -108,86 +108,90 @@ PATH=$heroku_dir/node/bin:$PATH
 # Optionally bootstrap a different npm version
 if [ "$npm_engine" != "" ]; then
   if ! [[ "$npm_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    status "Resolving npm version ${npm_engine} via semver.io..."
+    info "Resolving npm version ${npm_engine} via semver.io..."
     npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.io/npm/resolve)
   fi
-  status "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
-  npm install --quiet -g npm@$npm_engine 2>&1
+  info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
+  npm install --quiet -g npm@$npm_engine > /dev/null
 fi
 
 # Run subsequent commands from the build directory
 cd $build_dir
 
-echo ""
-echo "Using node: `node --version`"
-echo "Using npm: `npm --version`"
-echo ""
-
 ####### Build the project's dependencies
+
+head "Building dependencies"
 
 # Did we bust the cache?
 if ! $modules_cached; then
   cache_busted=true
 elif [ "$node_previous" != "" ] && [ "$node_engine" != "$node_previous" ]; then
-  status "Node version changed ($node_previous => $node_engine); invalidating cache"
+  info "Node version changed ($node_previous => $node_engine); invalidating cache"
   cache_busted=true
 elif [ "$npm_previous" != "" ] && [ "$npm_engine" != "$npm_previous" ]; then
-  status "Npm version changed ($npm_previous => $npm_engine); invalidating cache"
+  info "Npm version changed ($npm_previous => $npm_engine); invalidating cache"
   cache_busted=true
 elif [ "$bp_version" != "$bp_previous" ]; then
-  status "New buidpack version ($bp_version); invalidating cache"
+  info "New buidpack version ($bp_version); invalidating cache"
   cache_busted=true
 else
   cache_busted=false
 fi
 
 if [ "$modules_source" == "" ]; then
-  status "Skipping dependencies"
+  info "Skipping dependencies (no source for node_modules)"
 
 elif [ $modules_source == "prebuilt" ]; then
-  status "Rebuilding any native modules for this architecture"
+  info "Rebuilding any native modules for this architecture"
   npm rebuild 2>&1
 
 elif ! $BUILD_CLEAN && ! $cache_busted; then
-  status "Restoring node modules from cache"
+  info "Restoring node modules from cache"
   cp -r $cache_dir/node/node_modules $build_dir/
-  status "Pruning unused dependencies"
+  info "Pruning unused dependencies"
   npm prune 2>&1
-  status "Installing any new modules"
+  info "Installing any new modules"
   npm install --quiet --userconfig $build_dir/.npmrc 2>&1
 
 else
-  status "Installing node modules"
+  info "Installing node modules"
   touch $build_dir/.npmrc
   npm install --quiet --userconfig $build_dir/.npmrc 2>&1
-  status "Deduping dependency tree"
+  info "Deduping dependency tree"
   npm dedupe 2>&1
 fi
 
 ####### Create a Procfile if possible
 
-if [ "$start_method" == "npm start" ]; then
-  status "No Procfile found; Adding 'web: npm start' to new Procfile"
+head "Checking startup method"
+
+if [ "$start_method" == "Procfile" ]; then
+  info "Found Procfile"
+elif [ "$start_method" == "npm start" ]; then
+  info "No Procfile; Adding 'web: npm start' to new Procfile"
   echo "web: npm start" > $build_dir/Procfile
 elif [ "$start_method" == "server.js" ]; then
-  status "No Procfile found; Adding 'web: node server.js' to new Procfile"
+  info "No Procfile; Adding 'web: node server.js' to new Procfile"
   echo "web: node server.js" > $build_dir/Procfile
 fi
 
 ####### Create the runtime environment (profile.d)
 
-status "Building runtime environment"
-mkdir -p $build_dir/.profile.d
+head "Finalizing build"
 
 # Runtime & Multi-buildpack exports
+info "Creating runtime environment"
+mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
 echo "export NODE_HOME=\"\$HOME/.heroku/node\"" >> $build_dir/.profile.d/nodejs.sh
+
+info "Exporting binary paths"
 echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/node_modules/.bin:\$PATH\"" > $bp_dir/export
 echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> $bp_dir/export
 
 ####### Clean up
 
-status "Cleaning up build artifacts"
+info "Cleaning up build artifacts"
 
 # Clean up after npm
 rm -rf "$build_dir/.node-gyp"
@@ -207,12 +211,10 @@ echo $npm_engine > $cache_dir/node/npm-version
 echo $bp_version > $cache_dir/node/bp-version
 
 if test -d $build_dir/node_modules; then
-  status "Caching node_modules for future builds"
+  info "Caching node_modules for future builds"
   cp -r $build_dir/node_modules $cache_dir/node
 fi
 
-####### Summary output
-
 # Show the final dependency tree
-echo ""
-npm ls --depth=0 2>&1
+info "Build successful!"
+npm ls --depth=0 2>&1 | indent
