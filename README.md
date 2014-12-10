@@ -71,7 +71,8 @@ Sometimes it's necessary to be able to build without any cache present.
 
 Caching node_modules between builds can dramatically speed up build times.
 However, `npm install` doesn't automatically update already installed modules
-as long as they fall within acceptable semver ranges.
+as long as they fall within acceptable semver ranges,
+which can lead to outdated modules.
 
 ```shell
 heroku config:set BUILD_CLEAN=true
