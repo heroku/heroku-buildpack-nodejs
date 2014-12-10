@@ -1,0 +1,19 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/example/example.git"
+  },
+  "dependencies": {
+    "express": "4.10.4",
+    "lodash": "2.4.1"
+  },
+  "engines": {
+    "node": "~0.10.0"
+  },
+  "devDependencies": {
+    "mocha": "2.0.1"
+  }
+}

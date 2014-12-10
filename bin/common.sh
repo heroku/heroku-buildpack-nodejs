@@ -8,10 +8,30 @@ status() {
 }
 
 protip() {
+  tip=$1
+  url=$2
   echo
-  echo "PRO TIP: $*" | indent
-  echo "See https://devcenter.heroku.com/articles/nodejs-support" | indent
-  echo
+  echo "PRO TIP: $tip" | indent
+  echo "See ${url:-https://devcenter.heroku.com/articles/nodejs-support}" | indent
+}
+
+file_contents() {
+  if test -f $1; then
+    echo "$(cat $1)"
+  else
+    echo ""
+  fi
+}
+
+package_json() {
+  if test -f $build_dir/package.json; then
+    local result="$(cat $build_dir/package.json | $bp_dir/vendor/jq -r $1)"
+    if [ "$result" == "null" ]; then echo ""
+    else echo "$result"
+    fi
+  else
+    echo ""
+  fi
 }
 
 # sed -l basically makes sed replace and buffer through stdin to stdout
@@ -27,6 +47,13 @@ indent() {
 
 cat_npm_debug_log() {
   test -f $build_dir/npm-debug.log && cat $build_dir/npm-debug.log
+}
+
+tail_error_log() {
+  echo ""
+  echo " !     Build failure:"
+  echo ""
+  tail -n 500 $logfile | indent
 }
 
 export_env_dir() {
