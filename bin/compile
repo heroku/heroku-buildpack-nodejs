@@ -118,6 +118,11 @@ fi
 # Run subsequent commands from the build directory
 cd $build_dir
 
+echo ""
+echo "Using node: `node --version`"
+echo "Using npm: `npm --version`"
+echo ""
+
 ####### Build the project's dependencies
 
 # Did we bust the cache?
