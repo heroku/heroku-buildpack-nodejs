@@ -29,6 +29,8 @@ unset GIT_DIR
 mkdir -p $heroku_dir/node
 echo "" > $logfile
 
+trap build_failed ERR
+
 # Load config vars into environment; start with defaults
 export NPM_CONFIG_PRODUCTION=true
 export BUILD_CLEAN=false
@@ -110,7 +112,7 @@ if [ "$npm_engine" != "" ]; then
     npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.io/npm/resolve)
   fi
   status "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
-  npm install -g npm@$npm_engine
+  npm install --quiet -g npm@$npm_engine 2>&1
 fi
 
 # Run subsequent commands from the build directory
@@ -139,22 +141,22 @@ if [ "$modules_source" == "" ]; then
 
 elif [ $modules_source == "prebuilt" ]; then
   status "Rebuilding any native modules for this architecture"
-  npm rebuild
+  npm rebuild 2>&1
 
 elif ! $BUILD_CLEAN && ! $cache_busted; then
   status "Restoring node modules from cache"
   cp -r $cache_dir/node/node_modules $build_dir/
   status "Pruning unused dependencies"
-  npm prune
+  npm prune 2>&1
   status "Installing any new modules"
-  npm install --userconfig $build_dir/.npmrc
+  npm install --quiet --userconfig $build_dir/.npmrc 2>&1
 
 else
   status "Installing node modules"
   touch $build_dir/.npmrc
-  npm install --userconfig $build_dir/.npmrc
+  npm install --quiet --userconfig $build_dir/.npmrc 2>&1
   status "Deduping dependency tree"
-  npm dedupe
+  npm dedupe 2>&1
 fi
 
 ####### Create a Procfile if possible
@@ -208,4 +210,4 @@ fi
 
 # Show the final dependency tree
 echo ""
-npm ls --depth=0 | indent
+npm ls --depth=0 2>&1

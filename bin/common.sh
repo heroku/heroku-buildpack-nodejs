@@ -1,3 +1,9 @@
+build_failed() {
+  echo ""
+  echo "Build failed."
+  echo ""
+}
+
 error() {
   echo " !     $*" >&2
   exit 1
