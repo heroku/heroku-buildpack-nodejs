@@ -13,7 +13,7 @@ git push heroku master
 - Specify a version of npm (engines.npm) and avoid those pre-2.0 bugs!
 - Set `BUILD_CLEAN` to control `node_modules` caching between deploys
 - Set `NPM_CONFIG_PRODUCTION` to control `devDependencies` installation
-- Get clean output on success and concise debugging info on failure - no more 20,000-line 'silly' logs
+- Get clean output on success and concise debugging info on failure - no more 20,000-line logs
 - Go crazy with `.npmrc` configs
 - Export NODE_HOME and PATH for better integration with multiple buildpacks
 - Soon: specify io.js as your node engine
