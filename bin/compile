@@ -131,7 +131,7 @@ elif [ "$npm_previous" != "" ] && [ "$npm_engine" != "$npm_previous" ]; then
   status "Npm version changed ($npm_previous => $npm_engine); invalidating cache"
   cache_busted=true
 elif [ "$bp_version" != "$bp_previous" ]; then
-  status "Buildpack version changed (${bp_previous:-none} => $bp_version); invalidating cache"
+  status "New buidpack version ($bp_version); invalidating cache"
   cache_busted=true
 else
   cache_busted=false
