@@ -31,6 +31,7 @@ testSpecificVersion() {
 testStableVersion() {
   compile "stable-node"
   assertCaptured "Downloading and installing node 0.10"
+  assertNotCaptured "PRO TIP"
   assertCapturedSuccess
 }
 
@@ -208,9 +209,7 @@ testNpmrc() {
 testShrinkwrap() {
   compile "shrinkwrap"
   assertCaptured "express@4.10.4"
-  assertCaptured "mime-db@1.2.0"
-  assertCaptured "etag@1.5.1"
-  assertCaptured "lodash@2.4.1"
+  assertCaptured "lodash@2.4.0"
   assertNotCaptured "mocha"
   assertCapturedSuccess
 }
@@ -239,8 +238,11 @@ testProfileExport() {
 
 testMultiExport() {
   compile "stable-node"
-  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" "${bp_dir}/export"
-  assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${bp_dir}/export"
+  assertFileContains "export PATH=" "${bp_dir}/export"
+  assertFileContains "/.heroku/node/bin:" "${bp_dir}/export"
+  assertFileContains "/node_modules/.bin:\$PATH" "${bp_dir}/export"
+  assertFileContains "export NODE_HOME=" "${bp_dir}/export"
+  assertFileContains "/.heroku/node\"" "${bp_dir}/export"
   assertCapturedSuccess
 }
 

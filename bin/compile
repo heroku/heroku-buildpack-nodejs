@@ -176,12 +176,10 @@ status "Building runtime environment"
 mkdir -p $build_dir/.profile.d
 
 # Runtime & Multi-buildpack exports
-export_path="export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\""
-export_home="export NODE_HOME=\"\$HOME/.heroku/node\""
-echo $export_path > $build_dir/.profile.d/nodejs.sh
-echo $export_home >> $build_dir/.profile.d/nodejs.sh
-echo $export_path > $bp_dir/export
-echo $export_home >> $bp_dir/export
+echo "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
+echo "export NODE_HOME=\"\$HOME/.heroku/node\"" >> $build_dir/.profile.d/nodejs.sh
+echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/node_modules/.bin:\$PATH\"" > $bp_dir/export
+echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> $bp_dir/export
 
 ####### Clean up
 
