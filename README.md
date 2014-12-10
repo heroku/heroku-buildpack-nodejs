@@ -10,7 +10,7 @@ git push heroku master
 
 ## What can I do with Yoga?
 
-- Specify a version of npm (engines.npm) and avoid those pre-2.0 bugs!
+- Specify a version of npm  with `engines.npm` and avoid those pre-2.0 bugs!
 - Set `BUILD_CLEAN` to control `node_modules` caching between deploys
 - Set `NPM_CONFIG_PRODUCTION` to control `devDependencies` installation
 - Get clean output on success and concise debugging info on failure - no more 20,000-line logs
