@@ -1,6 +1,6 @@
 # Heroku Node.js Buildpack: Yoga
 
-Preview the next version of the node buildpack: yoga.
+Preview the next version of the node buildpack: yoga. It's powerful and flexible.
 
 ```shell
 heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#yoga
