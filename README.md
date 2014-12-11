@@ -9,6 +9,8 @@ git commit -am 'yoga' --allow-empty
 git push heroku master
 ```
 
+It's still in beta and we'd love [feedback](#feedback)!
+
 ## What can I do with Yoga?
 
 - [Specify an npm version](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#specify-an-npm-version)
