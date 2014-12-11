@@ -33,7 +33,7 @@ trap build_failed ERR
 
 # Load config vars into environment; start with defaults
 export NPM_CONFIG_PRODUCTION=true
-export BUILD_CLEAN=false
+export DISABLE_BUILD_CACHE=false
 
 if [ -d "$env_dir" ]; then
   export_env_dir $env_dir
@@ -81,7 +81,7 @@ info "node_modules cached: $modules_cached"
 echo ""
 
 info "NPM_CONFIG_PRODUCTION=$NPM_CONFIG_PRODUCTION"
-info "BUILD_CLEAN=$BUILD_CLEAN"
+info "DISABLE_BUILD_CACHE=$DISABLE_BUILD_CACHE"
 
 source $bp_dir/bin/warnings.sh
 
@@ -145,7 +145,7 @@ elif [ $modules_source == "prebuilt" ]; then
   info "Rebuilding any native modules for this architecture"
   npm rebuild 2>&1
 
-elif ! $BUILD_CLEAN && ! $cache_busted; then
+elif ! $DISABLE_BUILD_CACHE && ! $cache_busted; then
   info "Restoring node modules from cache"
   cp -r $cache_dir/node/node_modules $build_dir/
   info "Pruning unused dependencies"

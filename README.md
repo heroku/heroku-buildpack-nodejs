@@ -75,13 +75,13 @@ as long as they fall within acceptable semver ranges,
 which can lead to outdated modules.
 
 ```shell
-heroku config:set BUILD_CLEAN=true
+heroku config:set DISABLE_BUILD_CACHE=true
 git commit -am 'build' --allow-empty
 git push heroku master
-heroku config:unset BUILD_CLEAN
+heroku config:unset DISABLE_BUILD_CACHE
 ```
 
-Default: `BUILD_CLEAN` defaults to false
+Default: `DISABLE_BUILD_CACHE` defaults to false
 
 ### Enable or disable devDependencies installation
 
