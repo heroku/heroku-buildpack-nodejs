@@ -178,20 +178,20 @@ testDevDependencies() {
   assertCapturedSuccess
 }
 
-testBuildClean() {
+testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
 
-  compile "build-clean-1" $cache
+  compile "disable-build-cache-1" $cache
   assertCaptured "lodash@1.0.0"
   assertCapturedSuccess
 
-  compile "build-clean-2" $cache
+  compile "disable-build-cache-2" $cache
   assertCaptured "lodash@1.0.0"
   assertCapturedSuccess
 
-  echo "true" > $env_dir/BUILD_CLEAN
-  compile "build-clean-2" $cache $env_dir
+  echo "true" > $env_dir/DISABLE_BUILD_CACHE
+  compile "disable-build-cache-2" $cache $env_dir
   assertCaptured "lodash@1.3.1"
   assertCapturedSuccess
 }
