@@ -45,7 +45,7 @@ testUnstableVersion() {
 testInfoEmpty() {
   compile "info-empty"
   assertCaptured "Node engine:         unspecified"
-  assertCaptured "Npm engine:          default"
+  assertCaptured "Npm engine:          unspecified"
   assertCaptured "Start mechanism:     none"
   assertCaptured "node_modules source: package.json"
   assertCaptured "node_modules cached: false"
