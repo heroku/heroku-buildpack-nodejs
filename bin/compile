@@ -73,7 +73,7 @@ test -d $cache_dir/node/node_modules && modules_cached=true || modules_cached=fa
 
 echo ""
 info "Node engine:         ${node_engine:-unspecified}"
-info "Npm engine:          ${npm_engine:-default}"
+info "Npm engine:          ${npm_engine:-unspecified}"
 info "Start mechanism:     ${start_method:-none}"
 info "node_modules source: ${modules_source:-none}"
 info "node_modules cached: $modules_cached"
@@ -158,7 +158,6 @@ else
   touch $build_dir/.npmrc
   npm install --quiet --userconfig $build_dir/.npmrc 2>&1
   info "Deduping dependency tree"
-  npm dedupe 2>&1
 fi
 
 ####### Create a Procfile if possible
@@ -217,4 +216,4 @@ fi
 
 # Show the final dependency tree
 info "Build successful!"
-npm ls --depth=0 2>&1 | indent
+(npm ls --depth=0 || true) 2>/dev/null | indent
