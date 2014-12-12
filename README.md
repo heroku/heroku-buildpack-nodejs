@@ -131,6 +131,7 @@ The next features in the pipeline include:
 
 - Specifying io.js as your node engine
 - Providing proxy settings for your locked-down enterprise environment
+- Dynamically adjusting to different container sizes (especially regarding memory)
 
 ## Feedback
 

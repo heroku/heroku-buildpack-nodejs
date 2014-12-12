@@ -42,6 +42,16 @@ testUnstableVersion() {
   assertCapturedSuccess
 }
 
+testInfoEmpty() {
+  compile "info-empty"
+  assertCaptured "Node engine:         unspecified"
+  assertCaptured "Npm engine:          default"
+  assertCaptured "Start mechanism:     none"
+  assertCaptured "node_modules source: package.json"
+  assertCaptured "node_modules cached: false"
+  assertCapturedSuccess
+}
+
 testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "PRO TIP: Avoid semver ranges like '*'"
