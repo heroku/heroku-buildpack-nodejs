@@ -43,7 +43,7 @@ Soon, you'll be able to specify an npm version alongside your node version (engi
 For now, if you'd like to test out the latest version of npm, you can use the #npm-next branch:
 
 ```
-heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-node#npm-next
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#npm-next
 git commit -am 'npm@next' --allow-empty
 git push heroku master
 ```
