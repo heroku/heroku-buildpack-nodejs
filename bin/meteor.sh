@@ -106,7 +106,13 @@ demeteorize_app() {
   install_meteorite_deps "$build_dir" "$cache_dir"
   install_demeteorizer
 
-  HOME=$METEOR_HOME demeteorizer -o "$build_dir/demeteorized" | indent
+  # Build outside source dir to avoid warning:
+  # Warning: The output directory is under your source tree.
+  #          This causes issues when building with mobile platforms.
+  #         Consider building into a different directory instead (meteor build ../output)
+  tmp_build_dir=$(mktempdir /tmp/demetorized)
+  HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | indent
+  rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
   if [ ! -e "$build_dir/Procfile" ] ; then
     echo "web: node demeteorized/main.js" > "$build_dir/Procfile"
