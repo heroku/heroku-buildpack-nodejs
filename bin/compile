@@ -80,7 +80,7 @@ info "node_modules cached: $modules_cached"
 
 echo ""
 
-printenv | grep NPM_CONFIG | indent
+printenv | grep ^NPM_CONFIG_ | indent
 info "DISABLE_BUILD_CACHE=$DISABLE_BUILD_CACHE"
 
 source $bp_dir/bin/warnings.sh
