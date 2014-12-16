@@ -34,7 +34,7 @@ node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" http
 
 # Recommend using semver ranges in a safe manner
 if [ "$semver_range" == "null" ]; then
-  if [ -d "$build_dir/.meteor"]; then
+  if [ -d "$build_dir/.meteor" ]; then
     protip "Specify a node version in .node-version"
   else
     protip "Specify a node version in package.json"
