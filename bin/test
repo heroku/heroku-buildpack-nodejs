@@ -188,6 +188,32 @@ testDevDependencies() {
   assertCapturedSuccess
 }
 
+testOptionalDependencies() {
+  env_dir=$(mktmpdir)
+  #echo "true" > $env_dir/NPM_CONFIG_OPTIONAL
+  compile "optional-dependencies" "$(mktmpdir)" $env_dir
+  assertNotCaptured "NPM_CONFIG_OPTIONAL"
+  assertCaptured "less"
+  assertCaptured "mime"
+  assertCaptured "mkdirp"
+  assertCaptured "clean-css"
+  assertCaptured "request"
+  assertCapturedSuccess
+}
+
+testNoOptionalDependencies() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NPM_CONFIG_OPTIONAL
+  compile "optional-dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "NPM_CONFIG_OPTIONAL=false"
+  assertCaptured "less"
+  assertNotCaptured "mime"
+  assertNotCaptured "mkdirp"
+  assertNotCaptured "clean-css"
+  assertNotCaptured "request"
+  assertCapturedSuccess
+}
+
 testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
