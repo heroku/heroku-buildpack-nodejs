@@ -33,7 +33,7 @@ trap build_failed ERR
 
 # Load config vars into environment; start with defaults
 export NPM_CONFIG_PRODUCTION=true
-export DISABLE_BUILD_CACHE=false
+export NODE_MODULES_CACHE=true
 
 if [ -d "$env_dir" ]; then
   export_env_dir $env_dir
@@ -81,7 +81,7 @@ info "node_modules cached: $modules_cached"
 echo ""
 
 printenv | grep ^NPM_CONFIG_ | indent
-info "DISABLE_BUILD_CACHE=$DISABLE_BUILD_CACHE"
+info "NODE_MODULES_CACHE=$NODE_MODULES_CACHE"
 
 source $bp_dir/bin/warnings.sh
 
@@ -124,18 +124,21 @@ head "Building dependencies"
 
 # Did we bust the cache?
 if ! $modules_cached; then
-  cache_busted=true
+  use_cache=false
+elif ! $NODE_MODULES_CACHE; then
+  info "Cache disabled with NODE_MODULES_CACHE"
+  use_cache=false
 elif [ "$node_previous" != "" ] && [ "$node_engine" != "$node_previous" ]; then
   info "Node version changed ($node_previous => $node_engine); invalidating cache"
-  cache_busted=true
+  use_cache=false
 elif [ "$npm_previous" != "" ] && [ "$npm_engine" != "$npm_previous" ]; then
   info "Npm version changed ($npm_previous => $npm_engine); invalidating cache"
-  cache_busted=true
+  use_cache=false
 elif [ "$bp_version" != "$bp_previous" ]; then
-  info "New buidpack version ($bp_version); invalidating cache"
-  cache_busted=true
+  info "New buildpack version ($bp_version); invalidating cache"
+  use_cache=false
 else
-  cache_busted=false
+  use_cache=true
 fi
 
 if [ "$modules_source" == "" ]; then
@@ -145,7 +148,7 @@ elif [ $modules_source == "prebuilt" ]; then
   info "Rebuilding any native modules for this architecture"
   npm rebuild 2>&1
 
-elif ! $DISABLE_BUILD_CACHE && ! $cache_busted; then
+elif $use_cache; then
   info "Restoring node modules from cache"
   cp -r $cache_dir/node/node_modules $build_dir/
   info "Pruning unused dependencies"

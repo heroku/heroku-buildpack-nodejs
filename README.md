@@ -69,21 +69,21 @@ Default: the version of npm bundled with your node install (varies).
 
 ### Enable or disable node_modules caching
 
-Sometimes it's necessary to be able to build without any cache present.
+For a 'clean' build without using any cached node modules:
 
-Caching node_modules between builds can dramatically speed up build times.
-However, `npm install` doesn't automatically update already installed modules
+```shell
+heroku config:set NODE_MODULES_CACHE=false
+git commit -am 'rebuild' --allow-empty
+git push heroku master
+heroku config:unset NODE_MODULES_CACHE
+```
+
+Caching node_modules between builds dramatically speeds up build times.
+However, `npm install` doesn't automatically update already-installed modules
 as long as they fall within acceptable semver ranges,
 which can lead to outdated modules.
 
-```shell
-heroku config:set DISABLE_BUILD_CACHE=true
-git commit -am 'build' --allow-empty
-git push heroku master
-heroku config:unset DISABLE_BUILD_CACHE
-```
-
-Default: `DISABLE_BUILD_CACHE` defaults to false
+Default: `NODE_MODULES_CACHE` defaults to true
 
 ### Enable or disable devDependencies installation
 
