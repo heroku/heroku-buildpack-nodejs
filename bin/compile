@@ -89,10 +89,10 @@ source $bp_dir/bin/warnings.sh
 
 head "Installing binaries"
 
-# Resolve non-specific node versions using semver.io
+# Resolve non-specific node versions using semver.herokuapp.com
 if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   info "Resolving node version ${node_engine:-(latest stable)} via semver.io..."
-  node_engine=$(curl --silent --get --data-urlencode "range=${node_engine}" https://semver.io/node/resolve)
+  node_engine=$(curl --silent --get --data-urlencode "range=${node_engine}" https://semver.herokuapp.com/node/resolve)
 fi
 
 # Download node from Heroku's S3 mirror of nodejs.org/dist
@@ -109,7 +109,7 @@ PATH=$heroku_dir/node/bin:$PATH
 if [ "$npm_engine" != "" ]; then
   if ! [[ "$npm_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     info "Resolving npm version ${npm_engine} via semver.io..."
-    npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.io/npm/resolve)
+    npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.herokuapp.com/npm/resolve)
   fi
   info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
   npm install --quiet -g npm@$npm_engine > /dev/null
