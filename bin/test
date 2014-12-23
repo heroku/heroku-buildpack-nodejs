@@ -74,7 +74,7 @@ testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
   assertCaptured "Caching node"
-  assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/ | grep node | wc -l)"
 }
 
 testModulesCheckedIn() {
