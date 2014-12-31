@@ -30,9 +30,6 @@ export_env_dir $env_dir
 
 ####### Determine current state
 
-# Which version of the buildpack did we use last time?
-bp_previous=$(file_contents "$cache_dir/node/bp-version")
-
 # What's the requested semver range for node?
 node_engine=$(package_json ".engines.node")
 node_previous=$(file_contents "$cache_dir/node/node-version")
@@ -123,9 +120,6 @@ elif [ "$node_previous" != "" ] && [ "$node_engine" != "$node_previous" ]; then
 elif [ "$npm_previous" != "" ] && [ "$npm_engine" != "$npm_previous" ]; then
   info "Npm version changed ($npm_previous => $npm_engine); invalidating cache"
   use_cache=false
-elif [ "$bp_version" != "$bp_previous" ]; then
-  info "New buildpack version ($bp_version); invalidating cache"
-  use_cache=false
 else
   use_cache=true
 fi
@@ -201,7 +195,6 @@ mkdir -p $cache_dir/node
 
 echo $node_engine > $cache_dir/node/node-version
 echo $npm_engine > $cache_dir/node/npm-version
-echo $bp_version > $cache_dir/node/bp-version
 
 if test -d $build_dir/node_modules; then
   info "Caching node_modules for future builds"
