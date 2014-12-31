@@ -145,7 +145,6 @@ else
   info "Installing node modules"
   touch $build_dir/.npmrc
   npm install --quiet --userconfig $build_dir/.npmrc 2>&1
-  info "Deduping dependency tree"
 fi
 
 ####### Create a Procfile if possible
