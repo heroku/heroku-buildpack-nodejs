@@ -98,7 +98,7 @@ if [ "$npm_engine" != "" ]; then
     npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.herokuapp.com/npm/resolve)
   fi
   info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
-  npm install --quiet -g npm@$npm_engine > /dev/null
+  npm install --quiet -g npm@$npm_engine > /dev/null 2>&1 | indent
 fi
 
 # Run subsequent commands from the build directory
@@ -129,22 +129,22 @@ if [ "$modules_source" == "" ]; then
 
 elif [ $modules_source == "prebuilt" ]; then
   info "Rebuilding any native modules for this architecture"
-  npm run preinstall
-  npm rebuild 2>&1
-  npm run postinstall
+  npm run preinstall 2>&1 | indent
+  npm rebuild 2>&1 | indent
+  npm run postinstall 2>&1 | indent
 
 elif $use_cache; then
   info "Restoring node modules from cache"
   cp -r $cache_dir/node/node_modules $build_dir/
   info "Pruning unused dependencies"
-  npm prune 2>&1
+  npm prune 2>&1 | indent
   info "Installing any new modules"
-  npm install --quiet --userconfig $build_dir/.npmrc 2>&1
+  npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
 
 else
   info "Installing node modules"
   touch $build_dir/.npmrc
-  npm install --quiet --userconfig $build_dir/.npmrc 2>&1
+  npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
 fi
 
 ####### Create a Procfile if possible
