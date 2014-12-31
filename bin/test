@@ -105,7 +105,9 @@ testBuildWithCache() {
 testModulesCheckedIn() {
   compile "modules-checked-in"
   assertCaptured "node_modules source: prebuilt"
+  assertCaptured "(preinstall script)"
   assertCaptured "Rebuilding any native modules for this architecture"
+  assertCaptured "(postinstall script)"
   assertNotCaptured "Restoring node modules"
   assertNotCaptured "Pruning unused dependencies"
   assertNotCaptured "Installing any new modules"
@@ -154,6 +156,7 @@ testProcfileAbsentServerPresent() {
 testServerPresentOnly() {
   compile "server-present-only"
   assertCaptured "PRO TIP: Use 'npm init'"
+  assertCaptured "Skipping dependencies"
   assertCaptured "'web: node server.js' to new Procfile"
   assertFile "web: node server.js" "Procfile"
   assertCapturedSuccess

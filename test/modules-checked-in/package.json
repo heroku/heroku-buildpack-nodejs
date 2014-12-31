@@ -6,6 +6,10 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
+  "scripts": {
+    "preinstall": "echo '(preinstall script)'",
+    "postinstall": "echo '(postinstall script)'"
+  },
   "dependencies": {
     "hashish": "*"
   },

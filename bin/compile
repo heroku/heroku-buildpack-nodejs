@@ -6,38 +6,27 @@ set -e            # fail fast
 set -o pipefail   # don't ignore exit codes when piping output
 # set -x          # enable debugging
 
-bp_version="63-rc"
-
 # Configure directories
 build_dir=$1
 cache_dir=$2
 env_dir=$3
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
-logfile=/tmp/node-log.txt
+mkdir -p $heroku_dir/node
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
 
-# Output version
-head "Node.js Buildpack v$bp_version"
-
 # Avoid GIT_DIR leak from previous build steps
 unset GIT_DIR
 
-# Create directories & log file
-mkdir -p $heroku_dir/node
-echo "" > $logfile
-
+# Provide hook to deal with errors
 trap build_failed ERR
 
 # Load config vars into environment; start with defaults
 export NPM_CONFIG_PRODUCTION=true
 export NODE_MODULES_CACHE=true
-
-if [ -d "$env_dir" ]; then
-  export_env_dir $env_dir
-fi
+export_env_dir $env_dir
 
 ####### Determine current state
 
@@ -146,7 +135,9 @@ if [ "$modules_source" == "" ]; then
 
 elif [ $modules_source == "prebuilt" ]; then
   info "Rebuilding any native modules for this architecture"
+  npm run preinstall
   npm rebuild 2>&1
+  npm run postinstall
 
 elif $use_cache; then
   info "Restoring node modules from cache"
