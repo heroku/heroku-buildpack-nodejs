@@ -3,15 +3,45 @@ error() {
   exit 1
 }
 
-status() {
+head() {
+  echo ""
   echo "-----> $*"
 }
 
+info() {
+  #echo "`date +\"%M:%S\"`  $*"
+  echo "       $*"
+}
+
+build_failed() {
+  head "Build failed"
+}
+
 protip() {
+  tip=$1
+  url=$2
   echo
-  echo "PRO TIP: $*" | indent
-  echo "See https://devcenter.heroku.com/articles/nodejs-support" | indent
-  echo
+  echo "PRO TIP: $tip" | indent
+  echo "See ${url:-https://devcenter.heroku.com/articles/nodejs-support}" | indent
+}
+
+file_contents() {
+  if test -f $1; then
+    echo "$(cat $1)"
+  else
+    echo ""
+  fi
+}
+
+package_json() {
+  if test -f $build_dir/package.json; then
+    local result="$(cat $build_dir/package.json | $bp_dir/vendor/jq -r $1)"
+    if [ "$result" == "null" ]; then echo ""
+    else echo "$result"
+    fi
+  else
+    echo ""
+  fi
 }
 
 # sed -l basically makes sed replace and buffer through stdin to stdout
@@ -31,13 +61,15 @@ cat_npm_debug_log() {
 
 export_env_dir() {
   env_dir=$1
-  whitelist_regex=${2:-''}
-  blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
   if [ -d "$env_dir" ]; then
-    for e in $(ls $env_dir); do
-      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-      export "$e=$(cat $env_dir/$e)"
-      :
-    done
+    whitelist_regex=${2:-''}
+    blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
+    if [ -d "$env_dir" ]; then
+      for e in $(ls $env_dir); do
+        echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+        export "$e=$(cat $env_dir/$e)"
+        :
+      done
+    fi
   fi
 }
