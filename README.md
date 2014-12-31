@@ -1,28 +1,50 @@
-# Heroku Node.js Buildpack: Yoga
+# Heroku Buildpack for Node.js
 
-Preview the next version of the node buildpack: yoga.
-It's the most powerful and flexible Node buildpack yet.
+This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
 
-```shell
-heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#yoga
-git commit -am 'yoga' --allow-empty
+
+## How it Works
+
+Apps are built via one of four paths:
+
+1. A regular `npm install` (default scenario)
+2. Copy existing `node_modules` from cache, then `npm prune`, then `npm install` (subsequent builds)
+3. No build (if package.json doesn't exist but server.js does)
+4. Run `npm run preinstall`, `npm rebuild`, `npm run postinstall` (`node_modules` are checked into source control)
+
+You should only use #3 (omitting package.json) for quick tests or experiments.
+
+You should never use #4 - it's included for backwards-compatibility and will generate warnings.
+Checking in `node_modules` is an antipattern.
+For more information, see [the npm docs](https://docs.npmjs.com/misc/faq#should-i-check-my-node_modules-folder-into-git-)
+
+For technical details, check out the [heavily-commented compile script](https://github.com/heroku/heroku-buildpack-nodejs/blob/master/bin/compile).
+
+## Documentation
+
+For more information about using Node.js and buildpacks on Heroku, see these Dev Center articles:
+
+- [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
+- [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
+- [10 Habits of a Happy Node Hacker](https://blog.heroku.com/archives/2014/3/11/node-habits)
+- [Buildpacks](https://devcenter.heroku.com/articles/buildpacks)
+- [Buildpack API](https://devcenter.heroku.com/articles/buildpack-api)
+
+
+## Legacy Compatibility
+
+For most Node.js apps this buildpack should work just fine.
+If, however, you're unable to deploy using this new version of the buildpack, you can get your app working again by locking it to the previous version:
+
+```
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#v63 -a my-app
+git commit -am "empty" --allow-empty
 git push heroku master
 ```
 
-It's still in beta and we'd love [feedback](#feedback)!
+Then please open a support ticket at [help.heroku.com](https://help.heroku.com/) so we can diagnose and get your app running on the default buildpack.
 
-## What can I do with Yoga?
-
-- [Specify an npm version](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#specify-an-npm-version)
-- [Enable or disable node_modules caching](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#enable-or-disable-node_modules-caching)
-- [Enable or disable devDependencies installation](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#enable-or-disable-devdependencies-installation)
-- [Configure npm with .npmrc](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#configure-npm-with-npmrc)
-- [Chain node with multiple buildpacks](https://github.com/heroku/heroku-buildpack-nodejs/tree/yoga#chain-node-with-multiple-buildpacks)
-
-Yoga also outputs minimal but useful messages on success and concise debug information on error.
-No more 20,000-line error logs!
-
-## Stretch
+## Options
 
 ### Specify a node version
 
@@ -31,9 +53,9 @@ Set engines.node in package.json to the semver range
 (It's a good idea to make this the same version you use during development)
 
 ```json
-  "engines": {
-    "node": "0.11.x"
-  }
+"engines": {
+  "node": "0.11.x"
+}
 ```
 
 ```json
@@ -119,19 +141,8 @@ registry = 'https://custom-registry.com/'
 
 ### Chain Node with multiple buildpacks
 
-Frequently, Node is paired with other platforms like Ruby or PHP
-through Heroku's Multi Buildpack. In order to use node in
-another environment, specify this buildpack first in your .buildpacks file.
 This buildpack automatically exports node, npm, and any node_modules binaries
 into the `$PATH` for easy use in subsequent buildpacks.
-
-## Roadmap
-
-The next features in the pipeline include:
-
-- Specifying io.js as your node engine
-- Providing proxy settings for your locked-down enterprise environment
-- Dynamically adjusting to different container sizes (especially regarding memory)
 
 ## Feedback
 
@@ -140,6 +151,21 @@ Having trouble? Dig it? Feature request?
 - [help.heroku.com](https://help.heroku.com/)
 - [@hunterloftis](http://twitter.com/hunterloftis)
 - [github issues](https://github.com/heroku/heroku-buildpack-nodejs/issues)
+
+## Hacking
+
+To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Heroku app to test it, or configure an existing app to use your buildpack:
+
+```
+# Create a new Heroku app that uses your buildpack
+heroku create --buildpack <your-github-url>
+
+# Configure an existing Heroku app to use your buildpack
+heroku config:set BUILDPACK_URL=<your-github-url>
+
+# You can also use a git branch!
+heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
+```
 
 ## Testing
 
