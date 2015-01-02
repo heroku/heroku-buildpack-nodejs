@@ -7,15 +7,15 @@ This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/bui
 
 Apps are built via one of four paths:
 
-1. A regular `npm install` (default scenario)
+1. A regular `npm install` (first build; default scenario)
 2. Copy existing `node_modules` from cache, then `npm prune`, then `npm install` (subsequent builds)
-3. No build (if package.json doesn't exist but server.js does)
-4. Run `npm run preinstall`, `npm rebuild`, `npm run postinstall` (`node_modules` are checked into source control)
+3. Skip dependencies (if package.json doesn't exist but server.js does)
+4. Skip cache, run `npm rebuild` before `npm install` (`node_modules` are checked into source control)
 
 You should only use #3 (omitting package.json) for quick tests or experiments.
 
 You should never use #4 - it's included for backwards-compatibility and will generate warnings.
-Checking in `node_modules` is an antipattern.
+**Checking in `node_modules` is an antipattern.**
 For more information, see [the npm docs](https://docs.npmjs.com/misc/faq#should-i-check-my-node_modules-folder-into-git-)
 
 For technical details, check out the [heavily-commented compile script](https://github.com/heroku/heroku-buildpack-nodejs/blob/master/bin/compile).

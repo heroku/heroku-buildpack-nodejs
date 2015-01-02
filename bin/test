@@ -105,14 +105,12 @@ testBuildWithCache() {
 testModulesCheckedIn() {
   compile "modules-checked-in"
   assertCaptured "node_modules source: prebuilt"
-  assertCaptured "(preinstall script)"
   assertCaptured "Rebuilding any native modules for this architecture"
+  assertCaptured "(preinstall script)"
+  assertCaptured "Installing any new modules"
   assertCaptured "(postinstall script)"
   assertNotCaptured "Restoring node modules"
   assertNotCaptured "Pruning unused dependencies"
-  assertNotCaptured "Installing any new modules"
-  assertNotCaptured "Installing node modules"
-  assertNotCaptured "Deduping dependency tree"
   assertCapturedSuccess
 }
 
