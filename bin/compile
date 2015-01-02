@@ -129,9 +129,9 @@ if [ "$modules_source" == "" ]; then
 
 elif [ $modules_source == "prebuilt" ]; then
   info "Rebuilding any native modules for this architecture"
-  npm run preinstall 2>&1 | indent
   npm rebuild 2>&1 | indent
-  npm run postinstall 2>&1 | indent
+  info "Installing any new modules"
+  npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
 
 elif $use_cache; then
   info "Restoring node modules from cache"
