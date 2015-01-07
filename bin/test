@@ -54,6 +54,13 @@ testOldNpm() {
   assertCapturedSuccess
 }
 
+testFailingBuild() {
+  compile "failing-build"
+  assertCaptured "Build failed"
+  assertCaptured "This is a new Node.js buildpack"
+  assertCapturedError 1 ""
+}
+
 testInfoEmpty() {
   compile "info-empty"
   assertCaptured "Node engine:         unspecified"
