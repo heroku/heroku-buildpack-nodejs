@@ -24,6 +24,7 @@ unset GIT_DIR
 # Provide hook to deal with errors
 build_failed() {
   head "Build failed"
+  echo ""
   cat $warnings | indent
 }
 trap build_failed ERR
