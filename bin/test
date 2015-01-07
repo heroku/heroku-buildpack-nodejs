@@ -21,7 +21,7 @@ testDetectWithoutPackageJson() {
 testNoVersion() {
   compile "no-version"
   assertCaptured "Node engine:         unspecified"
-  assertCaptured "PRO TIP: Specify a node version in package.json"
+  assertCaptured "WARNING: Node version not specified in package.json"
   assertCaptured "Resolving node version (latest stable) via semver.io"
   assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
@@ -37,7 +37,7 @@ testSpecificVersion() {
 testStableVersion() {
   compile "stable-node"
   assertCaptured "Downloading and installing node 0.10"
-  assertNotCaptured "PRO TIP"
+  assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
 
@@ -50,7 +50,7 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "PRO TIP: This version of npm has several known issues."
+  assertCaptured "WARNING: This version of npm has several known issues."
   assertCapturedSuccess
 }
 
@@ -66,7 +66,7 @@ testInfoEmpty() {
 
 testDangerousRangeStar() {
   compile "dangerous-range-star"
-  assertCaptured "PRO TIP: Avoid semver ranges like '*'"
+  assertCaptured "WARNING: Avoid semver ranges like '*'"
   assertCaptured "Node engine:         *"
   assertCaptured "Resolving node version * via semver.io"
   assertCaptured "Downloading and installing node 0.10"
@@ -75,7 +75,7 @@ testDangerousRangeStar() {
 
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
-  assertCaptured "PRO TIP: Avoid semver ranges starting with '>'"
+  assertCaptured "WARNING: Avoid semver ranges starting with '>'"
   assertCaptured "Resolving node version >0.4 via semver.io"
   assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
@@ -173,7 +173,7 @@ testProcfileAbsentServerPresent() {
 
 testServerPresentOnly() {
   compile "server-present-only"
-  assertCaptured "PRO TIP: Use 'npm init'"
+  assertCaptured "WARNING: No package.json found"
   assertCaptured "Skipping dependencies"
   assertCaptured "'web: node server.js' to new Procfile"
   assertFile "web: node server.js" "Procfile"
