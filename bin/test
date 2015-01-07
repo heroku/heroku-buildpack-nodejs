@@ -48,6 +48,12 @@ testUnstableVersion() {
   assertCapturedSuccess
 }
 
+testOldNpm() {
+  compile "old-npm"
+  assertCaptured "PRO TIP: This version of npm has several known issues."
+  assertCapturedSuccess
+}
+
 testInfoEmpty() {
   compile "info-empty"
   assertCaptured "Node engine:         unspecified"

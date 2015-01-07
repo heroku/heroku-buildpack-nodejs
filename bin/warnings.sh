@@ -1,3 +1,10 @@
+protip() {
+  tip=$1
+  url=$2
+  echo "PRO TIP: $tip" >> $warnings
+  echo "${url:-https://devcenter.heroku.com/articles/nodejs-support}" >> $warnings
+}
+
 if [ "$node_engine" == "" ]; then
   protip "Specify a node version in package.json" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
 elif [ "$node_engine" == "*" ]; then
@@ -14,4 +21,10 @@ fi
 
 if [ "$start_method" == "" ]; then
   protip "Include a Procfile, package.json start script, or server.js file to start your app" "https://devcenter.heroku.com/articles/nodejs-support#runtime-behavior"
+fi
+
+if [ "$npm_engine" != "" ]; then
+  if [ "${npm_engine:0:1}" -lt "2" ]; then
+    protip "This version of npm has several known issues. You should consider upgrading to the latest release."
+  fi
 fi

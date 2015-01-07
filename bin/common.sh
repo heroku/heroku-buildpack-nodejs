@@ -13,18 +13,6 @@ info() {
   echo "       $*"
 }
 
-build_failed() {
-  head "Build failed"
-}
-
-protip() {
-  tip=$1
-  url=$2
-  echo
-  echo "PRO TIP: $tip" | indent
-  echo "See ${url:-https://devcenter.heroku.com/articles/nodejs-support}" | indent
-}
-
 file_contents() {
   if test -f $1; then
     echo "$(cat $1)"

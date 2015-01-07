@@ -13,6 +13,7 @@ env_dir=$3
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
 mkdir -p $heroku_dir/node
+warnings=$(mktemp)
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
@@ -21,6 +22,10 @@ source $bp_dir/bin/common.sh
 unset GIT_DIR
 
 # Provide hook to deal with errors
+build_failed() {
+  head "Build failed"
+  cat $warnings | indent
+}
 trap build_failed ERR
 
 # Load config vars into environment; start with defaults
@@ -205,3 +210,6 @@ fi
 # Show the final dependency tree
 info "Build successful!"
 (npm ls --depth=0 || true) 2>/dev/null | indent
+
+# Show any relevant warnings
+cat $warnings | indent
