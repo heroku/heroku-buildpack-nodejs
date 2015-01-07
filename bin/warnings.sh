@@ -26,6 +26,6 @@ fi
 
 if [ "$npm_engine" != "" ]; then
   if [ "${npm_engine:0:1}" -lt "2" ]; then
-    warning "This version of npm has several known issues. You should consider upgrading to the latest release."
+    warning "This version of npm has several known issues - consider upgrading to the latest release"
   fi
 fi

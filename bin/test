@@ -50,7 +50,7 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "WARNING: This version of npm has several known issues."
+  assertCaptured "WARNING: This version of npm has several known issues"
   assertCapturedSuccess
 }
 
