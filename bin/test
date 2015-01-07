@@ -7,6 +7,12 @@ testDetectWithPackageJson() {
   assertCapturedSuccess
 }
 
+testDetectWithServer() {
+  detect "server-present-only"
+  assertCaptured "Node.js"
+  assertCapturedSuccess
+}
+
 testDetectWithoutPackageJson() {
   detect "no-package-json"
   assertCapturedError 1 ""
@@ -140,6 +146,13 @@ testProcfileAbsentNpmStartAbsent() {
   compile "procfile-absent-npm-start-absent"
   assertCaptured "Start mechanism:     none"
   assertNotCaptured "new Procfile"
+  assertCapturedSuccess
+}
+
+testDynamicProcfile() {
+  compile "dynamic-procfile"
+  assertCaptured "Procfile created during build"
+  assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"
   assertCapturedSuccess
 }
 

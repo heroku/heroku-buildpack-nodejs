@@ -153,6 +153,8 @@ head "Checking startup method"
 
 if [ "$start_method" == "Procfile" ]; then
   info "Found Procfile"
+elif test -f $build_dir/Procfile; then
+  info "Procfile created during build"
 elif [ "$start_method" == "npm start" ]; then
   info "No Procfile; Adding 'web: npm start' to new Procfile"
   echo "web: npm start" > $build_dir/Procfile
