@@ -92,7 +92,8 @@ testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
   assertCaptured "Caching node_modules for future builds"
-  assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/ | grep node | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
 }
 
 testBuildWithCache() {
