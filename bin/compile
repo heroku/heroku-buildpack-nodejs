@@ -24,10 +24,15 @@ unset GIT_DIR
 # Provide hook to deal with errors
 build_failed() {
   head "Build failed"
-  info "This is a new Node.js buildpack. To revert to the previous version:"
+  info "We're sorry this build is failing! If you can't find the issue in application code,"
+  info "please submit a ticket so we can help: https://help.heroku.com/"
+  info ""
+  info "You can also try reverting to our legacy Node.js buildpack:"
   info "heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#v63"
-  info "We want you to be able to use the latest buildpack. Please submit a ticket if you can't:"
-  info "https://help.heroku.com/"
+  info ""
+  info "Love,"
+  info "Heroku"
+  
   echo ""
   cat $warnings | indent
 }
