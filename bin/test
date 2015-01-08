@@ -57,7 +57,7 @@ testOldNpm() {
 testFailingBuild() {
   compile "failing-build"
   assertCaptured "Build failed"
-  assertCaptured "This is a new Node.js buildpack"
+  assertCaptured "We're sorry this build is failing"
   assertCapturedError 1 ""
 }
 
