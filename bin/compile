@@ -17,23 +17,12 @@ warnings=$(mktemp)
 
 # Load some convenience functions like status(), echo(), and indent()
 source $bp_dir/bin/common.sh
+source $bp_dir/bin/warnings.sh
 
 # Avoid GIT_DIR leak from previous build steps
 unset GIT_DIR
 
 # Provide hook to deal with errors
-build_failed() {
-  head "Build failed"
-  echo ""
-  cat $warnings | indent
-  info "We're sorry this build is failing! If you can't find the issue in application code,"
-  info "please submit a ticket so we can help: https://help.heroku.com/"
-  info "You can also try reverting to our legacy Node.js buildpack:"
-  info "heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#v63"
-  info ""
-  info "Love,"
-  info "Heroku"
-}
 trap build_failed ERR
 
 # Load config vars into environment; start with defaults
@@ -82,7 +71,8 @@ echo ""
 printenv | grep ^NPM_CONFIG_ | indent
 info "NODE_MODULES_CACHE=$NODE_MODULES_CACHE"
 
-source $bp_dir/bin/warnings.sh
+warn_node_engine "$node_engine"
+warn_node_modules "$modules_source"
 
 ####### Vendor in binaries
 
@@ -117,6 +107,8 @@ if [ "$npm_engine" != "" ]; then
     npm install --quiet -g npm@$npm_engine > /dev/null 2>&1 | indent
   fi
 fi
+
+warn_old_npm `npm --version`
 
 # Run subsequent commands from the build directory
 cd $build_dir
@@ -179,6 +171,8 @@ elif [ "$start_method" == "server.js" ]; then
   info "No Procfile; Adding 'web: node server.js' to new Procfile"
   echo "web: node server.js" > $build_dir/Procfile
 fi
+
+warn_start "$start_method"
 
 ####### Create the runtime environment (profile.d)
 

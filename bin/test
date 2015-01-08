@@ -37,7 +37,6 @@ testSpecificVersion() {
 testStableVersion() {
   compile "stable-node"
   assertCaptured "Downloading and installing node 0.10"
-  assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
 
@@ -50,7 +49,8 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "WARNING: This version of npm has several known issues"
+  assertCaptured "WARNING: This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (2."
+  assertNotCaptured "integer expression expected"
   assertCapturedSuccess
 }
 
@@ -295,6 +295,7 @@ testNpmVersionSpecific() {
   compile "npm-version-specific"
   assertCaptured "installing npm 2.1.11"
   assertNotCaptured "Resolving npm version"
+  assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
 
