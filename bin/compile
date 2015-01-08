@@ -104,7 +104,7 @@ if [ "$npm_engine" != "" ]; then
     info "npm `npm --version` already installed with node"
   else
     info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
-    npm install --quiet -g npm@$npm_engine > /dev/null 2>&1 | indent
+    npm install --quiet -g npm@$npm_engine 2>&1 >/dev/null | indent
   fi
 fi
 
