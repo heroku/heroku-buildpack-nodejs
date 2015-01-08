@@ -111,7 +111,7 @@ if [ "$npm_engine" != "" ]; then
     npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.herokuapp.com/npm/resolve)
   fi
   if [[ `npm --version` == "$npm_engine" ]]; then
-    info "Version `npm --version` already installed"
+    info "npm `npm --version` already installed with node"
   else
     info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
     npm install --quiet -g npm@$npm_engine > /dev/null 2>&1 | indent
@@ -220,7 +220,7 @@ if test -d $build_dir/node_modules; then
 fi
 
 # Show the final dependency tree
-info "Build successful!"
+head "Build successful!"
 (npm ls --depth=0 || true) 2>/dev/null | indent
 
 # Show any relevant warnings

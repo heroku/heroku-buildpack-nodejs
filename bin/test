@@ -56,7 +56,7 @@ testOldNpm() {
 
 testSameNpm() {
   compile "same-npm"
-  assertCaptured "Version 1.4.28 already installed"
+  assertCaptured "npm 1.4.28 already installed"
   assertCapturedSuccess
 }
 
