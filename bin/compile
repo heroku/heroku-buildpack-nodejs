@@ -24,6 +24,8 @@ unset GIT_DIR
 # Provide hook to deal with errors
 build_failed() {
   head "Build failed"
+  echo ""
+  cat $warnings | indent
   info "We're sorry this build is failing! If you can't find the issue in application code,"
   info "please submit a ticket so we can help: https://help.heroku.com/"
   info ""
@@ -32,9 +34,6 @@ build_failed() {
   info ""
   info "Love,"
   info "Heroku"
-  
-  echo ""
-  cat $warnings | indent
 }
 trap build_failed ERR
 
