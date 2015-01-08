@@ -110,8 +110,12 @@ if [ "$npm_engine" != "" ]; then
     info "Resolving npm version ${npm_engine} via semver.io..."
     npm_engine=$(curl --silent --get --data-urlencode "range=${npm_engine}" https://semver.herokuapp.com/npm/resolve)
   fi
-  info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
-  npm install --quiet -g npm@$npm_engine > /dev/null 2>&1 | indent
+  if [[ `npm --version` == "$npm_engine" ]]; then
+    info "Version `npm --version` already installed"
+  else
+    info "Downloading and installing npm $npm_engine (replacing version `npm --version`)..."
+    npm install --quiet -g npm@$npm_engine > /dev/null 2>&1 | indent
+  fi
 fi
 
 # Run subsequent commands from the build directory

@@ -54,6 +54,12 @@ testOldNpm() {
   assertCapturedSuccess
 }
 
+testSameNpm() {
+  compile "same-npm"
+  assertCaptured "Version 1.4.28 already installed"
+  assertCapturedSuccess
+}
+
 testFailingBuild() {
   compile "failing-build"
   assertCaptured "Build failed"
