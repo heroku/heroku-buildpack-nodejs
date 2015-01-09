@@ -116,7 +116,7 @@ testInvalidDependency() {
 testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
-  assertCaptured "Caching node_modules for future builds"
+  assertCaptured "Caching results for future builds"
   assertEquals "1" "$(ls -1 $cache/ | grep node | wc -l)"
   assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
 }
@@ -125,7 +125,7 @@ testBuildWithCache() {
   cache=$(mktmpdir)
   compile "stable-node" $cache
   assertCaptured "node_modules cached: false"
-  assertCaptured "Caching node_modules for future builds"
+  assertCaptured "Caching results for future builds"
   assertCapturedSuccess
 
   compile "stable-node" $cache
