@@ -54,6 +54,12 @@ testOldNpm() {
   assertCapturedSuccess
 }
 
+testNonexistentNpm() {
+  compile "nonexistent-npm"
+  assertCaptured "version not found: npm@1.1.65"
+  assertCapturedError 1 ""
+}
+
 testSameNpm() {
   compile "same-npm"
   assertCaptured "npm 1.4.28 already installed"
