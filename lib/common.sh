@@ -14,24 +14,11 @@ info() {
 }
 
 warning() {
-  tip=$1
-  url=$2
+  local tip=$1
+  local url=$2
   echo "WARNING: $tip" >> $warnings
   echo "${url:-https://devcenter.heroku.com/articles/nodejs-support}" >> $warnings
   echo "" >> $warnings
-}
-
-build_failed() {
-  head "Build failed"
-  echo ""
-  cat $warnings | indent
-  info "We're sorry this build is failing! If you can't find the issue in application code,"
-  info "please submit a ticket so we can help: https://help.heroku.com/"
-  info "You can also try reverting to our legacy Node.js buildpack:"
-  info "heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#v63"
-  info ""
-  info "Love,"
-  info "Heroku"
 }
 
 file_contents() {
@@ -42,11 +29,15 @@ file_contents() {
   fi
 }
 
-package_json() {
-  if test -f $build_dir/package.json; then
-    local result="$(cat $build_dir/package.json | $bp_dir/vendor/jq -r $1)"
-    if [ "$result" == "null" ]; then echo ""
-    else echo "$result"
+read_json() {
+  local file=$1
+  local node=$2
+  if test -f $file; then
+    local result="$(cat $file | $bp_dir/vendor/jq -r $node)"
+    if [ "$result" == "null" ]; then
+      echo ""
+    else
+      echo "$result"
     fi
   else
     echo ""
