@@ -31,6 +31,7 @@ testSpecificVersion() {
   compile "specific-version"
   assertNotCaptured "Resolving node version"
   assertCaptured "Downloading and installing node 0.10.29"
+  assertCaptured "Using default npm version: 1.4.14"
   assertCapturedSuccess
 }
 
@@ -63,6 +64,21 @@ testNonexistentNpm() {
 testSameNpm() {
   compile "same-npm"
   assertCaptured "npm 1.4.28 already installed"
+  assertCapturedSuccess
+}
+
+testNpmVersionRange() {
+  compile "npm-version-range"
+  assertCaptured "Resolving npm version"
+  assertCaptured "installing npm 1.4."
+  assertCapturedSuccess
+}
+
+testNpmVersionSpecific() {
+  compile "npm-version-specific"
+  assertCaptured "installing npm 2.1.11"
+  assertNotCaptured "Resolving npm version"
+  assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
 
@@ -298,21 +314,6 @@ testShrinkwrap() {
   assertCaptured "express@4.10.4"
   assertCaptured "lodash@2.4.0"
   assertNotCaptured "mocha"
-  assertCapturedSuccess
-}
-
-testNpmVersionRange() {
-  compile "npm-version-range"
-  assertCaptured "Resolving npm version"
-  assertCaptured "installing npm 1.4."
-  assertCapturedSuccess
-}
-
-testNpmVersionSpecific() {
-  compile "npm-version-specific"
-  assertCaptured "installing npm 2.1.11"
-  assertNotCaptured "Resolving npm version"
-  assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
 
