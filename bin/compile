@@ -27,8 +27,8 @@ unset GIT_DIR
 trap build_failed ERR
 
 # Load config vars into environment; start with defaults
-export NPM_CONFIG_PRODUCTION=true
-export NODE_MODULES_CACHE=true
+export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-true}
+export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
 export_env_dir $env_dir
 
 ####### Determine current state
