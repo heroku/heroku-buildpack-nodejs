@@ -99,6 +99,8 @@ install_npm() {
       npm install --quiet -g npm@$npm_engine 2>&1 >/dev/null | indent
     fi
     warn_old_npm `npm --version`
+  else
+    info "Using default npm version: `npm --version`"
   fi
 }
 
