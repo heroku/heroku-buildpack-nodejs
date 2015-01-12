@@ -214,6 +214,17 @@ testNoEnvVars() {
   assertCapturedSuccess
 }
 
+testNonFileEnvVars() {
+  export NPM_CONFIG_FOO=bar
+  export NPM_CONFIG_PRODUCTION=false
+  compile "stable-node"
+  assertCaptured "NPM_CONFIG_FOO=bar"
+  assertCaptured "NPM_CONFIG_PRODUCTION=false"
+  assertCapturedSuccess
+  unset NPM_CONFIG_FOO
+  unset NPM_CONFIG_PRODUCTION
+}
+
 testNoDevDependencies() {
   compile "dev-dependencies"
   assertNotCaptured "lodash"

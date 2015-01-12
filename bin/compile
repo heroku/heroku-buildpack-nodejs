@@ -26,10 +26,10 @@ unset GIT_DIR
 # Provide hook to deal with errors
 trap build_failed ERR
 
-# Load config vars into environment; start with defaults
-export NPM_CONFIG_PRODUCTION=true
-export NODE_MODULES_CACHE=true
+# Load config vars into environment; set smart defaults
 export_env_dir $env_dir
+export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-true}
+export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
 
 ####### Determine current state
 
