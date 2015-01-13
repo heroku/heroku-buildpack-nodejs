@@ -33,6 +33,7 @@ export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
 
 ####### Determine current state
 
+iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
 node_engine=$(read_json "$build_dir/package.json" ".engines.node")
 node_previous=$(file_contents "$cache_dir/node/node-version")
 npm_engine=$(read_json "$build_dir/package.json" ".engines.npm")
@@ -49,7 +50,12 @@ warn_node_modules "$modules_source"
 ####### Vendor in binaries
 
 head "Installing binaries"
-install_node
+if [ "$iojs_engine" == "" ]; then
+  install_node
+else
+  install_iojs
+fi
+node_engine=`node --version`
 install_npm
 
 ####### Build the project's dependencies

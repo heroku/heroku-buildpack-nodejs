@@ -55,12 +55,16 @@ get_modules_cached() {
 
 show_current_state() {
   echo ""
-  info "Node engine:         ${node_engine:-unspecified}"
+  if [ "$iojs_engine" == "" ]; then
+    info "Node engine:         ${node_engine:-unspecified}"
+  else
+    achievement "iojs"
+    info "Node engine:         $iojs_engine (iojs)"
+  fi
   info "Npm engine:          ${npm_engine:-unspecified}"
   info "Start mechanism:     ${start_method:-none}"
   info "node_modules source: ${modules_source:-none}"
   info "node_modules cached: $modules_cached"
-
   echo ""
 
   printenv | grep ^NPM_CONFIG_ | indent
@@ -81,6 +85,24 @@ install_node() {
 
   # Move node (and npm) into .heroku/node and make them executable
   mv /tmp/node-v$node_engine-linux-x64/* $heroku_dir/node
+  chmod +x $heroku_dir/node/bin/*
+  PATH=$heroku_dir/node/bin:$PATH
+}
+
+install_iojs() {
+  # Resolve non-specific iojs versions using semver.herokuapp.com
+  if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    info "Resolving iojs version ${iojs_engine:-(latest stable)} via semver.io..."
+    iojs_engine=$(curl --silent --get --data-urlencode "range=${iojs_engine}" https://semver.herokuapp.com/iojs/resolve)
+  fi
+
+  # TODO: remove nightly, point at /dist once that's available
+  info "Downloading and installing iojs $iojs_engine..."
+  download_url="https://iojs.org/download/nightly/v$iojs_engine-nightly201501135ea716d895/iojs-v$iojs_engine-nightly201501135ea716d895-linux-x64.tar.gz"
+  curl $download_url -s -o - | tar xzf - -C /tmp
+
+  # Move iojs/node (and npm) binaries into .heroku/node and make them executable
+  mv /tmp/iojs-v$iojs_engine-nightly201501135ea716d895-linux-x64/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
 }
