@@ -96,13 +96,13 @@ install_iojs() {
     iojs_engine=$(curl --silent --get --data-urlencode "range=${iojs_engine}" https://semver.herokuapp.com/iojs/resolve)
   fi
 
-  # TODO: remove nightly, point at /dist once that's available
+  # TODO: point at /dist once that's available
   info "Downloading and installing iojs $iojs_engine..."
-  download_url="https://iojs.org/download/nightly/v$iojs_engine-nightly201501135ea716d895/iojs-v$iojs_engine-nightly201501135ea716d895-linux-x64.tar.gz"
+  download_url="https://iojs.org/dist-test/v$iojs_engine/iojs-v$iojs_engine-linux-x64.tar.gz"
   curl $download_url -s -o - | tar xzf - -C /tmp
 
   # Move iojs/node (and npm) binaries into .heroku/node and make them executable
-  mv /tmp/iojs-v$iojs_engine-nightly201501135ea716d895-linux-x64/* $heroku_dir/node
+  mv /tmp/iojs-v$iojs_engine-linux-x64/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
 }
