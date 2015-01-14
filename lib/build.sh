@@ -98,7 +98,7 @@ install_iojs() {
 
   # TODO: point at /dist once that's available
   info "Downloading and installing iojs $iojs_engine..."
-  download_url="https://iojs.org/dist-test/v$iojs_engine/iojs-v$iojs_engine-linux-x64.tar.gz"
+  download_url="https://iojs.org/dist/v$iojs_engine/iojs-v$iojs_engine-linux-x64.tar.gz"
   curl $download_url -s -o - | tar xzf - -C /tmp
 
   # Move iojs/node (and npm) binaries into .heroku/node and make them executable
