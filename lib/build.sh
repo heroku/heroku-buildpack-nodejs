@@ -72,6 +72,8 @@ show_current_state() {
 }
 
 install_node() {
+  local node_engine=$1
+
   # Resolve non-specific node versions using semver.herokuapp.com
   if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     info "Resolving node version ${node_engine:-(latest stable)} via semver.io..."
@@ -90,8 +92,10 @@ install_node() {
 }
 
 install_iojs() {
+  local iojs_engine=$1
+
   # Resolve non-specific iojs versions using semver.herokuapp.com
-  if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  if ! [[ "$iojs_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     info "Resolving iojs version ${iojs_engine:-(latest stable)} via semver.io..."
     iojs_engine=$(curl --silent --get --data-urlencode "range=${iojs_engine}" https://semver.herokuapp.com/iojs/resolve)
   fi
@@ -123,21 +127,6 @@ install_npm() {
     warn_old_npm `npm --version`
   else
     info "Using default npm version: `npm --version`"
-  fi
-}
-
-get_cache_status() {
-  # Did we bust the cache?
-  if ! $modules_cached; then
-    echo "No cache available"
-  elif ! $NODE_MODULES_CACHE; then
-    echo "Cache disabled with NODE_MODULES_CACHE"
-  elif [ "$node_previous" != "" ] && [ "$node_engine" != "$node_previous" ]; then
-    echo "Node version changed ($node_previous => $node_engine); invalidating cache"
-  elif [ "$npm_previous" != "" ] && [ "$npm_engine" != "$npm_previous" ]; then
-    echo "Npm version changed ($npm_previous => $npm_engine); invalidating cache"
-  else
-    echo "valid"
   fi
 }
 
@@ -176,20 +165,40 @@ clean_npm() {
   rm -rf "$build_dir/.npm"
 }
 
+# Caching
+
+create_cache() {
+  info "Caching results for future builds"
+  mkdir -p $cache_dir/node
+
+  echo `node --version` > $cache_dir/node/node-version
+  echo `npm --version` > $cache_dir/node/npm-version
+
+  if test -d $build_dir/node_modules; then
+    cp -r $build_dir/node_modules $cache_dir/node
+  fi
+}
+
 clean_cache() {
   info "Cleaning previous cache"
   rm -rf "$cache_dir/node_modules" # (for apps still on the older caching strategy)
   rm -rf "$cache_dir/node"
 }
 
-create_cache() {
-  info "Caching results for future builds"
-  mkdir -p $cache_dir/node
+get_cache_status() {
+  local node_version=`node --version`
+  local npm_version=`npm --version`
 
-  echo $node_engine > $cache_dir/node/node-version
-  echo $npm_engine > $cache_dir/node/npm-version
-
-  if test -d $build_dir/node_modules; then
-    cp -r $build_dir/node_modules $cache_dir/node
+  # Did we bust the cache?
+  if ! $modules_cached; then
+    echo "No cache available"
+  elif ! $NODE_MODULES_CACHE; then
+    echo "Cache disabled with NODE_MODULES_CACHE"
+  elif [ "$node_previous" != "" ] && [ "$node_version" != "$node_previous" ]; then
+    echo "Node version changed ($node_previous => $node_version); invalidating cache"
+  elif [ "$npm_previous" != "" ] && [ "$npm_version" != "$npm_previous" ]; then
+    echo "Npm version changed ($npm_previous => $npm_version); invalidating cache"
+  else
+    echo "valid"
   fi
 }

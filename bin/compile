@@ -55,11 +55,10 @@ warn_node_modules "$modules_source"
 
 head "Installing binaries"
 if [ "$iojs_engine" == "" ]; then
-  install_node
+  install_node "$node_engine"
 else
-  install_iojs
+  install_iojs "$iojs_engine"
 fi
-node_engine=`node --version`
 install_npm
 
 ####### Build the project's dependencies
