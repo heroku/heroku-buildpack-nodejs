@@ -4,6 +4,7 @@
 
 set -e            # fail fast
 set -o pipefail   # don't ignore exit codes when piping output
+set -o errtrace   # trap errors in functions as well
 # set -x          # enable debugging
 
 # Configure directories
@@ -65,34 +66,7 @@ install_npm
 
 head "Building dependencies"
 cd $build_dir
-
-if [ "$modules_source" == "" ]; then
-  info "Skipping dependencies (no source for node_modules)"
-
-elif [ "$modules_source" == "prebuilt" ]; then
-  info "Rebuilding any native modules for this architecture"
-  npm rebuild 2>&1 | indent
-  info "Installing any new modules"
-  npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
-
-else
-  cache_status=$(get_cache_status)
-
-  if [ "$cache_status" == "valid" ]; then
-    info "Restoring node modules from cache"
-    cp -r $cache_dir/node/node_modules $build_dir/
-    info "Pruning unused dependencies"
-    npm prune 2>&1 | indent
-    info "Installing any new modules"
-    npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
-  else
-    info "$cache_status"
-    info "Installing node modules"
-    touch $build_dir/.npmrc
-    npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
-  fi
-
-fi
+build_dependencies
 
 ####### Create a Procfile if possible
 

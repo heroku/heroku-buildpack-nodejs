@@ -130,6 +130,35 @@ install_npm() {
   fi
 }
 
+function build_dependencies() {
+  if [ "$modules_source" == "" ]; then
+    info "Skipping dependencies (no source for node_modules)"
+
+  elif [ "$modules_source" == "prebuilt" ]; then
+    info "Rebuilding any native modules for this architecture"
+    npm rebuild 2>&1 | indent
+    info "Installing any new modules"
+    npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+
+  else
+    cache_status=$(get_cache_status)
+
+    if [ "$cache_status" == "valid" ]; then
+      info "Restoring node modules from cache"
+      cp -r $cache_dir/node/node_modules $build_dir/
+      info "Pruning unused dependencies"
+      npm prune 2>&1 | indent
+      info "Installing any new modules"
+      npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+    else
+      info "$cache_status"
+      info "Installing node modules"
+      touch $build_dir/.npmrc
+      npm install --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+    fi
+  fi
+}
+
 ensure_procfile() {
   local start_method=$1
   local build_dir=$2
