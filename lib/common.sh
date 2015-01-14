@@ -21,6 +21,12 @@ warning() {
   echo "" >> $warnings
 }
 
+achievement() {
+  local msg=$1
+  echo "       ACHIEVEMENT UNLOCKED: $msg :)"
+  echo ""
+}
+
 file_contents() {
   if test -f $1; then
     echo "$(cat $1)"

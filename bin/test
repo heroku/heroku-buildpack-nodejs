@@ -18,6 +18,14 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
+testIoJs() {
+  compile "iojs"
+  assertCaptured "Node engine:         1.0."
+  assertCaptured "(iojs)"
+  assertCaptured "detected node version: v1.0."
+  assertCapturedSuccess
+}
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "Node engine:         unspecified"
