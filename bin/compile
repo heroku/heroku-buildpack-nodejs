@@ -44,7 +44,11 @@ modules_cached=$(get_modules_cached "$cache_dir")
 
 show_current_state
 
-warn_node_engine "$node_engine"
+if [ "$iojs_engine" == "" ]; then
+  warn_node_engine "$node_engine"
+else
+  warn_node_engine "$iojs_engine"
+fi
 warn_node_modules "$modules_source"
 
 ####### Vendor in binaries
