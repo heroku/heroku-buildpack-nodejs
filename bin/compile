@@ -34,13 +34,20 @@ export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
 
 ####### Determine current state
 
+head "Inspecting application state"
+
+info "Reading package.json..."
 iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
 node_engine=$(read_json "$build_dir/package.json" ".engines.node")
-node_previous=$(file_contents "$cache_dir/node/node-version")
 npm_engine=$(read_json "$build_dir/package.json" ".engines.npm")
-npm_previous=$(file_contents "$cache_dir/node/npm-version")
+
+info "Examining build directory..."
 start_method=$(get_start_method "$build_dir")
 modules_source=$(get_modules_source "$build_dir")
+
+info "Examining cache directory..."
+npm_previous=$(file_contents "$cache_dir/node/npm-version")
+node_previous=$(file_contents "$cache_dir/node/node-version")
 modules_cached=$(get_modules_cached "$cache_dir")
 
 show_current_state
