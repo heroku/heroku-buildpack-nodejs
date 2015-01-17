@@ -1,6 +1,7 @@
 error() {
   echo " !     $*" >&2
-  exit 1
+  echo ""
+  return 1
 }
 
 head() {
@@ -25,6 +26,15 @@ achievement() {
   local msg=$1
   echo "       ACHIEVEMENT UNLOCKED: $msg :)"
   echo ""
+}
+
+assert_json() {
+  local file=$1
+  if test -f $file; then
+    if ! cat $file | $bp_dir/vendor/jq '.' > /dev/null; then
+      error "Unable to parse $file as JSON"
+    fi
+  fi
 }
 
 file_contents() {

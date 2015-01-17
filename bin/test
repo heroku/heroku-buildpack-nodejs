@@ -24,7 +24,7 @@ testBadJson() {
   assertCaptured "We're sorry this build is failing"
   assertNotCaptured "build directory..."
   assertNotCaptured "Installing binaries"
-  assertCapturedError 1 ""
+  assertCapturedError 1 "Unable to parse"
 }
 
 testIoJs() {
@@ -206,6 +206,7 @@ testProcfileAbsentNpmStartPresent() {
 testProcfileAbsentNpmStartAbsent() {
   compile "procfile-absent-npm-start-absent"
   assertCaptured "Start mechanism:     none"
+  assertCaptured "None found"
   assertNotCaptured "new Procfile"
   assertCapturedSuccess
 }
