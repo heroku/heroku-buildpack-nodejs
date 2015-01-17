@@ -18,6 +18,15 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
+testBadJson() {
+  compile "bad-json"
+  assertCaptured "Build failed"
+  assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "build directory..."
+  assertNotCaptured "Installing binaries"
+  assertCapturedError 1 ""
+}
+
 testIoJs() {
   compile "iojs"
   assertCaptured "Node engine:         1.0."
@@ -92,8 +101,10 @@ testNpmVersionSpecific() {
 
 testFailingBuild() {
   compile "failing-build"
+  assertCaptured "Building dependencies"
   assertCaptured "Build failed"
   assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "Checking startup method"
   assertCapturedError 1 ""
 }
 
