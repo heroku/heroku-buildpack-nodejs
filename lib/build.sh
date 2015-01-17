@@ -53,6 +53,39 @@ get_modules_cached() {
   fi
 }
 
+# Sets:
+# iojs_engine
+# node_engine
+# npm_engine
+# start_method
+# modules_source
+# npm_previous
+# node_previous
+# modules_cached
+# environment variables (from ENV_DIR)
+
+read_current_state() {
+  info "package.json..."
+  assert_json "$build_dir/package.json"
+  iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
+  node_engine=$(read_json "$build_dir/package.json" ".engines.node")
+  npm_engine=$(read_json "$build_dir/package.json" ".engines.npm")
+
+  info "build directory..."
+  start_method=$(get_start_method "$build_dir")
+  modules_source=$(get_modules_source "$build_dir")
+
+  info "cache directory..."
+  npm_previous=$(file_contents "$cache_dir/node/npm-version")
+  node_previous=$(file_contents "$cache_dir/node/node-version")
+  modules_cached=$(get_modules_cached "$cache_dir")
+
+  info "environment variables..."
+  export_env_dir $env_dir
+  export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-true}
+  export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
+}
+
 show_current_state() {
   echo ""
   if [ "$iojs_engine" == "" ]; then
@@ -172,6 +205,8 @@ ensure_procfile() {
   elif [ "$start_method" == "server.js" ]; then
     info "No Procfile; Adding 'web: node server.js' to new Procfile"
     echo "web: node server.js" > $build_dir/Procfile
+  else
+    info "None found"
   fi
 }
 

@@ -1,6 +1,7 @@
 error() {
   echo " !     $*" >&2
-  exit 1
+  echo ""
+  return 1
 }
 
 head() {
@@ -27,6 +28,15 @@ achievement() {
   echo ""
 }
 
+assert_json() {
+  local file=$1
+  if test -f $file; then
+    if ! cat $file | $bp_dir/vendor/jq '.' > /dev/null; then
+      error "Unable to parse $file as JSON"
+    fi
+  fi
+}
+
 file_contents() {
   if test -f $1; then
     echo "$(cat $1)"
@@ -39,12 +49,7 @@ read_json() {
   local file=$1
   local node=$2
   if test -f $file; then
-    local result="$(cat $file | $bp_dir/vendor/jq -r $node)"
-    if [ "$result" == "null" ]; then
-      echo ""
-    else
-      echo "$result"
-    fi
+    cat $file | $bp_dir/vendor/jq --raw-output "$node // \"\"" || return 1
   else
     echo ""
   fi
