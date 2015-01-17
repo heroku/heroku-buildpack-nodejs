@@ -41,6 +41,7 @@ testNoVersion() {
   assertCaptured "WARNING: Node version not specified in package.json"
   assertCaptured "Resolving node version (latest stable) via semver.io"
   assertCaptured "Downloading and installing node 0.10"
+  assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
@@ -49,12 +50,14 @@ testSpecificVersion() {
   assertNotCaptured "Resolving node version"
   assertCaptured "Downloading and installing node 0.10.29"
   assertCaptured "Using default npm version: 1.4.14"
+  assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
 testStableVersion() {
   compile "stable-node"
   assertCaptured "Downloading and installing node 0.10"
+  assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
