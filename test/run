@@ -358,7 +358,6 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
-
 # Utils
 
 pushd $(dirname 0) >/dev/null

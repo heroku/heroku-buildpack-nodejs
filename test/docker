@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "Running tests in docker (cedar-14)..."
+docker run -v $(pwd):/buildpack:ro -it heroku/cedar:14 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+echo ""
+echo "Running tests in docker (cedar)..."
+docker run -v $(pwd):/buildpack:ro -it fabiokung/cedar bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
