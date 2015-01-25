@@ -1,3 +1,8 @@
+# DEPRECATED
+in favor of the official solution: https://devcenter.heroku.com/changelog-items/595
+
+-----
+
 Heroku Buildpack for io.js
 ============================
 ![substack-iojs](https://cloud.githubusercontent.com/assets/368767/5293096/97a4ec0a-7b39-11e4-8a88-211b5e3abbae.png)
