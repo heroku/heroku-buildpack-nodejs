@@ -45,3 +45,9 @@ export_env_dir() {
     done
   fi
 }
+
+end_of_build_protips() {
+  if [ -n "${METEOR_SETTINGS}" ] ; then
+    protip "METEOR_SETTINGS is automatically set, if you have a 'settings.json' file"
+  fi
+}

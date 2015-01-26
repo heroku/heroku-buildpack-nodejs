@@ -20,6 +20,9 @@ source $bp_dir/bin/meteor.sh
 # Output npm debug info on error
 trap cat_npm_debug_log ERR
 
+# Create the profile directory for runtime environment
+mkdir -p $build_dir/.profile.d
+
 # Look in package.json's engines.node field for a semver range
 semver_range=null
 if test -e $build_dir/package.json; then
@@ -145,7 +148,8 @@ if [ ! -e $build_dir/Procfile ]; then
   fi
 fi
 
+end_of_build_protips
+
 # Update the PATH
 status "Building runtime environment"
-mkdir -p $build_dir/.profile.d
 echo "export PATH=\"\$HOME/.vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh

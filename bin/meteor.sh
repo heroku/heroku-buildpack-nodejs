@@ -1,12 +1,31 @@
 create_meteor_profile() {
-  build_dir=$1
+  local build_dir=$1
 
-  mkdir -p "$build_dir"/.profile.d
   cat > "$build_dir"/.profile.d/meteor.sh <<EOF
   #!/bin/sh
 
-  export PATH=\$PATH:$HOME/$(dirname $METEOR_HOME)/.meteor
+  export PATH=\$PATH:\$HOME/$(dirname $METEOR_HOME)/.meteor
 EOF
+}
+
+create_meteor_settings_profile() {
+  local build_dir=$1
+  local settings=""
+
+  if [ -e "${build_dir}/settings.json" ] ; then
+    settings="/settings.json"
+  elif [ -d "${build_dir}/config" -a -e "${build_dir}/config/settings.json" ] ; then
+    settings="/config/settings.json"
+  fi
+
+  if [ -n "${settings}" ] ; then
+    status "${settings} detected, METEOR_SETTINGS will be set at runtime."
+    cat > "$build_dir"/.profile.d/meteor-settings.sh <<EOF
+    #!/bin/sh
+
+    export METEOR_SETTINGS=\$(cat \$HOME$settings)
+EOF
+  fi
 }
 
 clean_meteor_installation() {
@@ -136,5 +155,7 @@ demeteorize_app() {
   status "Application demeteorized"
 
   create_meteor_profile $build_dir
+  create_meteor_settings_profile $build_dir
+
   clean_meteor_installation
 }
