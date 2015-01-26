@@ -374,14 +374,14 @@ mktmpdir() {
 }
 
 detect() {
-  capture ${bp_dir}/bin/detect ${bp_dir}/test/$1
+  capture ${bp_dir}/bin/detect ${bp_dir}/test/fixtures/$1
 }
 
 compile_dir=""
 
 compile() {
   compile_dir=$(mktmpdir)
-  cp -r ${bp_dir}/test/$1/. ${compile_dir}
+  cp -r ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
