@@ -1,4 +1,4 @@
-Appsdeck Buildpack for Node.js And Meteor
+Buildpack for Node.js And Meteor
 =========================================
 
 This buildpack has been developped to deploy any node.js application
@@ -28,7 +28,7 @@ You can write a file `.node_version` at the root of your project, and we'll use 
 - Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).
 - Discourages use of dangerous semver ranges like `*` and `>0.10`.
 - Uses the version of `npm` that comes bundled with `node`.
-- Puts `node` and `npm` on the `PATH` so they can be executed with [appsdeck run](http://doc.appsdeck.eu/app/jobs).
+- Puts `node` and `npm` on the `PATH` so they can be executed with [scalingo run](http://doc.scalingo.com/app/jobs).
 
 ### Caching
 
@@ -39,13 +39,13 @@ You can write a file `.node_version` at the root of your project, and we'll use 
 - Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
 - Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
 
-For more technical details, see the [compile script](https://github.com/Scalingo/appsdeck-buildpack-nodejs/blob/master/bin/compile).
+For more technical details, see the [compile script](https://github.com/Scalingo/nodejs-buildpack/blob/master/bin/compile).
 
 
 Documentation
 -------------
 
-For more information about using Node.js and buildpacks on Appsdeck, see these Dev Center articles:
+For more information about using Node.js and buildpacks on Scalingo, see these Dev Center articles:
 
-- [Appsdeck Node.js Support](http://doc.appsdeck.eu/languages/nodejs)
-- [Buildpacks](http://doc.appsdeck.eu/buildpacks)
+- [Scalingo Node.js Support](http://doc.scalingo.com/languages/nodejs)
+- [Buildpacks](http://doc.scalingo.com/buildpacks)

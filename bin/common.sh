@@ -14,7 +14,7 @@ mktempdir() {
 protip() {
   echo
   echo "PRO TIP: $*" | indent
-  echo "See http://doc.appsdeck.eu/languages/nodejs" | indent
+  echo "See http://doc.scalingo.com/languages/nodejs" | indent
   echo
 }
 
