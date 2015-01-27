@@ -364,7 +364,7 @@ pushd $(dirname 0) >/dev/null
 bp_dir=$(pwd)
 popd >/dev/null
 
-source ${bp_dir}/vendor/test-utils/test-utils
+source ${bp_dir}/test/utils
 
 mktmpdir() {
   dir=$(mktemp -t testXXXXX)
