@@ -389,4 +389,4 @@ assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
-source ${bp_dir}/vendor/shunit2/shunit2
+source ${bp_dir}/test/shunit2
