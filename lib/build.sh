@@ -2,7 +2,8 @@ build_failed() {
   head "Build failed"
   echo ""
   cat $warnings | indent
-  info "We're sorry this build is failing! If you can't find the issue in application code,"
+  info "We're sorry this build is failing!"
+  info "If you can't find the issue in application code,"
   info "please send us an email at support@scalingo.com"
   info ""
   info "<3,"
@@ -55,6 +56,7 @@ get_modules_cached() {
 # iojs_engine
 # node_engine
 # npm_engine
+# meteor_version
 # start_method
 # modules_source
 # npm_previous
@@ -67,13 +69,15 @@ read_current_state() {
   assert_json "$build_dir/package.json"
   iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
   node_engine=$(read_json "$build_dir/package.json" ".engines.node")
-  [ -z "$node_engine" ] && node_engine=$(cat "$build_dir/.node-version")
+  meteor_version=$(file_contents "$build_dir/.meteor/release")
+  [ -z "$node_engine" ] && [ -n "$meteor_version" ] && node_engine=$(file_contents "$build_dir/.node-version")
 
   npm_engine=$(read_json "$build_dir/package.json" ".engines.npm")
 
   info "build directory..."
   start_method=$(get_start_method "$build_dir")
   modules_source=$(get_modules_source "$build_dir")
+  [ -n "$meteor_version" ] && modules_source="package.json"
 
   info "cache directory..."
   npm_previous=$(file_contents "$cache_dir/node/npm-version")
@@ -95,6 +99,7 @@ show_current_state() {
     info "Node engine:         $iojs_engine (iojs)"
   fi
   info "Npm engine:          ${npm_engine:-unspecified}"
+  info "Meteor.js Framework: ${meteor_version:-no}"
   info "Start mechanism:     ${start_method:-none}"
   info "node_modules source: ${modules_source:-none}"
   info "node_modules cached: $modules_cached"

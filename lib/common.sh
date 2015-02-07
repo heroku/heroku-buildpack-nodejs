@@ -14,13 +14,6 @@ info() {
   echo "       $*"
 }
 
-protip() {
-  echo
-  echo "PRO TIP: $*" | indent
-  echo "See http://doc.scalingo.com/languages/nodejs" | indent
-  echo
-}
-
 warning() {
   local tip=$1
   local url=$2
@@ -42,6 +35,10 @@ assert_json() {
       error "Unable to parse $file as JSON"
     fi
   fi
+}
+
+mktempdir() {
+  mktemp -d $1_XXXX
 }
 
 file_contents() {
@@ -89,5 +86,11 @@ export_env_dir() {
         :
       done
     fi
+  fi
+}
+
+end_of_build_protips() {
+  if [ -n "${METEOR_SETTINGS}" ] ; then
+    warning "METEOR_SETTINGS is automatically set, if you have a 'settings.json' file"
   fi
 }

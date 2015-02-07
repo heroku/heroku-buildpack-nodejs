@@ -47,15 +47,6 @@ warn_node_modules "$modules_source"
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
-# Demeteorize app if required
-if test -d "$build_dir/.meteor"; then
-  if test -z "$node_version"; then
-    protip "Specify a node version in .node-version"
-  fi
-  status "Meteor app detected"
-  demeteorize_app $node_version $build_dir $cache_dir
-fi
-
 ####### Vendor in binaries
 
 head "Installing binaries"
@@ -65,6 +56,12 @@ else
   install_iojs "$iojs_engine"
 fi
 install_npm
+
+# Demeteorize app if required
+if test -n "$meteor_version"; then
+  head "Meteor app detected"
+  demeteorize_app $build_dir $cache_dir
+fi
 
 ####### Build the project's dependencies
 
@@ -83,7 +80,7 @@ warn_start "$start_method"
 head "Finalizing build"
 end_of_build_protips
 write_profile
-write_export
+# write_export
 clean_npm
 clean_cache
 create_cache
