@@ -18,6 +18,13 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
+testUnstableVersion() {
+  compile "unstable-version"
+  assertCaptured "Resolving node version 0.11.x via semver.io"
+  assertCaptured "Downloading and installing node 0.11"
+  assertCapturedSuccess
+}
+
 testBadJson() {
   compile "bad-json"
   assertCaptured "Build failed"
@@ -61,12 +68,13 @@ testStableVersion() {
   assertCapturedSuccess
 }
 
-testUnstableVersion() {
-  compile "unstable-version"
-  assertCaptured "Resolving node version >0.11.0 via semver.io"
-  assertCaptured "Downloading and installing node 0.11"
-  assertCapturedSuccess
-}
+
+
+
+
+
+
+
 
 testOldNpm() {
   compile "old-npm"
