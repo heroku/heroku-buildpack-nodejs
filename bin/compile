@@ -1,155 +1,90 @@
 #!/usr/bin/env bash
 
-set -e            # fail fast
+set -o errexit    # always exit on error
+set -o errtrace   # trap errors in functions as well
 set -o pipefail   # do not ignore exit codes when piping output
+set -o posix      # more strict failures in subshells
 # set -x          # enable debugging
 
 # Configure directories
 build_dir=$1
 cache_dir=$2
 env_dir=$3
-
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
+heroku_dir=$build_dir/.heroku
+mkdir -p $heroku_dir/node
+warnings=$(mktemp)
 
-# Load some convenience functions like status(), echo(), and indent()
-source $bp_dir/bin/common.sh
+# Load dependencies
+source $bp_dir/lib/common.sh
+source $bp_dir/lib/build.sh
+source $bp_dir/lib/warnings.sh
 
-# Load meteo framework related functions
+# Load meteor framework related functions
 source $bp_dir/bin/meteor.sh
 
-# Output npm debug info on error
-trap cat_npm_debug_log ERR
+# Avoid GIT_DIR leak from previous build steps
+unset GIT_DIR
 
 # Create the profile directory for runtime environment
 mkdir -p $build_dir/.profile.d
 
-# Look in package.json's engines.node field for a semver range
-semver_range=null
-if test -e $build_dir/package.json; then
-  semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
-elif test -e $build_dir/.node-version; then
-  # For meteor which doesn't have any package.json
-  semver_range=$(cat $build_dir/.node-version)
-fi
+# Provide hook to deal with errors
+trap build_failed ERR
 
-# Resolve node version using semver.io
-node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
+####### Determine current state
+head "Reading application state"
+read_current_state
+show_current_state
 
-# Recommend using semver ranges in a safe manner
-if [ "$semver_range" == "null" ]; then
-  if [ -d "$build_dir/.meteor" ]; then
-    protip "Specify a node version in .node-version"
-  else
-    protip "Specify a node version in package.json"
-  fi
-  semver_range=""
-elif [ "$semver_range" == "*" ]; then
-  protip "Avoid using semver ranges like '*' in engines.node"
-elif [ ${semver_range:0:1} == ">" ]; then
-  protip "Avoid using semver ranges starting with '>' in engines.node"
-fi
-
-# Output info about requested range and resolved node version
-if [ "$semver_range" == "" ]; then
-  status "Defaulting to latest stable node: $node_version"
+if [ "$iojs_engine" == "" ]; then
+  warn_node_engine "$node_engine"
 else
-  status "Requested node range:  $semver_range"
-  status "Resolved node version: $node_version"
+  warn_node_engine "$iojs_engine"
 fi
-
-# Download node from Heroku's S3 mirror of nodejs.org/dist
-status "Downloading and installing node"
-node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
-curl $node_url -s -o - | tar xzf - -C $build_dir
-
-# Move node (and npm) into ./.vendor and make them executable
-mkdir -p $build_dir/.vendor
-mv $build_dir/node-v$node_version-linux-x64 $build_dir/.vendor/node
-chmod +x $build_dir/.vendor/node/bin/*
-PATH=$build_dir/.vendor/node/bin:$PATH
+warn_node_modules "$modules_source"
 
 # Run subsequent node/npm commands from the build path
 cd $build_dir
 
 # Demeteorize app if required
 if test -d "$build_dir/.meteor"; then
+  if test -z "$node_version"; then
+    protip "Specify a node version in .node-version"
+  fi
   status "Meteor app detected"
   demeteorize_app $node_version $build_dir $cache_dir
 fi
 
-# If node_modules directory is checked into source control then
-# rebuild any native deps. Otherwise, restore from the build cache.
-if test -d $build_dir/node_modules; then
-  status "Found existing node_modules directory; skipping cache"
-  status "Rebuilding any native dependencies"
-  npm rebuild 2>&1 | indent
-elif test -d $cache_dir/node/node_modules; then
-  status "Restoring node_modules directory from cache"
-  cp -r $cache_dir/node/node_modules $build_dir/
+####### Vendor in binaries
 
-  status "Pruning cached dependencies not specified in package.json"
-  npm prune 2>&1 | indent
-
-  if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
-    status "Node version changed since last build; rebuilding dependencies"
-    npm rebuild 2>&1 | indent
-  fi
+head "Installing binaries"
+if [ "$iojs_engine" == "" ]; then
+  install_node "$node_engine"
+else
+  install_iojs "$iojs_engine"
 fi
+install_npm
 
-# Scope config var availability only to `npm install`
-(
-  if [ -d "$env_dir" ]; then
-    status "Exporting config vars to environment"
-    export_env_dir $env_dir
-  fi
+####### Build the project's dependencies
 
-  status "Installing dependencies"
-  # Make npm output to STDOUT instead of its default STDERR
-  npm install --userconfig $build_dir/.npmrc --production 2>&1 | indent
-)
+head "Building dependencies"
+cd $build_dir
+build_dependencies
 
-# Persist goodies like node-version in the slug
-mkdir -p $build_dir/.heroku
+####### Create a Procfile if possible
 
-# Sa is not presentve resolved node version in the slug for later reference
-echo $node_version > $build_dir/.heroku/node-version
+head "Checking startup method"
+ensure_procfile "$start_method" "$build_dir"
+warn_start "$start_method"
 
-# Purge node-related cached content, being careful not to purge the top-level
-# cache, for the sake of heroku-buildpack-multi apps.
-rm -rf $cache_dir/node_modules # (for apps still on the older caching strategy)
-rm -rf $cache_dir/node
-mkdir -p $cache_dir/node
+####### Finalize the build
 
-# If app has a node_modules directory, cache it.
-if test -d $build_dir/node_modules; then
-  status "Caching node_modules directory for future builds"
-  cp -r $build_dir/node_modules $cache_dir/node
-fi
-
-# Copy goodies to the cache
-cp -r $build_dir/.heroku $cache_dir/node
-
-status "Cleaning up node-gyp and npm artifacts"
-rm -rf "$build_dir/.node-gyp"
-rm -rf "$build_dir/.npm"
-
-# If Procfile is absent, try to create one using `npm start`
-if [ ! -e $build_dir/Procfile ]; then
-  npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
-
-  # If `scripts.start` is set in package.json, or a server.js file
-  # is present in the app root, then create a default Procfile
-  if [ "$npm_start" != "null" ] || [ -f $build_dir/server.js ]; then
-    status "No Procfile found; Adding npm start to new Procfile"
-    echo "web: npm start" > $build_dir/Procfile
-  else
-    status "Procfile not found and npm start script is undefined"
-    protip "Create a Procfile or specify a start script in package.json"
-  fi
-fi
-
+head "Finalizing build"
 end_of_build_protips
-
-# Update the PATH
-status "Building runtime environment"
-echo "export PATH=\"\$HOME/.vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+write_profile
+write_export
+clean_npm
+clean_cache
+create_cache
+build_succeeded

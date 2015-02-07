@@ -7,124 +7,357 @@ testDetectWithPackageJson() {
   assertCapturedSuccess
 }
 
+testDetectWithServer() {
+  detect "server-present-only"
+  assertCaptured "Node.js"
+  assertCapturedSuccess
+}
+
 testDetectWithoutPackageJson() {
   detect "no-package-json"
   assertCapturedError 1 ""
 }
 
+testBadJson() {
+  compile "bad-json"
+  assertCaptured "Build failed"
+  assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "build directory..."
+  assertNotCaptured "Installing binaries"
+  assertCapturedError 1 "Unable to parse"
+}
+
+testIoJs() {
+  compile "iojs"
+  assertCaptured "Node engine:         1.0."
+  assertCaptured "(iojs)"
+  assertCaptured "detected node version: v1.0."
+  assertCapturedSuccess
+}
+
 testNoVersion() {
   compile "no-version"
-  assertCaptured "PRO TIP: Specify a node version in package.json"
-  assertCaptured "Defaulting to latest stable node"
+  assertCaptured "Node engine:         unspecified"
+  assertCaptured "WARNING: Node version not specified in package.json"
+  assertCaptured "Resolving node version (latest stable) via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
+  assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
-testDangerousRangeStar() {
-  compile "dangerous-range-star"
-  assertCaptured "PRO TIP: Avoid using semver ranges like '*'"
-  assertCaptured "Requested node range:  *"
-  assertCaptured "Resolved node version: 0.10"
-  assertCapturedSuccess
-}
-
-testDangerousRangeGreaterThan() {
-  compile "dangerous-range-greater-than"
-  assertCaptured "PRO TIP: Avoid using semver ranges starting with '>'"
-  assertCaptured "Requested node range:  >"
-  assertCaptured "Resolved node version: 0.10."
-  assertCapturedSuccess
-}
-
-testRangeWithSpace() {
-  compile "range-with-space"
-  assertCaptured "Requested node range:  >= 0.8.x"
-  assertCaptured "Resolved node version: 0.10."
+testSpecificVersion() {
+  compile "specific-version"
+  assertNotCaptured "Resolving node version"
+  assertCaptured "Downloading and installing node 0.10.29"
+  assertCaptured "Using default npm version: 1.4.14"
+  assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
 testStableVersion() {
   compile "stable-node"
-  assertNotCaptured "PRO TIP: Avoid using semver"
-  assertNotCaptured "PRO TIP: Specify"
-  assertCaptured "Resolved node version"
+  assertCaptured "Downloading and installing node 0.10"
+  assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Requested node range:  >0.11.0"
-  assertCaptured "Resolved node version: 0.11."
+  assertCaptured "Resolving node version >0.11.0 via semver.io"
+  assertCaptured "Downloading and installing node 0.11"
   assertCapturedSuccess
 }
 
-testProfileCreated() {
-  compile "stable-node"
-  assertCaptured "Building runtime environment"
-  assertFile "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" ".profile.d/nodejs.sh"
+testOldNpm() {
+  compile "old-npm"
+  assertCaptured "WARNING: This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (2."
+  assertNotCaptured "integer expression expected"
+  assertCapturedSuccess
+}
+
+testNonexistentNpm() {
+  compile "nonexistent-npm"
+  assertCaptured "version not found: npm@1.1.65"
+  assertCapturedError 1 ""
+}
+
+testSameNpm() {
+  compile "same-npm"
+  assertCaptured "npm 1.4.28 already installed"
+  assertCapturedSuccess
+}
+
+testNpmVersionRange() {
+  compile "npm-version-range"
+  assertCaptured "Resolving npm version"
+  assertCaptured "installing npm 1.4."
+  assertCapturedSuccess
+}
+
+testNpmVersionSpecific() {
+  compile "npm-version-specific"
+  assertCaptured "installing npm 2.1.11"
+  assertNotCaptured "Resolving npm version"
+  assertNotCaptured "WARNING"
+  assertCapturedSuccess
+}
+
+testFailingBuild() {
+  compile "failing-build"
+  assertCaptured "Building dependencies"
+  assertCaptured "Build failed"
+  assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "Checking startup method"
+  assertCapturedError 1 ""
+}
+
+testInfoEmpty() {
+  compile "info-empty"
+  assertCaptured "Node engine:         unspecified"
+  assertCaptured "Npm engine:          unspecified"
+  assertCaptured "Start mechanism:     none"
+  assertCaptured "node_modules source: package.json"
+  assertCaptured "node_modules cached: false"
+  assertCapturedSuccess
+}
+
+testDangerousRangeStar() {
+  compile "dangerous-range-star"
+  assertCaptured "WARNING: Avoid semver ranges like '*'"
+  assertCaptured "Node engine:         *"
+  assertCaptured "Resolving node version * via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
+  assertCapturedSuccess
+}
+
+testDangerousRangeGreaterThan() {
+  compile "dangerous-range-greater-than"
+  assertCaptured "WARNING: Avoid semver ranges starting with '>'"
+  assertCaptured "Resolving node version >0.4 via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
+  assertCapturedSuccess
+}
+
+testRangeWithSpace() {
+  compile "range-with-space"
+  assertCaptured "Resolving node version >= 0.8.x via semver.io"
+  assertCaptured "Downloading and installing node 0.10"
   assertCapturedSuccess
 }
 
 testInvalidDependency() {
   compile "invalid-dependency"
-  assertCaptured "not in the npm registry"
+  assertCaptured "npm ERR! 404"
   assertCapturedError 1 ""
 }
 
 testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
-  assertCaptured "Caching node"
-  assertEquals "1" "$(ls -1 $cache/ | wc -l)"
+  assertCaptured "Caching results for future builds"
+  assertEquals "1" "$(ls -1 $cache/ | grep node | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
+}
+
+testBuildWithCache() {
+  cache=$(mktmpdir)
+  compile "stable-node" $cache
+  assertCaptured "node_modules cached: false"
+  assertCaptured "Caching results for future builds"
+  assertCapturedSuccess
+
+  compile "stable-node" $cache
+  assertCaptured "node_modules cached: true"
+  assertCaptured "Restoring node modules from cache"
+  assertCapturedSuccess
 }
 
 testModulesCheckedIn() {
   compile "modules-checked-in"
-  assertCaptured "Found existing node_modules directory; skipping cache"
-  assertCaptured "Rebuilding any native dependencies"
+  assertCaptured "node_modules source: prebuilt"
+  assertCaptured "Rebuilding any native modules for this architecture"
+  assertCaptured "(preinstall script)"
+  assertCaptured "Installing any new modules"
+  assertCaptured "(postinstall script)"
+  assertNotCaptured "Restoring node modules"
+  assertNotCaptured "Pruning unused dependencies"
   assertCapturedSuccess
 }
 
 testUserConfig() {
   compile "userconfig"
-  assertCaptured "https://www.google.com/"
+  assertCaptured "www.google.com"
   assertCaptured "registry error"
   assertCapturedError 1 ""
 }
 
+testProcfile() {
+  compile "procfile-present-only"
+  assertCaptured "Start mechanism:     Procfile"
+  assertNotCaptured "new Procfile"
+  assertCapturedSuccess
+}
+
 testProcfileAbsentNpmStartPresent() {
   compile "procfile-absent-npm-start-present"
-  assertCaptured "No Procfile found; Adding npm start to new Procfile"
+  assertCaptured "Start mechanism:     npm start"
+  assertCaptured "Adding 'web: npm start' to new Procfile"
   assertFile "web: npm start" "Procfile"
   assertCapturedSuccess
 }
 
 testProcfileAbsentNpmStartAbsent() {
   compile "procfile-absent-npm-start-absent"
-  assertCaptured "Create a Procfile or specify a start script in package.json"
+  assertCaptured "Start mechanism:     none"
+  assertCaptured "None found"
+  assertNotCaptured "new Procfile"
   assertCapturedSuccess
 }
 
-testProcfileAbsentNpmStartPresent() {
-  compile "procfile-absent-npm-start-present"
-  assertCaptured "No Procfile found; Adding npm start to new Procfile"
-  assertFile "web: npm start" "Procfile"
+testDynamicProcfile() {
+  compile "dynamic-procfile"
+  assertCaptured "Procfile created during build"
+  assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"
   assertCapturedSuccess
 }
 
-testEnvDirNotImported() {
-  compile "stable-node"
-  assertNotCaptured "Exporting config vars to environment"
+testProcfileAbsentServerPresent() {
+  compile "procfile-absent-server-present"
+  assertCaptured "Start mechanism:     server.js"
+  assertCaptured "'web: node server.js' to new Procfile"
+  assertFile "web: node server.js" "Procfile"
   assertCapturedSuccess
 }
 
-testEnvDirExported() {
+testServerPresentOnly() {
+  compile "server-present-only"
+  assertCaptured "WARNING: No package.json found"
+  assertCaptured "Skipping dependencies"
+  assertCaptured "'web: node server.js' to new Procfile"
+  assertFile "web: node server.js" "Procfile"
+  assertCapturedSuccess
+}
+
+testEnvVars() {
   env_dir=$(mktmpdir)
-  echo "chicken" > $env_dir/birds
-  echo "koi" > $env_dir/fish
+  echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
   compile "stable-node" "$(mktmpdir)" $env_dir
-  assertCaptured "Exporting config vars to environment"
+  assertCaptured "NPM_CONFIG_PRODUCTION=false"
   assertCapturedSuccess
 }
+
+testNoEnvVars() {
+  env_dir=$(mktmpdir)
+  compile "stable-node" "$(mktmpdir)" $env_dir
+  assertCaptured "NPM_CONFIG_PRODUCTION=true"
+  assertCapturedSuccess
+}
+
+testNonFileEnvVars() {
+  export NPM_CONFIG_FOO=bar
+  export NPM_CONFIG_PRODUCTION=false
+  compile "stable-node"
+  assertCaptured "NPM_CONFIG_FOO=bar"
+  assertCaptured "NPM_CONFIG_PRODUCTION=false"
+  assertCapturedSuccess
+  unset NPM_CONFIG_FOO
+  unset NPM_CONFIG_PRODUCTION
+}
+
+testNoDevDependencies() {
+  compile "dev-dependencies"
+  assertNotCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testDevDependencies() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
+  compile "dev-dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testOptionalDependencies() {
+  env_dir=$(mktmpdir)
+  #echo "true" > $env_dir/NPM_CONFIG_OPTIONAL
+  compile "optional-dependencies" "$(mktmpdir)" $env_dir
+  assertNotCaptured "NPM_CONFIG_OPTIONAL"
+  assertCaptured "less"
+  assertCaptured "mime"
+  assertCaptured "mkdirp"
+  assertCaptured "clean-css"
+  assertCaptured "request"
+  assertCapturedSuccess
+}
+
+testNoOptionalDependencies() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NPM_CONFIG_OPTIONAL
+  compile "optional-dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "NPM_CONFIG_OPTIONAL=false"
+  assertCaptured "less"
+  assertNotCaptured "mime"
+  assertNotCaptured "mkdirp"
+  assertNotCaptured "clean-css"
+  assertNotCaptured "request"
+  assertCapturedSuccess
+}
+
+testDisableCache() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "node-modules-cache-1" $cache
+  assertCaptured "lodash@1.0.0"
+  assertCapturedSuccess
+
+  compile "node-modules-cache-2" $cache
+  assertCaptured "lodash@1.0.0"
+  assertCapturedSuccess
+
+  echo "false" > $env_dir/NODE_MODULES_CACHE
+  compile "node-modules-cache-2" $cache $env_dir
+  assertCaptured "lodash@1.3.1"
+  assertCapturedSuccess
+}
+
+testNpmrc() {
+  compile "dev-dependencies"
+  assertNotCaptured "lodash"
+  assertCapturedSuccess
+
+  compile "dev-dependencies-npmrc"
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testShrinkwrap() {
+  compile "shrinkwrap"
+  assertCaptured "express@4.10.4"
+  assertCaptured "lodash@2.4.0"
+  assertNotCaptured "mocha"
+  assertCapturedSuccess
+}
+
+testProfileExport() {
+  compile "stable-node"
+  assertCaptured "Creating runtime environment"
+  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertCapturedSuccess
+}
+
+testMultiExport() {
+  compile "stable-node"
+  assertFileContains "export PATH=" "${bp_dir}/export"
+  assertFileContains "/.heroku/node/bin:" "${bp_dir}/export"
+  assertFileContains "/node_modules/.bin:\$PATH" "${bp_dir}/export"
+  assertFileContains "export NODE_HOME=" "${bp_dir}/export"
+  assertFileContains "/.heroku/node\"" "${bp_dir}/export"
+  assertCapturedSuccess
+}
+
 
 # Utils
 

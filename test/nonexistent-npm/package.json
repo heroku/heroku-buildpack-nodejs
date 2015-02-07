@@ -6,14 +6,14 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
-  "scripts": {
-    "preinstall": "echo '(preinstall script)'",
-    "postinstall": "echo '(postinstall script)'"
-  },
   "dependencies": {
     "hashish": "*"
   },
   "engines": {
-    "node": "~0.10.0"
+    "node": "0.10.x",
+    "npm": "1.1.65"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
