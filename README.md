@@ -54,9 +54,11 @@ For more technical details, see the [compile script](https://github.com/Scalingo
 
 For more information about using Node.js and buildpacks on Scalingo, see these Dev Center articles:
 
-- [Scalingo Node.js Support](http://doc.scalingo.com/languages/nodejs)
+- [Scalingo Node.js Support](http://doc.scalingo.com/languages/javascript/nodejs)
 - [Buildpacks](http://doc.scalingo.com/buildpacks)
-- [Getting Started with Node.js on Scalingo](http://doc.scalingo.com/languages/nodejs/getting-started-with-express)
+- [Getting Started with Node.js on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-nodejs.html)
+- [Getting Started with Meteor on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-meteor.html)
+- [Getting Started with io.js on Scalingo](http://doc.scalingo.com/languages/javascript/iojs/getting-started-with-iojs.html)
 
 ## Options for Meteor
 

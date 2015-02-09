@@ -18,7 +18,7 @@ warning() {
   local tip=$1
   local url=$2
   echo "WARNING: $tip" >> $warnings
-  echo "${url:-http://doc.scalingo.com/languages/nodejs}" >> $warnings
+  echo "${url:-http://doc.scalingo.com/languages/javascript/nodejs}" >> $warnings
   echo "" >> $warnings
 }
 
