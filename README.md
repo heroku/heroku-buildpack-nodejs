@@ -169,22 +169,21 @@ heroku config:set BUILDPACK_URL=<your-github-url>#your-branch
 
 ## Testing
 
-[Anvil](https://github.com/ddollar/anvil) is a generic build server for Heroku.
+The buildpack tests use [Docker](https://www.docker.com/) to simulate
+Heroku's Cedar and Cedar-14 containers.
+
+To run the test suite:
 
 ```
-gem install anvil-cli
+test/docker
 ```
 
-The [heroku-anvil CLI plugin](https://github.com/ddollar/heroku-anvil) is a wrapper for anvil.
+Or to just test in cedar or cedar-14:
 
 ```
-heroku plugins:install https://github.com/ddollar/heroku-anvil
+test/docker cedar
+test/docker cedar-14
 ```
 
-The [ddollar/test](https://github.com/ddollar/buildpack-test) buildpack runs `bin/test` on your app/buildpack.
-
-```
-heroku build -b ddollar/test # -b can also point to a local directory
-```
-
-For more info on testing, see [Best Practices for Testing Buildpacks](https://discussion.heroku.com/t/best-practices-for-testing-buildpacks/294) on the Heroku discussion forum.
+The tests are run via the vendored [shunit2](http://shunit2.googlecode.com/svn/trunk/source/2.1/doc/shunit2.html)
+test framework.
