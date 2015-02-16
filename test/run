@@ -18,6 +18,13 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
+testUnstableVersion() {
+  compile "unstable-version"
+  assertCaptured "Resolving node version 0.11.x via semver.io"
+  assertCaptured "Downloading and installing node 0.11"
+  assertCapturedSuccess
+}
+
 testBadJson() {
   compile "bad-json"
   assertCaptured "Build failed"
@@ -61,12 +68,13 @@ testStableVersion() {
   assertCapturedSuccess
 }
 
-testUnstableVersion() {
-  compile "unstable-version"
-  assertCaptured "Resolving node version >0.11.0 via semver.io"
-  assertCaptured "Downloading and installing node 0.11"
-  assertCapturedSuccess
-}
+
+
+
+
+
+
+
 
 testOldNpm() {
   compile "old-npm"
@@ -358,14 +366,13 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
-
 # Utils
 
 pushd $(dirname 0) >/dev/null
 bp_dir=$(pwd)
 popd >/dev/null
 
-source ${bp_dir}/vendor/test-utils/test-utils
+source ${bp_dir}/test/utils
 
 mktmpdir() {
   dir=$(mktemp -t testXXXXX)
@@ -375,14 +382,14 @@ mktmpdir() {
 }
 
 detect() {
-  capture ${bp_dir}/bin/detect ${bp_dir}/test/$1
+  capture ${bp_dir}/bin/detect ${bp_dir}/test/fixtures/$1
 }
 
 compile_dir=""
 
 compile() {
   compile_dir=$(mktmpdir)
-  cp -r ${bp_dir}/test/$1/. ${compile_dir}
+  cp -r ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
@@ -390,4 +397,4 @@ assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
-source ${bp_dir}/vendor/shunit2/shunit2
+source ${bp_dir}/test/shunit2

@@ -1,0 +1,38 @@
+testConcurrency1X() {
+  MEMORY_AVAILABLE=512 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
+testConcurrency2X() {
+  MEMORY_AVAILABLE=1024 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=2"
+  assertCapturedSuccess
+}
+
+testConcurrencyPX() {
+  MEMORY_AVAILABLE=6144 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 6144 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=12"
+  assertCapturedSuccess
+}
+
+testConcurrencyCustomLimit() {
+  MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture ${bp_dir}/lib/concurrency.sh
+  echo "This is STD_OUT:"
+  cat ${STD_OUT}
+  echo "This is STD_ERR:"
+  cat ${STD_ERR}
+  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=6"
+  assertCapturedSuccess
+}
+
+testConcurrencySaneMaximum() {
+  MEMORY_AVAILABLE=6144 WEB_MEMORY=32 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 6144 MB available memory, 32 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=32"
+  assertCapturedSuccess
+}
