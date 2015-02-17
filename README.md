@@ -155,6 +155,22 @@ This behavior allows your app to automatically take advantage of larger containe
 The default settings will cluster
 1 process on a 1X dyno, 2 processes on a 2X dyno, and 12 processes on a PX dyno.
 
+For example, when your app starts:
+
+```
+app[web.1]: Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)
+app[web.1]: Recommending WEB_CONCURRENCY=2
+app[web.1]:
+app[web.1]: > example-concurrency@1.0.0 start /app
+app[web.1]: > node server.js
+app[web.1]: Listening on 51118
+app[web.1]: Listening on 51118
+```
+
+Notice that on a 2X dyno, the
+[example concurrency app](https://github.com/heroku-examples/node-concurrency)
+listens on two processes concurrently.
+
 ### Chain Node with multiple buildpacks
 
 This buildpack automatically exports node, npm, and any node_modules binaries
