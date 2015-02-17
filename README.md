@@ -139,6 +139,22 @@ just include an `.npmrc` file in the root of your project:
 registry = 'https://custom-registry.com/'
 ```
 
+### Reasonable defaults for concurrency
+
+This buildpack adds two environment variables: `WEB_MEMORY` and `WEB_CONCURRENCY`.
+You can set either of them, but if unset the buildpack will fill them with reasonable defaults.
+
+- `WEB_MEMORY`: expected memory use by each node process (in MB, default: 512)
+- `WEB_CONCURRENCY`: recommended number of processes to Cluster based on the current environment
+
+Clustering is not done automatically; concurrency should be part of the app,
+usually via a library like [throng](https://github.com/hunterloftis/throng).
+Apps without any clustering mechanism will remain unaffected by these variables.
+
+This behavior allows your app to automatically take advantage of larger containers.
+The default settings will cluster
+1 process on a 1X dyno, 2 processes on a 2X dyno, and 12 processes on a PX dyno.
+
 ### Chain Node with multiple buildpacks
 
 This buildpack automatically exports node, npm, and any node_modules binaries
