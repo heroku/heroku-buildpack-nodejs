@@ -40,7 +40,7 @@ testNoVersion() {
   assertCaptured "Node engine:         unspecified"
   assertCaptured "WARNING: Node version not specified in package.json"
   assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
@@ -126,7 +126,7 @@ testDangerousRangeStar() {
   assertCaptured "WARNING: Avoid semver ranges like '*'"
   assertCaptured "Node engine:         *"
   assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertCapturedSuccess
 }
 
@@ -134,14 +134,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "WARNING: Avoid semver ranges starting with '>'"
   assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertCapturedSuccess
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertCapturedSuccess
 }
 
