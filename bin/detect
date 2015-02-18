@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
-if [ -f $1/package.json ]; then
+build_dir=$1
+
+if ! [ -z "$NODE_DIRECTORY" ]; then
+  build_dir="$1/$NODE_DIRECTORY"
+fi
+
+if [ -f $build_dir/package.json ]; then
   echo "Node.js" && exit 0
-elif [ -f $1/server.js ]; then
+elif [ -f $build_dir/server.js ]; then
   echo "Node.js" && exit 0
 else
   echo "no" && exit 1

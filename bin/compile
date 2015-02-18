@@ -10,11 +10,17 @@ set -o posix      # more strict failures in subshells
 
 # Configure directories
 build_dir=$1
+
+if ! [ -z "$NODE_DIRECTORY" ]; then
+  build_dir="$1/$NODE_DIRECTORY"
+fi
+
 cache_dir=$2
 env_dir=$3
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
 mkdir -p $heroku_dir/node
+
 warnings=$(mktemp)
 
 # Load dependencies
