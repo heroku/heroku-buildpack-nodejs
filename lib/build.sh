@@ -164,6 +164,17 @@ install_npm() {
 }
 
 function build_dependencies() {
+  # load user defined cache directories
+  directories=($(cache_directories))
+  for directory in "${directories[@]}"
+  do
+    local source_dir=$cache_dir/node/$directory
+    if [ -e $source_dir ]; then
+      info "Loading user cache directory from cache: $directory"
+      cp -r $source_dir $build_dir/
+    fi
+  done
+
   if [ "$modules_source" == "" ]; then
     info "Skipping dependencies (no source for node_modules)"
 
@@ -242,6 +253,7 @@ create_cache() {
   if test -d $build_dir/node_modules; then
     cp -r $build_dir/node_modules $cache_dir/node
   fi
+  write_user_cache
 }
 
 clean_cache() {
@@ -266,4 +278,19 @@ get_cache_status() {
   else
     echo "valid"
   fi
+}
+
+cache_directories() {
+  result=`read_json "$build_dir/package.json" ".cache_directories[]"`
+  echo "$result"
+}
+
+
+write_user_cache() {
+  directories=($(cache_directories))
+  for directory in "${directories[@]}"
+  do
+    info "Storing directory: $directory"
+    cp -r $build_dir/$directory $cache_dir/node
+  done
 }
