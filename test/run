@@ -180,7 +180,9 @@ testBuildWithUserCacheDirectories() {
   assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
 
   compile "cache-directories" $cache
-  assertCaptured "Loading user cache directory from cache: bower_components"
+  assertCaptured "Restoring 2 directories from cache:"
+  assertCaptured "- bower_components"
+  assertCaptured "Restoring node modules from cache"
   assertCapturedSuccess
 }
 
