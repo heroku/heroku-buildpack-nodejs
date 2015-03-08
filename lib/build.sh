@@ -114,9 +114,11 @@ install_node() {
 
   # Resolve non-specific node versions using semver.herokuapp.com
   if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    info "Resolving node version ${node_engine:-(latest stable)} via semver.io..."
-    if [ -z "$node_engine" -a -n "$meteor_engine" ] ; then
+    if [ -z "$node_engine" -a -n "$meteor_version" ] ; then
       node_engine="0.10.x"
+      info "Resolving node version for Meteor ${node_engine} via semver.io..."
+    else
+      info "Resolving node version ${node_engine:-(latest stable)} via semver.io..."
     fi
     node_engine=$(curl --silent --get --data-urlencode "range=${node_engine}" https://semver.herokuapp.com/node/resolve)
   fi
