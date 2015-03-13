@@ -1,8 +1,6 @@
 warn_node_engine() {
   local node_engine=$1
-  if [ "$node_engine" == "" -a -n "$meteor_version" ]; then
-    warning "Specify a node version in .node-version" "http://doc.scalingo.com/languages/javascript/nodejs/meteor.html#node.js-version"
-  elif [ "$node_engine" == "" ]; then
+  if [ "$node_engine" == "" ]; then
     warning "Node version not specified in package.json" "http://doc.scalingo.com/languages/javascript/nodejs"
   elif [ "$node_engine" == "*" ]; then
     warning "Avoid semver ranges like '*' in engines.node" "http://doc.scalingo.com/languages/javascript/nodejs"
