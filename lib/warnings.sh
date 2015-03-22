@@ -27,7 +27,7 @@ warn_node_modules() {
 warn_start() {
   local start_method=$1
   if [ "$start_method" == "" -a -z "$meteor_version" ]; then
-    warning "No Procfile, package.json start script, or server.js file found" "http://doc.scalingo.com/languages/nodejs"
+    warning "No Procfile, package.json start script, or server.js file found" "http://doc.scalingo.com/languages/javascript/nodejs"
   fi
 }
 
@@ -35,6 +35,24 @@ warn_old_npm() {
   local npm_version=$1
   if [ "${npm_version:0:1}" -lt "2" ]; then
     local latest_npm=$(curl --silent --get https://semver.herokuapp.com/npm/stable)
-    warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "http://doc.scalingo.com/languages/nodejs"
+    warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "http://doc.scalingo.com/languages/javascript/nodejs"
+  fi
+}
+
+warn_meteor_npm_dir() {
+  if [ ! -d "packages/npm-container" ] ; then
+    warning "Your Meteor app is using '${meteorhacks_npm_version}', check in the 'packages/npm-container' directory in your GIT repository" "http://doc.scalingo.com/languages/javascript/nodejs/meteor/npm"
+  fi
+}
+
+warn_meteor_npm_packages_json() {
+  if [ ! -e "packages.json" ] ; then
+    warning "Your Meteor app is using '${meteorhacks_npm_version}', check in 'packages.json' in your GIT repository" "http://doc.scalingo.com/languages/javascript/nodejs/meteor/npm"
+  fi
+}
+
+warn_meteor_npm_package() {
+  if ! grep -q npm-container ".meteor/packages" ; then
+    warning "Your Meteor app is using '${meteorhacks_npm_version}', add 'npm-container' in '.meteor/packages'" "http://doc.scalingo.com/languages/javascript/nodejs/meteor/npm"
   fi
 }

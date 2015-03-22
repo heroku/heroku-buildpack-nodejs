@@ -96,6 +96,15 @@ install_meteorite_deps() {
   fi
 }
 
+check_meteorhacks_npm() {
+  meteorhacks_npm_version=$(grep meteorhacks:npm ".meteor/versions" || true)
+  if [ -n "${meteorhacks_npm_version}" ] ; then
+    warn_meteor_npm_dir
+    warn_meteor_npm_packages_json
+    warn_meteor_npm_package
+  fi
+}
+
 install_demeteorizer() {
   npm install -g 'onmodulus/demeteorizer' | indent
   head "Demeteorizer installed"
@@ -113,11 +122,12 @@ demeteorize_app() {
 
   install_meteorite_deps "$build_dir" "$cache_dir"
   install_demeteorizer
+  check_meteorhacks_npm
 
   # Build outside source dir to avoid warning:
   # Warning: The output directory is under your source tree.
   #          This causes issues when building with mobile platforms.
-  #         Consider building into a different directory instead (meteor build ../output)
+  #          Consider building into a different directory instead (meteor build ../output)
   tmp_build_dir=$(mktempdir /tmp/demetorized)
   HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | indent
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
