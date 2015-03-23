@@ -1,0 +1,19 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "0.10.18"
+  },
+  "dependencies": {
+    "bower": "1.3.12"
+  },
+  "scripts": {
+    "postinstall": "bower install --allow-root"
+  },
+  "cache_directories": ["bower_components", "node_modules"]
+}

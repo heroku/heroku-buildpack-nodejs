@@ -164,6 +164,8 @@ install_npm() {
 }
 
 function build_dependencies() {
+  restore_cache
+
   if [ "$modules_source" == "" ]; then
     info "Skipping dependencies (no source for node_modules)"
 
@@ -174,21 +176,8 @@ function build_dependencies() {
     npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
 
   else
-    cache_status=$(get_cache_status)
-
-    if [ "$cache_status" == "valid" ]; then
-      info "Restoring node modules from cache"
-      cp -r $cache_dir/node/node_modules $build_dir/
-      info "Pruning unused dependencies"
-      npm --unsafe-perm prune 2>&1 | indent
-      info "Installing any new modules"
-      npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
-    else
-      info "$cache_status"
-      info "Installing node modules"
-      touch $build_dir/.npmrc
-      npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
-    fi
+    info "Installing node modules"
+    npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
   fi
 }
 
@@ -242,6 +231,7 @@ create_cache() {
   if test -d $build_dir/node_modules; then
     cp -r $build_dir/node_modules $cache_dir/node
   fi
+  write_user_cache
 }
 
 clean_cache() {
@@ -265,5 +255,72 @@ get_cache_status() {
     echo "Npm version changed ($npm_previous => $npm_version); invalidating cache"
   else
     echo "valid"
+  fi
+}
+
+restore_cache() {
+  local directories=($(cache_directories))
+  local cache_status=$(get_cache_status)
+
+  if [ "$directories" != -1 ]; then
+    info "Restoring ${#directories[@]} directories from cache:"
+    for directory in "${directories[@]}"
+    do
+      local source_dir="$cache_dir/node/$directory"
+      if [ -e $source_dir ]; then
+        if [ "$directory" == "node_modules" ]; then
+          restore_npm_cache
+        else
+          info "- $directory"
+          cp -r $source_dir $build_dir/
+        fi
+      fi
+    done
+  elif [ "$cache_status" == "valid" ]; then
+    restore_npm_cache
+    info "$cache_status"
+  else
+    touch $build_dir/.npmrc
+  fi
+}
+
+restore_npm_cache() {
+  info "Restoring node modules from cache"
+  cp -r $cache_dir/node/node_modules $build_dir/
+  info "Pruning unused dependencies"
+  npm --unsafe-perm prune 2>&1 | indent
+}
+
+cache_directories() {
+  local package_json="$build_dir/package.json"
+  local key=".cache_directories"
+  local check=$(key_exist $package_json $key)
+  local result=-1
+  if [ "$check" != -1 ]; then
+    result=$(read_json "$package_json" "$key[]")
+  fi
+  echo $result
+}
+
+key_exist() {
+  local file=$1
+  local key=$2
+  local output=$(read_json $file $key)
+  if [ -n "$output" ]; then
+    echo 1
+  else
+    echo -1
+  fi
+}
+
+write_user_cache() {
+  local directories=($(cache_directories))
+  if [ "$directories" != -1 ]; then
+    info "Storing directories:"
+    for directory in "${directories[@]}"
+    do
+      info "- $directory"
+      cp -r $build_dir/$directory $cache_dir/node/
+    done
   fi
 }

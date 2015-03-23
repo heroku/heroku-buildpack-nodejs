@@ -172,6 +172,20 @@ testBuildWithCache() {
   assertCapturedSuccess
 }
 
+testBuildWithUserCacheDirectories() {
+  cache=$(mktmpdir)
+  compile "cache-directories" $cache
+  assertCapturedSuccess
+  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
+
+  compile "cache-directories" $cache
+  assertCaptured "Restoring 2 directories from cache:"
+  assertCaptured "- bower_components"
+  assertCaptured "Restoring node modules from cache"
+  assertCapturedSuccess
+}
+
 testModulesCheckedIn() {
   compile "modules-checked-in"
   assertCaptured "node_modules source: prebuilt"
