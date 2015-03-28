@@ -128,10 +128,10 @@ install_node() {
   node_url="http://s3pository.heroku.com/node/v$node_engine/node-v$node_engine-linux-x64.tar.gz"
   curl $node_url -s -o - | tar xzf - -C /tmp
 
-  # Move node (and npm) into .heroku/node and make them executable
-  mv /tmp/node-v$node_engine-linux-x64/* $heroku_dir/node
-  chmod +x $heroku_dir/node/bin/*
-  PATH=$heroku_dir/node/bin:$PATH
+  # Move node (and npm) into .vendor/node and make them executable
+  mv /tmp/node-v$node_engine-linux-x64/* $vendor_dir/node
+  chmod +x $vendor_dir/node/bin/*
+  PATH=$vendor_dir/node/bin:$PATH
 }
 
 install_iojs() {
@@ -148,10 +148,10 @@ install_iojs() {
   download_url="https://iojs.org/dist/v$iojs_engine/iojs-v$iojs_engine-linux-x64.tar.gz"
   curl $download_url -s -o - | tar xzf - -C /tmp
 
-  # Move iojs/node (and npm) binaries into .heroku/node and make them executable
-  mv /tmp/iojs-v$iojs_engine-linux-x64/* $heroku_dir/node
-  chmod +x $heroku_dir/node/bin/*
-  PATH=$heroku_dir/node/bin:$PATH
+  # Move iojs/node (and npm) binaries into .vendor/node and make them executable
+  mv /tmp/iojs-v$iojs_engine-linux-x64/* $vendor_dir/node
+  chmod +x $vendor_dir/node/bin/*
+  PATH=$vendor_dir/node/bin:$PATH
 }
 
 install_npm() {
@@ -223,14 +223,14 @@ ensure_procfile() {
 write_profile() {
   info "Creating runtime environment"
   mkdir -p $build_dir/.profile.d
-  echo "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
-  echo "export NODE_HOME=\"\$HOME/.heroku/node\"" >> $build_dir/.profile.d/nodejs.sh
+  echo "export PATH=\"\$HOME/.vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" > $build_dir/.profile.d/nodejs.sh
+  echo "export NODE_HOME=\"\$HOME/.vendor/node\"" >> $build_dir/.profile.d/nodejs.sh
 }
 
 write_export() {
   info "Exporting binary paths"
-  echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/node_modules/.bin:\$PATH\"" > $bp_dir/export
-  echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> $bp_dir/export
+  echo "export PATH=\"$build_dir/.vendor/node/bin:$build_dir/node_modules/.bin:\$PATH\"" > $bp_dir/export
+  echo "export NODE_HOME=\"$build_dir/.vendor/node\"" >> $bp_dir/export
 }
 
 clean_npm() {
