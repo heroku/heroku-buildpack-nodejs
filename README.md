@@ -37,7 +37,7 @@ For most Node.js apps this buildpack should work just fine.
 If, however, you're unable to deploy using this new version of the buildpack, you can get your app working again by locking it to the previous version:
 
 ```
-heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#v63 -a my-app
+heroku buildpack:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-nodejs#v63 -a my-app
 git commit -am "empty" --allow-empty
 git push heroku master
 ```
