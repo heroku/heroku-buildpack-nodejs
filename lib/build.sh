@@ -119,6 +119,7 @@ install_node() {
   curl $node_url -s -o - | tar xzf - -C /tmp
 
   # Move node (and npm) into .heroku/node and make them executable
+  echo "remove $heroku_dir/node"
   rm -rfv $heroku_dir/node
   mv /tmp/node-v$node_engine-linux-x64/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
