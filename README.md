@@ -2,7 +2,7 @@ Buildpack for Node.js, io.js And Meteor
 =======================================
 
 This buildpack has been developped to deploy any node.js application
-or an application based on the Meteor Framework (0.8+).
+or an application based on the Meteor Framework (0.9+).
 
 It is based on the original nodejs buildpack and has been updated to
 get an out of the box experience for Meteor.
@@ -219,19 +219,12 @@ scalingo env-set BUILDPACK_URL=<your-github-url>#your-branch
 ## Testing
 
 The buildpack tests use [Docker](https://www.docker.com/) to simulate
-Heroku's Cedar and Cedar-14 containers.
+Scalingo environment.
 
 To run the test suite:
 
 ```
 test/docker
-```
-
-Or to just test in cedar or cedar-14:
-
-```
-test/docker cedar
-test/docker cedar-14
 ```
 
 The tests are run via the vendored [shunit2](http://shunit2.googlecode.com/svn/trunk/source/2.1/doc/shunit2.html)
