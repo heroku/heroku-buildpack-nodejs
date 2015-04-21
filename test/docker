@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+scalingo-builder() {
+  echo "Running tests in docker (scalingo/builder)..."
+  docker run -v $(pwd):/buildpack:ro --rm -it scalingo/builder:v17 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+}
+
+scalingo-builder

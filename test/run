@@ -18,6 +18,21 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
+testDetectNodePhpIndex() {
+  detect "php-node-index"
+  assertCapturedError 1 ""
+}
+
+testDetectNodePhpCompose() {
+  detect "php-node-compose"
+  assertCapturedError 1 ""
+}
+
+testDetectNodePhpRequirements() {
+  detect "python-node"
+  assertCapturedError 1 ""
+}
+
 testBadJson() {
   compile "bad-json"
   assertCaptured "Build failed"
@@ -40,7 +55,7 @@ testNoVersion() {
   assertCaptured "Node engine:         unspecified"
   assertCaptured "WARNING: Node version not specified in package.json"
   assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
@@ -63,7 +78,7 @@ testStableVersion() {
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Resolving node version >0.11.0 via semver.io"
+  assertCaptured "Resolving node version 0.11.x via semver.io"
   assertCaptured "Downloading and installing node 0.11"
   assertCapturedSuccess
 }
@@ -126,7 +141,7 @@ testDangerousRangeStar() {
   assertCaptured "WARNING: Avoid semver ranges like '*'"
   assertCaptured "Node engine:         *"
   assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertCapturedSuccess
 }
 
@@ -134,14 +149,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "WARNING: Avoid semver ranges starting with '>'"
   assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertCapturedSuccess
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 0.10"
+  assertCaptured "Downloading and installing node 0.12"
   assertCapturedSuccess
 }
 
@@ -168,6 +183,20 @@ testBuildWithCache() {
 
   compile "stable-node" $cache
   assertCaptured "node_modules cached: true"
+  assertCaptured "Restoring node modules from cache"
+  assertCapturedSuccess
+}
+
+testBuildWithUserCacheDirectories() {
+  cache=$(mktmpdir)
+  compile "cache-directories" $cache
+  assertCapturedSuccess
+  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
+
+  compile "cache-directories" $cache
+  assertCaptured "Restoring 2 directories from cache:"
+  assertCaptured "- bower_components"
   assertCaptured "Restoring node modules from cache"
   assertCapturedSuccess
 }
@@ -358,6 +387,41 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
+testConcurrency1X() {
+  MEMORY_AVAILABLE=512 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
+testConcurrency2X() {
+  MEMORY_AVAILABLE=1024 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=2"
+  assertCapturedSuccess
+}
+
+testConcurrencyPX() {
+  MEMORY_AVAILABLE=6144 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 6144 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=12"
+  assertCapturedSuccess
+}
+
+testConcurrencyCustomLimit() {
+  MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=4"
+  assertCapturedSuccess
+}
+
+testConcurrencySaneMaximum() {
+  MEMORY_AVAILABLE=6144 WEB_MEMORY=32 capture ${bp_dir}/lib/concurrency.sh
+  assertCaptured "Detected 6144 MB available memory, 32 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=32"
+  assertCapturedSuccess
+}
+
 
 # Utils
 
@@ -365,7 +429,7 @@ pushd $(dirname 0) >/dev/null
 bp_dir=$(pwd)
 popd >/dev/null
 
-source ${bp_dir}/vendor/test-utils/test-utils
+source ${bp_dir}/test/utils
 
 mktmpdir() {
   dir=$(mktemp -t testXXXXX)
@@ -375,14 +439,14 @@ mktmpdir() {
 }
 
 detect() {
-  capture ${bp_dir}/bin/detect ${bp_dir}/test/$1
+  capture ${bp_dir}/bin/detect ${bp_dir}/test/fixtures/$1
 }
 
 compile_dir=""
 
 compile() {
   compile_dir=$(mktmpdir)
-  cp -r ${bp_dir}/test/$1/. ${compile_dir}
+  cp -r ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
@@ -390,4 +454,4 @@ assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
-source ${bp_dir}/vendor/shunit2/shunit2
+source ${bp_dir}/test/shunit2

@@ -167,6 +167,34 @@ just include an `.npmrc` file in the root of your project:
 registry = 'https://custom-registry.com/'
 ```
 
+### Reasonable defaults for concurrency
+
+This buildpack adds two environment variables: `WEB_MEMORY` and `WEB_CONCURRENCY`.
+You can set either of them, but if unset the buildpack will fill them with reasonable defaults.
+
+- `WEB_MEMORY`: expected memory use by each node process (in MB, default: 512)
+- `WEB_CONCURRENCY`: recommended number of processes to Cluster based on the current environment
+
+Clustering is not done automatically; concurrency should be part of the app,
+usually via a library like [throng](https://github.com/hunterloftis/throng).
+Apps without any clustering mechanism will remain unaffected by these variables.
+
+This behavior allows your app to automatically take advantage of larger containers.
+The default settings will cluster
+1 process on a S and M containers, 2 processes on L containers and 4 on XL containers.
+
+For example, when your app starts:
+
+```
+app[web-1]: Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)
+app[web-1]: Recommending WEB_CONCURRENCY=2
+app[web-1]:
+app[web-1]: > example-concurrency@1.0.0 start /app
+app[web-1]: > node server.js
+app[web-1]: Listening on 51118
+app[web-1]: Listening on 51118
+```
+
 ### Chain Node with multiple buildpacks
 
 This buildpack automatically exports node, npm, and any node_modules binaries
@@ -187,3 +215,24 @@ scalingo env-set BUILDPACK_URL=<your-github-url>
 # You can also use a git branch!
 scalingo env-set BUILDPACK_URL=<your-github-url>#your-branch
 ```
+
+## Testing
+
+The buildpack tests use [Docker](https://www.docker.com/) to simulate
+Heroku's Cedar and Cedar-14 containers.
+
+To run the test suite:
+
+```
+test/docker
+```
+
+Or to just test in cedar or cedar-14:
+
+```
+test/docker cedar
+test/docker cedar-14
+```
+
+The tests are run via the vendored [shunit2](http://shunit2.googlecode.com/svn/trunk/source/2.1/doc/shunit2.html)
+test framework.
