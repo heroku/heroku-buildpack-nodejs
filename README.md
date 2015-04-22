@@ -209,14 +209,14 @@ Heroku's Cedar and Cedar-14 containers.
 To run the test suite:
 
 ```
-test/docker
+make test
 ```
 
 Or to just test in cedar or cedar-14:
 
 ```
-test/docker cedar
-test/docker cedar-14
+make test-cedar-10
+make test-cedar-14
 ```
 
 The tests are run via the vendored [shunit2](http://shunit2.googlecode.com/svn/trunk/source/2.1/doc/shunit2.html)
