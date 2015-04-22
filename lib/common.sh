@@ -55,6 +55,16 @@ read_json() {
   fi
 }
 
+read_formatted_json() {
+  local file=$1
+  local node=$2
+  if test -f $file; then
+    cat $file | $bp_dir/vendor/jq "$node // \"\"" || return 1
+  else
+    echo ""
+  fi
+}
+
 # sed -l basically makes sed replace and buffer through stdin to stdout
 # so you get updates while the command runs and dont wait for the end
 # e.g. npm install | indent
