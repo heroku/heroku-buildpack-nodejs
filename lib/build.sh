@@ -23,7 +23,7 @@ get_start_method() {
   if test -f $build_dir/Procfile; then
     echo "Procfile"
   elif [[ $(read_json "$build_dir/package.json" ".scripts.start") != "" ]]; then
-    echo "npm start"
+    echo "package.json"
   elif test -f $build_dir/server.js; then
     echo "server.js"
   else
@@ -188,9 +188,9 @@ ensure_procfile() {
     info "Found Procfile"
   elif test -f $build_dir/Procfile; then
     info "Procfile created during build"
-  elif [ "$start_method" == "npm start" ]; then
-    info "No Procfile; Adding 'web: npm start' to new Procfile"
-    echo "web: npm start" > $build_dir/Procfile
+  elif [ "$start_method" == "package.json" ]; then
+    info "No Procfile; Adding start script from package.json to new Procfile"
+    echo "web: $(read_formatted_json "$build_dir/package.json" ".scripts.start")" > $build_dir/Procfile
   elif [ "$start_method" == "server.js" ]; then
     info "No Procfile; Adding 'web: node server.js' to new Procfile"
     echo "web: node server.js" > $build_dir/Procfile

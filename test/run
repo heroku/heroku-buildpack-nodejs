@@ -212,16 +212,16 @@ testProcfile() {
   assertCapturedSuccess
 }
 
-testProcfileAbsentNpmStartPresent() {
-  compile "procfile-absent-npm-start-present"
-  assertCaptured "Start mechanism:     npm start"
-  assertCaptured "Adding 'web: npm start' to new Procfile"
-  assertFile "web: npm start" "Procfile"
+testProcfileAbsentStartScriptPresent() {
+  compile "procfile-absent-start-script-present"
+  assertCaptured "Start mechanism:     package.json"
+  assertCaptured "Adding start script from package.json to new Procfile"
+  assertFile 'web: "echo foo"' "Procfile"
   assertCapturedSuccess
 }
 
-testProcfileAbsentNpmStartAbsent() {
-  compile "procfile-absent-npm-start-absent"
+testProcfileAbsentStartScriptAbsent() {
+  compile "procfile-absent-start-script-absent"
   assertCaptured "Start mechanism:     none"
   assertCaptured "None found"
   assertNotCaptured "new Procfile"
