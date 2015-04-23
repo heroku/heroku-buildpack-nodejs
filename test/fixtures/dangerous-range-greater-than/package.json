@@ -6,6 +6,9 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
+  "dependencies": {
+    "forcefailure": "*"
+  },
   "engines": {
     "node": ">0.4"
   }

@@ -38,9 +38,9 @@ testIoJs() {
 testNoVersion() {
   compile "no-version"
   assertCaptured "Node engine:         unspecified"
-  assertCaptured "WARNING: Node version not specified in package.json"
   assertCaptured "Resolving node version (latest stable) via semver.io"
   assertCaptured "Downloading and installing node 0.12"
+  assertNotCaptured "Node version not specified in package.json"
   assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
@@ -70,9 +70,9 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "WARNING: This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (2."
+  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (2."
   assertNotCaptured "integer expression expected"
-  assertCapturedSuccess
+  assertCapturedError
 }
 
 testNonexistentNpm() {
@@ -111,6 +111,23 @@ testFailingBuild() {
   assertCapturedError 1 ""
 }
 
+testWarningsOnFailure() {
+  compile "many-warnings"
+  assertCaptured "We recommend fixing these issues"
+  assertCaptured "Node version not specified"
+  assertCaptured "node_modules checked into source"
+  assertCaptured "has several known issues"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
+testTicketOnFailure() {
+  compile "invalid-dependency"
+  assertNotCaptured "We recommend fixing these issues"
+  assertCaptured "please submit a ticket"
+  assertCapturedError
+}
+
 testInfoEmpty() {
   compile "info-empty"
   assertCaptured "Node engine:         unspecified"
@@ -123,19 +140,19 @@ testInfoEmpty() {
 
 testDangerousRangeStar() {
   compile "dangerous-range-star"
-  assertCaptured "WARNING: Avoid semver ranges like '*'"
+  assertCaptured "Dangerous semver range"
   assertCaptured "Node engine:         *"
   assertCaptured "Resolving node version * via semver.io"
   assertCaptured "Downloading and installing node 0.12"
-  assertCapturedSuccess
+  assertCapturedError
 }
 
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
-  assertCaptured "WARNING: Avoid semver ranges starting with '>'"
+  assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4 via semver.io"
   assertCaptured "Downloading and installing node 0.12"
-  assertCapturedSuccess
+  assertCapturedError
 }
 
 testRangeWithSpace() {
@@ -259,7 +276,6 @@ testProcfileAbsentServerPresent() {
 
 testServerPresentOnly() {
   compile "server-present-only"
-  assertCaptured "WARNING: No package.json found"
   assertCaptured "Skipping dependencies"
   assertCaptured "'web: node server.js' to new Procfile"
   assertFile "web: node server.js" "Procfile"

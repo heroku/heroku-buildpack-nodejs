@@ -101,11 +101,11 @@ assertCapturedSuccess()
 assertCapturedError()
 {
   if [ $# -gt 1 ]; then
-    expectedErrorCode=${1}
+    local expectedErrorCode=${1}
     shift
   fi
 
-  expectedErrorMsg=${1:-""}
+  local expectedErrorMsg=${1:-""}
 
   if [ -z ${expectedErrorCode} ]; then
     assertTrue "Expected captured exit code to be greater than 0; was <${RETURN}>" "[ ${RETURN} -gt 0 ]"
@@ -121,16 +121,16 @@ assertCapturedError()
 _assertContains()
 {
   if [ 5 -eq $# ]; then
-    msg=$1
+    local msg=$1
     shift
   elif [ ! 4 -eq $# ]; then
     fail "Expected 4 or 5 parameters; Receieved $# parameters"
   fi
 
-  needle=$1
-  haystack=$2
-  expectation=$3
-  haystack_type=$4
+  local needle=$1
+  local haystack=$2
+  local expectation=$3
+  local haystack_type=$4
 
   case "${haystack_type}" in
     "file") grep -q -F -e "${needle}" ${haystack} ;;
