@@ -299,6 +299,11 @@ cache_directories() {
   if [ "$check" != -1 ]; then
     result=$(read_json "$package_json" "$key[]")
   fi
+  local key=".cacheDirectories"
+  local check=$(key_exist $package_json $key)
+  if [ "$check" != -1 ]; then
+    result=$(read_json "$package_json" "$key[]")
+  fi
   echo $result
 }
 
