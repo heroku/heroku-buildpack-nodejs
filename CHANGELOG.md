@@ -1,3 +1,7 @@
+## v74 (24/4/2015)
+
+- Update build failure messaging and help
+
 ## v73 (24/4/2015)
 
 - Patch for caching to disable cache restoration if node_modules already exists (eg from being git submoduled or checked into git)
