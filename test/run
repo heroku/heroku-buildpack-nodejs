@@ -201,7 +201,11 @@ testBuildWithUserCacheDirectoriesCamel() {
 }
 
 testModulesCheckedIn() {
-  compile "modules-checked-in"
+  cache=$(mktmpdir)
+  compile "modules-checked-in" $cache
+  assertCapturedSuccess
+
+  compile "modules-checked-in" $cache
   assertCaptured "node_modules source: prebuilt"
   assertCaptured "Rebuilding any native modules for this architecture"
   assertCaptured "(preinstall script)"

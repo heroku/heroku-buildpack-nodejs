@@ -164,7 +164,6 @@ install_npm() {
 }
 
 function build_dependencies() {
-  restore_cache
 
   if [ "$modules_source" == "" ]; then
     info "Skipping dependencies (no source for node_modules)"
@@ -176,6 +175,7 @@ function build_dependencies() {
     npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
 
   else
+    restore_cache
     info "Installing node modules"
     npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
   fi
