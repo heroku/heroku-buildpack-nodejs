@@ -9,6 +9,7 @@ build_failed() {
   info ""
   if [ "$warn" != "" ]; then
     info "During the build we spotted some likely problems:"
+    info ""
     echo "$warn" | indent
   else
     info "If you're stuck, please submit a ticket so we can help:"
