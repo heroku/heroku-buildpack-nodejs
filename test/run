@@ -113,7 +113,7 @@ testFailingBuild() {
 
 testWarningsOnFailure() {
   compile "many-warnings"
-  assertCaptured "We recommend fixing these issues"
+  assertCaptured "troubleshooting-node-deploys"
   assertCaptured "Node version not specified"
   assertCaptured "node_modules checked into source"
   assertCaptured "has several known issues"
@@ -123,7 +123,8 @@ testWarningsOnFailure() {
 
 testTicketOnFailure() {
   compile "invalid-dependency"
-  assertNotCaptured "We recommend fixing these issues"
+  assertCaptured "troubleshooting-node-deploys"
+  assertNotCaptured "During the build we spotted some likely problems"
   assertCaptured "please submit a ticket"
   assertCapturedError
 }

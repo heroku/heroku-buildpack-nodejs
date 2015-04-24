@@ -3,11 +3,11 @@ build_failed() {
   head "Build failed"
   echo ""
   info "We're sorry this build is failing!"
-  info "Are you running into common issues?"
+  info "Are you running into a common issue?"
   info "https://devcenter.heroku.com/articles/troubleshooting-node-deploys"
   info ""
   if [ "$warn" != "" ]; then
-    info "We recommend fixing these issues:"
+    info "During the build we spotted some likely problems:"
     echo $warn | indent
   else
     info "If you're stuck, please submit a ticket so we can help:"
