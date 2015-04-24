@@ -7,9 +7,12 @@
     "url" : "http://github.com/example/example.git"
   },
   "dependencies": {
-    "forcefailure": "*"
+    "thisdoesnotexist": "*"
   },
   "engines": {
-    "node": "*"
+    "npm": "~1.2"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }
