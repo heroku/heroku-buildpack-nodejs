@@ -12,6 +12,7 @@ set -x          # enable debugging
 build_dir=$1
 cache_dir=$2
 env_dir=$3
+subdir_dir=$4
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
 mkdir -p $heroku_dir/node
@@ -31,8 +32,14 @@ trap build_failed ERR
 ####### Determine current state
 
 head "Reading application state"
+old_pwd=$PWD
+if [[ ! -z $subdir_dir ]]; then
+    cd $subdir_dir
+fi
 read_current_state
 show_current_state
+
+cd $old_pwd
 
 if [ "$iojs_engine" == "" ]; then
   warn_node_engine "$node_engine"
