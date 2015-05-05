@@ -19,6 +19,11 @@ heroku_dir=$build_dir/.heroku
 mkdir -p $heroku_dir/node
 warnings=$(mktemp)
 
+echo "build_dir=$build_dir"
+echo "src_dir=$src_dir"
+echo "cache_dir=$cache_dir"
+echo "env_dir=$env_dir"
+
 # Load dependencies
 source $bp_dir/lib/common.sh
 source $bp_dir/lib/build.sh
@@ -59,7 +64,7 @@ install_npm
 ####### Build the project's dependencies
 
 head "Building dependencies"
-cd $build_dir
+cd $src_dir
 build_dependencies
 
 ####### Create a Procfile if possible
