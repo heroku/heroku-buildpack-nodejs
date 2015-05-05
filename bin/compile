@@ -9,11 +9,14 @@ set -o posix      # more strict failures in subshells
 set -x          # enable debugging
 
 # Configure directories
-build_dir=$PWD
-src_dir=$1
+build_dir=$1
 cache_dir=$2
 env_dir=$3
-subdir_dir=$4
+if [[ ! -z $4 ]]; then
+    src_dir=$4
+else
+    src_dir=$build_dir
+fi
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
 mkdir -p $heroku_dir/node
@@ -42,7 +45,7 @@ cd $src_dir
 read_current_state
 show_current_state
 
-cd $old_pwd
+cd $build_dir
 
 if [ "$iojs_engine" == "" ]; then
   warn_node_engine "$node_engine"
