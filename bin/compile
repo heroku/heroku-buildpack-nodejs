@@ -41,7 +41,7 @@ trap build_failed ERR
 ####### Determine current state
 
 head "Reading application state"
-cd $build_dir$sub_dir
+cd $build_dir/$sub_dir
 read_current_state
 show_current_state
 
