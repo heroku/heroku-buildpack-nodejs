@@ -13,9 +13,9 @@ build_dir=$1
 cache_dir=$2
 env_dir=$3
 if [[ ! -z $4 ]]; then
-    sub_dir=""
-else
     sub_dir=$4
+else
+    sub_dir=""
 fi
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
