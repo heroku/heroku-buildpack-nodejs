@@ -13,9 +13,9 @@ build_dir=$1
 cache_dir=$2
 env_dir=$3
 if [[ ! -z $4 ]]; then
-    src_dir=$4
+    sub_dir=$4
 else
-    src_dir=$build_dir
+    sub_dir=$build_dir
 fi
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
@@ -23,7 +23,7 @@ mkdir -p $heroku_dir/node
 warnings=$(mktemp)
 
 echo "build_dir=$build_dir"
-echo "src_dir=$src_dir"
+echo "sub_dir=$sub_dir"
 echo "cache_dir=$cache_dir"
 echo "env_dir=$env_dir"
 
@@ -41,7 +41,7 @@ trap build_failed ERR
 ####### Determine current state
 
 head "Reading application state"
-cd $src_dir
+cd $build_dir$sub_dir
 read_current_state
 show_current_state
 
@@ -67,7 +67,7 @@ install_npm
 ####### Build the project's dependencies
 
 head "Building dependencies"
-cd $src_dir
+cd $build_dir$sub_dir
 build_dependencies
 
 ####### Create a Procfile if possible
