@@ -13,10 +13,11 @@ build_dir=$1
 cache_dir=$2
 env_dir=$3
 if [[ ! -z $4 ]]; then
-    sub_dir=$4
+    sub_dir=/$4
 else
     sub_dir=""
 fi
+src_dir=$build_dir$sub_dir
 bp_dir=$(cd $(dirname $0); cd ..; pwd)
 heroku_dir=$build_dir/.heroku
 mkdir -p $heroku_dir/node
@@ -24,6 +25,7 @@ warnings=$(mktemp)
 
 echo "-----> build_dir=$build_dir"
 echo "-----> sub_dir=$sub_dir"
+echo "-----> src_dir=$src_dir"
 echo "-----> cache_dir=$cache_dir"
 echo "-----> env_dir=$env_dir"
 
@@ -41,7 +43,7 @@ trap build_failed ERR
 ####### Determine current state
 
 head "Reading application state"
-cd $build_dir/$sub_dir
+cd $src_dir
 read_current_state
 show_current_state
 
@@ -67,13 +69,13 @@ install_npm
 ####### Build the project's dependencies
 
 head "Building dependencies"
-cd $build_dir/$sub_dir
+cd $src_dir
 build_dependencies
 
 ####### Create a Procfile if possible
 
 head "Checking startup method"
-ensure_procfile "$start_method" "$build_dir"
+ensure_procfile "$start_method" "$src_dir"
 warn_start "$start_method"
 
 ####### Finalize the build
