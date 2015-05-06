@@ -337,7 +337,7 @@ install_gulp() {
   # Check and run gulp
   if [ -f $src_dir/gulpfile.js ]; then
     # Install gulp locally
-    echo "-----> Found gulpfile, installing heroku"
+    echo "-----> Found gulpfile, installing gulp"
     npm install gulp
   else
     echo "-----> No gulpfile found"
