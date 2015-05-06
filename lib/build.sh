@@ -182,7 +182,8 @@ function build_dependencies() {
   else
     info "Installing node modules"
     cd $src_dir
-    npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+    # npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+    npm install --unsafe-perm 2>&1 | indent
   fi
 }
 
