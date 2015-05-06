@@ -330,3 +330,24 @@ write_user_cache() {
     done
   fi
 }
+
+
+install_gulp() {
+  #https://github.com/appstack/heroku-buildpack-nodejs-gulp/blob/master/bin/compile
+  # Check and run gulp
+  (
+    if [ -f $src_dir/gulpfile.js ]; then
+      # get the env vars
+      if [ -d "$env_dir" ]; then
+        status "Exporting config vars to environment"
+        export_env_dir $env_dir
+      fi
+
+      # Install gulp locally
+      echo "-----> Found gulpfile, installing heroku"
+      npm install gulp
+    else
+      echo "-----> No gulpfile found"
+    fi
+  )
+}

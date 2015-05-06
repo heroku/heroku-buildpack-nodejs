@@ -71,6 +71,7 @@ install_npm
 head "Building dependencies"
 cd $src_dir
 build_dependencies
+install_gulp
 
 ####### Create a Procfile if possible
 
