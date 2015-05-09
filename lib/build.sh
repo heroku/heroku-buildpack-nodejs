@@ -241,7 +241,7 @@ create_cache() {
   echo `npm --version` > $cache_dir/node/npm-version
 
   if test -d $build_dir/node_modules; then
-    cp -r $build_dir/node_modules $cache_dir/node
+    cp -a $build_dir/node_modules $cache_dir/node
   fi
   write_user_cache
 }
@@ -284,7 +284,7 @@ restore_cache() {
           restore_npm_cache
         else
           info "- $directory"
-          cp -r $source_dir $build_dir/
+          cp -a $source_dir $build_dir/
         fi
       fi
     done
@@ -298,7 +298,7 @@ restore_cache() {
 
 restore_npm_cache() {
   info "Restoring node modules from cache"
-  cp -r $cache_dir/node/node_modules $build_dir/
+  cp -a $cache_dir/node/node_modules $build_dir/
   info "Pruning unused dependencies"
   npm --unsafe-perm prune 2>&1 | indent
 }
@@ -337,7 +337,7 @@ write_user_cache() {
     for directory in "${directories[@]}"
     do
       info "- $directory"
-      cp -r $build_dir/$directory $cache_dir/node/
+      cp -a $build_dir/$directory $cache_dir/node/
     done
   fi
 }
