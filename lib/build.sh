@@ -114,6 +114,8 @@ show_current_state() {
 
 install_node() {
   local node_engine=$1
+  local os=$(get_os)
+  local cpu=$(get_cpu)
 
   # Resolve non-specific node versions using semver.herokuapp.com
   if ! [[ "$node_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -123,17 +125,19 @@ install_node() {
 
   # Download node from Heroku's S3 mirror of nodejs.org/dist
   info "Downloading and installing node $node_engine..."
-  node_url="http://s3pository.heroku.com/node/v$node_engine/node-v$node_engine-linux-x64.tar.gz"
+  node_url="http://s3pository.heroku.com/node/v$node_engine/node-v$node_engine-$os-$cpu.tar.gz"
   curl $node_url -s -o - | tar xzf - -C /tmp
 
   # Move node (and npm) into .heroku/node and make them executable
-  mv /tmp/node-v$node_engine-linux-x64/* $heroku_dir/node
+  mv /tmp/node-v$node_engine-$os-$cpu/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
 }
 
 install_iojs() {
   local iojs_engine=$1
+  local os=$(get_os)
+  local cpu=$(get_cpu)
 
   # Resolve non-specific iojs versions using semver.herokuapp.com
   if ! [[ "$iojs_engine" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -143,11 +147,11 @@ install_iojs() {
 
   # TODO: point at /dist once that's available
   info "Downloading and installing iojs $iojs_engine..."
-  download_url="https://iojs.org/dist/v$iojs_engine/iojs-v$iojs_engine-linux-x64.tar.gz"
+  download_url="https://iojs.org/dist/v$iojs_engine/iojs-v$iojs_engine-$os-$cpu.tar.gz"
   curl $download_url -s -o - | tar xzf - -C /tmp
 
   # Move iojs/node (and npm) binaries into .heroku/node and make them executable
-  mv /tmp/iojs-v$iojs_engine-linux-x64/* $heroku_dir/node
+  mv /tmp/iojs-v$iojs_engine-$os-$cpu/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
 }
@@ -237,7 +241,7 @@ create_cache() {
   echo `npm --version` > $cache_dir/node/npm-version
 
   if test -d $build_dir/node_modules; then
-    cp -r $build_dir/node_modules $cache_dir/node
+    cp -a $build_dir/node_modules $cache_dir/node
   fi
   write_user_cache
 }
@@ -280,7 +284,7 @@ restore_cache() {
           restore_npm_cache
         else
           info "- $directory"
-          cp -r $source_dir $build_dir/
+          cp -a $source_dir $build_dir/
         fi
       fi
     done
@@ -294,7 +298,7 @@ restore_cache() {
 
 restore_npm_cache() {
   info "Restoring node modules from cache"
-  cp -r $cache_dir/node/node_modules $build_dir/
+  cp -a $cache_dir/node/node_modules $build_dir/
   info "Pruning unused dependencies"
   npm --unsafe-perm prune 2>&1 | indent
 }
@@ -305,12 +309,12 @@ cache_directories() {
   local check=$(key_exist $package_json $key)
   local result=-1
   if [ "$check" != -1 ]; then
-    result=$(read_json "$package_json" "$key[]")
+    result=$(read_json "$package_json" "$key")
   fi
   local key=".cacheDirectories"
   local check=$(key_exist $package_json $key)
   if [ "$check" != -1 ]; then
-    result=$(read_json "$package_json" "$key[]")
+    result=$(read_json "$package_json" "$key")
   fi
   echo $result
 }
@@ -333,7 +337,7 @@ write_user_cache() {
     for directory in "${directories[@]}"
     do
       info "- $directory"
-      cp -r $build_dir/$directory $cache_dir/node/
+      cp -a $build_dir/$directory $cache_dir/node/
     done
   fi
 }

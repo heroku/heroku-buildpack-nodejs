@@ -31,7 +31,7 @@ achievement() {
 assert_json() {
   local file=$1
   if test -f $file; then
-    if ! cat $file | $bp_dir/vendor/jq '.' > /dev/null; then
+    if ! "$bp_dir/vendor/JSON.sh" < "$file" > /dev/null; then
       error "Unable to parse $file as JSON"
     fi
   fi
@@ -47,11 +47,19 @@ file_contents() {
 
 read_json() {
   local file=$1
-  local node=$2
+  local node=$(echo $2 | \
+    sed -e 's/^\.*/\\["/' -e 's/$/"\\]/' -e 's/\./","/g' )
   if test -f $file; then
-    cat $file | $bp_dir/vendor/jq --raw-output "$node // \"\"" || return 1
-  else
-    echo ""
+    local value=$("$bp_dir/vendor/JSON.sh" -p < "$file" | \
+      egrep "$node" | \
+      cut -d $'\t' -f 2 || true)
+    if echo "$value" | egrep '^\[.*\]$' > /dev/null; then
+      value=$(echo "$value" | \
+        "$bp_dir/vendor/JSON.sh" -b | \
+        cut -d $'\t' -f 2 || true)
+
+    fi
+    echo "$value" | sed -e 's/^"//' -e 's/"$//'
   fi
 }
 
@@ -82,5 +90,17 @@ export_env_dir() {
         :
       done
     fi
+  fi
+}
+
+get_os() {
+  uname | tr A-Z a-z
+}
+
+get_cpu() {
+  if [[ "$(uname -p)" = "i686" ]]; then
+    echo "x86"
+  else
+    echo "x64"
   fi
 }

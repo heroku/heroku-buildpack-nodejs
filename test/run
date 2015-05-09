@@ -173,8 +173,8 @@ testNodeModulesCached() {
   cache=$(mktmpdir)
   compile "caching" $cache
   assertCaptured "Caching results for future builds"
-  assertEquals "1" "$(ls -1 $cache/ | grep node | wc -l)"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/ | grep node | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
 }
 
 testBuildWithCache() {
@@ -194,8 +194,8 @@ testBuildWithUserCacheDirectories() {
   cache=$(mktmpdir)
   compile "cache-directories" $cache
   assertCapturedSuccess
-  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l)"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
 
   compile "cache-directories" $cache
   assertCaptured "Restoring 2 directories from cache:"
@@ -208,8 +208,8 @@ testBuildWithUserCacheDirectoriesCamel() {
   cache=$(mktmpdir)
   compile "cache-directories-camel" $cache
   assertCapturedSuccess
-  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l)"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l)"
+  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
 
   compile "cache-directories" $cache
   assertCaptured "Restoring 2 directories from cache:"
@@ -466,7 +466,7 @@ compile_dir=""
 
 compile() {
   compile_dir=$(mktmpdir)
-  cp -r ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+  cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
