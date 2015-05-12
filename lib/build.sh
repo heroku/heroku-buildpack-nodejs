@@ -27,12 +27,12 @@ build_succeeded() {
 }
 
 get_start_method() {
-  local build_dir=$1
-  if test -f $build_dir/Procfile; then
+  local src_dir=$1
+  if test -f $src_dir/Procfile; then
     echo "Procfile"
-  elif [[ $(read_json "$build_dir/package.json" ".scripts.start") != "" ]]; then
+  elif [[ $(read_json "$src_dir/package.json" ".scripts.start") != "" ]]; then
     echo "npm start"
-  elif test -f $build_dir/server.js; then
+  elif test -f $src_dir/server.js; then
     echo "server.js"
   else
     echo ""
@@ -40,12 +40,12 @@ get_start_method() {
 }
 
 get_modules_source() {
-  local build_dir=$1
-  if test -d $build_dir/node_modules; then
+  local src_dir=$1
+  if test -d $src_dir/node_modules; then
     echo "prebuilt"
-  elif test -f $build_dir/npm-shrinkwrap.json; then
+  elif test -f $src_dir/npm-shrinkwrap.json; then
     echo "npm-shrinkwrap.json"
-  elif test -f $build_dir/package.json; then
+  elif test -f $src_dir/package.json; then
     echo "package.json"
   else
     echo ""
@@ -74,14 +74,14 @@ get_modules_cached() {
 
 read_current_state() {
   info "package.json..."
-  assert_json "$build_dir/package.json"
-  iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
-  node_engine=$(read_json "$build_dir/package.json" ".engines.node")
-  npm_engine=$(read_json "$build_dir/package.json" ".engines.npm")
+  assert_json "$src_dir/package.json"
+  iojs_engine=$(read_json "$src_dir/package.json" ".engines.iojs")
+  node_engine=$(read_json "$src_dir/package.json" ".engines.node")
+  npm_engine=$(read_json "$src_dir/package.json" ".engines.npm")
 
   info "build directory..."
-  start_method=$(get_start_method "$build_dir")
-  modules_source=$(get_modules_source "$build_dir")
+  start_method=$(get_start_method "$src_dir")
+  modules_source=$(get_modules_source "$src_dir")
 
   info "cache directory..."
   npm_previous=$(file_contents "$cache_dir/node/npm-version")
@@ -127,6 +127,9 @@ install_node() {
   curl $node_url -s -o - | tar xzf - -C /tmp
 
   # Move node (and npm) into .heroku/node and make them executable
+  echo "remove $heroku_dir/node"
+  rm -rfv $heroku_dir/node
+  mkdir -p $heroku_dir/node
   mv /tmp/node-v$node_engine-linux-x64/* $heroku_dir/node
   chmod +x $heroku_dir/node/bin/*
   PATH=$heroku_dir/node/bin:$PATH
@@ -180,28 +183,31 @@ function build_dependencies() {
     info "Rebuilding any native modules for this architecture"
     npm rebuild 2>&1 | indent
     info "Installing any new modules"
+    cd $src_dir
     npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
 
   else
     restore_cache
     info "Installing node modules"
-    npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+    cd $src_dir
+    # npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc 2>&1 | indent
+    npm install --quiet 2>&1 | indent
   fi
 }
 
 ensure_procfile() {
   local start_method=$1
-  local build_dir=$2
+  local src_dir=$2
   if [ "$start_method" == "Procfile" ]; then
     info "Found Procfile"
-  elif test -f $build_dir/Procfile; then
+  elif test -f $src_dir/Procfile; then
     info "Procfile created during build"
   elif [ "$start_method" == "npm start" ]; then
     info "No Procfile; Adding 'web: npm start' to new Procfile"
-    echo "web: npm start" > $build_dir/Procfile
+    echo "web: npm start" > $src_dir/Procfile
   elif [ "$start_method" == "server.js" ]; then
     info "No Procfile; Adding 'web: node server.js' to new Procfile"
-    echo "web: node server.js" > $build_dir/Procfile
+    echo "web: node server.js" > $src_dir/Procfile
   else
     info "None found"
   fi
@@ -236,8 +242,8 @@ create_cache() {
   echo `node --version` > $cache_dir/node/node-version
   echo `npm --version` > $cache_dir/node/npm-version
 
-  if test -d $build_dir/node_modules; then
-    cp -r $build_dir/node_modules $cache_dir/node
+  if test -d $src_dir/node_modules; then
+    cp -r $src_dir/node_modules $cache_dir/node
   fi
   write_user_cache
 }
@@ -294,13 +300,13 @@ restore_cache() {
 
 restore_npm_cache() {
   info "Restoring node modules from cache"
-  cp -r $cache_dir/node/node_modules $build_dir/
+  cp -r $cache_dir/node/node_modules $src_dir/
   info "Pruning unused dependencies"
   npm --unsafe-perm prune 2>&1 | indent
 }
 
 cache_directories() {
-  local package_json="$build_dir/package.json"
+  local package_json="$src_dir/package.json"
   local key=".cache_directories"
   local check=$(key_exist $package_json $key)
   local result=-1
@@ -335,5 +341,18 @@ write_user_cache() {
       info "- $directory"
       cp -r $build_dir/$directory $cache_dir/node/
     done
+  fi
+}
+
+
+install_gulp() {
+  #https://github.com/appstack/heroku-buildpack-nodejs-gulp/blob/master/bin/compile
+  # Check and run gulp
+  if [ -f $src_dir/gulpfile.js ]; then
+    # Install gulp locally
+    echo "-----> Found gulpfile, installing gulp"
+    npm install gulp  --quiet
+  else
+    echo "-----> No gulpfile found"
   fi
 }
