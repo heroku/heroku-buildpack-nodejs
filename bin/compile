@@ -73,7 +73,7 @@ cd $build_dir
   if test -d $build_dir/node_modules; then
     status "Found existing node_modules directory; skipping cache"
     status "Rebuilding any native dependencies"
-    npm rebuild 2>&1 | indent
+    npm rebuild --build-from-source 2>&1 | indent
   elif test -d $cache_dir/node/node_modules; then
     status "Restoring node_modules directory from cache"
     cp -r $cache_dir/node/node_modules $build_dir/
@@ -83,7 +83,7 @@ cd $build_dir
   
     if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
       status "Node version changed since last build; rebuilding dependencies"
-      npm rebuild 2>&1 | indent
+      npm rebuild --build-from-source 2>&1 | indent
     fi
   
   fi
