@@ -244,15 +244,20 @@ testUserConfig() {
 testProcfile() {
   compile "procfile-present-only"
   assertCaptured "Start mechanism:     Procfile"
-  assertNotCaptured "new Procfile"
+  assertNotCaptured "Adding default process type"
+  assertCapturedSuccess
+  release "procfile-present-only"
+  assertCaptured "default_process_types: {}"
   assertCapturedSuccess
 }
 
 testProcfileAbsentNpmStartPresent() {
   compile "procfile-absent-npm-start-present"
   assertCaptured "Start mechanism:     npm start"
-  assertCaptured "Adding 'web: npm start' to new Procfile"
-  assertFile "web: npm start" "Procfile"
+  assertCaptured "Adding default process type 'web: npm start'"
+  assertCapturedSuccess
+  release "procfile-absent-npm-start-present"
+  assertCaptured "web: npm start"
   assertCapturedSuccess
 }
 
@@ -262,6 +267,9 @@ testProcfileAbsentNpmStartAbsent() {
   assertCaptured "None found"
   assertNotCaptured "new Procfile"
   assertCapturedSuccess
+  release "procfile-absent-npm-start-absent"
+  assertCaptured "default_process_types: {}"
+  assertCapturedSuccess
 }
 
 testDynamicProcfile() {
@@ -269,21 +277,28 @@ testDynamicProcfile() {
   assertCaptured "Procfile created during build"
   assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"
   assertCapturedSuccess
+  release "dynamic-procfile"
+  assertCaptured "default_process_types: {}"
+  assertCapturedSuccess
 }
 
 testProcfileAbsentServerPresent() {
   compile "procfile-absent-server-present"
   assertCaptured "Start mechanism:     server.js"
-  assertCaptured "'web: node server.js' to new Procfile"
-  assertFile "web: node server.js" "Procfile"
+  assertCaptured "Adding default process type 'web: node server.js'"
+  assertCapturedSuccess
+  release "procfile-absent-server-present"
+  assertCaptured "web: node server.js"
   assertCapturedSuccess
 }
 
 testServerPresentOnly() {
   compile "server-present-only"
   assertCaptured "Skipping dependencies"
-  assertCaptured "'web: node server.js' to new Procfile"
-  assertFile "web: node server.js" "Procfile"
+  assertCaptured "Adding default process type 'web: node server.js'"
+  assertCapturedSuccess
+  release "server-present-only"
+  assertCaptured "web: node server.js"
   assertCapturedSuccess
 }
 
@@ -464,10 +479,22 @@ detect() {
 
 compile_dir=""
 
+default_process_types_cleanup() {
+  file="/tmp/default_process_types"
+  if [ -f "$file" ]; then
+    rm "$file"
+  fi
+}
+
 compile() {
+  default_process_types_cleanup
   compile_dir=$(mktmpdir)
   cp -r ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+release() {
+  capture ${bp_dir}/bin/release ${bp_dir}/test/fixtures/$1
 }
 
 assertFile() {
