@@ -198,10 +198,10 @@ ensure_procfile() {
     info "Procfile created during build"
   elif [ "$start_method" == "npm start" ]; then
     info "No Procfile; Adding default process type 'web: npm start'"
-    echo "web: npm start" > $bp_dir/default_process_types
+    echo "web: npm start" > /tmp/default_process_types
   elif [ "$start_method" == "server.js" ]; then
     info "No Procfile; Adding default process type 'web: node server.js'"
-    echo "web: node server.js" > $bp_dir/default_process_types
+    echo "web: node server.js" > /tmp/default_process_types
   else
     info "None found"
   fi

@@ -480,7 +480,7 @@ detect() {
 compile_dir=""
 
 default_process_types_cleanup() {
-  file="${bp_dir}/default_process_types"
+  file="/tmp/default_process_types"
   if [ -f "$file" ]; then
     rm "$file"
   fi
