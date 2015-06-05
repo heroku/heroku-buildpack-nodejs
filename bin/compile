@@ -1,74 +1,146 @@
 #!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
 
-####### Configure environment
+### Configure environment
 
 set -o errexit    # always exit on error
-set -o errtrace   # trap errors in functions as well
 set -o pipefail   # don't ignore exit codes when piping output
-set -o posix      # more strict failures in subshells
-# set -x          # enable debugging
+set -o nounset    # fail on unset variables
+unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
-# Configure directories
-build_dir=$1
-cache_dir=$2
-env_dir=$3
-bp_dir=$(cd $(dirname $0); cd ..; pwd)
-heroku_dir=$build_dir/.heroku
-mkdir -p $heroku_dir/node
-warnings=$(mktemp)
+### Configure directories
 
-# Load dependencies
-source $bp_dir/lib/common.sh
-source $bp_dir/lib/build.sh
-source $bp_dir/lib/warnings.sh
+BUILD_DIR=${1:-}
+CACHE_DIR=${2:-}
+ENV_DIR=${3:-}
+BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
-# Avoid GIT_DIR leak from previous build steps
-unset GIT_DIR
+mkdir -p "$BUILD_DIR/.heroku/node/"
+cd $BUILD_DIR
+export PATH="$BUILD_DIR/.heroku/node/bin":$PATH
 
-# Provide hook to deal with errors
-trap build_failed ERR
+### Load dependencies
 
-####### Determine current state
+source $BP_DIR/lib/output.sh
+source $BP_DIR/lib/json.sh
+source $BP_DIR/lib/failure.sh
+source $BP_DIR/lib/environment.sh
+source $BP_DIR/lib/binaries.sh
+source $BP_DIR/lib/cache.sh
+source $BP_DIR/lib/dependencies.sh
 
-head "Reading application state"
-read_current_state
-show_current_state
+### Handle errors
 
-if [ "$iojs_engine" == "" ]; then
-  warn_node_engine "$node_engine"
-else
-  warn_node_engine "$iojs_engine"
-fi
-warn_node_modules "$modules_source"
+handle_failure() {
+  header "Build failed"
+  failure_message | indent
+}
+trap 'handle_failure' ERR
 
-####### Vendor in binaries
+### Check initial state
 
-head "Installing binaries"
-if [ "$iojs_engine" == "" ]; then
-  install_node "$node_engine"
-else
-  install_iojs "$iojs_engine"
-fi
-install_npm
+[ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 
-####### Build the project's dependencies
+### Failures that should be caught immediately
 
-head "Building dependencies"
-cd $build_dir
-build_dependencies
+fail_invalid_package_json "$BUILD_DIR"
+warn_prebuilt_modules "$BUILD_DIR"
+warn_missing_package_json "$BUILD_DIR"
 
-####### Create a Procfile if possible
+### Compile
 
-head "Checking startup method"
-ensure_procfile "$start_method" "$build_dir"
-warn_start "$start_method"
+create_env() {
+  write_profile "$BP_DIR" "$BUILD_DIR"
+  write_export "$BP_DIR" "$BUILD_DIR"
+  export_env_dir "$ENV_DIR"
+  create_default_env
+}
 
-####### Finalize the build
+header "Creating runtime environment"
+create_env # can't indent the whole thing because piping causes subshells; no exporting possible
+list_node_config | indent
 
-head "Finalizing build"
-write_profile
-write_export
-clean_npm
-clean_cache
-create_cache
-build_succeeded
+install_bins() {
+  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
+  local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+
+  if [ -n "$iojs_engine" ]; then
+    echo "engines.iojs (package.json):  $iojs_engine (iojs)"
+  else
+    echo "engines.node (package.json):  ${node_engine:-unspecified}"
+  fi
+  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  echo ""
+
+  if [ -n "$iojs_engine" ]; then
+    warn_node_engine "$iojs_engine"
+    install_iojs "$iojs_engine" "$BUILD_DIR/.heroku/node"
+  else
+    warn_node_engine "$node_engine"
+    install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
+  fi
+  install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
+  warn_old_npm
+}
+
+header "Installing binaries"
+install_bins | indent
+
+restore_cache() {
+  local cache_status=$(get_cache_status)
+
+  if [ "$cache_status" == "disabled" ]; then
+    echo "Skipping (cache disabled)"
+  elif [ "$cache_status" == "invalidated" ]; then
+    echo "Skipping (cache invalidated)"
+  else
+    local cache_directories=$(get_cache_directories)
+    if [ "$cache_directories" == "" ]; then
+      echo "Loading 1 from cacheDirectories (default):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+    else
+      echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    fi
+  fi
+}
+
+header "Restoring cache"
+restore_cache | indent
+
+build_dependencies() {
+  if $PREBUILD; then
+    echo "Prebuild detected (node_modules already exists)"
+    rebuild_node_modules "$BUILD_DIR"
+  else
+    install_node_modules "$BUILD_DIR"
+  fi
+}
+
+header "Building dependencies"
+build_dependencies | indent
+
+cache_build() {
+  local cache_directories=$(get_cache_directories)
+  echo "Clearing previous node cache"
+  clear_cache
+  if [ "$cache_directories" == "" ]; then
+    echo "Saving 1 cacheDirectories (default):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+  else
+    echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+  fi
+}
+
+header "Caching build"
+cache_build | indent
+
+summarize_build() {
+  cd $BUILD_DIR
+  (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null
+}
+
+header "Build succeeded!"
+summarize_build | indent
