@@ -55,8 +55,8 @@ restore_cache_directories() {
     else
       if [ -e "$cache_dir/node/$cachepath" ]; then
         echo "- $cachepath"
-        mkdir -p "$build_dir/$cachepath"
-        cp -a "$cache_dir/node/$cachepath" $(dirname "$build_dir/$cachepath")
+        mkdir -p $(dirname "$build_dir/$cachepath")
+        mv "$cache_dir/node/$cachepath" "$build_dir/$cachepath"
       else
         echo "- $cachepath (not cached - skipping)"
       fi
@@ -72,12 +72,11 @@ save_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
 
-  mkdir -p $cache_dir/node
   for cachepath in ${@:3}; do
     if [ -e "$build_dir/$cachepath" ]; then
       echo "- $cachepath"
-      mkdir -p "$cache_dir/node/$cachepath"
-      cp -a "$build_dir/$cachepath" $(dirname "$cache_dir/node/$cachepath")
+      mkdir -p $(dirname "$cache_dir/node/$cachepath")
+      ln -s "$build_dir/$cachepath" "$cache_dir/node/$cachepath"
     else
       echo "- $cachepath (nothing to cache)"
     fi
