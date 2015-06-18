@@ -1,4 +1,11 @@
-## v74 (24/4/2015)
+## master
+
+- Fix caching issues
+- Use bin/release instead of generated Procfile
+- Support OSX
+- Simplify detect (package.json required)
+
+## v74 / v75 (24/4/2015)
 
 - Update build failure messaging and help
 

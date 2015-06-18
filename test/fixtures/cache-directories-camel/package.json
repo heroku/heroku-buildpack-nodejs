@@ -7,13 +7,11 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "0.10.18"
+    "node": "0.12.4"
   },
-  "dependencies": {
-    "bower": "1.3.12"
-  },
+  "dependencies": {},
   "scripts": {
-    "postinstall": "bower install --allow-root"
+    "postinstall": "npm install --prefix=server && npm install --prefix=client"
   },
-  "cacheDirectories": ["bower_components", "node_modules"]
+  "cacheDirectories": ["server/node_modules", "client/node_modules", "non/existent"]
 }
