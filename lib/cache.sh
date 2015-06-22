@@ -75,8 +75,8 @@ save_cache_directories() {
   for cachepath in ${@:3}; do
     if [ -e "$build_dir/$cachepath" ]; then
       echo "- $cachepath"
-      mkdir -p $(dirname "$cache_dir/node/$cachepath")
-      ln -s "$build_dir/$cachepath" "$cache_dir/node/$cachepath"
+      mkdir -p "$cache_dir/node/$cachepath"
+      cp -a "$build_dir/$cachepath" $(dirname "$cache_dir/node/$cachepath")
     else
       echo "- $cachepath (nothing to cache)"
     fi
