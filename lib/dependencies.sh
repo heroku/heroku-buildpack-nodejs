@@ -21,8 +21,6 @@ rebuild_node_modules() {
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
-    echo "Pruning any extraneous modules"
-    npm prune --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
     echo "Rebuilding any native modules"
     npm rebuild 2>&1
     if [ -e $build_dir/npm-shrinkwrap.json ]; then
