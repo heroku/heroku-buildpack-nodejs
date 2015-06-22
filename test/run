@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testModulesCheckedIn() {
+  cache=$(mktmpdir)
+  compile "modules-checked-in" $cache
+  assertCapturedSuccess
+
+  compile "modules-checked-in" $cache
+  assertCaptured "Prebuild detected"
+  assertCaptured "Rebuilding any native modules"
+  assertCaptured "(preinstall script)"
+  assertCaptured "Installing any new modules"
+  assertCaptured "(postinstall script)"
+  assertNotCaptured "Pruning any extraneous modules"
+  assertCapturedSuccess
+}
+
 testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
@@ -232,20 +247,6 @@ testBuildWithUserCacheDirectoriesCamel() {
   assertCaptured "- server/node_modules"
   assertCaptured "- client/node_modules"
   assertCaptured "- non/existent (not cached - skipping)"
-  assertCapturedSuccess
-}
-
-testModulesCheckedIn() {
-  cache=$(mktmpdir)
-  compile "modules-checked-in" $cache
-  assertCapturedSuccess
-
-  compile "modules-checked-in" $cache
-  assertCaptured "Prebuild detected"
-  assertCaptured "Rebuilding any native modules"
-  assertCaptured "(preinstall script)"
-  assertCaptured "Installing any new modules"
-  assertCaptured "(postinstall script)"
   assertCapturedSuccess
 }
 
