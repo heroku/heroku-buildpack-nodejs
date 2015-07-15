@@ -58,6 +58,7 @@ testIoJs() {
   compile "iojs"
   assertCaptured "engines.iojs (package.json):  1.0."
   assertCaptured "Downloading and installing iojs 1.0."
+  assertNotCaptured "Downloading and installing npm"
   assertCapturedSuccess
 }
 
