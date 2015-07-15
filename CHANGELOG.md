@@ -1,3 +1,7 @@
+## v77
+
+- Skip npm bootstrapping with iojs
+
 ## v76
 
 - Fix caching issues
