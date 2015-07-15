@@ -10,7 +10,8 @@
     "hashish": "*"
   },
   "engines": {
-    "iojs": "1.0.x"
+    "iojs": "1.0.x",
+    "npm": "2.11.x"
   },
   "scripts": {
     "postinstall": "echo \"detected node version:\" `node --version`"
