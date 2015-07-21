@@ -1,22 +1,34 @@
-## v77
+# Node.js Buildpack Changelog
 
-- Skip npm bootstrapping with iojs
+## v77 (2015-07-15)
 
-## v76
+Npm bootstrapping skipped when using iojs.
 
-- Fix caching issues
-- Use bin/release instead of generated Procfile
-- Support OSX
-- Simplify detect (package.json required)
+- Fixes https://github.com/heroku/heroku-buildpack-nodejs/issues/202
 
-## v74 / v75 (24/4/2015)
+## v76 (2015-06-23)
 
-- Update build failure messaging and help
+Refactor to bring caching logic to the forefront.
 
-## v73 (24/4/2015)
+- Fixes cachDirectories issues
+- Addresses https://github.com/heroku/heroku-buildpack-nodejs/pull/231
+- Addresses https://github.com/heroku/heroku-buildpack-nodejs/issues/226
+- Simplifies detect (package.json required)
 
-- Patch for caching to disable cache restoration if node_modules already exists (eg from being git submoduled or checked into git)
+## v75 (2015-04-24)
 
-## v72 (23/4/2015)
+Updated build failure and help messaging.
 
-* Accepts `cacheDirectories` array in package.json to override default `node_modules` caching
+## v74 (2015-04-24)
+
+Updated messaging.
+
+## v73 (2015-04-24)
+
+Disables cache restoration if node_modules already exists.
+
+## v72 (2015-04-23)
+
+Accepts `cacheDirectories` array in package.json to override default `node_modules` caching.
+
+- Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
