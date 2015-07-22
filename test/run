@@ -1,6 +1,38 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testBuildWithCache() {
+  cache=$(mktmpdir)
+
+  compile "stable-node" $cache
+  assertCaptured "Skipping cache (new runtime"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "stable-node" $cache
+  assertNotCaptured "- node_modules (not cached - skipping)"
+  assertCapturedSuccess
+
+  rm -rf "$cache/node/node_modules"
+  compile "stable-node" $cache
+  assertCaptured "- node_modules (not cached - skipping)"
+  assertCapturedSuccess
+}
+
+testSignatureInvalidation() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "node-0.12.6" $cache
+  assertCaptured "Downloading and installing node 0.12.6"
+  assertCapturedSuccess
+
+  compile "node-0.12.7" $cache
+  assertCaptured "Downloading and installing node 0.12.7"
+  assertCaptured "Skipping cache (new runtime"
+  assertCapturedSuccess
+}
+
 testModulesCheckedIn() {
   cache=$(mktmpdir)
   compile "modules-checked-in" $cache
@@ -202,19 +234,6 @@ testNodeModulesCached() {
   assertCaptured "Saving 1 cacheDirectories (default)"
   assertCaptured "- node_modules"
   assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
-}
-
-testBuildWithCache() {
-  cache=$(mktmpdir)
-
-  compile "stable-node" $cache
-  assertCaptured "- node_modules (not cached - skipping)"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
-
-  compile "stable-node" $cache
-  assertNotCaptured "- node_modules (not cached - skipping)"
   assertCapturedSuccess
 }
 

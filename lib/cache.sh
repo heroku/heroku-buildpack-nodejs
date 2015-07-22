@@ -5,7 +5,7 @@ create_signature() {
 }
 
 save_signature() {
-  echo "$(get_signature)" > $CACHE_DIR/node/signature
+  echo "$(create_signature)" > $CACHE_DIR/node/signature
 }
 
 load_signature() {
@@ -16,19 +16,11 @@ load_signature() {
   fi
 }
 
-signature_changed() {
-  if ! [ "$(create_signature)" == "$(load_signature)" ]; then
-    return 1
-  else
-    return 0
-  fi
-}
-
 get_cache_status() {
   if ! ${NODE_MODULES_CACHE:-true}; then
-    echo "disabled"
-  elif signature_changed; then
-    echo "invalidated"
+    echo "disabled by config"
+  elif [ "$(create_signature)" != "$(load_signature)" ]; then
+    echo "new runtime signature"
   else
     echo "valid"
   fi
@@ -66,6 +58,7 @@ restore_cache_directories() {
 
 clear_cache() {
   rm -rf $CACHE_DIR/node
+  mkdir -p $CACHE_DIR/node
 }
 
 save_cache_directories() {

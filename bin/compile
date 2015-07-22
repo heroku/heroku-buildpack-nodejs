@@ -89,13 +89,9 @@ header "Installing binaries"
 install_bins | indent
 
 restore_cache() {
-  local cache_status=$(get_cache_status)
+  local cache_status="$(get_cache_status)"
 
-  if [ "$cache_status" == "disabled" ]; then
-    echo "Skipping (cache disabled)"
-  elif [ "$cache_status" == "invalidated" ]; then
-    echo "Skipping (cache invalidated)"
-  else
+  if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
       echo "Loading 1 from cacheDirectories (default):"
@@ -104,6 +100,8 @@ restore_cache() {
       echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
       restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
     fi
+  else
+    echo "Skipping cache ($cache_status)"
   fi
 }
 
@@ -124,6 +122,7 @@ build_dependencies | indent
 
 cache_build() {
   local cache_directories=$(get_cache_directories)
+  
   echo "Clearing previous node cache"
   clear_cache
   if [ "$cache_directories" == "" ]; then
@@ -133,6 +132,7 @@ cache_build() {
     echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
   fi
+  save_signature
 }
 
 header "Caching build"

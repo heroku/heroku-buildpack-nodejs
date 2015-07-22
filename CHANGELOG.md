@@ -1,3 +1,7 @@
+## Upcoming
+
+- Fix runtime signature cache invalidation
+
 ## v77
 
 - Skip npm bootstrapping with iojs
@@ -15,8 +19,8 @@
 
 ## v73 (24/4/2015)
 
-- Patch for caching to disable cache restoration if node_modules already exists (eg from being git submoduled or checked into git)
+- Disable cache restoration if node_modules already exists (eg from being git submoduled or checked into git)
 
 ## v72 (23/4/2015)
 
-* Accepts `cacheDirectories` array in package.json to override default `node_modules` caching
+* Accept `cacheDirectories` array in package.json to override default `node_modules` caching
