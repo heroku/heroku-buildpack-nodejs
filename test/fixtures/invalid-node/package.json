@@ -6,7 +6,9 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
+  "dependencies": {
+  },
   "engines": {
-    "node": ">2.0"
+    "node": "0.11.33"
   }
 }

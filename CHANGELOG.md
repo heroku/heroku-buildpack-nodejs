@@ -1,6 +1,7 @@
 ## Upcoming
 
 - Fix runtime signature cache invalidation
+- Provide error messaging for un-downloadable binaries
 
 ## v77
 
