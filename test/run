@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testInvalidNode() {
+  compile "invalid-node"
+  assertCaptured "Downloading and installing node 0.11.33"
+  assertCaptured "Unable to download node 0.11.33"
+  assertCapturedError
+}
+
+testInvalidIo() {
+  compile "invalid-io"
+  assertCaptured "Downloading and installing iojs 2.0.99"
+  assertCaptured "Unable to download iojs 2.0.99"
+  assertCapturedError
+}
+
 testBuildWithCache() {
   cache=$(mktmpdir)
 
