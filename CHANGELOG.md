@@ -2,6 +2,7 @@
 
 - Fix runtime signature cache invalidation
 - Provide error messaging for un-downloadable binaries
+- Default to NODE_ENV=production for both build and runtime
 
 ## v77
 
