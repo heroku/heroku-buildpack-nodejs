@@ -406,29 +406,25 @@ testMultiExport() {
 
 testConcurrency1X() {
   MEMORY_AVAILABLE=512 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertEquals "$WEB_CONCURRENCY" "1"
   assertCapturedSuccess
 }
 
 testConcurrency2X() {
   MEMORY_AVAILABLE=1024 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=2"
+  assertEquals "$WEB_CONCURRENCY" "2"
   assertCapturedSuccess
 }
 
 testConcurrencyPX() {
   MEMORY_AVAILABLE=6144 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 6144 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=12"
+  assertEquals "$WEB_CONCURRENCY" "12"
   assertCapturedSuccess
 }
 
 testConcurrencyCustomLimit() {
   MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=4"
+  assertEquals "$WEB_CONCURRENCY" "4"
   assertCapturedSuccess
 }
 
