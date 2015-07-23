@@ -1,28 +1,43 @@
+# Node.js Buildpack Changelog
+
 ## Upcoming
+
+Defaults node environment to 'production'; bugfixes
 
 - Fix runtime signature cache invalidation
 - Provide error messaging for un-downloadable binaries
 - Default to NODE_ENV=production for both build and runtime
+- https://github.com/heroku/heroku-buildpack-nodejs/issues/60
 
-## v77
+## v77 (2015-07-15)
 
-- Skip npm bootstrapping with iojs
+Npm bootstrapping skipped when using iojs.
 
-## v76
+- Fixes https://github.com/heroku/heroku-buildpack-nodejs/issues/202
 
-- Fix caching issues
-- Use bin/release instead of generated Procfile
-- Support OSX
-- Simplify detect (package.json required)
+## v76 (2015-06-23)
 
-## v74 / v75 (24/4/2015)
+Refactor to bring caching logic to the forefront.
 
-- Update build failure messaging and help
+- Fixes cachDirectories issues
+- Addresses https://github.com/heroku/heroku-buildpack-nodejs/pull/231
+- Addresses https://github.com/heroku/heroku-buildpack-nodejs/issues/226
+- Simplifies detect (package.json required)
 
-## v73 (24/4/2015)
+## v75 (2015-04-24)
 
-- Disable cache restoration if node_modules already exists (eg from being git submoduled or checked into git)
+Updated build failure and help messaging.
 
-## v72 (23/4/2015)
+## v74 (2015-04-24)
 
-* Accept `cacheDirectories` array in package.json to override default `node_modules` caching
+Updated messaging.
+
+## v73 (2015-04-24)
+
+Disables cache restoration if node_modules already exists.
+
+## v72 (2015-04-23)
+
+Accepts `cacheDirectories` array in package.json to override default `node_modules` caching.
+
+- Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
