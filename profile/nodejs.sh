@@ -10,6 +10,11 @@ calculate_concurrency() {
   WEB_CONCURRENCY=$WEB_CONCURRENCY
 }
 
+log_concurrency() {
+  echo "Detected $MEMORY_AVAILABLE MB available memory, $WEB_MEMORY MB limit per process (WEB_MEMORY)"
+  echo "Recommending WEB_CONCURRENCY=$WEB_CONCURRENCY"
+}
+
 detect_memory() {
   local default=$1
   local limit=$(ulimit -u)
@@ -24,10 +29,13 @@ detect_memory() {
 
 export PATH="$HOME/.heroku/node/bin:$HOME/bin:$HOME/node_modules/.bin:$PATH"
 export NODE_HOME="$HOME/.heroku/node"
-export NODE_ENV=${NODE_ENV:-production}
 
 calculate_concurrency
 
 export MEMORY_AVAILABLE=$MEMORY_AVAILABLE
 export WEB_MEMORY=$WEB_MEMORY
 export WEB_CONCURRENCY=$WEB_CONCURRENCY
+
+if [ "$LOG_CONCURRENCY" = "true" ]; then
+  log_concurrency
+fi
