@@ -1,6 +1,7 @@
 # Heroku Buildpack for Node.js
 
-![buildpack_banner_node](https://cloud.githubusercontent.com/assets/51578/8779657/68fc46ee-2ed2-11e5-9d49-0bc17e7ba185.jpg)
+![nodesjs](https://cloud.githubusercontent.com/assets/51578/8882955/3f0c3980-3219-11e5-8666-bc9c926a7356.jpg)
+
 
 This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps. If you fork this repository, please **update this README** to explain what your fork does and why it's special.
 
