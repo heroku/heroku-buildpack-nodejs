@@ -1,6 +1,41 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testConcurrency1X() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture $(pwd)/profile/nodejs.sh
+  assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
+testConcurrency2X() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture $(pwd)/profile/nodejs.sh
+  assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=2"
+  assertCapturedSuccess
+}
+
+testConcurrencyPX() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=6144 capture $(pwd)/profile/nodejs.sh
+  assertCaptured "Detected 6144 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=12"
+  assertCapturedSuccess
+}
+
+testConcurrencyCustomLimit() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/nodejs.sh
+  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=4"
+  assertCapturedSuccess
+}
+
+testConcurrencySaneMaximum() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=6144 WEB_MEMORY=32 capture $(pwd)/profile/nodejs.sh
+  assertCaptured "Detected 6144 MB available memory, 32 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=32"
+  assertCapturedSuccess
+}
+
 testInvalidNode() {
   compile "invalid-node"
   assertCaptured "Downloading and installing node 0.11.33"
@@ -403,38 +438,6 @@ testMultiExport() {
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
   assertCapturedSuccess
 }
-
-testConcurrency1X() {
-  MEMORY_AVAILABLE=512 capture $(pwd)/profile/nodejs.sh
-  assertEquals "$WEB_CONCURRENCY" "1"
-  assertCapturedSuccess
-}
-
-testConcurrency2X() {
-  MEMORY_AVAILABLE=1024 capture $(pwd)/profile/nodejs.sh
-  assertEquals "$WEB_CONCURRENCY" "2"
-  assertCapturedSuccess
-}
-
-testConcurrencyPX() {
-  MEMORY_AVAILABLE=6144 capture $(pwd)/profile/nodejs.sh
-  assertEquals "$WEB_CONCURRENCY" "12"
-  assertCapturedSuccess
-}
-
-testConcurrencyCustomLimit() {
-  MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/nodejs.sh
-  assertEquals "$WEB_CONCURRENCY" "4"
-  assertCapturedSuccess
-}
-
-testConcurrencySaneMaximum() {
-  MEMORY_AVAILABLE=6144 WEB_MEMORY=32 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 6144 MB available memory, 32 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=32"
-  assertCapturedSuccess
-}
-
 
 # Utils
 
