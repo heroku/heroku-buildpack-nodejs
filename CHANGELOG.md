@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Upcoming
+## v78 (2015-07-24)
 
 Defaults node environment to 'production'; bugfixes
 
