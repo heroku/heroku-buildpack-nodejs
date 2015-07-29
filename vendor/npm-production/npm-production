@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 (function() {
-  var buildPrunedShrinkwrap, command, commands, fs, npm, path, shrinkwrap, spawn, _ref,
-    __slice = [].slice;
+  var buildPrunedShrinkwrap, command, commands, fs, npm, path, ref, shrinkwrap, spawn,
+    slice = [].slice;
 
   fs = require('fs');
 
@@ -10,13 +10,13 @@
   spawn = require('child_process').spawn;
 
   buildPrunedShrinkwrap = function() {
-    var config, devDependencies, name, prunedShrinkwrapDependencies, shrinkwrap, _ref;
+    var config, devDependencies, name, prunedShrinkwrapDependencies, ref, shrinkwrap;
     devDependencies = JSON.parse(fs.readFileSync('./package.json')).devDependencies;
     shrinkwrap = JSON.parse(fs.readFileSync('./npm-shrinkwrap.json'));
     prunedShrinkwrapDependencies = {};
-    _ref = shrinkwrap.dependencies;
-    for (name in _ref) {
-      config = _ref[name];
+    ref = shrinkwrap.dependencies;
+    for (name in ref) {
+      config = ref[name];
       if (!devDependencies[name]) {
         prunedShrinkwrapDependencies[name] = config;
       }
@@ -27,20 +27,28 @@
 
   commands = {
     prune: function(shrinkwrap, cb) {
-      var dir, modulesToPrune, npm;
+      var dir, e, moduleDirs, modulesToPrune, npm;
+      try {
+        moduleDirs = fs.readdirSync('./node_modules');
+      } catch (_error) {
+        e = _error;
+        if (e.code !== 'ENOENT') {
+          throw e;
+        }
+        return process.nextTick(cb);
+      }
       modulesToPrune = (function() {
-        var _i, _len, _ref, _results;
-        _ref = fs.readdirSync('./node_modules');
-        _results = [];
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          dir = _ref[_i];
+        var i, len, results;
+        results = [];
+        for (i = 0, len = moduleDirs.length; i < len; i++) {
+          dir = moduleDirs[i];
           if (dir[0] !== '.' && !shrinkwrap.dependencies[dir]) {
-            _results.push(dir);
+            results.push(dir);
           }
         }
-        return _results;
+        return results;
       })();
-      npm = spawn('npm', ['rm'].concat(__slice.call(process.argv.slice(3)), __slice.call(modulesToPrune)), {
+      npm = spawn('npm', ['rm'].concat(slice.call(process.argv.slice(3)), slice.call(modulesToPrune)), {
         stdio: 'inherit'
       });
       return npm.on('close', function(code) {
@@ -63,7 +71,7 @@
       console.log('installing pruned npm-shrinkwrap.json\n');
       fs.renameSync('./.pruned-npm-shrinkwrap.json', './npm-shrinkwrap.json');
       try {
-        npm = spawn('npm', ['install'].concat(__slice.call(process.argv.slice(3))), {
+        npm = spawn('npm', ['install'].concat(slice.call(process.argv.slice(3))), {
           stdio: 'inherit'
         });
         return npm.on('close', function(code) {
@@ -81,7 +89,7 @@
 
   /* MAIN */
 
-  command = (_ref = process.argv[2]) != null ? _ref.toLowerCase() : void 0;
+  command = (ref = process.argv[2]) != null ? ref.toLowerCase() : void 0;
 
   switch (command) {
     case 'prune':
@@ -89,9 +97,9 @@
       console.log("npm-production is handling `npm " + command + "`");
       shrinkwrap = buildPrunedShrinkwrap();
       commands[command](shrinkwrap, function(err) {
-        var _ref1;
+        var ref1;
         if (err != null) {
-          console.error((_ref1 = err.stack) != null ? _ref1 : err);
+          console.error((ref1 = err.stack) != null ? ref1 : err);
         }
         return process.exit((err != null) && 1 || 0);
       });

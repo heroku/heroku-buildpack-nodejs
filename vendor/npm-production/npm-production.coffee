@@ -23,7 +23,13 @@ buildPrunedShrinkwrap = ->
 commands =
 
   prune: (shrinkwrap, cb) ->
-    modulesToPrune = (dir for dir in fs.readdirSync('./node_modules') when dir[0] isnt '.' and !shrinkwrap.dependencies[dir])
+    try
+      moduleDirs = fs.readdirSync './node_modules'
+    catch e
+      throw e unless e.code is 'ENOENT'
+      return process.nextTick(cb)
+
+    modulesToPrune = (dir for dir in moduleDirs when dir[0] isnt '.' and !shrinkwrap.dependencies[dir])
     npm = spawn 'npm', ['rm', process.argv[3..]..., modulesToPrune...], {stdio: 'inherit'}
     npm.on 'close', (code) ->
       cb code isnt 0 and new Error("non-zero exit code #{code}") or null
