@@ -85,7 +85,7 @@ install_bins() {
   warn_old_npm
 
   echo "Installing npm-production"
-  install $BP_DIR/vendor/npm-production/npm-production $BUILD_DIR/vendor/node/bin
+  install $BP_DIR/vendor/npm-production/npm-production $BUILD_DIR/.heroku/node/bin
 }
 
 header "Installing binaries"
