@@ -1,0 +1,19 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "dependencies": {
+    "hashish": "*"
+  },
+  "engines": {
+    "iojs": "1.0.x",
+    "npm": "2.11.x"
+  },
+  "scripts": {
+    "postinstall": "echo \"detected node version:\" `node --version`"
+  }
+}

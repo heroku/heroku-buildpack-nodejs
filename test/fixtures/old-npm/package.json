@@ -1,0 +1,20 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "dependencies": {
+    "hashish": "*",
+    "thisdoesnotexist": "*"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "~1.2"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

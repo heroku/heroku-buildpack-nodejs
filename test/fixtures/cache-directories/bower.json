@@ -1,0 +1,6 @@
+{
+  "name": "node-buildpack-test-app",
+  "dependencies": {
+    "jquery": "^1.11.1"
+  }
+}

@@ -1,152 +1,150 @@
 #!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
 
-set -e            # fail fast
+### Configure environment
+
+set -o errexit    # always exit on error
 set -o pipefail   # don't ignore exit codes when piping output
-# set -x          # enable debugging
+set -o nounset    # fail on unset variables
+unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
-# Configure directories
-build_dir=$1
-cache_dir=$2
-env_dir=$3
-bp_dir=$(cd $(dirname $0); cd ..; pwd)
+### Configure directories
 
-# Fix leak
-unset GIT_DIR
+BUILD_DIR=${1:-}
+CACHE_DIR=${2:-}
+ENV_DIR=${3:-}
+BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
-# Load some convenience functions like status(), echo(), and indent()
-source $bp_dir/bin/common.sh
+mkdir -p "$BUILD_DIR/.heroku/node/"
+cd $BUILD_DIR
+export PATH="$BUILD_DIR/.heroku/node/bin":$PATH
 
-# Output npm debug info on error
-trap cat_npm_debug_log ERR
+### Load dependencies
 
-# Look in package.json's engines.node field for a semver range
-semver_range=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .engines.node)
+source $BP_DIR/lib/output.sh
+source $BP_DIR/lib/json.sh
+source $BP_DIR/lib/failure.sh
+source $BP_DIR/lib/environment.sh
+source $BP_DIR/lib/binaries.sh
+source $BP_DIR/lib/cache.sh
+source $BP_DIR/lib/dependencies.sh
 
-# Resolve node version using semver.io
-node_version=$(curl --silent --get --data-urlencode "range=${semver_range}" https://semver.io/node/resolve)
+### Handle errors
 
-# Recommend using semver ranges in a safe manner
-if [ "$semver_range" == "null" ]; then
-  protip "Specify a node version in package.json"
-  semver_range=""
-elif [ "$semver_range" == "*" ]; then
-  protip "Avoid using semver ranges like '*' in engines.node"
-elif [ ${semver_range:0:1} == ">" ]; then
-  protip "Avoid using semver ranges starting with '>' in engines.node"
-fi
+handle_failure() {
+  header "Build failed"
+  failure_message | indent
+}
+trap 'handle_failure' ERR
 
-# Output info about requested range and resolved node version
-if [ "$semver_range" == "" ]; then
-  status "Defaulting to latest stable node: $node_version"
-else
-  status "Requested node range:  $semver_range"
-  status "Resolved node version: $node_version"
-fi
+### Check initial state
 
-# Download node from Heroku's S3 mirror of nodejs.org/dist
-status "Downloading and installing node"
-node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
-curl $node_url -s -o - | tar xzf - -C $build_dir
+[ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 
-# Move node (and npm) into ./vendor and make them executable
-mkdir -p $build_dir/vendor
-mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
-chmod +x $build_dir/vendor/node/bin/*
-PATH=$build_dir/vendor/node/bin:$PATH
+### Failures that should be caught immediately
 
-# install our productionified npm
-status "Installing npm-production"
-install $bp_dir/vendor/npm-production/npm-production $build_dir/vendor/node/bin
+fail_invalid_package_json "$BUILD_DIR"
+warn_prebuilt_modules "$BUILD_DIR"
+warn_missing_package_json "$BUILD_DIR"
 
-# Run subsequent node/npm commands from the build path
-cd $build_dir
+### Compile
 
-# Scope config-var availability to all npm commands (so env-based npm credentials are available)
-(
-  if [ -d "$env_dir" ]; then
-    status "Exporting config vars to environment"
-    export_env_dir $env_dir
-  fi
+create_env() {
+  write_profile "$BP_DIR" "$BUILD_DIR"
+  write_export "$BP_DIR" "$BUILD_DIR"
+  export_env_dir "$ENV_DIR"
+  create_default_env
+}
 
-  # If node_modules directory is checked into source control then
-  # rebuild any native deps. Otherwise, restore from the build cache.
-  if test -d $build_dir/node_modules; then
-    status "Found existing node_modules directory; skipping cache"
-    status "Rebuilding any native dependencies"
-    npm rebuild --build-from-source 2>&1 | indent
-  elif test -d $cache_dir/node/node_modules; then
-    status "Restoring node_modules directory from cache"
-    cp -r $cache_dir/node/node_modules $build_dir/
-  
-    status "Pruning cached dependencies not specified in package.json"
-    npm-production prune 2>&1 | indent
-  
-    if test -f $cache_dir/node/.heroku/node-version && [ $(cat $cache_dir/node/.heroku/node-version) != "$node_version" ]; then
-      status "Node version changed since last build; rebuilding dependencies"
-      npm rebuild --build-from-source 2>&1 | indent
-    fi
-  
-  fi
+header "Creating runtime environment"
+create_env # can't indent the whole thing because piping causes subshells; no exporting possible
+list_node_config | indent
 
-  status "Installing dependencies"
-  # Make npm output to STDOUT instead of its default STDERR
-  npm-production install --userconfig $build_dir/.npmrc --production 2>&1 | indent
-)
+install_bins() {
+  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
+  local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
 
-# Persist goodies like node-version in the slug
-mkdir -p $build_dir/.heroku
-
-# Save resolved node version in the slug for later reference
-echo $node_version > $build_dir/.heroku/node-version
-
-# Purge node-related cached content, being careful not to purge the top-level
-# cache, for the sake of heroku-buildpack-multi apps.
-rm -rf $cache_dir/node_modules # (for apps still on the older caching strategy)
-rm -rf $cache_dir/node
-mkdir -p $cache_dir/node
-
-# If app has a node_modules directory, cache it.
-if test -d $build_dir/node_modules; then
-  status "Caching node_modules directory for future builds"
-  cp -r $build_dir/node_modules $cache_dir/node
-fi
-
-# Copy goodies to the cache
-cp -r $build_dir/.heroku $cache_dir/node
-
-status "Cleaning up node-gyp and npm artifacts"
-rm -rf "$build_dir/.node-gyp"
-rm -rf "$build_dir/.npm"
-
-# If Procfile is absent, try to create one using `npm start`
-if [ ! -e $build_dir/Procfile ]; then
-  npm_start=$(cat $build_dir/package.json | $bp_dir/vendor/jq -r .scripts.start)
-
-  # If `scripts.start` is set in package.json, or a server.js file
-  # is present in the app root, then create a default Procfile
-  if [ "$npm_start" != "null" ] || [ -f $build_dir/server.js ]; then
-    status "No Procfile found; Adding npm start to new Procfile"
-    echo "web: npm start" > $build_dir/Procfile
+  if [ -n "$iojs_engine" ]; then
+    echo "engines.iojs (package.json):  $iojs_engine (iojs)"
   else
-    status "Procfile not found and npm start script is undefined"
-    protip "Create a Procfile or specify a start script in package.json"
+    echo "engines.node (package.json):  ${node_engine:-unspecified}"
   fi
-fi
+  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  echo ""
 
-# Update the PATH
-status "Building runtime environment"
-mkdir -p $build_dir/.profile.d
-echo "export PATH=\"\$HOME/vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\";" > $build_dir/.profile.d/nodejs.sh
+  if [ -n "$iojs_engine" ]; then
+    warn_node_engine "$iojs_engine"
+    install_iojs "$iojs_engine" "$BUILD_DIR/.heroku/node"
+    echo "Using bundled npm version for iojs compatibility: `npm --version`"
+  else
+    warn_node_engine "$node_engine"
+    install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
+    install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
+  fi
+  warn_old_npm
 
-# Post package.json to nomnom service
-# Use a subshell so failures won't break the build.
-(
-  curl \
-    --data @$build_dir/package.json \
-    --fail \
-    --silent \
-    --request POST \
-    --header "content-type: application/json" \
-    https://nomnom.heroku.com/?request_id=$REQUEST_ID \
-    > /dev/null
-) &
+  echo "Installing npm-production"
+  install $BP_DIR/vendor/npm-production/npm-production $BUILD_DIR/vendor/node/bin
+}
+
+header "Installing binaries"
+install_bins | indent
+
+restore_cache() {
+  local cache_status="$(get_cache_status)"
+
+  if [ "$cache_status" == "valid" ]; then
+    local cache_directories=$(get_cache_directories)
+    if [ "$cache_directories" == "" ]; then
+      echo "Loading 1 from cacheDirectories (default):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+    else
+      echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    fi
+  else
+    echo "Skipping cache ($cache_status)"
+  fi
+}
+
+header "Restoring cache"
+restore_cache | indent
+
+build_dependencies() {
+  if $PREBUILD; then
+    echo "Prebuild detected (node_modules already exists)"
+    rebuild_node_modules "$BUILD_DIR"
+  else
+    install_node_modules "$BUILD_DIR"
+  fi
+}
+
+header "Building dependencies"
+build_dependencies | indent
+
+cache_build() {
+  local cache_directories=$(get_cache_directories)
+  
+  echo "Clearing previous node cache"
+  clear_cache
+  if [ "$cache_directories" == "" ]; then
+    echo "Saving 1 cacheDirectories (default):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+  else
+    echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+  fi
+  save_signature
+}
+
+header "Caching build"
+cache_build | indent
+
+summarize_build() {
+  cd $BUILD_DIR
+  (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null
+}
+
+header "Build succeeded!"
+summarize_build | indent
