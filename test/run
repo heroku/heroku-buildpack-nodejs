@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testBuildWithUserCacheDirectoriesCamel() {
+  cache=$(mktmpdir)
+
+  compile "cache-directories-camel" $cache
+  assertCaptured "- non/existent (nothing to cache)"
+  assertEquals "1" "$(ls -1 $cache/node/server | grep node_modules | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/client | grep node_modules | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "cache-directories-camel" $cache
+  assertCaptured "Loading 3 from cacheDirectories"
+  assertCaptured "- server/node_modules"
+  assertCaptured "- client/node_modules"
+  assertCaptured "- non/existent (not cached - skipping)"
+  assertCapturedSuccess
+}
+
 testConcurrency1X() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture $(pwd)/profile/nodejs.sh
   assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
@@ -12,6 +29,13 @@ testConcurrency2X() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture $(pwd)/profile/nodejs.sh
   assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=2"
+  assertCapturedSuccess
+}
+
+testConcurrencyPerformanceM() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture $(pwd)/profile/nodejs.sh
+  assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=5"
   assertCapturedSuccess
 }
 
@@ -302,22 +326,9 @@ testBuildWithUserCacheDirectories() {
   assertCapturedSuccess
 }
 
-testBuildWithUserCacheDirectoriesCamel() {
-  cache=$(mktmpdir)
 
-  compile "cache-directories-camel" $cache
-  assertCaptured "- non/existent (nothing to cache)"
-  assertEquals "1" "$(ls -1 $cache/node/server | grep node_modules | wc -l | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node/client | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
 
-  compile "cache-directories-camel" $cache
-  assertCaptured "Loading 3 from cacheDirectories"
-  assertCaptured "- server/node_modules"
-  assertCaptured "- client/node_modules"
-  assertCaptured "- non/existent (not cached - skipping)"
-  assertCapturedSuccess
-}
+
 
 testUserConfig() {
   compile "userconfig"
