@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Upcoming
+
+Supports WEB_CONCURRENCY for Performance-M dynos
+
 ## v78 (2015-07-24)
 
 Defaults node environment to 'production'; bugfixes
