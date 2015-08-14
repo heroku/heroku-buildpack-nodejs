@@ -1,8 +1,8 @@
 # Node.js Buildpack Changelog
 
-## Upcoming
+## v80 (2015-08-14)
 
-- Fix not defaulting to `NODE_ENV=production` during runtime
+Fixes not defaulting to `NODE_ENV=production` during runtime
 
 ## v79 (2015-08-10)
 
