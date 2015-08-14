@@ -11,6 +11,10 @@ install_node_modules() {
       echo "Installing node modules (package.json)"
     fi
     npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    if [ "$NPM_CONFIG_PRODUCTION" = "false" ] && [ "$NODE_ENV" = "production" ]; then
+      echo "Pruning devDependencies"
+      npm prune --unsafe-perm --userconfig $build_dir/.npmrc --production 2>&1
+    fi
   else
     echo "Skipping (no package.json)"
   fi
@@ -29,6 +33,10 @@ rebuild_node_modules() {
       echo "Installing any new modules (package.json)"
     fi
     npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    if [ "$NPM_CONFIG_PRODUCTION" = "false" ] && [ "$NODE_ENV" = "production" ]; then
+      echo "Pruning devDependencies"
+      npm prune --unsafe-perm --userconfig $build_dir/.npmrc --production 2>&1
+    fi
   else
     echo "Skipping (no package.json)"
   fi
