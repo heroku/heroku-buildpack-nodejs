@@ -113,6 +113,8 @@ To install *dependencies and devDependencies:*
 heroku config:set NPM_CONFIG_PRODUCTION=false
 ```
 
+If `NODE_ENV` is set to `production`, your devDependencies will be pruned after running `npm install`.
+
 Default: `NPM_CONFIG_PRODUCTION` defaults to true on Heroku
 
 ### Configure npm with .npmrc
