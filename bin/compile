@@ -86,6 +86,9 @@ install_bins() {
 
   echo "Installing npm-production"
   install $BP_DIR/vendor/npm-production/npm-production $BUILD_DIR/.heroku/node/bin
+
+  echo "Installing cronitor"
+  install $BP_DIR/vendor/cronitor/cronitor $BUILD_DIR/.heroku/node/bin
 }
 
 header "Installing binaries"
