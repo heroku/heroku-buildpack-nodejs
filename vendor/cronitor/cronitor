@@ -6,7 +6,9 @@ cmd=$@
 
 curl https://cronitor.link/${cronitor_id}/run -m 10
 
-( $cmd )
+(
+  eval $cmd
+)
 code=$?
 
 if [ $code -eq 0 ]; then
