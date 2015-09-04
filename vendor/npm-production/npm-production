@@ -27,11 +27,11 @@
 
   commands = {
     prune: function(shrinkwrap, cb) {
-      var dir, e, moduleDirs, modulesToPrune, npm;
+      var dir, e, error, moduleDirs, modulesToPrune, npm;
       try {
         moduleDirs = fs.readdirSync('./node_modules');
-      } catch (_error) {
-        e = _error;
+      } catch (error) {
+        e = error;
         if (e.code !== 'ENOENT') {
           throw e;
         }
@@ -56,14 +56,14 @@
       });
     },
     install: function(shrinkwrap, cb) {
-      var cleanup, e, npm;
+      var cleanup, e, error, npm;
       cleanup = function() {
-        var e;
+        var e, error;
         try {
           console.log('restoring original npm-shrinkwrap.json');
           return fs.renameSync('./.full-npm-shrinkwrap.json', './npm-shrinkwrap.json');
-        } catch (_error) {
-          e = _error;
+        } catch (error) {
+          e = error;
         }
       };
       fs.writeFileSync('./.pruned-npm-shrinkwrap.json', JSON.stringify(shrinkwrap, null, '  '));
@@ -78,8 +78,8 @@
           cleanup();
           return cb(code !== 0 && new Error("non-zero exit code " + code) || null);
         });
-      } catch (_error) {
-        e = _error;
+      } catch (error) {
+        e = error;
         cleanup();
         throw e;
       }
@@ -91,26 +91,23 @@
 
   command = (ref = process.argv[2]) != null ? ref.toLowerCase() : void 0;
 
-  switch (command) {
-    case 'prune':
-    case 'install':
-      console.log("npm-production is handling `npm " + command + "`");
-      shrinkwrap = buildPrunedShrinkwrap();
-      commands[command](shrinkwrap, function(err) {
-        var ref1;
-        if (err != null) {
-          console.error((ref1 = err.stack) != null ? ref1 : err);
-        }
-        return process.exit((err != null) && 1 || 0);
-      });
-      break;
-    default:
-      npm = spawn('npm', process.argv.slice(2), {
-        stdio: 'inherit'
-      });
-      npm.on('close', function(code) {
-        return process.exit(code);
-      });
+  if ((command === 'prune' || command === 'install') && fs.existsSync('./package.json') && fs.existsSync('./npm-shrinkwrap.json')) {
+    console.log("npm-production is handling `npm " + command + "`");
+    shrinkwrap = buildPrunedShrinkwrap();
+    commands[command](shrinkwrap, function(err) {
+      var ref1;
+      if (err != null) {
+        console.error((ref1 = err.stack) != null ? ref1 : err);
+      }
+      return process.exit((err != null) && 1 || 0);
+    });
+  } else {
+    npm = spawn('npm', process.argv.slice(2), {
+      stdio: 'inherit'
+    });
+    npm.on('close', function(code) {
+      return process.exit(code);
+    });
   }
 
 }).call(this);

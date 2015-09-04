@@ -62,16 +62,18 @@ commands =
 
 command = process.argv[2]?.toLowerCase()
 
-switch command
-  when 'prune', 'install'
+if command in ['prune', 'install'] \
+  and fs.existsSync('./package.json') \
+  and fs.existsSync('./npm-shrinkwrap.json')
     console.log "npm-production is handling `npm #{command}`"
     shrinkwrap = buildPrunedShrinkwrap()
     commands[command] shrinkwrap, (err) ->
       console.error(err.stack ? err) if err?
       process.exit err? and 1 or 0
-
-  else # passthru
-    npm = spawn 'npm', process.argv[2..], {stdio: 'inherit'}
-    npm.on 'close', (code) ->
-      process.exit code
+  
+else
+  # passthru
+  npm = spawn 'npm', process.argv[2..], {stdio: 'inherit'}
+  npm.on 'close', (code) ->
+    process.exit code
 
