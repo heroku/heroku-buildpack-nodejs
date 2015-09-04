@@ -1,0 +1,11 @@
+{
+  "name": "heroku-buildpack-npm-productionify",
+  "version": "0.0.1",
+  "devDependencies": {
+    "coffee-script": "*"
+  },
+  "scripts": {
+    "pretest": "echo '#!/usr/bin/env node' > npm-production && ./node_modules/.bin/coffee -p npm-production.coffee >> npm-production && chmod a+x npm-production",
+    "test": "/usr/bin/true"
+  }
+}

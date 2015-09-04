@@ -1,0 +1,21 @@
+#!/bin/sh
+
+cronitor_id=$1
+shift
+cmd=$@
+
+curl https://cronitor.link/${cronitor_id}/run -m 10
+
+(
+  eval $cmd
+)
+code=$?
+
+if [ $code -eq 0 ]; then
+  curl https://cronitor.link/${cronitor_id}/complete -m 10
+else
+  curl https://cronitor.link/${cronitor_id}/fail -m 10
+fi
+
+exit $code
+
