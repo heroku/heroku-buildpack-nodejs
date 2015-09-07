@@ -106,7 +106,7 @@ check_meteorhacks_npm() {
 }
 
 install_demeteorizer() {
-  npm install -g 'onmodulus/demeteorizer' | indent
+  npm install -g 'onmodulus/demeteorizer#v2.3.1' | indent
   head "Demeteorizer installed"
 }
 
