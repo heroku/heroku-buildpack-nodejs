@@ -101,7 +101,7 @@ restore_cache() {
       restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
     fi
   else
-    echo "Skipping cache ($cache_status)"
+    echo "Skipping cache restore ($cache_status)"
   fi
 }
 
@@ -122,10 +122,13 @@ build_dependencies | indent
 
 cache_build() {
   local cache_directories=$(get_cache_directories)
-  
+
   echo "Clearing previous node cache"
   clear_cache
-  if [ "$cache_directories" == "" ]; then
+
+  if ! ${NODE_MODULES_CACHE:-true}; then
+    echo "Skipping cache save (disabled by config)"
+  elif [ "$cache_directories" == "" ]; then
     echo "Saving 1 cacheDirectories (default):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
   else

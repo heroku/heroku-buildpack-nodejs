@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testDisableCache() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "node-modules-cache-1" $cache
+  assertCaptured "lodash@1.0.0"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep lodash | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "node-modules-cache-2" $cache
+  assertCaptured "lodash@1.0.0"
+  assertCaptured "Saving 1 cacheDirectories"
+  assertCapturedSuccess
+
+  echo "false" > $env_dir/NODE_MODULES_CACHE
+  compile "node-modules-cache-2" $cache $env_dir
+  assertCaptured "lodash@1.3.1"
+  assertNotCaptured "Saving 1 cacheDirectories"
+  assertCapturedSuccess
+}
+
 testBuildWithUserCacheDirectoriesCamel() {
   cache=$(mktmpdir)
 
@@ -78,7 +99,7 @@ testBuildWithCache() {
   cache=$(mktmpdir)
 
   compile "stable-node" $cache
-  assertCaptured "Skipping cache (new runtime"
+  assertCaptured "Skipping cache restore (new runtime"
   assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
   assertCapturedSuccess
 
@@ -102,7 +123,7 @@ testSignatureInvalidation() {
 
   compile "node-0.12.7" $cache
   assertCaptured "Downloading and installing node 0.12.7"
-  assertCaptured "Skipping cache (new runtime"
+  assertCaptured "Skipping cache restore (new runtime"
   assertCapturedSuccess
 }
 
@@ -118,25 +139,6 @@ testModulesCheckedIn() {
   assertCaptured "Installing any new modules"
   assertCaptured "(postinstall script)"
   assertNotCaptured "Pruning any extraneous modules"
-  assertCapturedSuccess
-}
-
-testDisableCache() {
-  cache=$(mktmpdir)
-  env_dir=$(mktmpdir)
-
-  compile "node-modules-cache-1" $cache
-  assertCaptured "lodash@1.0.0"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep lodash | wc -l | tr -d ' ')"
-  assertCapturedSuccess
-
-  compile "node-modules-cache-2" $cache
-  assertCaptured "lodash@1.0.0"
-  assertCapturedSuccess
-
-  echo "false" > $env_dir/NODE_MODULES_CACHE
-  compile "node-modules-cache-2" $cache $env_dir
-  assertCaptured "lodash@1.3.1"
   assertCapturedSuccess
 }
 
