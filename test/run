@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+
+  compile "caching" $cache
+  assertCaptured "Saving 2 cacheDirectories (default)"
+  assertCaptured "- node_modules"
+  assertCaptured "- bower_components (nothing to cache)"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+}
+
 testBuildWithUserCacheDirectoriesCamel() {
   cache=$(mktmpdir)
 
@@ -298,16 +309,6 @@ testInvalidDependency() {
   compile "invalid-dependency"
   assertCaptured "npm ERR! 404"
   assertCapturedError 1 ""
-}
-
-testNodeModulesCached() {
-  cache=$(mktmpdir)
-
-  compile "caching" $cache
-  assertCaptured "Saving 1 cacheDirectories (default)"
-  assertCaptured "- node_modules"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
 }
 
 testBuildWithUserCacheDirectories() {
