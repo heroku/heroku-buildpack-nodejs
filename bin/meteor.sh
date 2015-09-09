@@ -110,6 +110,18 @@ install_demeteorizer() {
   head "Demeteorizer installed"
 }
 
+remove_uninstallable_modules() {
+  # Separe the modules names with '\n'
+  uninstallable_modules="1to2"
+  for module in $uninstallable_modules ; do
+    out=$($bp_dir/vendor/jq ".dependencies[\"${module}\"]" < "demeteorized/package.json")
+    if [ "$out" != "null" ] ; then
+      cat "demeteorized/package.json" | grep -v "${module}" > .tmp_package.json
+      mv .tmp_package.json package.json
+    fi
+  done
+}
+
 demeteorize_app() {
   build_dir=$1
   cache_dir=$2
@@ -152,8 +164,7 @@ demeteorize_app() {
   fi
 
   head "Application demeteorized"
-
+  remove_uninstallable_modules
   create_meteor_settings_profile $build_dir
-
   clean_meteor_installation
 }
