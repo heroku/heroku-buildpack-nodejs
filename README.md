@@ -37,7 +37,7 @@ You can write a file `.node_version` at the root of your project, and we'll use 
 - Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).
 - Discourages use of dangerous semver ranges like `*` and `>0.10`.
 - Uses the version of `npm` that comes bundled with `node`.
-- Puts `node` and `npm` on the `PATH` so they can be executed with [scalingo run](http://doc.scalingo.com/app/jobs).
+- Puts `node` and `npm` on the `PATH` so they can be executed with [scalingo run](http://doc.scalingo.com/app/tasks).
 
 ### Caching
 
