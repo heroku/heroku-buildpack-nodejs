@@ -56,9 +56,9 @@ For more information about using Node.js and buildpacks on Scalingo, see these D
 
 - [Scalingo Node.js Support](http://doc.scalingo.com/languages/javascript/nodejs)
 - [Buildpacks](http://doc.scalingo.com/buildpacks)
-- [Getting Started with Node.js on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-nodejs.html)
-- [Getting Started with Meteor on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-meteor.html)
-- [Getting Started with io.js on Scalingo](http://doc.scalingo.com/languages/javascript/iojs/getting-started-with-iojs.html)
+- [Getting Started with Node.js on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-nodejs)
+- [Getting Started with Meteor on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-meteor)
+- [Getting Started with io.js on Scalingo](http://doc.scalingo.com/languages/javascript/iojs/getting-started-with-iojs)
 
 ## Options for Meteor
 
