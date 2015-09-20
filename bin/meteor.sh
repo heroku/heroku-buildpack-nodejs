@@ -1,3 +1,11 @@
+get_meteor_version() {
+  if [ -e "${1:-}/.meteor/release" ]; then
+    cat ${1:-}/.meteor/release
+  fi
+}
+
+meteor_version=$(get_meteor_version ${1:-})
+
 create_meteor_settings_profile() {
   local build_dir=$1
   local settings=""
@@ -9,7 +17,7 @@ create_meteor_settings_profile() {
   fi
 
   if [ -n "${settings}" ] ; then
-    head "${settings} detected, METEOR_SETTINGS will be set at runtime."
+    header "${settings} detected, METEOR_SETTINGS will be set at runtime."
     cat > "$build_dir"/.profile.d/meteor-settings.sh <<EOF
     #!/bin/sh
 
@@ -51,20 +59,21 @@ install_meteor_dist() {
 
   tarball_url="https://d3sqy0vbqsdhku.cloudfront.net/packages-bootstrap/${release}/meteor-bootstrap-${platform}.tar.gz"
 
-  head "Downloading Meteor distribution"
+  header "Downloading Meteor distribution"
   curl --silent --fail "${tarball_url}" | tar -xzf - -C "${METEOR_HOME}" -o
 
-  head "Meteor ${release} has been installed."
+  header "Meteor ${release} has been installed."
 }
 
 install_meteor() {
   build_dir=$1
   cache_dir=$2
+  local cached_meteor_version=""
 
   if [ -d "$cache_dir/meteor" ] ; then
     [ -d "$METEOR_HOME" ] && rm -fr "${METEOR_HOME}"
     cp -r "${cache_dir}/meteor" "${METEOR_HOME}"
-    local cached_meteor_version=$(cat "$cache_dir/meteor-version")
+    cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
   [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(cat "$build_dir/.meteor/release")
@@ -72,9 +81,9 @@ install_meteor() {
   if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
     mkdir -p ${METEOR_HOME}
     install_meteor_dist $meteor_version
-    head "Meteor installed → $meteor_version"
+    header "Meteor installed → $meteor_version"
   else
-    head "Meteor installed from cache → $meteor_version"
+    header "Meteor installed from cache → $meteor_version"
   fi
 }
 
@@ -88,11 +97,12 @@ install_meteorite_deps() {
   if [ -e "$build_dir/smart.json" ] ; then
     if [ ! -e "$build_dir/smart.lock" ] ; then
       error "smart.lock is not present, run 'mrt install' to freeze dependencies"
+      return 1
     fi
     npm install -g meteorite | indent
-    head "Meteorite installed"
+    header "Meteorite installed"
     mrt install | indent
-    head "Meteorite packaged installed"
+    header "Meteorite packaged installed"
   fi
 }
 
@@ -107,14 +117,14 @@ check_meteorhacks_npm() {
 
 install_demeteorizer() {
   npm install -g 'onmodulus/demeteorizer#v2.3.1' | indent
-  head "Demeteorizer installed"
+  header "Demeteorizer installed"
 }
 
 remove_uninstallable_modules() {
   # Separe the modules names with '\n'
   uninstallable_modules="1to2"
   for module in $uninstallable_modules ; do
-    out=$($bp_dir/vendor/jq ".dependencies[\"${module}\"]" < "demeteorized/package.json")
+    out=$($JQ ".dependencies[\"${module}\"]" < "demeteorized/package.json")
     if [ "$out" != "null" ] ; then
       cat "demeteorized/package.json" | grep -v "${module}" > .tmp_package.json
       mv .tmp_package.json package.json
@@ -140,7 +150,7 @@ demeteorize_app() {
   # Warning: The output directory is under your source tree.
   #          This causes issues when building with mobile platforms.
   #          Consider building into a different directory instead (meteor build ../output)
-  tmp_build_dir=$(mktempdir /tmp/demetorized)
+  tmp_build_dir=$(mktemp -d /tmp/demeteorized_XXXX)
   HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | indent
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
@@ -150,20 +160,20 @@ demeteorize_app() {
 
   ln -s "demeteorized/package.json" "package.json"
 
-  head "Caching meteor runtime for future builds"
+  header "Caching meteor runtime for future builds"
   rm -rf "$cache_dir/meteor"
   cp -r "$METEOR_HOME" "$cache_dir/meteor"
   echo $meteor_version > "$cache_dir/meteor-version"
 
   if [ -d "$build_dir/.meteorite" ] ; then
-    head "Caching meteorite packages for future builds"
+    header "Caching meteorite packages for future builds"
     rm -rf "$cache_dir/meteorite"
     rm -rf "$cache_dir/meteorite-packages"
     cp -r "$build_dir/packages" "$cache_dir/meteorite-packages"
     cp -r "$build_dir/.meteorite" "$cache_dir/meteorite"
   fi
 
-  head "Application demeteorized"
+  header "Application demeteorized"
   remove_uninstallable_modules
   create_meteor_settings_profile $build_dir
   clean_meteor_installation

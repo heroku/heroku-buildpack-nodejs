@@ -7,7 +7,8 @@
     "url" : "http://github.com/example/example.git"
   },
   "dependencies": {
-    "hashish": "*"
+    "hashish": "*",
+    "thisdoesnotexist": "*"
   },
   "engines": {
     "node": "0.10.x",

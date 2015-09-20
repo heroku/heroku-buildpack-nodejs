@@ -10,3 +10,5 @@ elif [ -f $1/package.json -o -f $1/server.js ]; then
 else
   echo "no" && exit 1
 fi
+
+exit 1

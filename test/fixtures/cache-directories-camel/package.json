@@ -1,0 +1,17 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "0.12.4"
+  },
+  "dependencies": {},
+  "scripts": {
+    "postinstall": "npm install --prefix=server && npm install --prefix=client"
+  },
+  "cacheDirectories": ["server/node_modules", "client/node_modules", "non/existent"]
+}

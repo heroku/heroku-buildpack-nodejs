@@ -1,6 +1,8 @@
 Buildpack for Node.js, io.js And Meteor
 =======================================
 
+![nodesjs](https://cloud.githubusercontent.com/assets/51578/8882955/3f0c3980-3219-11e5-8666-bc9c926a7356.jpg)
+
 This buildpack has been developped to deploy any node.js application
 or an application based on the Meteor Framework (0.9+).
 
@@ -224,7 +226,7 @@ Scalingo environment.
 To run the test suite:
 
 ```
-test/docker
+make test
 ```
 
 The tests are run via the vendored [shunit2](http://shunit2.googlecode.com/svn/trunk/source/2.1/doc/shunit2.html)

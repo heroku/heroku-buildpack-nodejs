@@ -1,87 +1,155 @@
 #!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir> <env-dir>
 
+### Configure environment
 set -o errexit    # always exit on error
-set -o errtrace   # trap errors in functions as well
-set -o pipefail   # do not ignore exit codes when piping output
-set -o posix      # more strict failures in subshells
-# set -x          # enable debugging
+set -o pipefail   # dont ignore exit codes when piping output
+set -o nounset    # fail on unset variables
+unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
-# Configure directories
-build_dir=$1
-cache_dir=$2
-env_dir=$3
-bp_dir=$(cd $(dirname $0); cd ..; pwd)
-vendor_dir=$build_dir/.vendor
-mkdir -p $vendor_dir/node
-warnings=$(mktemp)
+### Configure directories
+BUILD_DIR=${1:-}
+CACHE_DIR=${2:-}
+ENV_DIR=${3:-}
+BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
-# Load dependencies
-source $bp_dir/lib/common.sh
-source $bp_dir/lib/build.sh
-source $bp_dir/lib/warnings.sh
+mkdir -p "$BUILD_DIR/.scalingo/node/"
+cd $BUILD_DIR
+export PATH="$BUILD_DIR/.scalingo/node/bin":$PATH
+
+### Load dependencies
+source $BP_DIR/lib/output.sh
+source $BP_DIR/lib/json.sh
+source $BP_DIR/lib/failure.sh
+source $BP_DIR/lib/environment.sh
+source $BP_DIR/lib/binaries.sh
+source $BP_DIR/lib/cache.sh
+source $BP_DIR/lib/dependencies.sh
 
 # Load meteor framework related functions
-source $bp_dir/bin/meteor.sh
+source $BP_DIR/bin/meteor.sh
 
-# Avoid GIT_DIR leak from previous build steps
-unset GIT_DIR
+### Handle errors
+handle_failure() {
+  header "Build failed"
+  failure_message | indent
+}
+trap 'handle_failure' ERR
 
-# Create the profile directory for runtime environment
-mkdir -p $build_dir/.profile.d
+### Check initial state
+[ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 
-# Provide hook to deal with errors
-trap build_failed ERR
-
-####### Determine current state
-head "Reading application state"
-read_current_state
-show_current_state
-
-if [ "$iojs_engine" == "" ]; then
-  warn_node_engine "$node_engine"
-else
-  warn_node_engine "$iojs_engine"
+### Failures that should be caught immediately
+if test -z "$meteor_version"; then
+  fail_invalid_package_json "$BUILD_DIR"
+  warn_prebuilt_modules "$BUILD_DIR"
+  warn_missing_package_json "$BUILD_DIR"
 fi
-warn_node_modules "$modules_source"
 
-# Run subsequent node/npm commands from the build path
-cd $build_dir
+### Compile
+create_env() {
+  write_profile "$BP_DIR" "$BUILD_DIR"
+  write_export "$BP_DIR" "$BUILD_DIR"
+  export_env_dir "$ENV_DIR"
+  create_default_env
+}
 
-####### Vendor in binaries
+header "Creating runtime environment"
+create_env # can't indent the whole thing because piping causes subshells; no exporting possible
+list_node_config | indent
 
-head "Installing binaries"
-if [ "$iojs_engine" == "" ]; then
-  install_node "$node_engine"
-else
-  install_iojs "$iojs_engine"
-fi
-install_npm
+install_bins() {
+  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
+  local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+
+  if [ -n $meteor_version ] ; then
+    node_engine=$(cat "$BUILD_DIR/.node-version 2>/dev/null" || echo "0.10.x")
+  fi
+
+  if [ -n "$iojs_engine" ]; then
+    echo "engines.iojs (package.json):  $iojs_engine (iojs)"
+  else
+    echo "engines.node (package.json):  ${node_engine:-unspecified}"
+  fi
+  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  echo ""
+
+  if [ -n "$iojs_engine" ]; then
+    warn_node_engine "$iojs_engine"
+    install_iojs "$iojs_engine" "$BUILD_DIR/.scalingo/node"
+    echo "Using bundled npm version for iojs compatibility: `npm --version`"
+  else
+    warn_node_engine "$node_engine"
+    install_nodejs "$node_engine" "$BUILD_DIR/.scalingo/node"
+    install_npm "$npm_engine" "$BUILD_DIR/.scalingo/node"
+  fi
+  warn_old_npm
+}
+
+header "Installing binaries"
+install_bins | indent
 
 # Demeteorize app if required
 if test -n "$meteor_version"; then
-  head "Meteor app detected"
-  demeteorize_app $build_dir $cache_dir
+  header "Meteor app detected: version ${meteor_version}"
+  demeteorize_app $BUILD_DIR $CACHE_DIR
 fi
 
-####### Build the project's dependencies
+restore_cache() {
+  local cache_status="$(get_cache_status)"
 
-head "Building dependencies"
-cd $build_dir
-build_dependencies
+  if [ "$cache_status" == "valid" ]; then
+    local cache_directories=$(get_cache_directories)
+    if [ "$cache_directories" == "" ]; then
+      echo "Loading 1 from cacheDirectories (default):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+    else
+      echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    fi
+  else
+    echo "Skipping cache ($cache_status)"
+  fi
+}
 
-####### Create a Procfile if possible
+header "Restoring cache"
+restore_cache | indent
 
-head "Checking startup method"
-ensure_procfile "$start_method" "$build_dir"
-warn_start "$start_method"
+build_dependencies() {
+  if $PREBUILD; then
+    echo "Prebuild detected (node_modules already exists)"
+    rebuild_node_modules "$BUILD_DIR"
+  else
+    install_node_modules "$BUILD_DIR"
+  fi
+}
 
-####### Finalize the build
+header "Building dependencies"
+build_dependencies | indent
 
-head "Finalizing build"
-end_of_build_protips
-write_profile
-# write_export
-clean_npm
-clean_cache
-create_cache
-build_succeeded
+cache_build() {
+  local cache_directories=$(get_cache_directories)
+  
+  echo "Clearing previous node cache"
+  clear_cache
+  if [ "$cache_directories" == "" ]; then
+    echo "Saving 1 cacheDirectories (default):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+  else
+    echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+  fi
+  save_signature
+}
+
+header "Caching build"
+cache_build | indent
+
+summarize_build() {
+  cd $BUILD_DIR
+  (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null
+}
+
+header "Build succeeded!"
+summarize_build | indent
