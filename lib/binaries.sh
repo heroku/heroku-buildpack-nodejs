@@ -13,7 +13,7 @@ install_nodejs() {
 
   if needs_resolution "$version"; then
     echo "Resolving node version ${version:-(latest stable)} via semver.io..."
-    local version=$(curl --retry 3 --silent --get --data-urlencode "range=${version}" https://semver.herokuapp.com/node/resolve)
+    local version=$(curl --retry 3 --silent --get --data-urlencode "range=${version}" https://semver.scalingo.io/node/resolve)
   fi
 
   echo "Downloading and installing node $version..."
@@ -30,7 +30,7 @@ install_iojs() {
 
   if needs_resolution "$version"; then
     echo "Resolving iojs version ${version:-(latest stable)} via semver.io..."
-    version=$(curl --retry 3 --silent --get --data-urlencode "range=${version}" https://semver.herokuapp.com/iojs/resolve)
+    version=$(curl --retry 3 --silent --get --data-urlencode "range=${version}" https://semver.scalingo.io/iojs/resolve)
   fi
 
   echo "Downloading and installing iojs $version..."
@@ -49,7 +49,7 @@ install_npm() {
   else
     if needs_resolution "$version"; then
       echo "Resolving npm version ${version} via semver.io..."
-      version=$(curl --retry 3 --silent --get --data-urlencode "range=${version}" https://semver.herokuapp.com/npm/resolve)
+      version=$(curl --retry 3 --silent --get --data-urlencode "range=${version}" https://semver.scalingo.io/npm/resolve)
     fi
     if [[ `npm --version` == "$version" ]]; then
       echo "npm `npm --version` already installed with node"
