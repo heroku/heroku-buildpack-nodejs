@@ -41,6 +41,18 @@ install_iojs() {
   chmod +x $dir/bin/*
 }
 
+install_nsolid() {
+  local version="$1"
+  local dir="$2"
+
+  echo "Downloading and installing nsolid $version..."
+  local download_url="https://nsolid-download.nodesource.com/download/nsolid-node/release/v$version/nsolid-v$version-$os-$cpu.tar.gz"
+  curl "$download_url" --silent --fail -o /tmp/node.tar.gz || (echo "Unable to download nsolid $version; does it exist?" && false)
+  tar xzf /tmp/node.tar.gz -C /tmp
+  mv /tmp/nsolid-v$version-$os-$cpu/* $dir
+  chmod +x $dir/bin/*
+}
+
 install_npm() {
   local version="$1"
 
