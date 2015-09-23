@@ -9,6 +9,6 @@
   "dependencies": {
   },
   "engines": {
-    "node": "1.0.0"
+    "nsolid": "1.0.0"
   }
 }
