@@ -39,11 +39,11 @@ testConcurrencyPerformanceM() {
   assertCapturedSuccess
 }
 
-testConcurrencyPX() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=6144 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 6144 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=12"
-  assertCapturedSuccess
+testConcurrencyPerformanceL() {
+   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture $(pwd)/profile/nodejs.sh
+   assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+   assertCaptured "Recommending WEB_CONCURRENCY=28"
+   assertCapturedSuccess
 }
 
 testConcurrencyCustomLimit() {
@@ -171,7 +171,7 @@ testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
   assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 0.12."
+  assertCaptured "Downloading and installing node 4."
   assertCapturedSuccess
 }
 
@@ -199,7 +199,7 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (2."
+  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (3."
   assertNotCaptured "integer expression expected"
   assertCapturedError
 }
@@ -275,7 +275,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 0.12."
+  assertCaptured "Downloading and installing node 4."
   assertCapturedError
 }
 
@@ -283,14 +283,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 0.12"
+  assertCaptured "Downloading and installing node 4."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 0.12"
+  assertCaptured "Downloading and installing node 4."
   assertCapturedSuccess
 }
 
