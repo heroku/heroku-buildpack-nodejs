@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testUntrackedDependencies() {
+  compile "missing-grunt"
+  assertCaptured "grunt may not be tracked in package.json"
+  assertCapturedError
+}
+
+testBadJson() {
+  compile "bad-json"
+  assertCaptured "Build failed"
+  assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "Installing binaries"
+  assertCapturedError 1 "Unable to parse"
+}
+
 testBuildWithUserCacheDirectoriesCamel() {
   cache=$(mktmpdir)
 
@@ -149,14 +163,6 @@ testDetectWithPackageJson() {
 testDetectWithoutPackageJson() {
   detect "no-package-json"
   assertCapturedError 1 ""
-}
-
-testBadJson() {
-  compile "bad-json"
-  assertCaptured "Build failed"
-  assertCaptured "We're sorry this build is failing"
-  assertNotCaptured "Installing binaries"
-  assertCapturedError 1 "Unable to parse"
 }
 
 testIoJs() {

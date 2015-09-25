@@ -19,6 +19,9 @@ mkdir -p "$BUILD_DIR/.heroku/node/"
 cd $BUILD_DIR
 export PATH="$BUILD_DIR/.heroku/node/bin":$PATH
 
+LOG_FILE='/tmp/node-build-log.txt'
+echo "" > "$LOG_FILE"
+
 ### Load dependencies
 
 source $BP_DIR/lib/output.sh
@@ -33,7 +36,8 @@ source $BP_DIR/lib/dependencies.sh
 
 handle_failure() {
   header "Build failed"
-  failure_message | indent
+  warn_untracked_dependencies "$LOG_FILE"
+  failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
 
@@ -57,8 +61,8 @@ create_env() {
 }
 
 header "Creating runtime environment"
-create_env # can't indent the whole thing because piping causes subshells; no exporting possible
-list_node_config | indent
+create_env # can't pipe the whole thing because piping causes subshells, preventing exports
+list_node_config | output "$LOG_FILE"
 
 install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
@@ -86,7 +90,7 @@ install_bins() {
 }
 
 header "Installing binaries"
-install_bins | indent
+install_bins | output "$LOG_FILE"
 
 restore_cache() {
   local cache_status="$(get_cache_status)"
@@ -106,7 +110,7 @@ restore_cache() {
 }
 
 header "Restoring cache"
-restore_cache | indent
+restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   if $PREBUILD; then
@@ -118,11 +122,11 @@ build_dependencies() {
 }
 
 header "Building dependencies"
-build_dependencies | indent
+build_dependencies | output "$LOG_FILE"
 
 cache_build() {
   local cache_directories=$(get_cache_directories)
-  
+
   echo "Clearing previous node cache"
   clear_cache
   if [ "$cache_directories" == "" ]; then
@@ -136,7 +140,7 @@ cache_build() {
 }
 
 header "Caching build"
-cache_build | indent
+cache_build | output "$LOG_FILE"
 
 summarize_build() {
   cd $BUILD_DIR
@@ -144,4 +148,4 @@ summarize_build() {
 }
 
 header "Build succeeded!"
-summarize_build | indent
+summarize_build | output "$LOG_FILE"

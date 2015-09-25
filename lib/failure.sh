@@ -67,3 +67,14 @@ warn_old_npm() {
     warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
   fi
 }
+
+warn_untracked_dependencies() {
+  local log_file="$1"
+  if grep -qi 'gulp: not found' "$log_file"; then
+    warning "gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  elif grep -qi 'grunt: not found' "$log_file"; then
+    warning "grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  elif grep -qi 'bower: not found' "$log_file"; then
+    warning "bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  fi
+}
