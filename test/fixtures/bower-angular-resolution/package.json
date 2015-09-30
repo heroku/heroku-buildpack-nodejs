@@ -13,6 +13,6 @@
     "node": "4.1.1"
   },
   "scripts": {
-    "postinstall": "bower install"
+    "postinstall": "bower install --allow-root"
   }
 }
