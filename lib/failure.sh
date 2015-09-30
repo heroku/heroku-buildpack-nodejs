@@ -71,10 +71,17 @@ warn_old_npm() {
 warn_untracked_dependencies() {
   local log_file="$1"
   if grep -qi 'gulp: not found' "$log_file"; then
-    warning "gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "Gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
   elif grep -qi 'grunt: not found' "$log_file"; then
-    warning "grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "Grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
   elif grep -qi 'bower: not found' "$log_file"; then
-    warning "bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "Bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  fi
+}
+
+warn_angular_resolution() {
+  local log_file="$1"
+  if grep -qi 'Unable to find suitable version for angular' "$log_file"; then
+    warning "Bower may need a resolution hint for angular" "https://github.com/bower/bower/issues/1746"
   fi
 }

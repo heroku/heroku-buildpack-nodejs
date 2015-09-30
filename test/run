@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testBowerAngularResolution() {
+  compile "bower-angular-resolution"
+  assertCaptured "Bower may need a resolution hint for angular"
+  assertCapturedError
+}
+
 testUntrackedDependencies() {
   compile "missing-grunt"
-  assertCaptured "grunt may not be tracked in package.json"
+  assertCaptured "Grunt may not be tracked in package.json"
   assertCapturedError
 }
 

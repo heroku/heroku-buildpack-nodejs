@@ -1,0 +1,23 @@
+{
+  "name": "bower-angular-resolution",
+  "version": "0.0.0",
+  "homepage": "https://github.com/heroku/heroku-buildpack-nodejs",
+  "authors": [
+    "Hunter Loftis <hunter@hunterloftis.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "1.0.7",
+    "angular-ui-router": "0.2.15"
+  }
+}
