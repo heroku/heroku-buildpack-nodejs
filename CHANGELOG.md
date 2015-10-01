@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Pending
+
+Fixes modules-checked-in reference URL
+
 ## v82 (2015-09-30)
 
 Detects bower+angular resolution failures
