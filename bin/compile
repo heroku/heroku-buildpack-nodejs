@@ -8,6 +8,10 @@ set -o pipefail   # don't ignore exit codes when piping output
 set -o nounset    # fail on unset variables
 unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
+### Constants
+
+DEFAULT_CACHE="node_modules bower_components"
+
 ### Configure directories
 
 BUILD_DIR=${1:-}
@@ -99,14 +103,14 @@ restore_cache() {
   if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
-      echo "Loading 1 from cacheDirectories (default):"
-      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+      echo "Loading 2 from cacheDirectories (default):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
     else
       echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
       restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
     fi
   else
-    echo "Skipping cache ($cache_status)"
+    echo "Skipping cache restore ($cache_status)"
   fi
 }
 
@@ -130,9 +134,11 @@ cache_build() {
 
   echo "Clearing previous node cache"
   clear_cache
-  if [ "$cache_directories" == "" ]; then
-    echo "Saving 1 cacheDirectories (default):"
-    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+  if ! ${NODE_MODULES_CACHE:-true}; then
+    echo "Skipping cache save (disabled by config)"
+  elif [ "$cache_directories" == "" ]; then
+    echo "Saving 2 cacheDirectories (default):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
   else
     echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
