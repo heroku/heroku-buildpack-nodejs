@@ -3,6 +3,7 @@
 ## Pending
 
 Fixes modules-checked-in reference URL
+When cache restoration is disabled, avoids uploading to the cache as well
 
 ## v82 (2015-09-30)
 

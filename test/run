@@ -12,13 +12,13 @@ testDisableCache() {
 
   compile "node-modules-cache-2" $cache
   assertCaptured "lodash@1.0.0"
-  assertCaptured "Saving 1 cacheDirectories"
+  assertCaptured "Saving 2 cacheDirectories"
   assertCapturedSuccess
 
   echo "false" > $env_dir/NODE_MODULES_CACHE
   compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.3.1"
-  assertNotCaptured "Saving 1 cacheDirectories"
+  assertNotCaptured "Saving 2 cacheDirectories"
   assertCapturedSuccess
 }
 
@@ -40,6 +40,17 @@ testBadJson() {
   assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Installing binaries"
   assertCapturedError 1 "Unable to parse"
+}
+
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+
+  compile "caching" $cache
+  assertCaptured "Saving 2 cacheDirectories (default)"
+  assertCaptured "- node_modules"
+  assertCaptured "- bower_components (nothing to cache)"
+  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
+  assertCapturedSuccess
 }
 
 testBuildWithUserCacheDirectoriesCamel() {
@@ -312,16 +323,6 @@ testInvalidDependency() {
   compile "invalid-dependency"
   assertCaptured "npm ERR! 404"
   assertCapturedError 1 ""
-}
-
-testNodeModulesCached() {
-  cache=$(mktmpdir)
-
-  compile "caching" $cache
-  assertCaptured "Saving 1 cacheDirectories (default)"
-  assertCaptured "- node_modules"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
 }
 
 testBuildWithUserCacheDirectories() {
