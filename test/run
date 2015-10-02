@@ -22,6 +22,26 @@ testDisableCache() {
   assertCapturedSuccess
 }
 
+testBowerAngularResolution() {
+  compile "bower-angular-resolution"
+  assertCaptured "Bower may need a resolution hint for angular"
+  assertCapturedError
+}
+
+testUntrackedDependencies() {
+  compile "missing-grunt"
+  assertCaptured "Grunt may not be tracked in package.json"
+  assertCapturedError
+}
+
+testBadJson() {
+  compile "bad-json"
+  assertCaptured "Build failed"
+  assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "Installing binaries"
+  assertCapturedError 1 "Unable to parse"
+}
+
 testBuildWithUserCacheDirectoriesCamel() {
   cache=$(mktmpdir)
 
@@ -151,14 +171,6 @@ testDetectWithPackageJson() {
 testDetectWithoutPackageJson() {
   detect "no-package-json"
   assertCapturedError 1 ""
-}
-
-testBadJson() {
-  compile "bad-json"
-  assertCaptured "Build failed"
-  assertCaptured "We're sorry this build is failing"
-  assertNotCaptured "Installing binaries"
-  assertCapturedError 1 "Unable to parse"
 }
 
 testIoJs() {
@@ -327,10 +339,6 @@ testBuildWithUserCacheDirectories() {
   assertCaptured "- bower_components"
   assertCapturedSuccess
 }
-
-
-
-
 
 testUserConfig() {
   compile "userconfig"
