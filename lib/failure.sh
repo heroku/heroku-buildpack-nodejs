@@ -48,7 +48,7 @@ warn_node_engine() {
 warn_prebuilt_modules() {
   local build_dir=${1:-}
   if [ -e "$build_dir/node_modules" ]; then
-    warning "node_modules checked into source control" "https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git-"
+    warning "node_modules checked into source control" "https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git"
   fi
 }
 
@@ -82,5 +82,25 @@ warn_meteor_npm_packages_json() {
 warn_meteor_npm_package() {
   if ! grep -q npm-container ".meteor/packages" ; then
     warning "Your Meteor app is using '${meteorhacks_npm_version}', add 'npm-container' in '.meteor/packages'" "http://doc.scalingo.com/languages/javascript/nodejs/meteor/npm"
+  fi
+}
+
+warn_untracked_dependencies() {
+  local log_file="$1"
+  if grep -qi 'gulp: not found' "$log_file"; then
+    warning "Gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  fi
+  if grep -qi 'grunt: not found' "$log_file"; then
+    warning "Grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  fi
+  if grep -qi 'bower: not found' "$log_file"; then
+    warning "Bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+  fi
+}
+
+warn_angular_resolution() {
+  local log_file="$1"
+  if grep -qi 'Unable to find suitable version for angular' "$log_file"; then
+    warning "Bower may need a resolution hint for angular" "https://github.com/bower/bower/issues/1746"
   fi
 }

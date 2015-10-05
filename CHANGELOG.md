@@ -1,5 +1,22 @@
 # Node.js Buildpack Changelog
 
+## Pending
+
+Caching improvements
+
+- Fixes modules-checked-in reference URL
+- When cache restoration is disabled, empties the cache instead of saving it
+- Adds bower_components as a default cache target
+
+## v82 (2015-09-30)
+
+Detects bower+angular resolution failures
+Detects missing grunt/gulp/bower failures
+
+## v81 (2015-09-24)
+
+Supports WEB_CONCURRENCY=28 for Performance-L dynos
+
 ## v80 (2015-08-14)
 
 Fixes not defaulting to `NODE_ENV=production` during runtime

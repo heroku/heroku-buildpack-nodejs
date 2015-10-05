@@ -7,6 +7,10 @@ set -o pipefail   # dont ignore exit codes when piping output
 set -o nounset    # fail on unset variables
 unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
+### Constants
+
+DEFAULT_CACHE="node_modules bower_components"
+
 ### Configure directories
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
@@ -16,6 +20,9 @@ BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 mkdir -p "$BUILD_DIR/.scalingo/node/"
 cd $BUILD_DIR
 export PATH="$BUILD_DIR/.scalingo/node/bin":$PATH
+
+LOG_FILE='/tmp/node-build-log.txt'
+echo "" > "$LOG_FILE"
 
 ### Load dependencies
 source $BP_DIR/lib/output.sh
@@ -32,7 +39,9 @@ source $BP_DIR/bin/meteor.sh
 ### Handle errors
 handle_failure() {
   header "Build failed"
-  failure_message | indent
+  warn_untracked_dependencies "$LOG_FILE"
+  warn_angular_resolution "$LOG_FILE"
+  failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
 
@@ -55,8 +64,8 @@ create_env() {
 }
 
 header "Creating runtime environment"
-create_env # can't indent the whole thing because piping causes subshells; no exporting possible
-list_node_config | indent
+create_env # can't pipe the whole thing because piping causes subshells, preventing exports
+list_node_config | output "$LOG_FILE"
 
 install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
@@ -88,7 +97,7 @@ install_bins() {
 }
 
 header "Installing binaries"
-install_bins | indent
+install_bins | output "$LOG_FILE"
 
 # Demeteorize app if required
 if test -n "$meteor_version"; then
@@ -102,19 +111,19 @@ restore_cache() {
   if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
-      echo "Loading 1 from cacheDirectories (default):"
-      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+      echo "Loading 2 from cacheDirectories (default):"
+      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
     else
       echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
       restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
     fi
   else
-    echo "Skipping cache ($cache_status)"
+    echo "Skipping cache restore ($cache_status)"
   fi
 }
 
 header "Restoring cache"
-restore_cache | indent
+restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   if $PREBUILD; then
@@ -126,16 +135,18 @@ build_dependencies() {
 }
 
 header "Building dependencies"
-build_dependencies | indent
+build_dependencies | output "$LOG_FILE"
 
 cache_build() {
   local cache_directories=$(get_cache_directories)
-  
+
   echo "Clearing previous node cache"
   clear_cache
-  if [ "$cache_directories" == "" ]; then
-    echo "Saving 1 cacheDirectories (default):"
-    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "node_modules"
+  if ! ${NODE_MODULES_CACHE:-true}; then
+    echo "Skipping cache save (disabled by config)"
+  elif [ "$cache_directories" == "" ]; then
+    echo "Saving 2 cacheDirectories (default):"
+    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
   else
     echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
@@ -144,7 +155,7 @@ cache_build() {
 }
 
 header "Caching build"
-cache_build | indent
+cache_build | output "$LOG_FILE"
 
 summarize_build() {
   cd $BUILD_DIR
@@ -152,4 +163,4 @@ summarize_build() {
 }
 
 header "Build succeeded!"
-summarize_build | indent
+summarize_build | output "$LOG_FILE"
