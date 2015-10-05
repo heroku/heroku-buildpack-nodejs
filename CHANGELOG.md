@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Pending
+## v83 (2015-10-05)
 
 Caching improvements
 
