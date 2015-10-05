@@ -99,9 +99,9 @@ install_meteorite_deps() {
       error "smart.lock is not present, run 'mrt install' to freeze dependencies"
       return 1
     fi
-    npm install -g meteorite | indent
+    npm install -g meteorite | output "$LOG_FILE"
     header "Meteorite installed"
-    mrt install | indent
+    mrt install | output "$LOG_FILE"
     header "Meteorite packaged installed"
   fi
 }
@@ -116,7 +116,7 @@ check_meteorhacks_npm() {
 }
 
 install_demeteorizer() {
-  npm install -g 'onmodulus/demeteorizer#v2.3.1' | indent
+  npm install -g 'onmodulus/demeteorizer#v2.3.1' | output "$LOG_FILE"
   header "Demeteorizer installed"
 }
 
@@ -151,7 +151,7 @@ demeteorize_app() {
   #          This causes issues when building with mobile platforms.
   #          Consider building into a different directory instead (meteor build ../output)
   tmp_build_dir=$(mktemp -d /tmp/demeteorized_XXXX)
-  HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | indent
+  HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | output "$LOG_FILE"
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
   if [ ! -e "$build_dir/Procfile" ] ; then
