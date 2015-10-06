@@ -2,16 +2,15 @@ info() {
   echo "       $*"
 }
 
-# sed -l basically makes sed replace and buffer through stdin to stdout
-# so you get updates while the command runs and dont wait for the end
-# e.g. npm install | indent
+# sed's buffer can't hold some of the huge build output from JS asset builders
+# try awk next? awk  '{ print "       " $0 }'
 output() {
   local logfile="$1"
   local c='s/^/       /'
 
   case $(uname) in
-    Darwin) tee -a "$logfile" | sed -l "$c";; # mac/bsd sed: -l buffers on line boundaries
-    *)      tee -a "$logfile" | sed -u "$c";; # unix/gnu sed: -u unbuffered (arbitrary) chunks of data
+    Darwin) tee -a "$logfile";;
+    *)      tee -a "$logfile";;
   esac
 }
 
