@@ -6,9 +6,8 @@ info() {
 # try awk? awk  '{ print "       " $0 }'
 output() {
   local logfile="$1"
-  local c='s/^/       /'
 
-  tee -a "$logfile"
+  tee -i -a "$logfile" 2> /dev/null
 }
 
 header() {
