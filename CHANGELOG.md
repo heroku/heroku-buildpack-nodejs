@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Pending
+## v84 (2015-10-08)
 
 Replaces sed with awk for output formatting
 
