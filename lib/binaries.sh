@@ -49,7 +49,7 @@ install_npm() {
   else
     if needs_resolution "$version"; then
       echo "Resolving npm version ${version} via semver.io..."
-      version=$(curl --silent --get --data-urlencode "range=${version}" https://semver.herokuapp.com/npm/resolve)
+      version=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/npm/resolve)
     fi
     if [[ `npm --version` == "$version" ]]; then
       echo "npm `npm --version` already installed with node"
