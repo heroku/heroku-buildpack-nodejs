@@ -9,8 +9,8 @@ output() {
   local c='s/^/       /'
 
   case $(uname) in
-    Darwin) tee -i -a "$logfile" 2> /dev/null | sed -l "$c";;
-    *)      tee -i -a "$logfile" 2> /dev/null | sed -u "$c";;
+    Darwin) stdbuf -oL -eL sed -l "$c" | tee -i -a "$logfile" 2> /dev/null;;
+    *)      stdbuf -oL -eL sed -u "$c" | tee -i -a "$logfile" 2> /dev/null;;
   esac
 }
 
