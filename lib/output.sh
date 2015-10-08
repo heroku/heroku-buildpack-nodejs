@@ -8,10 +8,7 @@ output() {
   local logfile="$1"
   local c='s/^/       /'
 
-  case $(uname) in
-    Darwin) tee -a "$logfile" | awk '{ print "       " $0 }';;
-    *)      tee -a "$logfile" | awk -W interactive '{ print "       " $0 }';;
-  esac
+  tee -a "$logfile"
 }
 
 header() {
