@@ -1,5 +1,11 @@
 # Node.js Buildpack Changelog
 
+## v85 (2015-10-08)
+
+Fixes piped output buffering issues
+
+- https://github.com/heroku/heroku-buildpack-nodejs/issues/273
+
 ## v84 (2015-10-08)
 
 Replaces sed with awk for output formatting
