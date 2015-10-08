@@ -1,5 +1,11 @@
 # Node.js Buildpack Changelog
 
+## Pending
+
+Replaces sed with awk for output formatting
+
+- large output (from assets or npm 3) was crashing sed ('resource unavailable')
+
 ## v83 (2015-10-05)
 
 Caching improvements
