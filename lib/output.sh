@@ -6,8 +6,12 @@ info() {
 # try awk? awk  '{ print "       " $0 }'
 output() {
   local logfile="$1"
+  local c='s/^/       /'
 
-  tee -i -a "$logfile" 2> /dev/null
+  case $(uname) in
+    Darwin) tee -i -a "$logfile" 2> /dev/null | sed -l "$c";;
+    *)      tee -i -a "$logfile" 2> /dev/null | sed -u "$c";;
+  esac
 }
 
 header() {
