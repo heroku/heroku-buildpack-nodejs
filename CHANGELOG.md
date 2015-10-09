@@ -1,8 +1,12 @@
 # Node.js Buildpack Changelog
 
-## v85 (2015-10-08)
+## v86 (2015-10-08)
 
 Fixes piped output buffering issues
+
+## v85 (2015-10-08)
+
+Fixes piped output buffering issues (unsuccessful)
 
 - https://github.com/heroku/heroku-buildpack-nodejs/issues/273
 
