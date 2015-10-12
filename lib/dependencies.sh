@@ -23,7 +23,7 @@ function _install_preselected_modules() {
   for module in $preselected_modules ; do
     out=$($JQ ".dependencies.${module}" < package.json)
     if [ "$out" != "null" ] ; then
-      npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc $module 2>&1 | indent
+      npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc $module 2>&1
     fi
   done
 }
