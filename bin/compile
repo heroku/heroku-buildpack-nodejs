@@ -93,7 +93,11 @@ install_bins() {
     install_nodejs "$node_engine" "$BUILD_DIR/.scalingo/node"
     install_npm "$npm_engine" "$BUILD_DIR/.scalingo/node"
   fi
-  warn_old_npm
+
+  # Only warn about old version of NPM for non-meteor applications
+  if test -z "$meteor_version"; then
+    warn_old_npm
+  fi
 }
 
 header "Installing binaries"
