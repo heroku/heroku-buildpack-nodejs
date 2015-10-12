@@ -401,6 +401,14 @@ testNonFileEnvVars() {
   unset NPM_CONFIG_PRODUCTION
 }
 
+testPrioritaryDependencies() {
+  compile "prioritary-dependencies"
+  assertCaptured "phantomjs"
+  assertCaptured "1.9.12"
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
 testNoDevDependencies() {
   compile "dev-dependencies"
   assertNotCaptured "lodash"
