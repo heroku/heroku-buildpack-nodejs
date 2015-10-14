@@ -155,7 +155,7 @@ demeteorize_app() {
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
   if [ ! -e "$build_dir/Procfile" ] ; then
-    echo "web: node demeteorized/main.js" > "$build_dir/Procfile"
+    echo "web: node demeteorized/bundle/programs/server/main.js" > "$build_dir/Procfile"
   fi
 
   ln -s "demeteorized/bundle/programs/server/package.json" "package.json"
