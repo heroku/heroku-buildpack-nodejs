@@ -116,7 +116,7 @@ check_meteorhacks_npm() {
 }
 
 install_demeteorizer() {
-  npm install -g 'onmodulus/demeteorizer#v2.3.1' | output "$LOG_FILE"
+  npm install -g 'onmodulus/demeteorizer#v3.0.1' | output "$LOG_FILE"
   header "Demeteorizer installed"
 }
 
@@ -124,9 +124,9 @@ remove_uninstallable_modules() {
   # Separe the modules names with '\n'
   uninstallable_modules="1to2"
   for module in $uninstallable_modules ; do
-    out=$($JQ ".dependencies[\"${module}\"]" < "demeteorized/package.json")
+    out=$($JQ ".dependencies[\"${module}\"]" < "demeteorized/bundle/programs/server/package.json")
     if [ "$out" != "null" ] ; then
-      cat "demeteorized/package.json" | grep -v "${module}" > .tmp_package.json
+      cat "demeteorized/bundle/programs/server/package.json" | grep -v "${module}" > .tmp_package.json
       mv .tmp_package.json package.json
     fi
   done
@@ -158,7 +158,7 @@ demeteorize_app() {
     echo "web: node demeteorized/main.js" > "$build_dir/Procfile"
   fi
 
-  ln -s "demeteorized/package.json" "package.json"
+  ln -s "demeteorized/bundle/programs/server/package.json" "package.json"
 
   header "Caching meteor runtime for future builds"
   rm -rf "$cache_dir/meteor"
