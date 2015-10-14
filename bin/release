@@ -9,10 +9,11 @@ addons: ["scalingo-mongodb:free"]
 default_process_types:
   web: node demeteorized/bundle/programs/server/boot.js demeteorized/bundle/programs/server/program.json
 EOF
+
 else
   cat << EOF
 addons: []
 default_process_types:
   web: npm start
 EOF
-end
+fi
