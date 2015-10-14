@@ -7,7 +7,7 @@ if [ -d "$1/.meteor" ] ; then
   cat << EOF
 addons: ["scalingo-mongodb:free"]
 default_process_types:
-  web: node demeteorized/bundle/programs/server/boot.js demeteorized/bundle/programs/server/program.json
+  web: ./.start-meteor-app
 EOF
 
 else

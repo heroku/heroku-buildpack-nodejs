@@ -26,6 +26,17 @@ EOF
   fi
 }
 
+create_meteor_startup_file() {
+  local build_dir=$1
+
+  cat << EOF > "${build_dir}/.start-meteor-app"
+cd demeteorized/bundle/programs/server
+exec node boot.js program.json
+EOF
+
+  chmod +x "${build_dir}/.start-meteor-app"
+}
+
 clean_meteor_installation() {
   rm -rf "$METEOR_HOME"
 }
@@ -172,5 +183,6 @@ demeteorize_app() {
   header "Application demeteorized"
   remove_uninstallable_modules
   create_meteor_settings_profile $build_dir
+  create_meteor_startup_file $build_dir
   clean_meteor_installation
 }
