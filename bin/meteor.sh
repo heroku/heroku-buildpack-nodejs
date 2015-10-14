@@ -154,10 +154,6 @@ demeteorize_app() {
   HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | output "$LOG_FILE"
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
-  if [ ! -e "$build_dir/Procfile" ] ; then
-    echo "web: node demeteorized/bundle/programs/server/main.js" > "$build_dir/Procfile"
-  fi
-
   ln -s "demeteorized/bundle/programs/server/package.json" "package.json"
 
   header "Caching meteor runtime for future builds"

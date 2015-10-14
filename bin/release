@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-cat << EOF
+build_dir=$1
+
+if [ -d "$1/.meteor" ] ; then
+  cat << EOF
+addons: ["scalingo-mongodb:free"]
+default_process_types:
+  web: node demeteorized/bundle/programs/server/boot.js demeteorized/bundle/programs/server/program.json
+EOF
+else
+  cat << EOF
 addons: []
 default_process_types:
   web: npm start
 EOF
+end
