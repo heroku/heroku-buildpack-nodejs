@@ -37,6 +37,20 @@ EOF
   chmod +x "${build_dir}/.start-meteor-app"
 }
 
+# Hacky function to work over this bug https://github.com/onmodulus/demeteorizer/issues/152
+install_phantomjs_linux() {
+  local build_dir=$1
+  local npm_dir="${build_dir}/demeteorized/bundle/programs/server/npm"
+  local phantom_dir="${npm_dir}/dfischer_phantomjs/node_modules/phantomjs"
+
+  if [ -d "$phantom_dir" ] ; then
+    pushd $phantom_dir > /dev/null
+    header "Installation of phantomjs"
+    node install.js
+    popd > /dev/null
+  fi
+}
+
 clean_meteor_installation() {
   rm -rf "$METEOR_HOME"
 }
@@ -182,6 +196,7 @@ demeteorize_app() {
 
   header "Application demeteorized"
   remove_uninstallable_modules
+  install_phantomjs_linux $build_dir
   create_meteor_settings_profile $build_dir
   create_meteor_startup_file $build_dir
   clean_meteor_installation
