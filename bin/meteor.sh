@@ -161,8 +161,8 @@ remove_mobile_platforms() {
   build_dir=$1
   platforms_file="${build_dir}/.meteor/platforms"
   [ ! -e "${platforms_file}" ] && return
-  grep -q ios "${platforms_file}" && meteor remove-platform ios > /dev/null
-  grep -q android "${platforms_file}" && meteor remove-platform android > /dev/null
+  grep -q ios "${platforms_file}" && meteor remove-platform ios > /dev/null || true
+  grep -q android "${platforms_file}" && meteor remove-platform android > /dev/null || true
 }
 
 demeteorize_app() {
