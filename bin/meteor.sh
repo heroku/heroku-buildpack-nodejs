@@ -67,7 +67,7 @@ install_meteor_dist() {
 
   linux_arch=$(uname -m)
   if [ "${linux_arch}" = "i686" ] ; then
-    PLATFORM="os.linux.x86_32"
+    platform="os.linux.x86_32"
   elif [ "${linux_arch}" = "x86_64" ] ; then
     platform="os.linux.x86_64"
   else
@@ -157,6 +157,14 @@ remove_uninstallable_modules() {
   done
 }
 
+remove_mobile_platforms() {
+  build_dir=$1
+  platforms_file="${build_dir}/.meteor/platforms"
+  [ ! -e "${platforms_file}" ] && return
+  grep -q ios "${platforms_file}" && meteor remove-platform ios > /dev/null
+  grep -q android "${platforms_file}" && meteor remove-platform android > /dev/null
+}
+
 demeteorize_app() {
   build_dir=$1
   cache_dir=$2
@@ -171,12 +179,13 @@ demeteorize_app() {
   install_demeteorizer
   check_meteorhacks_npm
 
+  remove_mobile_platforms "$build_dir"
   # Build outside source dir to avoid warning:
   # Warning: The output directory is under your source tree.
   #          This causes issues when building with mobile platforms.
   #          Consider building into a different directory instead (meteor build ../output)
   tmp_build_dir=$(mktemp -d /tmp/demeteorized_XXXX)
-  HOME=$METEOR_HOME demeteorizer -o "${tmp_build_dir}" | output "$LOG_FILE"
+  HOME=$METEOR_HOME demeteorizer -a os.linux.x86_64 -o "${tmp_build_dir}" | output "$LOG_FILE"
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
   ln -s "demeteorized/bundle/programs/server/package.json" "package.json"
