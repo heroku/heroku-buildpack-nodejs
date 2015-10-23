@@ -20,6 +20,7 @@ install_nodejs() {
   local download_url="http://s3pository.heroku.com/node/v$version/node-v$version-$os-$cpu.tar.gz"
   curl "$download_url" --silent --fail -o /tmp/node.tar.gz || (echo "Unable to download node $version; does it exist?" && false)
   tar xzf /tmp/node.tar.gz -C /tmp
+  rm -rf $dir/*
   mv /tmp/node-v$version-$os-$cpu/* $dir
   chmod +x $dir/bin/*
 }
