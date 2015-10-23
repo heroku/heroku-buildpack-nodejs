@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Pending
+
+Enables compiling the same directory multiple times
+
 ## v86 (2015-10-08)
 
 Fixes piped output buffering issues
