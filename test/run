@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testWarningsOnFailure() {
+  compile "many-warnings"
+  assertCaptured "troubleshooting-node-deploys"
+  assertCaptured "node_modules checked into source"
+  assertCaptured "has several known issues"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
 testMultipleRuns() {
   local compileDir=$(mktmpdir)
   local cacheDir=$(mktmpdir)
@@ -207,7 +216,7 @@ testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
   assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 5."
   assertCapturedSuccess
 }
 
@@ -281,16 +290,6 @@ testFailingBuild() {
   assertCapturedError 1 ""
 }
 
-testWarningsOnFailure() {
-  compile "many-warnings"
-  assertCaptured "troubleshooting-node-deploys"
-  assertCaptured "Node version not specified"
-  assertCaptured "node_modules checked into source"
-  assertCaptured "has several known issues"
-  assertNotCaptured "please submit a ticket"
-  assertCapturedError
-}
-
 testTicketOnFailure() {
   compile "invalid-dependency"
   assertCaptured "troubleshooting-node-deploys"
@@ -311,7 +310,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 5."
   assertCapturedError
 }
 
@@ -319,14 +318,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 5."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 5."
   assertCapturedSuccess
 }
 

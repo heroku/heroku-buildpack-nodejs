@@ -3,6 +3,7 @@
 ## Pending
 
 Enables compiling the same directory multiple times
+Updates tests for Node v5
 
 ## v86 (2015-10-08)
 
