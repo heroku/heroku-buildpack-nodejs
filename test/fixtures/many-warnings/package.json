@@ -10,7 +10,8 @@
     "thisdoesnotexist": "*"
   },
   "engines": {
-    "npm": "~1.2"
+    "node": "0.10.x",
+    "npm": "1.4.28"
   },
   "scripts": {
     "start": "node server.js"
