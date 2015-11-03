@@ -42,6 +42,6 @@ write_profile() {
 write_export() {
   local bp_dir="$1"
   local build_dir="$2"
-  echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/node_modules/.bin:\$PATH\"" > $bp_dir/export
+  echo "export PATH=\"$build_dir/.heroku/node/bin:\$PATH:$build_dir/node_modules/.bin\"" > $bp_dir/export
   echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> $bp_dir/export
 }

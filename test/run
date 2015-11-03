@@ -456,7 +456,7 @@ testShrinkwrap() {
 testProfileExport() {
   compile "stable-node"
   assertCaptured "Creating runtime environment"
-  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$PATH:\$HOME/bin:\$HOME/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertCapturedSuccess
 }
@@ -464,8 +464,8 @@ testProfileExport() {
 testMultiExport() {
   compile "stable-node"
   assertFileContains "export PATH=" "${bp_dir}/export"
-  assertFileContains "/.heroku/node/bin:" "${bp_dir}/export"
-  assertFileContains "/node_modules/.bin:\$PATH" "${bp_dir}/export"
+  assertFileContains "/.heroku/node/bin" "${bp_dir}/export"
+  assertFileContains "/node_modules/.bin" "${bp_dir}/export"
   assertFileContains "export NODE_HOME=" "${bp_dir}/export"
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
   assertCapturedSuccess
