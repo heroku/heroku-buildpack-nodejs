@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Pending
+## v87 (2015-11-03)
 
 Several edge-case fixes
 
