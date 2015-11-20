@@ -184,21 +184,6 @@ testDetectWithoutPackageJson() {
   assertCapturedError 1 ""
 }
 
-testDetectNodePhpIndex() {
-  detect "php-node-index"
-  assertCapturedError 1 ""
-}
-
-testDetectNodePhpCompose() {
-  detect "php-node-compose"
-  assertCapturedError 1 ""
-}
-
-testDetectNodePhpRequirements() {
-  detect "python-node"
-  assertCapturedError 1 ""
-}
-
 testIoJs() {
   compile "iojs"
   assertCaptured "engines.iojs (package.json):  1.0."
