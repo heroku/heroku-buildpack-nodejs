@@ -188,6 +188,12 @@ demeteorize_app() {
   HOME=$METEOR_HOME demeteorizer -a os.linux.x86_64 -o "${tmp_build_dir}" | output "$LOG_FILE"
   rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
+  # If there is an existing package.json (commonly for dev purposes), ignore it
+  # The real dependencies are defined by demeteorizer
+  # Example https://github.com/wekan/wekan
+  if [ -e "package.json" ] ; then
+    rm "package.json"
+  fi
   ln -s "demeteorized/bundle/programs/server/package.json" "package.json"
 
   header "Caching meteor runtime for future builds"
