@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Pending
+
+Retries all curl requests
+
 ## v87 (2015-11-03)
 
 Several edge-case fixes
