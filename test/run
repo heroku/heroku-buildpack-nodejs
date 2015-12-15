@@ -194,9 +194,19 @@ testDetectNodePhpCompose() {
   assertCapturedError 1 ""
 }
 
-testDetectNodePhpRequirements() {
+testDetectNodePhpComposeMultibuildpacks() {
+  detect "php-node-compose-multibuildpacks"
+  assertCapturedError 0 ""
+}
+
+testDetectNodePythonRequirements() {
   detect "python-node"
   assertCapturedError 1 ""
+}
+
+testDetectNodePythonMultibuildpackRequirements() {
+  detect "python-node-multibuildpack"
+  assertCapturedError 0 ""
 }
 
 testIoJs() {
