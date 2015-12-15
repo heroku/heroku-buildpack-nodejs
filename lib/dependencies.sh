@@ -3,6 +3,8 @@ install_node_modules() {
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
+    echo "Running prebuild script (if present)"
+    npm run heroku-prebuild --if-present
     echo "Pruning any extraneous modules"
     npm prune --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
     if [ -e $build_dir/npm-shrinkwrap.json ]; then
@@ -11,6 +13,8 @@ install_node_modules() {
       echo "Installing node modules (package.json)"
     fi
     npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    echo "Running postbuild script (if present)"
+    npm run heroku-postbuild --if-present
   else
     echo "Skipping (no package.json)"
   fi
@@ -21,6 +25,8 @@ rebuild_node_modules() {
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
+    echo "Running prebuild script (if present)"
+    npm run heroku-prebuild --if-present
     echo "Rebuilding any native modules"
     npm rebuild 2>&1
     if [ -e $build_dir/npm-shrinkwrap.json ]; then
@@ -29,6 +35,8 @@ rebuild_node_modules() {
       echo "Installing any new modules (package.json)"
     fi
     npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    echo "Running postbuild script (if present)"
+    npm run heroku-postbuild --if-present
   else
     echo "Skipping (no package.json)"
   fi
