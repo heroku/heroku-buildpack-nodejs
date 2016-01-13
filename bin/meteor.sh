@@ -173,6 +173,7 @@ demeteorize_app() {
 
   METEOR_HOME="$build_dir/.meteor-install"
   [ -e "$build_dir/.meteor/release" ] && meteor_version=$(cat "$build_dir/.meteor/release")
+  METEOR_BUILD_ANDROID_CORDOVA=${METEOR_BUILD_ANDROID_CORDOVA:-}
 
   install_meteor "$build_dir" "$cache_dir"
   export PATH=$PATH:${METEOR_HOME}/.meteor
