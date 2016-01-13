@@ -162,7 +162,9 @@ remove_mobile_platforms() {
   platforms_file="${build_dir}/.meteor/platforms"
   [ ! -e "${platforms_file}" ] && return
   sed -i 's/^ios$//g' "${platforms_file}"
-  sed -i 's/^android$//g' "${platforms_file}"
+  if [ "x${METEOR_BUILD_ANDROID_CORDOVA}" = "x" ] ; then
+    sed -i 's/^android$//g' "${platforms_file}"
+  fi
 }
 
 demeteorize_app() {
