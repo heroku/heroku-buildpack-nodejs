@@ -30,23 +30,23 @@ create_meteor_startup_file() {
   local build_dir=$1
 
   cat << EOF > "${build_dir}/.start-meteor-app"
-cd demeteorized/bundle/programs/server
+cd .app-build/bundle/programs/server
 exec node boot.js program.json
 EOF
 
   chmod +x "${build_dir}/.start-meteor-app"
 }
 
-# Hacky function to work over this bug https://github.com/onmodulus/demeteorizer/issues/152
 install_phantomjs_linux() {
   local build_dir=$1
-  local npm_dir="${build_dir}/demeteorized/bundle/programs/server/npm"
+  local npm_dir="${build_dir}/.app-build/bundle/programs/server/npm"
   local phantom_dir="${npm_dir}/dfischer_phantomjs/node_modules/phantomjs"
 
   if [ -d "$phantom_dir" ] ; then
     pushd $phantom_dir > /dev/null
-    header "Installation of phantomjs"
-    node install.js
+    header "Phantomjs installation"
+    node install.js 2>&1 | grep -v "${build_dir}" | grep -v '%' | output "$LOG_FILE"
+    info "Phantomjs installed and ready"
     popd > /dev/null
   fi
 }
@@ -98,6 +98,10 @@ install_meteor() {
   if [ -d "$cache_dir/meteor" ] ; then
     [ -d "$METEOR_HOME" ] && rm -fr "${METEOR_HOME}"
     cp -r "${cache_dir}/meteor" "${METEOR_HOME}"
+
+    meteor_build_cache_dir="${build_dir}/.meteor/local"
+    [ -d "${meteor_build_cache_dir}" ] && rm -rf "${meteor_build_cache_dir}"
+    [ -d "${cache_dir}/meteor-local" ] && cp -r "${cache_dir}/meteor-local" "${meteor_build_cache_dir}" 
     cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
@@ -108,26 +112,7 @@ install_meteor() {
     install_meteor_dist $meteor_version
     header "Meteor installed → $meteor_version"
   else
-    header "Meteor installed from cache → $meteor_version"
-  fi
-}
-
-install_meteorite_deps() {
-  build_dir=$1
-  cache_dir=$2
-
-  [ -d "$cache_dir/meteorite" ] && cp -r "$cache_dir/meteorite" "$build_dir/.meteorite"
-  [ -d "$cache_dir/meteorite-packages" ] && cp -r "$cache_dir/meteorite-packages" "$build_dir/packages"
-
-  if [ -e "$build_dir/smart.json" ] ; then
-    if [ ! -e "$build_dir/smart.lock" ] ; then
-      error "smart.lock is not present, run 'mrt install' to freeze dependencies"
-      return 1
-    fi
-    npm install -g meteorite | output "$LOG_FILE"
-    header "Meteorite installed"
-    mrt install | output "$LOG_FILE"
-    header "Meteorite packaged installed"
+    info "Meteor installed from cache → $meteor_version"
   fi
 }
 
@@ -140,18 +125,13 @@ check_meteorhacks_npm() {
   fi
 }
 
-install_demeteorizer() {
-  npm install -g 'onmodulus/demeteorizer#v3.0.1' | output "$LOG_FILE"
-  header "Demeteorizer installed"
-}
-
 remove_uninstallable_modules() {
   # Separe the modules names with '\n'
   uninstallable_modules="1to2"
   for module in $uninstallable_modules ; do
-    out=$($JQ ".dependencies[\"${module}\"]" < "demeteorized/bundle/programs/server/package.json")
+    out=$($JQ ".dependencies[\"${module}\"]" < ".app-build/bundle/programs/server/package.json")
     if [ "$out" != "null" ] ; then
-      cat "demeteorized/bundle/programs/server/package.json" | grep -v "${module}" > .tmp_package.json
+      cat ".app-build/bundle/programs/server/package.json" | grep -v "${module}" > .tmp_package.json
       mv .tmp_package.json package.json
     fi
   done
@@ -162,57 +142,52 @@ remove_mobile_platforms() {
   platforms_file="${build_dir}/.meteor/platforms"
   [ ! -e "${platforms_file}" ] && return
   sed -i 's/^ios$//g' "${platforms_file}"
-  if [ "x${METEOR_BUILD_ANDROID_CORDOVA}" = "x" ] ; then
-    sed -i 's/^android$//g' "${platforms_file}"
-  fi
+  sed -i 's/^android$//g' "${platforms_file}"
 }
 
-demeteorize_app() {
+link_meteor_package_json() {
+  build_dir=$1
+  cache_dir=$2
+  # If there is an existing package.json (commonly for dev purposes), ignore it
+  # The real dependencies are defined by meteor build
+  # Example https://github.com/wekan/wekan
+  if [ -e "$build_dir/package.json" ] ; then
+    rm "$build_dir/package.json"
+  fi
+  ln -s "$build_dir/.app-build/bundle/programs/server/package.json" "$build_dir/package.json"
+}
+
+cache_meteor_install() {
+  build_dir=$1
+  cache_dir=$2
+  meteor_install=$3
+  info "Caching meteor runtime for future builds"
+  rm -rf "$cache_dir/meteor"
+  cp -r "$meteor_install" "$cache_dir/meteor"
+  cp -r "$build_dir/.meteor/local" "$cache_dir/meteor-local"
+  echo $meteor_version > "$cache_dir/meteor-version"
+}
+
+build_meteor_app() {
   build_dir=$1
   cache_dir=$2
 
   METEOR_HOME="$build_dir/.meteor-install"
   [ -e "$build_dir/.meteor/release" ] && meteor_version=$(cat "$build_dir/.meteor/release")
-  METEOR_BUILD_ANDROID_CORDOVA=${METEOR_BUILD_ANDROID_CORDOVA:-}
 
   install_meteor "$build_dir" "$cache_dir"
   export PATH=$PATH:${METEOR_HOME}/.meteor
 
-  install_meteorite_deps "$build_dir" "$cache_dir"
-  install_demeteorizer
   check_meteorhacks_npm
-
   remove_mobile_platforms "$build_dir"
-  # Build outside source dir to avoid warning:
-  # Warning: The output directory is under your source tree.
-  #          This causes issues when building with mobile platforms.
-  #          Consider building into a different directory instead (meteor build ../output)
-  tmp_build_dir=$(mktemp -d /tmp/demeteorized_XXXX)
-  HOME=$METEOR_HOME demeteorizer -a os.linux.x86_64 -o "${tmp_build_dir}" | output "$LOG_FILE"
-  rm -rf ${build_dir}/demeteorized && mv "${tmp_build_dir}" "${build_dir}/demeteorized"
 
-  # If there is an existing package.json (commonly for dev purposes), ignore it
-  # The real dependencies are defined by demeteorizer
-  # Example https://github.com/wekan/wekan
-  if [ -e "package.json" ] ; then
-    rm "package.json"
-  fi
-  ln -s "demeteorized/bundle/programs/server/package.json" "package.json"
-
-  header "Caching meteor runtime for future builds"
-  rm -rf "$cache_dir/meteor"
-  cp -r "$METEOR_HOME" "$cache_dir/meteor"
-  echo $meteor_version > "$cache_dir/meteor-version"
-
-  if [ -d "$build_dir/.meteorite" ] ; then
-    header "Caching meteorite packages for future builds"
-    rm -rf "$cache_dir/meteorite"
-    rm -rf "$cache_dir/meteorite-packages"
-    cp -r "$build_dir/packages" "$cache_dir/meteorite-packages"
-    cp -r "$build_dir/.meteorite" "$cache_dir/meteorite"
-  fi
-
-  header "Application demeteorized"
+  info "Building Meteor Application"
+  HOME=$METEOR_HOME meteor build --architecture os.linux.x86_64 --directory ".app-build" 2>&1 | \
+    grep -v "under your source tree" | \
+    output "$LOG_FILE"
+  link_meteor_package_json "$build_dir" "$cache_dir"
+  cache_meteor_install "$build_dir" "$cache_dir" "$METEOR_HOME"
+  info "Application built"
   remove_uninstallable_modules
   install_phantomjs_linux $build_dir
   create_meteor_settings_profile $build_dir

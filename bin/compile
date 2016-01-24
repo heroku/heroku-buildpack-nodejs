@@ -103,10 +103,10 @@ install_bins() {
 header "Installing binaries"
 install_bins | output "$LOG_FILE"
 
-# Demeteorize app if required
+# Build meteor app if required
 if test -n "$meteor_version"; then
   header "Meteor app detected: version ${meteor_version}"
-  demeteorize_app $BUILD_DIR $CACHE_DIR
+  build_meteor_app $BUILD_DIR $CACHE_DIR
 fi
 
 restore_cache() {

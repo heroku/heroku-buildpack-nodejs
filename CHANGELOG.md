@@ -1,3 +1,12 @@
+# Meteor Specific Changelog
+
+## 2016-01-24
+
+- Drop pre-1.0 meteorite support
+- Cache .meteor/local directory between builds
+- Fix output globally
+- Refactor code functions
+
 # Node.js Buildpack Changelog
 
 ## Pending
