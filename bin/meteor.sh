@@ -78,7 +78,7 @@ install_meteor_dist() {
 
   # If you already have a tropohouse/warehouse, we do a clean install here:
   if [ -e "$METEOR_HOME/.meteor" ]; then
-    echo "Removing your existing Meteor installation."
+    info "Removing your existing Meteor installation."
     rm -rf "$METEOR_HOME/.meteor"
   fi
 
