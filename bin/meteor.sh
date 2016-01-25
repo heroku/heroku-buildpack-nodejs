@@ -162,8 +162,9 @@ cache_meteor_install() {
   cache_dir=$2
   meteor_install=$3
   info "Caching meteor runtime for future builds"
-  rm -rf "$cache_dir/meteor"
+  [ -d "$cache_dir/meteor" ] && rm -rf "$cache_dir/meteor"
   cp -r "$meteor_install" "$cache_dir/meteor"
+  [ -d "$cache_dir/meteor-local" ] && rm -rf "$cache_dir/meteor-local"
   cp -r "$build_dir/.meteor/local" "$cache_dir/meteor-local"
   echo $meteor_version > "$cache_dir/meteor-version"
 }
