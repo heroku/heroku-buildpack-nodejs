@@ -76,15 +76,6 @@ You can define the node version you want to use with Meteor in the `.node-versio
 0.11.x
 ```
 
-### Build for target 'web.cordova'
-
-Build to 'web.cordova' is disabled by default, set the following variable in
-your environment to enable it.
-
-```
-METEOR_BUILD_ANDROID_CORDOVA=true
-```
-
 ## Options for Node
 
 ### Specify a node version
