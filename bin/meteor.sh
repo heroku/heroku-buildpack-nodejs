@@ -182,7 +182,7 @@ build_meteor_app() {
   check_meteorhacks_npm
   remove_mobile_platforms "$build_dir"
 
-  info "Building Meteor Application"
+  info "Building Meteor Application - may take some time, be patient..."
   HOME=$METEOR_HOME meteor build --architecture os.linux.x86_64 --directory ".app-build" 2>&1 | \
     grep -v "under your source tree" | \
     output "$LOG_FILE"
