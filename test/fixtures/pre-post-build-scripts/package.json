@@ -1,0 +1,16 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "~0.10.0"
+  },
+  "scripts" : {
+    "heroku-prebuild" : "echo heroku-prebuild hook message",
+    "heroku-postbuild" : "echo heroku-postbuild hook message"
+  }
+}

@@ -471,6 +471,15 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
+testPrePostBuildScripts() {
+  compile "pre-post-build-scripts"
+  assertCaptured "Running prebuild script"
+  assertCaptured "echo heroku-prebuild hook message"
+  assertCaptured "Running postbuild script"
+  assertCaptured "echo heroku-postbuild hook message"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd $(dirname 0) >/dev/null

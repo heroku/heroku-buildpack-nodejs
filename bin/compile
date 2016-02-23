@@ -118,11 +118,14 @@ header "Restoring cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
+  local has_prebuild_script=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")
+  local has_postbuild_script=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
+
   if $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
-    rebuild_node_modules "$BUILD_DIR"
+    rebuild_node_modules "$BUILD_DIR" "$has_prebuild_script" "$has_postbuild_script"
   else
-    install_node_modules "$BUILD_DIR"
+    install_node_modules "$BUILD_DIR" "$has_prebuild_script" "$has_postbuild_script"
   fi
 }
 
