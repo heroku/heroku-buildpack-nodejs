@@ -1,8 +1,9 @@
 # Node.js Buildpack Changelog
 
-## Pending
+## v88 (2016-2-23)
 
-Retries all curl requests
+- Retries all curl requests
+- Use HTTPS for node binary downloads again
 
 ## v87 (2015-11-03)
 
