@@ -52,7 +52,9 @@ install_phantomjs_linux() {
 }
 
 clean_meteor_installation() {
+  local build_dir=$1
   rm -rf "$METEOR_HOME"
+  [ -d "${build_dir}/.meteor/local" ] && rm -rf "${build_dir}/.meteor/local"
 }
 
 ## Install meteor distribution
@@ -193,5 +195,5 @@ build_meteor_app() {
   install_phantomjs_linux $build_dir
   create_meteor_settings_profile $build_dir
   create_meteor_startup_file $build_dir
-  clean_meteor_installation
+  clean_meteor_installation $build_dir
 }
