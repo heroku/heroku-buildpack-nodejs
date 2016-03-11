@@ -1,5 +1,10 @@
 # Node.js Buildpack Changelog
 
+## Latest
+
+- Adds heroku-prebuild script
+- Adds heroku-postbuild script
+
 ## v88 (2016-2-23)
 
 - Retries all curl requests
