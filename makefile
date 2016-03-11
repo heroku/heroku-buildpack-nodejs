@@ -1,4 +1,4 @@
-test: test-cedar-14 test-cedar-10
+test: test-cedar-14
 
 test-cedar-14:
 	@echo "Running tests in docker (cedar-14)..."
