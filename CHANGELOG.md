@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Latest
+## v89 (2016-3-11)
 
 - Adds heroku-prebuild script
 - Adds heroku-postbuild script
