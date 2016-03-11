@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testPrePostBuildScripts() {
+  compile "pre-post-build-scripts"
+  assertCaptured "Running heroku-prebuild"
+  assertCaptured "echo heroku-prebuild hook message"
+  assertCaptured "Running heroku-postbuild"
+  assertCaptured "echo heroku-postbuild hook message"
+  assertCapturedSuccess
+
+  compile "stable-node"
+  assertNotCaptured "Running heroku-prebuild"
+  assertNotCaptured "Running heroku-postbuild"
+  assertCapturedSuccess
+}
+
 testWarningsOnFailure() {
   compile "many-warnings"
   assertCaptured "troubleshooting-node-deploys"
@@ -468,15 +482,6 @@ testMultiExport() {
   assertFileContains "/node_modules/.bin" "${bp_dir}/export"
   assertFileContains "export NODE_HOME=" "${bp_dir}/export"
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
-  assertCapturedSuccess
-}
-
-testPrePostBuildScripts() {
-  compile "pre-post-build-scripts"
-  assertCaptured "Running prebuild script"
-  assertCaptured "echo heroku-prebuild hook message"
-  assertCaptured "Running postbuild script"
-  assertCaptured "echo heroku-postbuild hook message"
   assertCapturedSuccess
 }
 
