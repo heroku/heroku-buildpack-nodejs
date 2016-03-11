@@ -118,12 +118,14 @@ header "Restoring cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
+  run_if_present 'heroku-prebuild'
   if $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     rebuild_node_modules "$BUILD_DIR"
   else
     install_node_modules "$BUILD_DIR"
   fi
+  run_if_present 'heroku-postbuild'
 }
 
 header "Building dependencies"
