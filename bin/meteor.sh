@@ -166,7 +166,7 @@ cache_meteor_install() {
   info "Caching meteor runtime for future builds"
 
   # If first build or new version of meteor, caching meteor install
-  if [ ! -e "$cache_dir/meteor-version" -o "$meteor_version" != "$(cat $cache_dir/meteor-version)" ] ; then
+  if [[ ! -e "$cache_dir/meteor-version" ]] || [[ "$meteor_version" != "$(cat $cache_dir/meteor-version)" ]] ; then
     [ -d "$cache_dir/meteor" ] && rm -rf "$cache_dir/meteor"
     cp -r "$meteor_install" "$cache_dir/meteor"
   fi
