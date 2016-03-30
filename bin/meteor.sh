@@ -127,18 +127,6 @@ check_meteorhacks_npm() {
   fi
 }
 
-remove_uninstallable_modules() {
-  # Separe the modules names with '\n'
-  uninstallable_modules="1to2"
-  for module in $uninstallable_modules ; do
-    out=$($JQ ".dependencies[\"${module}\"]" < ".app-build/bundle/programs/server/package.json")
-    if [ "$out" != "null" ] ; then
-      cat ".app-build/bundle/programs/server/package.json" | grep -v "${module}" > .tmp_package.json
-      mv .tmp_package.json package.json
-    fi
-  done
-}
-
 remove_mobile_platforms() {
   build_dir=$1
   platforms_file="${build_dir}/.meteor/platforms"
@@ -154,7 +142,7 @@ link_meteor_package_json() {
   # The real dependencies are defined by meteor build
   # Example https://github.com/wekan/wekan
   if [ -e "$build_dir/package.json" ] ; then
-    rm "$build_dir/package.json"
+    mv "$build_dir/package.json" "$build_dir/package.app.json"
   fi
   ln -s "$build_dir/.app-build/bundle/programs/server/package.json" "$build_dir/package.json"
 }
@@ -199,7 +187,6 @@ build_meteor_app() {
   link_meteor_package_json "$build_dir" "$cache_dir"
   cache_meteor_install "$build_dir" "$cache_dir" "$METEOR_HOME"
   info "Application built"
-  remove_uninstallable_modules
   install_phantomjs_linux $build_dir
   create_meteor_settings_profile $build_dir
   create_meteor_startup_file $build_dir
