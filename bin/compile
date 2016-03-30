@@ -103,12 +103,6 @@ install_bins() {
 header "Installing binaries"
 install_bins | output "$LOG_FILE"
 
-# Build meteor app if required
-if test -n "$meteor_version"; then
-  header "Meteor app detected: version ${meteor_version}"
-  build_meteor_app $BUILD_DIR $CACHE_DIR
-fi
-
 restore_cache() {
   local cache_status="$(get_cache_status)"
 
@@ -160,6 +154,12 @@ cache_build() {
 
 header "Caching build"
 cache_build | output "$LOG_FILE"
+
+# Build meteor app if required
+if test -n "$meteor_version"; then
+  header "Meteor app detected: version ${meteor_version}"
+  build_meteor_app $BUILD_DIR $CACHE_DIR
+fi
 
 summarize_build() {
   cd $BUILD_DIR

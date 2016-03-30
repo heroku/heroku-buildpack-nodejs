@@ -135,16 +135,14 @@ remove_mobile_platforms() {
   sed -i 's/^android$//g' "${platforms_file}"
 }
 
-link_meteor_package_json() {
+install_meteor_npm_package_json() {
   build_dir=$1
   cache_dir=$2
-  # If there is an existing package.json (commonly for dev purposes), ignore it
-  # The real dependencies are defined by meteor build
-  # Example https://github.com/wekan/wekan
-  if [ -e "$build_dir/package.json" ] ; then
-    mv "$build_dir/package.json" "$build_dir/package.app.json"
-  fi
-  ln -s "$build_dir/.app-build/bundle/programs/server/package.json" "$build_dir/package.json"
+
+  pushd "$build_dir/.app-build/bundle/programs/server" >/dev/null
+  npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1 | output "$LOG_FILE"
+  (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null | output "$LOG_FILE"
+  popd >/dev/null
 }
 
 cache_meteor_install() {
@@ -178,13 +176,15 @@ build_meteor_app() {
   remove_mobile_platforms "$build_dir"
 
   info "Building Meteor Application - may take some time, be patient..."
+
   HOME=$METEOR_HOME meteor build --architecture os.linux.x86_64 --directory ".app-build" 2>&1 | \
     grep -v "under your source tree" | \
     grep -v "interpreted as source code" | \
     grep -v "a different directory instead" | \
     grep -v "meteor build ../output" | \
     output "$LOG_FILE"
-  link_meteor_package_json "$build_dir" "$cache_dir"
+
+  install_meteor_npm_package_json "$build_dir" "$cache_dir"
   cache_meteor_install "$build_dir" "$cache_dir" "$METEOR_HOME"
   info "Application built"
   install_phantomjs_linux $build_dir
