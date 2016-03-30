@@ -192,6 +192,9 @@ build_meteor_app() {
   info "Building Meteor Application - may take some time, be patient..."
   HOME=$METEOR_HOME meteor build --architecture os.linux.x86_64 --directory ".app-build" 2>&1 | \
     grep -v "under your source tree" | \
+    grep -v "interpreted as source code" | \
+    grep -v "a different directory instead" | \
+    grep -v "meteor build ../output" | \
     output "$LOG_FILE"
   link_meteor_package_json "$build_dir" "$cache_dir"
   cache_meteor_install "$build_dir" "$cache_dir" "$METEOR_HOME"
