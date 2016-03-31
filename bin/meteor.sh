@@ -111,6 +111,16 @@ install_meteor() {
 
   if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
     mkdir -p ${METEOR_HOME}
+
+    if [ "x${cached_meteor_version}" != "x" ] ; then
+      header "Upgrading Meteor from ${cached_meteor_version} to ${meteor_version}"
+    fi
+
+    if [ -d "${meteor_build_cache_dir}" ] ; then
+      info "Meteor build cache purged"
+      rm -rf "${meteor_build_cache_dir}"
+    fi
+
     install_meteor_dist $meteor_version
     header "Meteor installed → $meteor_version"
   else
