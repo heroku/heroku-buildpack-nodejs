@@ -185,6 +185,7 @@ build_meteor_app() {
   check_meteorhacks_npm
 
   build_flags="--architecture os.linux.x86_64 --directory .app-build"
+  BUILD_MOBILE_PLATFORMS_SERVER=${BUILD_MOBILE_PLATFORMS_SERVER:-false}
   if [ "x${BUILD_MOBILE_PLATFORMS_SERVER}" = "xtrue" ] ; then
     build_flags="--server-only ${build_flags}"
   else
