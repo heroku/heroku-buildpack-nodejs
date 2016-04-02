@@ -183,11 +183,17 @@ build_meteor_app() {
   export PATH=$PATH:${METEOR_HOME}/.meteor
 
   check_meteorhacks_npm
-  remove_mobile_platforms "$build_dir"
+
+  build_flags="--architecture os.linux.x86_64 --directory .app-build"
+  if [ "x${BUILD_MOBILE_PLATFORMS_SERVER}" = "xtrue" ] ; then
+    build_flags="--server-only ${build_flags}"
+  else
+    remove_mobile_platforms "$build_dir"
+  fi
 
   info "Building Meteor Application - may take some time, be patient..."
 
-  HOME=$METEOR_HOME meteor build --architecture os.linux.x86_64 --directory ".app-build" 2>&1 | \
+  HOME=$METEOR_HOME meteor build $build_flags 2>&1 | \
     grep -v "under your source tree" | \
     grep -v "interpreted as source code" | \
     grep -v "a different directory instead" | \
