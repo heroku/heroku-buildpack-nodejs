@@ -68,6 +68,16 @@ If you're using the meteor framework, you just need to commit the `.meteor`
 directory at the root of your Meteor project, we'll detect and handle it to
 make your application work, out of the box.
 
+### Build mobile server backend for cordova
+
+You've to setup the `BUILD_MOBILE_PLATFORMS_SERVER` environment variable to true.
+
+```
+scalingo env-set BUILD_MOBILE_PLATFORMS_SERVER=true
+```
+
+Then the buildpack will user the `--server-only` flag of Meteor (≥ 1.3)
+
 ### Specify a node version
 
 You can define the node version you want to use with Meteor in the `.node-version` file at the root of your project.
