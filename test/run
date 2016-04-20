@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testEnvBlacklist() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo 'tr_TR.UTF-8' > "$env_dir"/LANG
+  echo 'safeVar' > "$env_dir"/SAFE
+  compile "echo-lang" $cache $env_dir
+  assertCaptured "safeVar"
+  assertNotCaptured "tr_TR.UTF-8"
+  assertCapturedSuccess
+}
+
 testPrePostBuildScripts() {
   compile "pre-post-build-scripts"
   assertCaptured "Running heroku-prebuild"
