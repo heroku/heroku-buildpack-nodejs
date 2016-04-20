@@ -1,0 +1,16 @@
+{
+  "name": "echo-lang",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "scripts": {
+    "postinstall": "echo $LANG; echo $SAFE;"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
