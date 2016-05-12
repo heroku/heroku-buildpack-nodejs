@@ -24,6 +24,7 @@ cd $BUILD_DIR
 export PATH="$BUILD_DIR/.heroku/node/bin":$PATH
 
 LOG_FILE='/tmp/node-build-log.txt'
+mkdir -p '/tmp'
 echo "" > "$LOG_FILE"
 
 ### Load dependencies
