@@ -97,7 +97,7 @@ install_bins() {
 header "Installing binaries"
 install_bins | output "$LOG_FILE"
 
-envconsul_url="https://github.com/hashicorp/envconsul/releases/download/v0.6.0"
+envconsul_url="https://releases.hashicorp.com/envconsul/0.6.0"
 envconsul_package_version="envconsul_0.6.0_linux_amd64.zip"
 envconsul_download_url="$envconsul_url/$envconsul_package_version"
 
