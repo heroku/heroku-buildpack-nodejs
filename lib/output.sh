@@ -1,5 +1,5 @@
 info() {
-  echo "       $*"
+  echo "       $*" || true
 }
 
 # format output and send a copy to the log
@@ -8,17 +8,17 @@ output() {
 
   while read LINE;
   do
-    echo "       $LINE"
-    echo "$LINE" >> "$logfile"
+    echo "       $LINE" || true
+    echo "$LINE" >> "$logfile" || true
   done
 }
 
 header() {
-  echo ""
-  echo "-----> $*"
+  echo "" || true
+  echo "-----> $*" || true
 }
 
 error() {
-  echo " !     $*" >&2
-  echo ""
+  echo " !     $*" >&2 || true
+  echo "" || true
 }
