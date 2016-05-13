@@ -3,6 +3,7 @@
 ## Current
 
 - Do not fail build on output errors
+- Do not prune before install (shrinkwrap unsupported by prune)
 
 ## v90 (2016-4-20)
 
