@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Current
+
+- Do not fail build on output errors
+
 ## v90 (2016-4-20)
 
 - Blacklists the LANG env var
