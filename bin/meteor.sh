@@ -43,6 +43,7 @@ install_phantomjs_linux() {
   local dfischer_phantomjs_dir="/dfischer_phantomjs/node_modules/phantomjs"
   local phantom_dir_pre13="${npm_dir}${dfischer_phantomjs_dir}"
   local phantom_dir_post13="${npm_dir}/node_modules/meteor${dfischer_phantomjs_dir}"
+  local phantom_dir=""
 
   [ -d "$phantom_dir_pre13" ] && phantom_dir=$phantom_dir_pre13
   [ -d "$phantom_dir_post13" ] && phantom_dir=$phantom_dir_post13
