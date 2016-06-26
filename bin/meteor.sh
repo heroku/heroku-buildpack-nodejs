@@ -40,9 +40,14 @@ EOF
 install_phantomjs_linux() {
   local build_dir=$1
   local npm_dir="${build_dir}/.app-build/bundle/programs/server/npm"
-  local phantom_dir="${npm_dir}/dfischer_phantomjs/node_modules/phantomjs"
+  local dfischer_phantomjs_dir="/dfischer_phantomjs/node_modules/phantomjs"
+  local phantom_dir_pre13="${npm_dir}${dfischer_phantomjs_dir}"
+  local phantom_dir_post13="${npm_dir}/node_modules/meteor${dfischer_phantomjs_dir}"
 
-  if [ -d "$phantom_dir" ] ; then
+  [ -d "$phantom_dir_pre13" ] && phantom_dir=$phantom_dir_pre13
+  [ -d "$phantom_dir_post13" ] && phantom_dir=$phantom_dir_post13
+
+  if [ -n "$phantom_dir" ] ; then
     pushd $phantom_dir > /dev/null
     header "Phantomjs installation"
     node install.js 2>&1 | grep -v "${build_dir}" | grep -v '%' | output "$LOG_FILE"
