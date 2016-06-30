@@ -87,3 +87,17 @@ warn_angular_resolution() {
     warning "Bower may need a resolution hint for angular" "https://github.com/bower/bower/issues/1746"
   fi
 }
+
+warn_missing_devdeps() {
+  local log_file="$1"
+  if grep -qi 'cannot find module' "$log_file"; then
+    warning "A module may be missing from package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
+      local devDeps=$(read_json "$BUILD_DIR/package.json" ".devDependencies")
+      echo "devDependencies: $devDeps"
+      if [ "$devDeps" != "" ]; then
+        warning "A module may be specified in devDependencies instead of dependencies" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
+      fi
+    fi
+  fi
+}
