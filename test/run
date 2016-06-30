@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testWarnUnmetDep() {
+  compile "unmet-dep"
+  assertCaptured "may cause runtime issues"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may cause runtime issues"
+  assertCapturedSuccess
+}
+
 testWarnEconnreset() {
   compile "econnreset-mock"
   assertCaptured "may be related to npm versions"

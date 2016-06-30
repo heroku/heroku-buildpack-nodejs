@@ -162,3 +162,4 @@ header "Build succeeded!"
 summarize_build | output "$LOG_FILE"
 
 warn_no_start "$LOG_FILE"
+warn_unmet_dep "$LOG_FILE"

@@ -128,3 +128,10 @@ warn_econnreset() {
     warning "ECONNRESET issues may be related to npm versions" "https://github.com/npm/registry/issues/10#issuecomment-217141066"
   fi
 }
+
+warn_unmet_dep() {
+  local log_file="$1"
+  if grep -qi 'unmet dependency' "$log_file" || grep -qi 'unmet peer dependency' "$log_file"; then
+    warn "Unmet dependencies don't fail npm install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
+  fi
+}
