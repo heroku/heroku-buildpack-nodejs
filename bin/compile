@@ -42,6 +42,8 @@ handle_failure() {
   header "Build failed"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
+  warn_missing_devdeps "$LOG_FILE"
+  warn_econnreset "$LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
@@ -158,3 +160,6 @@ summarize_build() {
 
 header "Build succeeded!"
 summarize_build | output "$LOG_FILE"
+
+warn_no_start "$LOG_FILE"
+warn_unmet_dep "$LOG_FILE"
