@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testWarnNoStart() {
+  compile "no-start"
+  assertCaptured "may not specify any way to start"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may not specify any way to start"
+  assertCapturedSuccess
+}
+
 testWarnDevDeps() {
   compile "missing-devdeps-1"
   assertCaptured "A module may be missing"

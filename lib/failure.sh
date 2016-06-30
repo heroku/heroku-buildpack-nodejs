@@ -35,6 +35,14 @@ warning() {
   echo "" >> $warnings
 }
 
+warn() {
+  local tip=${1:-}
+  local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}
+  echo " !     $tip" || true
+  echo "       $url" || true
+  echo ""
+}
+
 warn_node_engine() {
   local node_engine=${1:-}
   if [ "$node_engine" == "" ]; then
@@ -97,6 +105,18 @@ warn_missing_devdeps() {
       echo "devDependencies: $devDeps"
       if [ "$devDeps" != "" ]; then
         warning "A module may be specified in devDependencies instead of dependencies" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
+      fi
+    fi
+  fi
+}
+
+warn_no_start() {
+  local log_file="$1"
+  if ! [ -e "$BUILD_DIR/Procfile" ]; then
+    local startScript=$(read_json "$BUILD_DIR/package.json" ".scripts.start")
+    if [ "$startScript" == "" ]; then
+      if ! [ -e "$BUILD_DIR/server.js" ]; then
+        warn "This app may not specify any way to start a node process" "https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type"
       fi
     fi
   fi
