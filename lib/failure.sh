@@ -121,3 +121,10 @@ warn_no_start() {
     fi
   fi
 }
+
+warn_econnreset() {
+  local log_file="$1"
+  if grep -qi 'econnreset' "$log_file"; then
+    warning "ECONNRESET issues may be related to npm versions" "https://github.com/npm/registry/issues/10#issuecomment-217141066"
+  fi
+}

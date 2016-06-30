@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testWarnEconnreset() {
+  compile "econnreset-mock"
+  assertCaptured "may be related to npm versions"
+  assertCapturedError
+  compile "no-version"
+  assertNotCaptured "may be related to npm versions"
+  assertCapturedSuccess
+}
+
 testWarnNoStart() {
   compile "no-start"
   assertCaptured "may not specify any way to start"
