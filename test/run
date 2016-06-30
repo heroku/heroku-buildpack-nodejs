@@ -201,8 +201,8 @@ testConcurrencySaneMaximum() {
 
 testInvalidNode() {
   compile "invalid-node"
-  assertCaptured "Downloading and installing node 0.11.33"
-  assertCaptured "Unable to download node 0.11.33"
+  assertCaptured "Downloading and installing node 0.11.333"
+  assertCaptured "Unable to download node 0.11.333"
   assertCapturedError
 }
 
