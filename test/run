@@ -31,15 +31,15 @@ testWarnNoStart() {
 testWarnDevDeps() {
   compile "missing-devdeps-1"
   assertCaptured "A module may be missing"
-  assertNotCaptured "A module may be specified"
+  assertNotCaptured "This module may be specified"
   assertCapturedError
   compile "missing-devdeps-2"
   assertCaptured "A module may be missing"
-  assertCaptured "A module may be specified"
+  assertCaptured "This module may be specified"
   assertCapturedError
   compile "failing-build"
   assertNotCaptured "A module may be missing"
-  assertNotCaptured "A module may be specified"
+  assertNotCaptured "This module may be specified"
   assertCapturedError
 }
 
