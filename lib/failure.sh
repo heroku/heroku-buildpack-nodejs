@@ -102,7 +102,6 @@ warn_missing_devdeps() {
     warning "A module may be missing from package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
     if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
       local devDeps=$(read_json "$BUILD_DIR/package.json" ".devDependencies")
-      echo "devDependencies: $devDeps"
       if [ "$devDeps" != "" ]; then
         warning "A module may be specified in devDependencies instead of dependencies" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
       fi
