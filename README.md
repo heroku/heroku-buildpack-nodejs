@@ -34,6 +34,14 @@ Uses the [semver.io](https://semver.io) webservice to find the latest version of
 
 You can write a file `.node_version` at the root of your project, and we'll use semver to get the best node version from this instruction
 
+##### Debug Build
+
+Define the environment variable `METEOR_DEBUG_BUILD` to true and we'll build your application in debug mode (unminifed code)
+
+```
+scalingo env-set METEOR_DEBUG_BUILD=true
+```
+
 ### Common
 
 - Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).

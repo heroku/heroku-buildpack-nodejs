@@ -192,10 +192,16 @@ build_meteor_app() {
 
   build_flags="--architecture os.linux.x86_64 --directory .app-build"
   BUILD_MOBILE_PLATFORMS_SERVER=${BUILD_MOBILE_PLATFORMS_SERVER:-false}
+  METEOR_DEBUG_BUILD=${METEOR_DEBUG_BUILD:-false}
+
   if [ "x${BUILD_MOBILE_PLATFORMS_SERVER}" = "xtrue" ] ; then
     build_flags="--server-only ${build_flags}"
   else
     remove_mobile_platforms "$build_dir"
+  fi
+
+  if [ "x${METEOR_DEBUG_BUILD}" = "xtrue"  ] ; then
+    build_flags="--debug ${build_flags}"
   fi
 
   info "Building Meteor Application - may take some time, be patient..."
