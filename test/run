@@ -192,13 +192,6 @@ testConcurrencyCustomLimit() {
   assertCapturedSuccess
 }
 
-testConcurrencySaneMaximum() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=6144 WEB_MEMORY=32 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 6144 MB available memory, 32 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=32"
-  assertCapturedSuccess
-}
-
 testInvalidNode() {
   compile "invalid-node"
   assertCaptured "Downloading and installing node 0.11.333"
