@@ -18,7 +18,7 @@ install_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc --globalconfig $bp_dir/npmrc 2>&1
+    npm install --unsafe-perm --userconfig $build_dir/.npmrc --globalconfig $BP_DIR/npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -36,7 +36,7 @@ rebuild_node_modules() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc --globalconfig $bp_dir/npmrc 2>&1
+    npm install --unsafe-perm --userconfig $build_dir/.npmrc --globalconfig $BP_DIR/npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
