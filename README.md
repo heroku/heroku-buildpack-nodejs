@@ -94,6 +94,12 @@ You can define the node version you want to use with Meteor in the `.node-versio
 0.11.x
 ```
 
+### Starting flags for `node` process
+
+```
+scalingo env-set NODE_BOOT_FLAGS="--max-old-space-size=4096"
+```
+
 ## Options for Node
 
 ### Specify a node version
