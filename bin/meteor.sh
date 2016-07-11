@@ -31,7 +31,7 @@ create_meteor_startup_file() {
 
   cat << EOF > "${build_dir}/.start-meteor-app"
 cd .app-build/bundle/programs/server
-exec node boot.js program.json
+exec node \$NODE_BOOT_FLAGS boot.js program.json
 EOF
 
   chmod +x "${build_dir}/.start-meteor-app"
