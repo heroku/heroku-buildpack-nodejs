@@ -73,8 +73,8 @@ install_bins() {
   local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
 
   if [ -n "${meteor_version}" ] ; then
-    node_engine=$(cat "$BUILD_DIR/.node-version" 2>/dev/null || echo "0.10.x")
-    npm_engine=$(cat "$BUILD_DIR/.npm-version" 2>/dev/null || echo "3.x")
+    [ -z "$node_engine" ] && node_engine=$(meteor_node_version "${meteor_version}")
+    [ -z "$npm_engine" ]  && npm_engine=$(meteor_npm_version "${meteor_version}")
   fi
 
   if [ -n "$iojs_engine" ]; then

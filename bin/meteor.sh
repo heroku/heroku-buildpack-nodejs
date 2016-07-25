@@ -6,6 +6,22 @@ get_meteor_version() {
 
 meteor_version=$(get_meteor_version ${1:-})
 
+# Format of .meteor/release file is METEOR@1.4.x-patchsomething
+meteor_node_version() {
+  local meteor_release_version="$1"
+  local meteor_version="$(echo $meteor_release_version | cut -d'@' -f2)"
+  local minor="$(echo $meteor_version | cut -d'.' -f2)"
+  if [ "$minor" -gt 3 ] ; then
+    echo "4.4.x"
+  else
+    echo "0.10.x"
+  fi
+}
+
+meteor_npm_version() {
+  echo "3.x"
+}
+
 create_meteor_settings_profile() {
   local build_dir=$1
   local settings=""
