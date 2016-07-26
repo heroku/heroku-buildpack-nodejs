@@ -6,11 +6,15 @@ get_meteor_version() {
 
 meteor_version=$(get_meteor_version ${1:-})
 
+get_meteor_minor_version() {
+  local meteor_release_version="$meteor_version"
+  local meteor_version="$(echo $meteor_release_version | cut -d'@' -f2)"
+  echo $meteor_version | cut -d'.' -f2
+}
+
 # Format of .meteor/release file is METEOR@1.4.x-patchsomething
 meteor_node_version() {
-  local meteor_release_version="$1"
-  local meteor_version="$(echo $meteor_release_version | cut -d'@' -f2)"
-  local minor="$(echo $meteor_version | cut -d'.' -f2)"
+  minor=$(get_meteor_minor_version)
   if [ "$minor" -gt 3 ] ; then
     echo "4.4.x"
   else
@@ -55,6 +59,9 @@ EOF
 
 install_phantomjs_linux() {
   local build_dir=$1
+  if [ "$(get_meteor_minor_version)" -gt 3 ] ; then
+    return
+  fi
   local npm_dir="${build_dir}/.app-build/bundle/programs/server/npm"
   local dfischer_phantomjs_dir="/dfischer_phantomjs/node_modules/phantomjs"
   local phantom_dir_pre13="${npm_dir}${dfischer_phantomjs_dir}"
