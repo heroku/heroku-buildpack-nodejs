@@ -161,5 +161,7 @@ summarize_build() {
 header "Build succeeded!"
 summarize_build | output "$LOG_FILE"
 
+run_if_present 'heroku-postinstall'
+
 warn_no_start "$LOG_FILE"
 warn_unmet_dep "$LOG_FILE"
