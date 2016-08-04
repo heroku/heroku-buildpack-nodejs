@@ -1,7 +1,7 @@
 source $BP_DIR/lib/binaries.sh
 
 create_signature() {
-  echo "$(node --version); $(npm --version)"
+  echo "$(node -v); $(npm -v); ${PREBUILD:-''}; ${STACK:-''};"
 }
 
 save_signature() {
