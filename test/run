@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testCanaryNode() {
+  compile "node-canary"
+  assertCaptured "Resolving 'canary' node version"
+  assertCaptured "Downloading node 7."
+  assertCapturedSuccess
+}
+
 testLTSNode() {
   compile "node-lts"
   assertCaptured "Resolving 'lts' node version"
