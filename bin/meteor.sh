@@ -138,7 +138,7 @@ install_meteor() {
     cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
-  [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(get_meteor_version)
+  [ -e "$build_dir/.meteor/release" ] && local meteor_version=$(get_meteor_version $build_dir)
 
   if [ -z "$cached_meteor_version" -o "$cached_meteor_version" != "$meteor_version" ] ; then
     mkdir -p ${METEOR_HOME}
@@ -208,7 +208,7 @@ build_meteor_app() {
   cache_dir=$2
 
   METEOR_HOME="$build_dir/.meteor-install"
-  [ -e "$build_dir/.meteor/release" ] && meteor_version=$(get_meteor_version)
+  [ -e "$build_dir/.meteor/release" ] && meteor_version=$(get_meteor_version $build_dir)
 
   install_meteor "$build_dir" "$cache_dir"
   export PATH=$PATH:${METEOR_HOME}/.meteor
