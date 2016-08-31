@@ -1,6 +1,8 @@
 get_meteor_version() {
   if [ -e "${1:-}/.meteor/release" ]; then
-    cat ${1:-}/.meteor/release
+    # removing space newline if .meteor/release has been edited by hand
+    # and the editor added \r\n or \n
+    cat ${1:-}/.meteor/release | sed  's/[ \r\n]//'
   fi
 }
 
