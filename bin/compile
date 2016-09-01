@@ -44,7 +44,7 @@ indent() {
 
 echo "-----> Install ffmpeg"
 VENDOR_DIR="vendor"
-DOWNLOAD_URL="https://www.ffmpeg.org/releases/ffmpeg-3.1.3.tar.gz"
+DOWNLOAD_URL="http://flect.github.io/heroku-binaries/libs/ffmpeg.tar.gz"
 
 echo "DOWNLOAD_URL = " $DOWNLOAD_URL | indent
 
