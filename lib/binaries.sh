@@ -15,13 +15,13 @@ install_nodejs() {
 
   if needs_resolution "$version"; then
     echo "Resolving '$version' node version..."
-    local resolved=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "filter=text" "${nodebin}/${version}")
+    local resolved=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "filter=text" "${nodebin}/${version}/${platform}")
   else
     local resolved="$version"
   fi
 
   echo "Downloading node $resolved..."
-  local download_url="$nodebin/$version/$platform"
+  local download_url="$nodebin/$version/$platform/bin"
   local code=$(curl "$download_url" --location --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
     echo "Unable to download node $resolved; does it exist?" && false
