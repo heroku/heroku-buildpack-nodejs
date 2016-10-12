@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testYarn() {
+  compile "yarn"
+  assertCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn)"
+  assertNotCaptured "Installing node modules (package.json"
+  assertCapturedSuccess
+}
+
 testWarnUnmetDep() {
   compile "unmet-dep"
   assertCaptured "may cause runtime issues"
