@@ -19,12 +19,11 @@ install_yarn() {
   rm -rf $dir
   mkdir -p "$dir"
   # https://github.com/yarnpkg/yarn/issues/770
-  if [ $(tar --version | grep -q 'gnu') ]; then
-      local warning='--warning=no-unknown-keyword'
+  if tar --version | grep -q 'gnu'; then
+    tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1 --warning=no-unknown-keyword
   else
-      local warning=''
+    tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1
   fi
-  tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1 $warning
   chmod +x $dir/bin/*
   echo "Installed yarn $(yarn --version)"
 }
