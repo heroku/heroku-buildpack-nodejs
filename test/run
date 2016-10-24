@@ -4,14 +4,14 @@
 testCanaryNode() {
   compile "node-canary"
   assertCaptured "Resolving 'canary' node version"
-  assertCaptured "Downloading node 7."
+  assertCaptured "-nightly"
   assertCapturedSuccess
 }
 
 testLTSNode() {
   compile "node-lts"
   assertCaptured "Resolving 'lts' node version"
-  assertCaptured "Downloading node 4."
+  assertCaptured "Downloading node 6."
   assertCapturedSuccess
 }
 
@@ -303,7 +303,7 @@ testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
   assertCaptured "Resolving 'LTS' node version"
-  assertCaptured "Downloading node 4."
+  assertCaptured "Downloading node 6."
   assertCapturedSuccess
 }
 
@@ -411,7 +411,7 @@ testDangerousRangeGreaterThan() {
 
 testRangeWithSpace() {
   compile "range-with-space"
-  assertCaptured "Resolving '>= 0.8.x' node version"
+  assertCaptured "Resolving '>=0.8.x' node version"
   assertCaptured "Downloading node 6."
   assertCapturedSuccess
 }

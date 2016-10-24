@@ -8,20 +8,22 @@ needs_resolution() {
 }
 
 install_nodejs() {
-  local version=${1:-'LTS'}
+  local versionStr=${1:-'LTS'}
+  local version=${versionStr// /} # remove whitespace
   local dir="$2"
   local nodebin=${NODEBIN_URL:-'https://nodebin.herokuapp.com/v1/nodes'}
   local platform="$os-$cpu"
+  local url="${nodebin}/${version}/${platform}"
 
   if needs_resolution "$version"; then
     echo "Resolving '$version' node version..."
-    local resolved=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "filter=text" "${nodebin}/${version}/${platform}")
+    local resolved=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "filter=text" "$url")
   else
     local resolved="$version"
   fi
 
   echo "Downloading node $resolved..."
-  local download_url="$nodebin/$version/$platform/bin"
+  local download_url="$url/bin"
   local code=$(curl "$download_url" --location --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
     echo "Unable to download node $resolved; does it exist?" && false
