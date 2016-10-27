@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testCanaryNode() {
+  compile "node-canary"
+  assertCaptured "Resolving 'canary' node version"
+  assertCaptured "-nightly"
+  assertCapturedSuccess
+}
+
+testLTSNode() {
+  compile "node-lts"
+  assertCaptured "Resolving 'lts' node version"
+  assertCaptured "Downloading node 6."
+  assertCapturedSuccess
+}
+
+testStableNode() {
+  compile "node-stable"
+  assertCaptured "Resolving 'stable' node version"
+  assertCaptured "Downloading node 6."
+  assertCapturedSuccess
+}
+
+testMaintenanceNode() {
+  compile "node-maintenance"
+  assertCaptured "Resolving 'maintenance' node version"
+  assertCaptured "Downloading node 0.12."
+  assertCapturedSuccess
+}
+
 testWarnUnmetDep() {
   compile "unmet-dep"
   assertCaptured "may cause runtime issues"
@@ -194,7 +222,7 @@ testConcurrencyCustomLimit() {
 
 testInvalidNode() {
   compile "invalid-node"
-  assertCaptured "Downloading and installing node 0.11.333"
+  assertCaptured "Downloading node 0.11.333"
   assertCaptured "Unable to download node 0.11.333"
   assertCapturedError
 }
@@ -229,11 +257,11 @@ testSignatureInvalidation() {
   env_dir=$(mktmpdir)
 
   compile "node-0.12.6" $cache
-  assertCaptured "Downloading and installing node 0.12.6"
+  assertCaptured "Downloading node 0.12.6"
   assertCapturedSuccess
 
   compile "node-0.12.7" $cache
-  assertCaptured "Downloading and installing node 0.12.7"
+  assertCaptured "Downloading node 0.12.7"
   assertCaptured "Skipping cache restore (new runtime"
   assertCapturedSuccess
 }
@@ -267,37 +295,37 @@ testIoJs() {
   compile "iojs"
   assertCaptured "engines.iojs (package.json):  1.0."
   assertCaptured "Downloading and installing iojs 1.0."
-  assertNotCaptured "Downloading and installing npm"
+  assertNotCaptured "Downloading npm"
   assertCapturedSuccess
 }
 
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Resolving 'LTS' node version"
+  assertCaptured "Downloading node 6."
   assertCapturedSuccess
 }
 
 testSpecificVersion() {
   compile "specific-version"
-  assertNotCaptured "Resolving node version"
-  assertCaptured "Downloading and installing node 0.10.29"
-  assertCaptured "Using default npm version: 1.4.14"
+  assertNotCaptured "node version..."
+  assertCaptured "Downloading node 0.10.29"
+  assertCaptured "Using packaged npm version: 1.4.14"
   assertCapturedSuccess
 }
 
 testStableVersion() {
   compile "stable-node"
-  assertCaptured "Downloading and installing node 0.10."
+  assertCaptured "Downloading node 0.10."
   assertNotCaptured "We're sorry this build is failing"
   assertCapturedSuccess
 }
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Resolving node version 0.11.x via semver.io"
-  assertCaptured "Downloading and installing node 0.11."
+  assertCaptured "Resolving '0.11.x' node version"
+  assertCaptured "Downloading node 0.11."
   assertCapturedSuccess
 }
 
@@ -368,23 +396,23 @@ testInfoEmpty() {
 testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Resolving '*' node version"
+  assertCaptured "Downloading node 6."
   assertCapturedError
 }
 
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Resolving '>0.4' node version"
+  assertCaptured "Downloading node 6."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
-  assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Resolving '>=0.8.x' node version"
+  assertCaptured "Downloading node 6."
   assertCapturedSuccess
 }
 

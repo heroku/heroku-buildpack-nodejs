@@ -8,23 +8,32 @@ needs_resolution() {
 }
 
 install_nodejs() {
-  local version="$1"
+  local versionStr=${1:-'LTS'}
+  local version=${versionStr// /} # remove whitespace
   local dir="$2"
+  local nodebin=${NODEBIN_URL:-'https://nodebin.herokuapp.com/v1/nodes'}
+  local platform="$os-$cpu"
+  local url="${nodebin}/${version}/${platform}"
 
   if needs_resolution "$version"; then
-    echo "Resolving node version ${version:-(latest stable)} via semver.io..."
-    local version=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/node/resolve)
+    echo "Resolving '$version' node version..."
+    local resolved=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "filter=text" "$url")
+  else
+    local resolved="$version"
   fi
 
-  echo "Downloading and installing node $version..."
-  local download_url="https://s3pository.heroku.com/node/v$version/node-v$version-$os-$cpu.tar.gz"
-  local code=$(curl "$download_url" --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
+  echo "Downloading node $resolved..."
+  local download_url="$url/bin"
+  local code=$(curl "$download_url" --location --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
-    echo "Unable to download node $version; does it exist?" && false
+    echo "Unable to download node $resolved; does it exist?" && false
   fi
+
+  echo "Installing node binaries..."
+  rm -rf /tmp/node-v*
   tar xzf /tmp/node.tar.gz -C /tmp
   rm -rf $dir/*
-  mv /tmp/node-v$version-$os-$cpu/* $dir
+  mv /tmp/node-v*/* $dir
   chmod +x $dir/bin/*
 }
 
@@ -49,7 +58,7 @@ install_npm() {
   local version="$1"
 
   if [ "$version" == "" ]; then
-    echo "Using default npm version: `npm --version`"
+    echo "Using packaged npm version: `npm --version`"
   else
     if needs_resolution "$version"; then
       echo "Resolving npm version ${version} via semver.io..."

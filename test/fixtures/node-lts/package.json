@@ -1,18 +1,15 @@
 {
-  "name": "unmet-dep",
+  "name": "node-lts",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "engines": {
-    "node": "6.2.0"
+    "node": "lts"
   },
   "scripts": {
     "start": "node server.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "grunt-steroids": "0.2.3"
-  }
+  "license": "ISC"
 }
