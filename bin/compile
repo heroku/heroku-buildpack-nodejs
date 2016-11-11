@@ -127,7 +127,11 @@ build_dependencies() {
   run_if_present 'heroku-prebuild'
   if $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
-    rebuild_node_modules "$BUILD_DIR"
+    if [ -f "$BUILD_DIR/yarn.lock" ]; then
+      rebuild_yarn_modules "$BUILD_DIR"
+    else
+      rebuild_node_modules "$BUILD_DIR"
+    fi
   elif [ -f "$BUILD_DIR/yarn.lock" ]; then
     yarn_node_modules "$BUILD_DIR"
   else
