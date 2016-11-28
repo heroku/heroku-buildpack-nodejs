@@ -44,6 +44,7 @@ create_meteor_settings_profile() {
     #!/bin/sh
 
     export METEOR_SETTINGS=\$(cat \$HOME$settings)
+    export PATH=\$HOME/.app-build/bundle/programs/server/npm/node_modules/.bin:\$HOME/.app-build/bundle/programs/server/node_modules/.bin:\$PATH
 EOF
   fi
 }
