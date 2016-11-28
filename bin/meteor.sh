@@ -44,9 +44,17 @@ create_meteor_settings_profile() {
     #!/bin/sh
 
     export METEOR_SETTINGS=\$(cat \$HOME$settings)
-    export PATH=\$HOME/.app-build/bundle/programs/server/npm/node_modules/.bin:\$HOME/.app-build/bundle/programs/server/node_modules/.bin:\$PATH
 EOF
   fi
+}
+
+create_meteor_profile() {
+  local build_dir=$1
+  cat > "$build_dir"/.profile.d/meteor.sh <<EOF
+  #!/bin/sh
+
+  export PATH=\$HOME/.app-build/bundle/programs/server/npm/node_modules/.bin:\$HOME/.app-build/bundle/programs/server/node_modules/.bin:\$PATH
+EOF
 }
 
 create_meteor_startup_file() {
@@ -243,6 +251,7 @@ build_meteor_app() {
   info "Application built"
   install_phantomjs_linux $build_dir
   create_meteor_settings_profile $build_dir
+  create_meteor_profile $build_dir
   create_meteor_startup_file $build_dir
   clean_meteor_installation $build_dir
 }
