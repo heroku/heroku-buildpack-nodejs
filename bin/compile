@@ -98,7 +98,6 @@ install_bins() {
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
     install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
     if [ -n "$yarn_engine" ]; then
-      echo "installing yarn"
       install_yarn "$yarn_engine" "$BUILD_DIR/.heroku/yarn"
     fi
   fi
@@ -167,7 +166,7 @@ cache_build | output "$LOG_FILE"
 
 summarize_build() {
   cd $BUILD_DIR
-  if [ "$BUILD_MODE" == "yarn" ]; then
+  if [ "$YARN_ENABLED" = true ]; then
     echo ""
     (yarn ls || true) 2>/dev/null
     echo ""
