@@ -11,7 +11,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 ### Constants
 
 DEFAULT_CACHE="node_modules bower_components"
-BUILD_MODE="npm"
+YARN_ENABLED=false
 
 ### Configure directories
 
@@ -83,15 +83,10 @@ install_bins() {
   else
     echo "engines.node (package.json):  ${node_engine:-unspecified}"
   fi
-
+  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
   if [ -n "$yarn_engine" ]; then
-        BUILD_MODE="yarn"
-        export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
-
-      echo "engines.yarn (package.json):  $yarn_engine (yarn)"
-    else
-      echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
-    fi
+    echo "engines.yarn (package.json):  $yarn_engine (yarn)"
+  fi
   echo ""
 
   if [ -n "$iojs_engine" ]; then
@@ -101,11 +96,11 @@ install_bins() {
   else
     warn_node_engine "$node_engine"
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
-      if [ "$BUILD_MODE" == "yarn" ]; then
-        install_yarn "$yarn_engine" "$BUILD_DIR/.heroku/yarn"
-      else
-        install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
-      fi
+    install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
+    if [ -n "$yarn_engine" ]; then
+      export PATH="$BUILD_DIR/.heroku/yarn/bin":$PATH
+      install_yarn "$yarn_engine" "$BUILD_DIR/.heroku/yarn"
+    fi
   fi
 
   warn_old_npm
@@ -136,11 +131,11 @@ restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   run_if_present 'heroku-prebuild'
-  if $PREBUILD; then
+  if $YARN_ENABLED; then
+    yarn_node_modules "$BUILD_DIR"
+  elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     rebuild_node_modules "$BUILD_DIR"
-  elif [ "$BUILD_MODE" == "yarn" ]; then
-    yarn_node_modules "$BUILD_DIR"
   else
     install_node_modules "$BUILD_DIR"
   fi
