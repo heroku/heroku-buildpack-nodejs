@@ -10,7 +10,7 @@ run_if_present() {
 yarn_node_modules() {
   local build_dir=${1:-}
 
-  echo "Installing node modules (yarn)"
+  echo "Installing node modules (yarn install --force)"
   yarn install --force 2>&1
 }
 

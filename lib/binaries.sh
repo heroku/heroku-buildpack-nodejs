@@ -13,7 +13,6 @@ install_yarn() {
 
   echo "Downloading and installing yarn $version..."
   local download_url="https://yarnpkg.com/downloads/$version/yarn-v$version.tar.gz"
-  echo "from $download_url"
 
   local code=$(curl "$download_url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
@@ -28,7 +27,6 @@ install_yarn() {
     tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1
   fi
   chmod +x $dir/bin/*
-  yarn --version
   echo "Installed yarn $(yarn --version)"
 }
 
