@@ -131,7 +131,7 @@ restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   run_if_present 'heroku-prebuild'
-  if $YARN_ENABLED; then
+  if [ "$YARN_ENABLED" = true ]; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
