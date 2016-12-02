@@ -22,7 +22,7 @@ BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
 mkdir -p "$BUILD_DIR/.heroku/node/"
 cd $BUILD_DIR
-export PATH="$BUILD_DIR/.heroku/node/bin":$PATH
+export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
 LOG_FILE='/tmp/node-build-log.txt'
 echo "" > "$LOG_FILE"
@@ -98,7 +98,7 @@ install_bins() {
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
     install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
     if [ -n "$yarn_engine" ]; then
-      export PATH="$BUILD_DIR/.heroku/yarn/bin":$PATH
+      echo "installing yarn"
       install_yarn "$yarn_engine" "$BUILD_DIR/.heroku/yarn"
     fi
   fi
