@@ -11,7 +11,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 ### Constants
 
 DEFAULT_CACHE="node_modules bower_components"
-YARN_ENABLED=false
+YARN_ENABLED=true
 
 ### Configure directories
 
@@ -85,7 +85,7 @@ install_bins() {
   fi
   echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
   if [ -n "$yarn_engine" ]; then
-    echo "engines.yarn (package.json):  $yarn_engine (yarn)"
+    echo "engines.yarn (package.json):  $yarn_engine"
   fi
   echo ""
 
