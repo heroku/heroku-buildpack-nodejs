@@ -9,9 +9,11 @@ run_if_present() {
 
 yarn_node_modules() {
   local build_dir=${1:-}
-
-  echo "Installing node modules (yarn install --force)"
-  yarn install --force 2>&1
+  if [ -e $build_dir/package.json ]; then
+    cd $build_dir
+  fi
+  echo "Installing node modules (yarn)"
+  yarn 2>&1
 }
 
 install_node_modules() {
