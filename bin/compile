@@ -21,9 +21,9 @@ BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
 mkdir -p "$BUILD_DIR/.heroku/node/"
 cd $BUILD_DIR
-export PATH="$BUILD_DIR/.heroku/node/bin":$PATH
+export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
-LOG_FILE='/tmp/node-build-log.txt'
+LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
 ### Load dependencies
@@ -51,6 +51,7 @@ trap 'handle_failure' ERR
 ### Check initial state
 
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
+[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 
 ### Failures that should be caught immediately
 
@@ -75,6 +76,7 @@ install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
   local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"
@@ -93,6 +95,10 @@ install_bins() {
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
     install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
   fi
+  if $YARN; then
+    install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+  fi
+
   warn_old_npm
 }
 
@@ -102,6 +108,12 @@ install_bins | output "$LOG_FILE"
 restore_cache() {
   local cache_status="$(get_cache_status)"
 
+  if $YARN; then
+    if [ -e "$BUILD_DIR/node_modules" ]; then
+      warn "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
+      rm -rf "$BUILD_DIR/node_modules"
+    fi
+  fi
   if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
@@ -121,13 +133,16 @@ restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   run_if_present 'heroku-prebuild'
-  if $PREBUILD; then
+  if $YARN; then
+    yarn_node_modules "$BUILD_DIR"
+  elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
-    rebuild_node_modules "$BUILD_DIR"
+    npm_rebuild "$BUILD_DIR"
   else
-    install_node_modules "$BUILD_DIR"
+    npm_node_modules "$BUILD_DIR"
   fi
   run_if_present 'heroku-postbuild'
+  # TODO: run_if_present 'build'
 }
 
 header "Building dependencies"
@@ -154,8 +169,7 @@ header "Caching build"
 cache_build | output "$LOG_FILE"
 
 summarize_build() {
-  cd $BUILD_DIR
-  (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null
+  list_dependencies "$BUILD_DIR"
 }
 
 header "Build succeeded!"

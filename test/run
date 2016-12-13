@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testYarnSemver() {
+  compile "yarn-semver"
+  assertCaptured "Resolving yarn version ~0.17"
+  assertCaptured "installing yarn (0.17."
+  assertCapturedSuccess
+}
+
+testYarnRun() {
+  compile "yarn-run"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertCaptured "foobar"
+  assertCapturedSuccess
+}
+
+testYarnEngine() {
+  compile "yarn-engine"
+  assertCaptured "installing yarn (0.16.1)"
+  assertCapturedSuccess
+}
+
+testYarn() {
+  compile "yarn"
+  assertCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn)"
+  assertNotCaptured "Installing node modules (package.json"
+  assertCapturedSuccess
+}
+
 testWarnUnmetDep() {
   compile "unmet-dep"
   assertCaptured "may cause runtime issues"
@@ -275,7 +303,7 @@ testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
   assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Downloading and installing node 6."
   assertCapturedSuccess
 }
 
@@ -303,7 +331,7 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (3."
+  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release"
   assertNotCaptured "integer expression expected"
   assertCapturedError
 }
@@ -369,7 +397,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Downloading and installing node 6."
   assertCapturedError
 }
 
@@ -377,14 +405,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Downloading and installing node 6."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 5."
+  assertCaptured "Downloading and installing node 6."
   assertCapturedSuccess
 }
 
@@ -515,7 +543,7 @@ testShrinkwrap() {
 testProfileExport() {
   compile "stable-node"
   assertCaptured "Creating runtime environment"
-  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$PATH:\$HOME/bin:\$HOME/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/.heroku/yarn/bin:\$PATH:\$HOME/bin:\$HOME/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertCapturedSuccess
 }
@@ -524,6 +552,7 @@ testMultiExport() {
   compile "stable-node"
   assertFileContains "export PATH=" "${bp_dir}/export"
   assertFileContains "/.heroku/node/bin" "${bp_dir}/export"
+  assertFileContains "/.heroku/yarn/bin" "${bp_dir}/export"
   assertFileContains "/node_modules/.bin" "${bp_dir}/export"
   assertFileContains "export NODE_HOME=" "${bp_dir}/export"
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
