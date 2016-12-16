@@ -33,7 +33,13 @@ yarn_node_modules() {
   # according to docs: "Verifies that versions of the package dependencies in the current project’s package.json matches that of yarn’s lock file."
   # however, appears to also check for the presence of deps in node_modules
   # yarn check 1>/dev/null
-  yarn install --pure-lockfile 2>&1
+  local yarn_lock_hash=$(yarn_lock_digest)
+  yarn install 2>&1
+  fail_yarn_lock_outdated $yarn_lock_hash
+}
+
+yarn_lock_digest() {
+  echo $(openssl dgst -sha512 yarn.lock | sed s/SHA512\(yarn\.lock\)\=\ //)
 }
 
 npm_node_modules() {

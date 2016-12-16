@@ -27,6 +27,14 @@ fail_invalid_package_json() {
   fi
 }
 
+fail_yarn_lock_outdated() {
+  local original_yarn_lock_hash=$1
+  if [ $original_yarn_lock_hash != $(yarn_lock_digest) ]; then
+    error "yarn.lock is outdated. run \`yarn install\`, commit the updated \`yarn.lock\`, and redeploy"
+    return 1
+  fi
+}
+
 warning() {
   local tip=${1:-}
   local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}

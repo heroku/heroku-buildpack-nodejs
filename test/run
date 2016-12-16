@@ -29,6 +29,11 @@ testYarn() {
   assertCapturedSuccess
 }
 
+testYarnLockOutdated() {
+  compile "yarn-lock-outdated"
+  assertCapturedError "yarn.lock is outdated"
+}
+
 testWarnUnmetDep() {
   compile "unmet-dep"
   assertCaptured "may cause runtime issues"
