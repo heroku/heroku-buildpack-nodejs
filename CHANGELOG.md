@@ -1,5 +1,10 @@
 # Node.js Buildpack Changelog
 
+## v94 (2016-12-16)
+
+- Warn on yarn NODE_ENV and NPM_CONFIG incompatibility
+- Pass --ignore-engines flag to yarn to avoid hard failures
+
 ## v93 (2016-12-16)
 
 - Use yarn instead of npm if yarn.lock file is present
