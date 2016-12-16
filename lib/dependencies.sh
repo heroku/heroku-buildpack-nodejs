@@ -33,6 +33,13 @@ yarn_node_modules() {
   # according to docs: "Verifies that versions of the package dependencies in the current project’s package.json matches that of yarn’s lock file."
   # however, appears to also check for the presence of deps in node_modules
   # yarn check 1>/dev/null
+  if [ "$NODE_ENV" == "production" ] && [ "$NPM_CONFIG_PRODUCTION" == "false" ]; then
+    echo ""
+    echo "Warning: when NODE_ENV=production, yarn will NOT install any devDependencies"
+    echo "  (even if NPM_CONFIG_PRODUCTION is false)"
+    echo "  https://yarnpkg.com/en/docs/cli/install#toc-yarn-install-production"
+    echo ""
+  fi
   yarn install --pure-lockfile --ignore-engines 2>&1
 }
 
