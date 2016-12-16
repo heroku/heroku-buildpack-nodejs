@@ -40,7 +40,7 @@ yarn_node_modules() {
     echo "  https://yarnpkg.com/en/docs/cli/install#toc-yarn-install-production"
     echo ""
   fi
-  yarn install --pure-lockfile 2>&1
+  yarn install --pure-lockfile --ignore-engines 2>&1
 }
 
 npm_node_modules() {
