@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## v93 (2016-12-16)
+
+- Use yarn instead of npm if yarn.lock file is present
+
 ## v91 (2016-7-7)
 
 - Do not fail build on output errors
