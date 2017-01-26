@@ -1,7 +1,7 @@
 source $BP_DIR/lib/binaries.sh
 
 create_signature() {
-  echo "$(node --version); $(npm --version)"
+  echo "$(node --version); $(npm --version); $(yarn --version 2>/dev/null || true)"
 }
 
 save_signature() {

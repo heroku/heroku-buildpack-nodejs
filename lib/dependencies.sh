@@ -4,7 +4,7 @@ list_dependencies() {
   cd "$build_dir"
   if $YARN; then
     echo ""
-    (yarn ls || true) 2>/dev/null
+    (yarn list --depth=0 || true) 2>/dev/null
     echo ""
   else
     (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null
@@ -27,20 +27,17 @@ run_if_present() {
 
 yarn_node_modules() {
   local build_dir=${1:-}
-
-  echo "Installing node modules (yarn)"
+  echo "Installing node modules (yarn.lock)"
   cd "$build_dir"
+  yarn install --pure-lockfile --ignore-engines --cache-folder $build_dir/.cache/yarn 2>&1
   # according to docs: "Verifies that versions of the package dependencies in the current project’s package.json matches that of yarn’s lock file."
-  # however, appears to also check for the presence of deps in node_modules
-  # yarn check 1>/dev/null
-  if [ "$NODE_ENV" == "production" ] && [ "$NPM_CONFIG_PRODUCTION" == "false" ]; then
-    echo ""
-    echo "Warning: when NODE_ENV=production, yarn will NOT install any devDependencies"
-    echo "  (even if NPM_CONFIG_PRODUCTION is false)"
-    echo "  https://yarnpkg.com/en/docs/cli/install#toc-yarn-install-production"
-    echo ""
+  # however, appears to also check for the presence of deps in node_modules, so must be run after install
+  if $(yarn check 1>/dev/null); then
+    echo "yarn.lock and package.json match"
+  else
+    error "yarn.lock is outdated. run \`yarn install\`, commit the updated \`yarn.lock\`, and redeploy"
+    return 1
   fi
-  yarn install --pure-lockfile --ignore-engines 2>&1
 }
 
 npm_node_modules() {
@@ -54,7 +51,7 @@ npm_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --unsafe-perm --userconfig $build_dir/.npmrc --cache $build_dir/.npm 2>&1
   else
     echo "Skipping (no package.json)"
   fi

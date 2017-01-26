@@ -10,7 +10,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
-DEFAULT_CACHE="node_modules bower_components"
+DEFAULT_CACHE=".npm .cache/yarn bower_components"
 
 ### Configure directories
 
@@ -44,6 +44,7 @@ handle_failure() {
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE"
   warn_econnreset "$LOG_FILE"
+  warn_young_yarn "$LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
@@ -117,7 +118,7 @@ restore_cache() {
   if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
-      echo "Loading 2 from cacheDirectories (default):"
+      echo "Loading 3 from cacheDirectories (default):"
       restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
     else
       echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
@@ -156,7 +157,7 @@ cache_build() {
   if ! ${NODE_MODULES_CACHE:-true}; then
     echo "Skipping cache save (disabled by config)"
   elif [ "$cache_directories" == "" ]; then
-    echo "Saving 2 cacheDirectories (default):"
+    echo "Saving 3 cacheDirectories (default):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
   else
     echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
@@ -169,7 +170,9 @@ header "Caching build"
 cache_build | output "$LOG_FILE"
 
 summarize_build() {
-  list_dependencies "$BUILD_DIR"
+  if $NODE_VERBOSE; then
+    list_dependencies "$BUILD_DIR"
+  fi
 }
 
 header "Build succeeded!"

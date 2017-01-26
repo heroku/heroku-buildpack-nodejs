@@ -1,5 +1,14 @@
 # Node.js Buildpack Changelog
 
+## Master
+
+- Use cache directories instead of node_modules
+- Use yarn, if available, as part of the cache signature
+- Warn about yarn's youth and evolution on build failures
+- Link to opt-out of yarn instructions
+- Use `yarn list` instead of `yarn ls`
+- Hide final dep tree listings under a `NODE_VERBOSE` flag
+
 ## v94 (2016-12-16)
 
 - Warn on yarn NODE_ENV and NPM_CONFIG incompatibility
