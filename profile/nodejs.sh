@@ -35,6 +35,7 @@ calculate_concurrency
 export MEMORY_AVAILABLE=$MEMORY_AVAILABLE
 export WEB_MEMORY=$WEB_MEMORY
 export WEB_CONCURRENCY=$WEB_CONCURRENCY
+export NODE_WEB_CONCURRENCY=$WEB_CONCURRENCY
 
 if [ "$LOG_CONCURRENCY" = "true" ]; then
   log_concurrency
