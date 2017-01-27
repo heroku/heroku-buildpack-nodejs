@@ -35,8 +35,8 @@ yarn_node_modules() {
   if $(yarn check 1>/dev/null); then
     echo "yarn.lock and package.json match"
   else
-    error "yarn.lock is outdated. run \`yarn install\`, commit the updated \`yarn.lock\`, and redeploy"
-    return 1
+    echo "yarn.lock is outdated"
+    warning "yarn.lock is outdated." "run \`yarn install\`, commit the updated \`yarn.lock\`, and redeploy"
   fi
 }
 

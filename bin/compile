@@ -164,6 +164,7 @@ cache_build() {
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
   fi
   save_signature
+  remove_caches_from_slug "$BUILD_DIR"
 }
 
 header "Caching build"
