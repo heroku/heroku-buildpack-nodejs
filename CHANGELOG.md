@@ -1,5 +1,10 @@
 # Node.js Buildpack Changelog
 
+## v96 (2017-01-27)
+
+- Clear caches from the slug
+- Warn, rather than failing, on a failed `yarn check`
+
 ## v95 (2017-01-27)
 
 - Use cache directories instead of node_modules
