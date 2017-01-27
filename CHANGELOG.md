@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Master
+## v95 (2017-01-27)
 
 - Use cache directories instead of node_modules
 - Use yarn, if available, as part of the cache signature
