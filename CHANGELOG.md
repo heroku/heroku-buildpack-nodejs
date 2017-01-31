@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Master
+
+- Default to the latest LTS node version (6.x)
+
 ## v97 (2017-01-31)
 
 - Cache node_modules
