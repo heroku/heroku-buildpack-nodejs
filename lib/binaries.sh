@@ -35,9 +35,8 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local user_version="$1"
+  local version=${1:-6.x}
   local dir="$2"
-  local version=${user_version:-6.x}
 
   if needs_resolution "$version"; then
     echo "Resolving node version $version via semver.io..."
