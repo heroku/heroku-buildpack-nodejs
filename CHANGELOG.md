@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Master
+## v97 (2017-01-31)
 
 - Cache node_modules
 - No longer run `yarn check`
