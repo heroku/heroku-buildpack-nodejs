@@ -1,15 +1,36 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testDisableCache() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "true" > $env_dir/NODE_VERBOSE
+  compile "node-modules-cache-1" $cache $env_dir
+  assertCaptured "lodash@1.0.0"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep lodash | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "node-modules-cache-2" $cache $env_dir
+  assertCaptured "lodash@1.0.0"
+  assertCaptured "Saving 2 cacheDirectories"
+  assertCapturedSuccess
+
+  echo "false" > $env_dir/NODE_MODULES_CACHE
+  compile "node-modules-cache-2" $cache $env_dir
+  assertCaptured "lodash@1.3.1"
+  assertNotCaptured "Saving 2 cacheDirectories"
+  assertCapturedSuccess
+}
+
 testNodeModulesCached() {
   cache=$(mktmpdir)
 
   compile "caching" $cache
-  assertCaptured "Saving 3 cacheDirectories (default)"
-  assertCaptured "- .npm"
-  assertCaptured "- .cache/yarn (nothing to cache)"
+  assertCaptured "Saving 2 cacheDirectories (default)"
+  assertCaptured "- node_modules"
   assertCaptured "- bower_components (nothing to cache)"
-  assertEquals "1" "$(ls -1 $cache/node/.npm | grep express | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep express | wc -l | tr -d ' ')"
   assertCapturedSuccess
 }
 
@@ -26,16 +47,16 @@ testBuildWithCache() {
 
   compile "stable-node" $cache
   assertCaptured "Skipping cache restore (new runtime"
-  assertEquals "1" "$(ls -1 $cache/node/.npm | grep hashish | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep hashish | wc -l | tr -d ' ')"
   assertCapturedSuccess
 
   compile "stable-node" $cache
-  assertNotCaptured "- .npm (not cached - skipping)"
+  assertNotCaptured "- node_modules (not cached - skipping)"
   assertCapturedSuccess
 
-  rm -rf "$cache/node/.npm"
+  rm -rf "$cache/node/node_modules"
   compile "stable-node" $cache
-  assertCaptured "- .npm (not cached - skipping)"
+  assertCaptured "- node_modules (not cached - skipping)"
   assertCapturedSuccess
 }
 

@@ -10,7 +10,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
-DEFAULT_CACHE=".npm .cache/yarn bower_components"
+DEFAULT_CACHE="node_modules bower_components"
 
 ### Configure directories
 
@@ -118,7 +118,7 @@ restore_cache() {
   if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
-      echo "Loading 3 from cacheDirectories (default):"
+      echo "Loading 2 from cacheDirectories (default):"
       restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
     else
       echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
@@ -157,14 +157,13 @@ cache_build() {
   if ! ${NODE_MODULES_CACHE:-true}; then
     echo "Skipping cache save (disabled by config)"
   elif [ "$cache_directories" == "" ]; then
-    echo "Saving 3 cacheDirectories (default):"
+    echo "Saving 2 cacheDirectories (default):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
   else
     echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
   fi
   save_signature
-  remove_caches_from_slug "$BUILD_DIR"
 }
 
 header "Caching build"

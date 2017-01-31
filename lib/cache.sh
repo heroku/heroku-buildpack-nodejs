@@ -56,12 +56,6 @@ restore_cache_directories() {
   done
 }
 
-remove_caches_from_slug() {
-  local build_dir=${1:-}
-  rm -rf "$build_dir/.npm"
-  rm -rf "$build_dir/.cache/yarn"
-}
-
 clear_cache() {
   rm -rf $CACHE_DIR/node
   mkdir -p $CACHE_DIR/node
