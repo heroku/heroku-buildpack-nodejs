@@ -1,5 +1,10 @@
 # Node.js Buildpack Changelog
 
+## Master
+
+- Cache node_modules
+- No longer run `yarn check`
+
 ## v96 (2017-01-27)
 
 - Clear caches from the slug
