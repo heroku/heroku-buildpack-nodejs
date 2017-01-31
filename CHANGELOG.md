@@ -1,6 +1,6 @@
 # Node.js Buildpack Changelog
 
-## Master
+## v98 (2017-01-31)
 
 - Default to the latest LTS node version (6.x)
 
