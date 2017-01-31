@@ -35,11 +35,12 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version="$1"
+  local user_version="$1"
   local dir="$2"
+  local version=${user_version:-6.x}
 
   if needs_resolution "$version"; then
-    echo "Resolving node version ${version:-(latest stable)} via semver.io..."
+    echo "Resolving node version $version via semver.io..."
     local version=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/node/resolve)
   fi
 
