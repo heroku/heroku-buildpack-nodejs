@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testNoVersion() {
+  compile "no-version"
+  assertCaptured "engines.node (package.json):  unspecified"
+  assertCaptured "Resolving node version 6.x via semver.io"
+  assertCaptured "Downloading and installing node 6."
+  assertCapturedSuccess
+}
+
 testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
@@ -297,14 +305,6 @@ testIoJs() {
   assertCaptured "engines.iojs (package.json):  1.0."
   assertCaptured "Downloading and installing iojs 1.0."
   assertNotCaptured "Downloading and installing npm"
-  assertCapturedSuccess
-}
-
-testNoVersion() {
-  compile "no-version"
-  assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 6."
   assertCapturedSuccess
 }
 
