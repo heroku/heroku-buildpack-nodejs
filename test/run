@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testCI() {
+  ci "ci-basic"
+  assertCapturedErr "says hello"
+  assertCapturedErr "1 passed"
+  assertCapturedZero
+}
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
@@ -594,6 +601,18 @@ compile() {
   cp -a $(pwd)/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+ci() {
+  default_process_types_cleanup
+  bp_dir=$(mktmpdir)
+  compile_dir=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local artifact_dir=$(mktmpdir)
+  cp -a $(pwd)/* ${bp_dir}
+  cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+  ${bp_dir}/bin/test-compile ${compile_dir} ${2:-$(mktmpdir)} ${env_dir} > /dev/null 2>&1
+  capture ${bp_dir}/bin/test ${compile_dir} ${env_dir} ${artifact_dir}
 }
 
 compileDir() {
