@@ -87,7 +87,11 @@ install_bins() {
   else
     echo "engines.node (package.json):  ${node_engine:-unspecified}"
   fi
-  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  if [ -n "$yarn_engine" ]; then
+    echo "engines.yarn (package.json): ${yarn_engine:-unspecified}"
+  else
+    echo "engines.npm (package.json):   ${npm_engine:-default}"
+  fi
   echo ""
 
   if [ -n "$iojs_engine" ]; then

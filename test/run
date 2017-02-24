@@ -89,6 +89,8 @@ testYarnRun() {
 
 testYarnEngine() {
   compile "yarn-engine"
+  assertCaptured "engines.yarn (package.json): 0.16.1"
+  assertNotCaptured "engines.npm"
   assertCaptured "installing yarn 0.16.1"
   assertCapturedSuccess
 }
