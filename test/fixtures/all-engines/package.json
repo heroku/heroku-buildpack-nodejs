@@ -1,0 +1,11 @@
+{
+  "name": "all-engines",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">6.0 <6.5",
+    "npm": "^3.x",
+    "yarn": "~0.20.0"
+  }
+}
