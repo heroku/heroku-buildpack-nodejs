@@ -1,5 +1,9 @@
 # Node.js Buildpack Changelog
 
+## Master
+
+- Use yarn in CI tests if available
+
 ## v98 (2017-01-31)
 
 - Default to the latest LTS node version (6.x)
