@@ -86,9 +86,9 @@ assertCaptured()
   assertFileContains "$@" "${STD_OUT}"
 }
 
-assertCapturedErr()
+assertCapturedAny()
 {
-  assertFileContains "$@" "${STD_ERR}"
+  assertContains "$@" "$(cat $STD_ERR && cat $STD_OUT)"
 }
 
 assertNotCaptured()

@@ -3,8 +3,8 @@
 
 testCI() {
   ci "ci-basic"
-  assertCapturedErr "says hello"
-  assertCapturedErr "1 passed"
+  assertCapturedAny "says hello"
+  assertCapturedAny "1 passed"
   assertCapturedZero
 }
 
