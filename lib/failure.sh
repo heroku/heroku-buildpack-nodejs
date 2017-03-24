@@ -56,7 +56,7 @@ warn_node_engine() {
 warn_prebuilt_modules() {
   local build_dir=${1:-}
   if [ -e "$build_dir/node_modules" ]; then
-    warning "node_modules checked into source control" "http://doc.scalingo.com/languages/javascript/nodejs/#do-not-track-modules-with-git"
+    warning "node_modules checked into source control" "http://doc.scalingo.com/languages/javascript/nodejs#do-not-track-modules-with-git"
   fi
 }
 
@@ -95,7 +95,7 @@ warn_meteor_npm_package() {
 
 warn_young_yarn() {
   if $YARN; then
-    warning "This project was built with yarn, which is new and under development. Some projects can still be built more reliably with npm" "http://doc.scalingo.com/languages/javascript/nodejs/#dependencies-installation"
+    warning "This project was built with yarn, which is new and under development. Some projects can still be built more reliably with npm" "http://doc.scalingo.com/languages/javascript/nodejs#dependencies-installation"
   fi
 }
 

@@ -105,7 +105,7 @@ install_bins() {
     warn_old_npm
   fi
   if $YARN; then
-    install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+    install_yarn "$BUILD_DIR/.scalingo/yarn" "$yarn_engine"
   fi
 
   warn_old_npm
@@ -119,7 +119,7 @@ restore_cache() {
 
   if $YARN; then
     if [ -e "$BUILD_DIR/node_modules" ]; then
-      warn "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
+      warn "node_modules checked into source control" "http://doc.scalingo.com/languages/javascript/nodejs#do-not-track-modules-with-git"
       rm -rf "$BUILD_DIR/node_modules"
     fi
   fi
@@ -142,6 +142,7 @@ restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   run_if_present 'heroku-prebuild'
+  run_if_present 'scalingo-prebuild'
   if $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
@@ -151,6 +152,7 @@ build_dependencies() {
     npm_node_modules "$BUILD_DIR"
   fi
   run_if_present 'heroku-postbuild'
+  run_if_present 'scalingo-postbuild'
   # TODO: run_if_present 'build'
 }
 
