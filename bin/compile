@@ -19,9 +19,9 @@ BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
 mkdir -p "$BUILD_DIR/.scalingo/node/"
 cd $BUILD_DIR
-export PATH="$BUILD_DIR/.scalingo/node/bin":$PATH
+export PATH="$BUILD_DIR/.scalingo/node/bin:$BUILD_DIR/.scalingo/yarn/bin":$PATH
 
-LOG_FILE='/tmp/node-build-log.txt'
+LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
 ### Load dependencies
@@ -41,12 +41,16 @@ handle_failure() {
   header "Build failed"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
+  warn_missing_devdeps "$LOG_FILE"
+  warn_econnreset "$LOG_FILE"
+  warn_young_yarn "$LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
 
 ### Check initial state
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
+[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 
 ### Failures that should be caught immediately
 if test -z "$meteor_version"; then
@@ -71,6 +75,7 @@ install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
   local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "${meteor_version}" ] ; then
     [ -z "$node_engine" ] && node_engine=$(meteor_node_version "${meteor_version}")
@@ -99,6 +104,11 @@ install_bins() {
   if test -z "$meteor_version"; then
     warn_old_npm
   fi
+  if $YARN; then
+    install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+  fi
+
+  warn_old_npm
 }
 
 header "Installing binaries"
@@ -107,6 +117,12 @@ install_bins | output "$LOG_FILE"
 restore_cache() {
   local cache_status="$(get_cache_status)"
 
+  if $YARN; then
+    if [ -e "$BUILD_DIR/node_modules" ]; then
+      warn "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
+      rm -rf "$BUILD_DIR/node_modules"
+    fi
+  fi
   if [ "$cache_status" == "valid" ]; then
     local cache_directories=$(get_cache_directories)
     if [ "$cache_directories" == "" ]; then
@@ -125,12 +141,17 @@ header "Restoring cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
-  if $PREBUILD; then
+  run_if_present 'heroku-prebuild'
+  if $YARN; then
+    yarn_node_modules "$BUILD_DIR"
+  elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
-    rebuild_node_modules "$BUILD_DIR"
+    npm_rebuild "$BUILD_DIR"
   else
-    install_node_modules "$BUILD_DIR"
+    npm_node_modules "$BUILD_DIR"
   fi
+  run_if_present 'heroku-postbuild'
+  # TODO: run_if_present 'build'
 }
 
 header "Building dependencies"
@@ -163,9 +184,13 @@ if test -n "$meteor_version"; then
 fi
 
 summarize_build() {
-  cd $BUILD_DIR
-  (npm ls --depth=0 | tail -n +2 || true) 2>/dev/null
+  if $NODE_VERBOSE; then
+    list_dependencies "$BUILD_DIR"
+  fi
 }
 
 header "Build succeeded!"
 summarize_build | output "$LOG_FILE"
+
+warn_no_start "$LOG_FILE"
+warn_unmet_dep "$LOG_FILE"

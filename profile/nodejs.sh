@@ -4,8 +4,6 @@ calculate_concurrency() {
   WEB_CONCURRENCY=${WEB_CONCURRENCY-$((MEMORY_AVAILABLE/WEB_MEMORY))}
   if (( WEB_CONCURRENCY < 1 )); then
     WEB_CONCURRENCY=1
-  elif (( WEB_CONCURRENCY > 32 )); then
-    WEB_CONCURRENCY=32
   fi
   WEB_CONCURRENCY=$WEB_CONCURRENCY
 }
@@ -28,7 +26,7 @@ detect_memory() {
   esac
 }
 
-export PATH="$HOME/.scalingo/node/bin:$HOME/bin:$HOME/node_modules/.bin:$PATH"
+export PATH="$HOME/.scalingo/node/bin:$HOME/.scalingo/yarn/bin:$PATH:$HOME/bin:$HOME/node_modules/.bin"
 export NODE_HOME="$HOME/.scalingo/node"
 export NODE_ENV=${NODE_ENV:-production}
 

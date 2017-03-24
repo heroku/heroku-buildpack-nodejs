@@ -9,7 +9,88 @@
 
 # Node.js Buildpack Changelog
 
-## Pending
+## Master
+
+- Use yarn in CI tests if available
+
+## v98 (2017-01-31)
+
+- Default to the latest LTS node version (6.x)
+
+## v97 (2017-01-31)
+
+- Cache node_modules
+- No longer run `yarn check`
+
+## v96 (2017-01-27)
+
+- Clear caches from the slug
+- Warn, rather than failing, on a failed `yarn check`
+
+## v95 (2017-01-27)
+
+- Use cache directories instead of node_modules
+- Use yarn, if available, as part of the cache signature
+- Warn about yarn's youth and evolution on build failures
+- Link to opt-out of yarn instructions
+- Use `yarn list` instead of `yarn ls`
+- Hide final dep tree listings under a `NODE_VERBOSE` flag
+
+## v94 (2016-12-16)
+
+- Warn on yarn NODE_ENV and NPM_CONFIG incompatibility
+- Pass --ignore-engines flag to yarn to avoid hard failures
+
+## v93 (2016-12-16)
+
+- Use yarn instead of npm if yarn.lock file is present
+
+## v91 (2016-7-7)
+
+- Do not fail build on output errors
+- Do not prune before install (shrinkwrap unsupported by prune)
+- Extended warnings (missing dependencies, econnreset, no start)
+- Remove hard limit on WEB_CONCURRENCY (32)
+
+## v90 (2016-4-20)
+
+- Blacklists the LANG env var
+
+## v89 (2016-3-11)
+
+- Adds heroku-prebuild script
+- Adds heroku-postbuild script
+
+## v88 (2016-2-23)
+
+- Retries all curl requests
+- Use HTTPS for node binary downloads again
+
+## v87 (2015-11-03)
+
+Several edge-case fixes
+
+- Enables compiling the same directory multiple times
+- Updates tests for Node v5
+- Moves node_modules/.bin binaries to last on the PATH
+
+## v86 (2015-10-08)
+
+Fixes piped output buffering issues
+
+## v85 (2015-10-08)
+
+Fixes piped output buffering issues (unsuccessful)
+
+- https://github.com/heroku/heroku-buildpack-nodejs/issues/273
+
+## v84 (2015-10-08)
+
+Replaces sed with awk for output formatting
+
+- large output (from assets or npm 3) was crashing sed ('resource unavailable')
+
+## v83 (2015-10-05)
 
 Caching improvements
 

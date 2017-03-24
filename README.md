@@ -1,7 +1,7 @@
 Buildpack for Node.js, io.js And Meteor
 =======================================
 
-![nodesjs](https://cloud.githubusercontent.com/assets/51578/8882955/3f0c3980-3219-11e5-8666-bc9c926a7356.jpg)
+![nodejs](https://cloud.githubusercontent.com/assets/51578/13712672/efdf2a40-e792-11e5-82ef-492478cbc0dc.png)
 
 This buildpack has been developped to deploy any node.js application
 or an application based on the Meteor Framework (0.9+).
@@ -243,7 +243,7 @@ scalingo env-set BUILDPACK_URL=<your-github-url>
 scalingo env-set BUILDPACK_URL=<your-github-url>#your-branch
 ```
 
-## Testing
+## Tests
 
 The buildpack tests use [Docker](https://www.docker.com/) to simulate
 Scalingo environment.

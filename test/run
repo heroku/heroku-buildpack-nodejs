@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testNoVersion() {
+  compile "no-version"
+  assertCaptured "engines.node (package.json):  unspecified"
+  assertCaptured "Resolving node version 6.x via semver.io"
+  assertCaptured "Downloading and installing node 6."
+  assertCapturedSuccess
+}
+
 testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
 
-  compile "node-modules-cache-1" $cache
+  echo "true" > $env_dir/NODE_VERBOSE
+  compile "node-modules-cache-1" $cache $env_dir
   assertCaptured "lodash@1.0.0"
   assertEquals "1" "$(ls -1 $cache/node/node_modules | grep lodash | wc -l | tr -d ' ')"
   assertCapturedSuccess
 
-  compile "node-modules-cache-2" $cache
+  compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.0.0"
   assertCaptured "Saving 2 cacheDirectories"
   assertCapturedSuccess
@@ -19,6 +28,150 @@ testDisableCache() {
   compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.3.1"
   assertNotCaptured "Saving 2 cacheDirectories"
+  assertCapturedSuccess
+}
+
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+
+  compile "caching" $cache
+  assertCaptured "Saving 2 cacheDirectories (default)"
+  assertCaptured "- node_modules"
+  assertCaptured "- bower_components (nothing to cache)"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep express | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+}
+
+testYarn() {
+  compile "yarn"
+  assertCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertNotCaptured "Installing node modules (package.json"
+  assertCapturedSuccess
+}
+
+testBuildWithCache() {
+  cache=$(mktmpdir)
+
+  compile "stable-node" $cache
+  assertCaptured "Skipping cache restore (new runtime"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep hashish | wc -l | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "stable-node" $cache
+  assertNotCaptured "- node_modules (not cached - skipping)"
+  assertCapturedSuccess
+
+  rm -rf "$cache/node/node_modules"
+  compile "stable-node" $cache
+  assertCaptured "- node_modules (not cached - skipping)"
+  assertCapturedSuccess
+}
+
+testYarnSemver() {
+  compile "yarn-semver"
+  assertCaptured "Resolving yarn version ~0.17"
+  assertCaptured "installing yarn (0.17."
+  assertCapturedSuccess
+}
+
+testYarnRun() {
+  compile "yarn-run"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertCaptured "foobar"
+  assertCapturedSuccess
+}
+
+testYarnEngine() {
+  compile "yarn-engine"
+  assertCaptured "installing yarn (0.16.1)"
+  assertCapturedSuccess
+}
+
+testWarnUnmetDep() {
+  compile "unmet-dep"
+  assertCaptured "may cause runtime issues"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may cause runtime issues"
+  assertCapturedSuccess
+}
+
+testWarnEconnreset() {
+  compile "econnreset-mock"
+  assertCaptured "may be related to npm versions"
+  assertCapturedError
+  compile "no-version"
+  assertNotCaptured "may be related to npm versions"
+  assertCapturedSuccess
+}
+
+testWarnNoStart() {
+  compile "no-start"
+  assertCaptured "may not specify any way to start"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may not specify any way to start"
+  assertCapturedSuccess
+}
+
+testWarnDevDeps() {
+  compile "missing-devdeps-1"
+  assertCaptured "A module may be missing"
+  assertNotCaptured "This module may be specified"
+  assertCapturedError
+  compile "missing-devdeps-2"
+  assertCaptured "A module may be missing"
+  assertCaptured "This module may be specified"
+  assertCapturedError
+  compile "failing-build"
+  assertNotCaptured "A module may be missing"
+  assertNotCaptured "This module may be specified"
+  assertCapturedError
+}
+
+testEnvBlacklist() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo 'tr_TR.UTF-8' > "$env_dir"/LANG
+  echo 'safeVar' > "$env_dir"/SAFE
+  compile "echo-lang" $cache $env_dir
+  assertCaptured "safeVar"
+  assertNotCaptured "tr_TR.UTF-8"
+  assertCapturedSuccess
+}
+
+testPrePostBuildScripts() {
+  compile "pre-post-build-scripts"
+  assertCaptured "Running heroku-prebuild"
+  assertCaptured "echo heroku-prebuild hook message"
+  assertCaptured "Running heroku-postbuild"
+  assertCaptured "echo heroku-postbuild hook message"
+  assertCapturedSuccess
+
+  compile "stable-node"
+  assertNotCaptured "Running heroku-prebuild"
+  assertNotCaptured "Running heroku-postbuild"
+  assertCapturedSuccess
+}
+
+testWarningsOnFailure() {
+  compile "many-warnings"
+  assertCaptured "troubleshooting-node-deploys"
+  assertCaptured "node_modules checked into source"
+  assertCaptured "has several known issues"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
+testMultipleRuns() {
+  local compileDir=$(mktmpdir)
+  local cacheDir=$(mktmpdir)
+
+  cp -a test/fixtures/stable-node/. ${compileDir}
+  compileDir "$compileDir" "$cacheDir"
+  assertCapturedSuccess
+  compileDir "$compileDir" "$cacheDir"
   assertCapturedSuccess
 }
 
@@ -40,17 +193,6 @@ testBadJson() {
   assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Installing binaries"
   assertCapturedError 1 "Unable to parse"
-}
-
-testNodeModulesCached() {
-  cache=$(mktmpdir)
-
-  compile "caching" $cache
-  assertCaptured "Saving 2 cacheDirectories (default)"
-  assertCaptured "- node_modules"
-  assertCaptured "- bower_components (nothing to cache)"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
 }
 
 testBuildWithUserCacheDirectoriesCamel() {
@@ -105,17 +247,10 @@ testConcurrencyCustomLimit() {
   assertCapturedSuccess
 }
 
-testConcurrencySaneMaximum() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=6144 WEB_MEMORY=32 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 6144 MB available memory, 32 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=32"
-  assertCapturedSuccess
-}
-
 testInvalidNode() {
   compile "invalid-node"
-  assertCaptured "Downloading and installing node 0.11.33"
-  assertCaptured "Unable to download node 0.11.33"
+  assertCaptured "Downloading and installing node 0.11.333"
+  assertCaptured "Unable to download node 0.11.333"
   assertCapturedError
 }
 
@@ -124,24 +259,6 @@ testInvalidIo() {
   assertCaptured "Downloading and installing iojs 2.0.99"
   assertCaptured "Unable to download iojs 2.0.99"
   assertCapturedError
-}
-
-testBuildWithCache() {
-  cache=$(mktmpdir)
-
-  compile "stable-node" $cache
-  assertCaptured "Skipping cache restore (new runtime"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
-  assertCapturedSuccess
-
-  compile "stable-node" $cache
-  assertNotCaptured "- node_modules (not cached - skipping)"
-  assertCapturedSuccess
-
-  rm -rf "$cache/node/node_modules"
-  compile "stable-node" $cache
-  assertCaptured "- node_modules (not cached - skipping)"
-  assertCapturedSuccess
 }
 
 testSignatureInvalidation() {
@@ -169,7 +286,6 @@ testModulesCheckedIn() {
   assertCaptured "(preinstall script)"
   assertCaptured "Installing any new modules"
   assertCaptured "(postinstall script)"
-  assertNotCaptured "Pruning any extraneous modules"
   assertCapturedSuccess
 }
 
@@ -217,14 +333,6 @@ testIoJs() {
   assertCapturedSuccess
 }
 
-testNoVersion() {
-  compile "no-version"
-  assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version (latest stable) via semver.io"
-  assertCaptured "Downloading and installing node 4."
-  assertCapturedSuccess
-}
-
 testSpecificVersion() {
   compile "specific-version"
   assertNotCaptured "Resolving node version"
@@ -249,7 +357,7 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release (3."
+  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release"
   assertNotCaptured "integer expression expected"
   assertCapturedError
 }
@@ -295,16 +403,6 @@ testFailingBuild() {
   assertCapturedError 1 ""
 }
 
-testWarningsOnFailure() {
-  compile "many-warnings"
-  assertCaptured "troubleshooting-node-deploys"
-  assertCaptured "Node version not specified"
-  assertCaptured "node_modules checked into source"
-  assertCaptured "has several known issues"
-  assertNotCaptured "please submit a ticket"
-  assertCapturedError
-}
-
 testTicketOnFailure() {
   compile "invalid-dependency"
   assertCaptured "troubleshooting-node-deploys"
@@ -325,7 +423,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 7."
   assertCapturedError
 }
 
@@ -333,14 +431,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 7."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 4."
+  assertCaptured "Downloading and installing node 7."
   assertCapturedSuccess
 }
 
@@ -479,16 +577,17 @@ testShrinkwrap() {
 testProfileExport() {
   compile "stable-node"
   assertCaptured "Creating runtime environment"
-  assertFileContains "export PATH=\"\$HOME/.vendor/node/bin:\$HOME/bin:\$HOME/node_modules/.bin:\$PATH\"" "${compile_dir}/.profile.d/nodejs.sh"
-  assertFileContains "export NODE_HOME=\"\$HOME/.vendor/node\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export PATH=\"\$HOME/.scalingo/node/bin:\$HOME/.scalingo/yarn/bin:\$PATH:\$HOME/bin:\$HOME/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export NODE_HOME=\"\$HOME/.scalingo/node\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertCapturedSuccess
 }
 
 testMultiExport() {
   compile "stable-node"
   assertFileContains "export PATH=" "${bp_dir}/export"
-  assertFileContains "/.vendor/node/bin:" "${bp_dir}/export"
-  assertFileContains "/node_modules/.bin:\$PATH" "${bp_dir}/export"
+  assertFileContains "/.scalingo/node/bin" "${bp_dir}/export"
+  assertFileContains "/.scalingo/yarn/bin" "${bp_dir}/export"
+  assertFileContains "/node_modules/.bin" "${bp_dir}/export"
   assertFileContains "export NODE_HOME=" "${bp_dir}/export"
   assertFileContains "/.vendor/node\"" "${bp_dir}/export"
   assertCapturedSuccess
@@ -528,6 +627,18 @@ compile() {
   cp -a $(pwd)/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+compileDir() {
+  default_process_types_cleanup
+
+  local bp_dir=$(mktmpdir)
+  local compile_dir=${1:-$(mktmpdir)}
+  local cache_dir=${2:-$(mktmpdir)}
+  local env_dir=$3
+
+  cp -a $(pwd)/* ${bp_dir}
+  capture ${bp_dir}/bin/compile ${compile_dir} ${cache_dir} ${env_dir}
 }
 
 release() {

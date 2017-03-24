@@ -6,9 +6,11 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
-  "dependencies": {
-  },
   "engines": {
-    "node": "0.11.333"
+    "node": "~0.10.0"
+  },
+  "scripts" : {
+    "heroku-prebuild" : "echo heroku-prebuild hook message",
+    "heroku-postbuild" : "echo heroku-postbuild hook message"
   }
 }

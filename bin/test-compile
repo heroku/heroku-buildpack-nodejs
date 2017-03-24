@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+NPM_CONFIG_PRODUCTION=false YARN_PRODUCTION=false "$(dirname ${0:-})/compile" "$1" "$2" "$3"

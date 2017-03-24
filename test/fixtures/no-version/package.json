@@ -5,5 +5,8 @@
   "repository" : {
     "type" : "git",
     "url" : "http://github.com/example/example.git"
+  },
+  "scripts": {
+    "start": "node server.js"
   }
 }

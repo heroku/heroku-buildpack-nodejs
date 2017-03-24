@@ -1,26 +1,24 @@
 info() {
-  echo "       $*"
+  echo "       $*" || true
 }
 
-# sed -l basically makes sed replace and buffer through stdin to stdout
-# so you get updates while the command runs and dont wait for the end
-# e.g. npm install | indent
+# format output and send a copy to the log
 output() {
   local logfile="$1"
-  local c='s/^/       /'
 
-  case $(uname) in
-    Darwin) tee -a "$logfile" | sed -l "$c";; # mac/bsd sed: -l buffers on line boundaries
-    *)      tee -a "$logfile" | sed -u "$c";; # unix/gnu sed: -u unbuffered (arbitrary) chunks of data
-  esac
+  while read LINE;
+  do
+    echo "       $LINE" || true
+    echo "$LINE" >> "$logfile" || true
+  done
 }
 
 header() {
-  echo ""
-  echo "-----> $*"
+  echo "" || true
+  echo "-----> $*" || true
 }
 
 error() {
-  echo " !     $*" >&2
-  echo ""
+  echo " !     $*" >&2 || true
+  echo "" || true
 }
