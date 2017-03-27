@@ -45,7 +45,7 @@ into the `$PATH` for easy use in subsequent buildpacks.
 Having trouble? Dig it? Feature request?
 
 - [help.heroku.com](https://help.heroku.com/)
-- [@hunterloftis](http://twitter.com/hunterloftis)
+- [@jeremymorrell](http://twitter.com/jeremymorrell)
 - [GitHub issues](https://github.com/heroku/heroku-buildpack-nodejs/issues)
 
 ## Hacking
