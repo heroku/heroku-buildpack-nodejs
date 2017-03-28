@@ -175,6 +175,13 @@ testWarningsOnFailure() {
   assertCapturedError
 }
 
+testDotHerokuNodeCollision() {
+  compile "dot-heroku-node-collision"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
 testMultipleRuns() {
   local compileDir=$(mktmpdir)
   local cacheDir=$(mktmpdir)
