@@ -273,6 +273,11 @@ testSignatureInvalidation() {
   assertCaptured "Downloading and installing node 0.12.7"
   assertCaptured "Skipping cache restore (new runtime"
   assertCapturedSuccess
+
+  compile "nsolid-1.0.0" $cache
+  assertCaptured "Downloading and installing nsolid 1.0.0"
+  assertCaptured "Skipping cache (new runtime"
+  assertCapturedSuccess
 }
 
 testModulesCheckedIn() {

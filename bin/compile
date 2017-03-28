@@ -76,11 +76,14 @@ list_node_config | output "$LOG_FILE"
 install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
+  local nsolid_engine=$(read_json "$BUILD_DIR/package.json" ".engines.nsolid")
   local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"
+  elif [ -n "$nsolid_engine" ]; then
+    echo "engines.nsolid (package.json):  $nsolid_engine (nsolid)"
   else
     echo "engines.node (package.json):  ${node_engine:-unspecified}"
   fi
@@ -91,6 +94,10 @@ install_bins() {
     warn_node_engine "$iojs_engine"
     install_iojs "$iojs_engine" "$BUILD_DIR/.heroku/node"
     echo "Using bundled npm version for iojs compatibility: `npm --version`"
+  elif [ -n "$nsolid_engine" ]; then
+    warn_node_engine "$nsolid_engine"
+    install_nsolid "$nsolid_engine" "$BUILD_DIR/.heroku/node"
+    echo "Using bundled npm version for nsolid compatibility: `npm --version`"
   else
     warn_node_engine "$node_engine"
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
