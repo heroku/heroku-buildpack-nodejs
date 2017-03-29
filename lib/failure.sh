@@ -102,13 +102,13 @@ warn_young_yarn() {
 warn_untracked_dependencies() {
   local log_file="$1"
   if grep -qi 'gulp: not found' "$log_file" || grep -qi 'gulp: command not found' "$log_file"; then
-    warning "Gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "Gulp may not be tracked in package.json" "http://doc.scalingo.com/languages/javascript/nodejs#ensure-youre-tracking-all-your-dependencies"
   fi
   if grep -qi 'grunt: not found' "$log_file" || grep -qi 'grunt: command not found' "$log_file"; then
-    warning "Grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "Grunt may not be tracked in package.json" "http://doc.scalingo.com/languages/javascript/nodejs#ensure-youre-tracking-all-your-dependencies"
   fi
   if grep -qi 'bower: not found' "$log_file" || grep -qi 'bower: command not found' "$log_file"; then
-    warning "Bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "Bower may not be tracked in package.json" "http://doc.scalingo.com/languages/javascript/nodejs#ensure-youre-tracking-all-your-dependencies"
   fi
 }
 
@@ -122,11 +122,11 @@ warn_angular_resolution() {
 warn_missing_devdeps() {
   local log_file="$1"
   if grep -qi 'cannot find module' "$log_file"; then
-    warning "A module may be missing from 'dependencies' in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
+    warning "A module may be missing from 'dependencies' in package.json" "http://doc.scalingo.com/languages/javascript/nodejs#ensure-youre-tracking-all-your-dependencies"
     if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
       local devDeps=$(read_json "$BUILD_DIR/package.json" ".devDependencies")
       if [ "$devDeps" != "" ]; then
-        warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
+        warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "http://doc.scalingo.com/languages/javascript/nodejs#install-devdependencies"
       fi
     fi
   fi
@@ -138,7 +138,7 @@ warn_no_start() {
     local startScript=$(read_json "$BUILD_DIR/package.json" ".scripts.start")
     if [ "$startScript" == "" ]; then
       if ! [ -e "$BUILD_DIR/server.js" ]; then
-        warn "This app may not specify any way to start a node process" "https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type"
+        warn "This app may not specify any way to start a node process" "http://doc.scalingo.com/languages/javascript/nodejs#nodejs-app-startup"
       fi
     fi
   fi
