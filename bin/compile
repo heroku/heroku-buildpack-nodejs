@@ -100,6 +100,8 @@ install_bins() {
     install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
   fi
 
+  install_heroku_node "$BUILD_DIR/.heroku/node/bin"
+
   warn_old_npm
 }
 

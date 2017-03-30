@@ -90,3 +90,16 @@ install_npm() {
     fi
   fi
 }
+
+install_heroku_node() {
+  local dir="$1"
+
+  echo "Installing Heroku custom node binary..."
+
+  mv $dir/node $dir/node-original
+
+  echo "#!/usr/bin/env bash" > $dir/node
+  echo 'exec "`dirname "$0"`/node-original" $NODE_OPTS "$@"' >> $dir/node
+
+  chmod +x $dir/node
+}
