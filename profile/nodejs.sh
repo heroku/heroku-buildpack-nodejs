@@ -1,13 +1,22 @@
 calculate_concurrency() {
-  MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(detect_memory 512)}
-  WEB_MEMORY=${WEB_MEMORY-512}
-  if [ -z "$WEB_CONCURRENCY" ]; then
-    WEB_CONCURRENCY=${WEB_CONCURRENCY-$((MEMORY_AVAILABLE/WEB_MEMORY))}
+  local memory_available=$1
+  local web_memory=$2
+
+  # if the user hasn't set a value for WEB_CONCURRENCY 
+  # we compute a reasonable value
+  if [[ -z "$WEB_CONCURRENCY" ]]; then
+    WEB_CONCURRENCY=$((memory_available/web_memory))
     if (( WEB_CONCURRENCY < 1 )); then
       WEB_CONCURRENCY=1
     fi
+
+    # We prepend the calculated value with a leading '0' so that other buildpacks
+    # can distinguish between a value set by the Node buildpack  and a value set 
+    # by the user
     WEB_CONCURRENCY="0$WEB_CONCURRENCY"
   fi
+
+  echo $WEB_CONCURRENCY
 }
 
 log_concurrency() {
@@ -32,11 +41,9 @@ export PATH="$HOME/.heroku/node/bin:$HOME/.heroku/yarn/bin:$PATH:$HOME/bin:$HOME
 export NODE_HOME="$HOME/.heroku/node"
 export NODE_ENV=${NODE_ENV:-production}
 
-calculate_concurrency
-
-export MEMORY_AVAILABLE=$MEMORY_AVAILABLE
-export WEB_MEMORY=$WEB_MEMORY
-export WEB_CONCURRENCY=$WEB_CONCURRENCY
+export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(detect_memory 512)}
+export WEB_MEMORY=${WEB_MEMORY-512}
+export WEB_CONCURRENCY=$(calculate_concurrency $MEMORY_AVAILABLE $WEB_MEMORY)
 
 if [ "$LOG_CONCURRENCY" = "true" ]; then
   log_concurrency
