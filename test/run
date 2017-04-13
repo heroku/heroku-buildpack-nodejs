@@ -88,8 +88,19 @@ testYarnEngine() {
   assertCapturedSuccess
 }
 
-testWarnUnmetDep() {
+testWarnUnmetDepNpm() {
   compile "unmet-dep"
+  assertCaptured "fail npm install"
+  assertCaptured "may cause runtime issues"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may cause runtime issues"
+  assertCapturedSuccess
+}
+
+testWarnUnmetDepYarn() {
+  compile "unmet-dep-yarn"
+  assertCaptured "fail yarn install"
   assertCaptured "may cause runtime issues"
   assertCapturedSuccess
   compile "no-version"

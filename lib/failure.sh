@@ -1,5 +1,12 @@
 warnings=$(mktemp -t heroku-buildpack-nodejs-XXXX)
 
+detect_package_manager() {
+  case $YARN in
+    true) echo "yarn";;
+    *) echo "npm";;
+  esac
+}
+
 failure_message() {
   local warn="$(cat $warnings)"
   echo ""
@@ -136,7 +143,8 @@ warn_econnreset() {
 
 warn_unmet_dep() {
   local log_file="$1"
+  local package_manager=$(detect_package_manager)
   if grep -qi 'unmet dependency' "$log_file" || grep -qi 'unmet peer dependency' "$log_file"; then
-    warn "Unmet dependencies don't fail npm install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
+    warn "Unmet dependencies don't fail $package_manager install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
   fi
 }
