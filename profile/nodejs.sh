@@ -1,22 +1,23 @@
 calculate_concurrency() {
   local memory_available=$1
   local web_memory=$2
+  local concurrency=$WEB_CONCURRENCY
 
   # if the user hasn't set a value for WEB_CONCURRENCY 
   # we compute a reasonable value
   if [[ -z "$WEB_CONCURRENCY" ]]; then
-    WEB_CONCURRENCY=$((memory_available/web_memory))
-    if (( WEB_CONCURRENCY < 1 )); then
-      WEB_CONCURRENCY=1
+    concurrency=$((memory_available/web_memory))
+    if (( concurrency < 1 )); then
+      concurrency=1
     fi
 
     # We prepend the calculated value with a leading '0' so that other buildpacks
     # can distinguish between a value set by the Node buildpack  and a value set 
     # by the user
-    WEB_CONCURRENCY="0$WEB_CONCURRENCY"
+    concurrency="0$concurrency"
   fi
 
-  echo $WEB_CONCURRENCY
+  echo $concurrency
 }
 
 log_concurrency() {
