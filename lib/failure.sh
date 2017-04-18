@@ -69,7 +69,7 @@ warn_prebuilt_modules() {
   local build_dir=${1:-}
   if [ -e "$build_dir/node_modules" ]; then
     warning "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
-    mcount 'warnings.prebuilt'
+    mcount 'warnings.modules.prebuilt'
   fi
 }
 
@@ -101,15 +101,15 @@ warn_untracked_dependencies() {
   local log_file="$1"
   if grep -qi 'gulp: not found' "$log_file" || grep -qi 'gulp: command not found' "$log_file"; then
     warning "Gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-    mcount 'warnings.untracked.gulp'
+    mcount 'warnings.modules.untracked.gulp'
   fi
   if grep -qi 'grunt: not found' "$log_file" || grep -qi 'grunt: command not found' "$log_file"; then
     warning "Grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-    mcount 'warnings.untracked.grunt'
+    mcount 'warnings.modules.untracked.grunt'
   fi
   if grep -qi 'bower: not found' "$log_file" || grep -qi 'bower: command not found' "$log_file"; then
     warning "Bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-    mcount 'warnings.untracked.bower'
+    mcount 'warnings.modules.untracked.bower'
   fi
 }
 
