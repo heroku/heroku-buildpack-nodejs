@@ -25,7 +25,6 @@ failure_message() {
   echo "Love,"
   echo "Heroku"
   echo ""
-  mcount 'failures'
 }
 
 fail_invalid_package_json() {
