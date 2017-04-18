@@ -223,45 +223,38 @@ testBuildWithUserCacheDirectoriesCamel() {
   assertCapturedSuccess
 }
 
-testConcurrencyExplicit() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 WEB_CONCURRENCY=3 capture $(pwd)/profile/nodejs.sh
-  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=3"
-  assertCapturedSuccess
-}
-
 testConcurrency1X() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture $(pwd)/profile/nodejs.sh
   assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=01"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
   assertCapturedSuccess
 }
 
 testConcurrency2X() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture $(pwd)/profile/nodejs.sh
   assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=02"
+  assertCaptured "Recommending WEB_CONCURRENCY=2"
   assertCapturedSuccess
 }
 
 testConcurrencyPerformanceM() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture $(pwd)/profile/nodejs.sh
   assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=05"
+  assertCaptured "Recommending WEB_CONCURRENCY=5"
   assertCapturedSuccess
 }
 
 testConcurrencyPerformanceL() {
    LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture $(pwd)/profile/nodejs.sh
    assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-   assertCaptured "Recommending WEB_CONCURRENCY=028"
+   assertCaptured "Recommending WEB_CONCURRENCY=28"
    assertCapturedSuccess
 }
 
 testConcurrencyCustomLimit() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/nodejs.sh
   assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=04"
+  assertCaptured "Recommending WEB_CONCURRENCY=4"
   assertCapturedSuccess
 }
 
