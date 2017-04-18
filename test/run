@@ -54,7 +54,7 @@ testBuildWithCache() {
   cache=$(mktmpdir)
 
   compile "stable-node" $cache
-  assertCaptured "Skipping cache restore (new runtime"
+  assertCaptured "Skipping cache restore (new-signature"
   assertEquals "1" "$(ls -1 $cache/node/node_modules | grep hashish | wc -l | tr -d ' ')"
   assertCapturedSuccess
 
@@ -289,7 +289,7 @@ testSignatureInvalidation() {
 
   compile "node-0.12.7" $cache
   assertCaptured "Downloading and installing node 0.12.7"
-  assertCaptured "Skipping cache restore (new runtime"
+  assertCaptured "Skipping cache restore (new-signature"
   assertCapturedSuccess
 }
 

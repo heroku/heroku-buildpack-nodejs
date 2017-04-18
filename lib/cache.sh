@@ -18,9 +18,9 @@ load_signature() {
 
 get_cache_status() {
   if ! ${NODE_MODULES_CACHE:-true}; then
-    echo "disabled by config"
+    echo "disabled"
   elif [ "$(create_signature)" != "$(load_signature)" ]; then
-    echo "new runtime signature"
+    echo "new-signature"
   else
     echo "valid"
   fi

@@ -11,6 +11,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 ### Constants
 
 DEFAULT_CACHE="node_modules bower_components"
+BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
 
@@ -26,8 +27,13 @@ export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
+STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
+BUILDPACK_LOG_FILE=${BUILDPACK_LOG_FILE:-/dev/null}
+
 ### Load dependencies
 
+curl -s 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/latest/stdlib.sh' > "$STDLIB_FILE"
+source "$STDLIB_FILE"
 source $BP_DIR/lib/output.sh
 source $BP_DIR/lib/json.sh
 source $BP_DIR/lib/failure.sh
@@ -91,13 +97,18 @@ install_bins() {
     warn_node_engine "$iojs_engine"
     install_iojs "$iojs_engine" "$BUILD_DIR/.heroku/node"
     echo "Using bundled npm version for iojs compatibility: `npm --version`"
+    mcount 'bin.iojs.$(node --version)'
   else
     warn_node_engine "$node_engine"
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
     install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
+    mcount "bin.node.$(node --version)"
   fi
   if $YARN; then
     install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+    mcount "bin.yarn.$(yarn --version)"
+  else
+    mcount "bin.npm.$(npm --version)"
   fi
 
   warn_old_npm
@@ -127,6 +138,8 @@ restore_cache() {
   else
     echo "Skipping cache restore ($cache_status)"
   fi
+
+  mcount "cache.$cache_status"
 }
 
 header "Restoring cache"
@@ -134,6 +147,10 @@ restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
   run_if_present 'heroku-prebuild'
+
+  local cache_status="$(get_cache_status)"
+  local start=$(nowms)
+
   if $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
@@ -142,6 +159,9 @@ build_dependencies() {
   else
     npm_node_modules "$BUILD_DIR"
   fi
+
+  mtime "modules.time.cache.$cache_status" "${start}"
+
   run_if_present 'heroku-postbuild'
   # TODO: run_if_present 'build'
 }
@@ -173,6 +193,8 @@ summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"
   fi
+
+  mmeasure 'modules.size' "$(measure_size)"
 }
 
 header "Build succeeded!"
