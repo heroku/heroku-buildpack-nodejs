@@ -2,6 +2,7 @@
 
 ## Master
 
+- Replace semver and s3pository with nodebin
 - Use yarn in CI tests if available
 
 ## v98 (2017-01-31)

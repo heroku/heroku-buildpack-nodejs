@@ -36,6 +36,10 @@ source $BP_DIR/lib/binaries.sh
 source $BP_DIR/lib/cache.sh
 source $BP_DIR/lib/dependencies.sh
 
+### Check invalid package.json before adding an error trap
+
+fail_invalid_package_json "$BUILD_DIR"
+
 ### Handle errors
 
 handle_failure() {
@@ -54,9 +58,8 @@ trap 'handle_failure' ERR
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 
-### Failures that should be caught immediately
+### Warnings that should be caught immediately
 
-fail_invalid_package_json "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
@@ -84,7 +87,11 @@ install_bins() {
   else
     echo "engines.node (package.json):  ${node_engine:-unspecified}"
   fi
-  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  if [ -n "$yarn_engine" ]; then
+    echo "engines.yarn (package.json): ${yarn_engine:-unspecified}"
+  else
+    echo "engines.npm (package.json):   ${npm_engine:-default}"
+  fi
   echo ""
 
   if [ -n "$iojs_engine" ]; then
