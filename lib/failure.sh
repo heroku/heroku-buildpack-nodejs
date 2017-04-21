@@ -30,7 +30,7 @@ failure_message() {
 fail_invalid_package_json() {
   if ! cat ${1:-}/package.json | $JQ "." 1>/dev/null; then
     error "Unable to parse package.json"
-    mcount 'failures.parse-package'
+    mcount 'failures.parse.package-json'
     return 1
   fi
 }
