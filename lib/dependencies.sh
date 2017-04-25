@@ -1,3 +1,7 @@
+measure_size() {
+  echo "$((du -s node_modules 2>/dev/null || echo 0) | awk '{print $1}')"
+}
+
 list_dependencies() {
   local build_dir="$1"
 
