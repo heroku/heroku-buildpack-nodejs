@@ -31,7 +31,7 @@ BUILDPACK_LOG_FILE=${BUILDPACK_LOG_FILE:-/dev/null}
 
 ### Load dependencies
 
-curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/latest/stdlib.sh' > "$STDLIB_FILE"
+curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v2/stdlib.sh' > "$STDLIB_FILE"
 source "$STDLIB_FILE"
 source $BP_DIR/lib/output.sh
 source $BP_DIR/lib/json.sh
