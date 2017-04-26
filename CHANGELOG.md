@@ -2,7 +2,15 @@
 
 ## Master
 
+## v100 (2017-04-26)
+
+- Instrument metrics logging
+- Undo the Prepend a leading 0 to `WEB_CONCURRENCY` change
+
+## v99 (2017-04-17)
+
 - Use yarn in CI tests if available
+- Prepend a leading 0 to `WEB_CONCURRENCY`
 
 ## v98 (2017-01-31)
 
