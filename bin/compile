@@ -35,6 +35,9 @@ source $BP_DIR/lib/dependencies.sh
 
 # Load meteor framework related functions
 source $BP_DIR/bin/meteor.sh
+if test -n "$meteor_version" ; then
+  export NPM_CONFIG_PRODUCTION=false
+fi
 
 ### Handle errors
 handle_failure() {
