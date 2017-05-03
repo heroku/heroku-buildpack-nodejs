@@ -138,12 +138,12 @@ install_meteor() {
   local cached_meteor_version=""
   local meteor_build_cache_dir="${build_dir}/.meteor/local"
 
-  if [ -d "$cache_dir/meteor" ] ; then
+  if [ -d "$cache_dir/meteor" -a -f "$cache_dir/meteor-version" ] ; then
     [ -d "$METEOR_HOME" ] && rm -fr "${METEOR_HOME}"
     cp -r "${cache_dir}/meteor" "${METEOR_HOME}"
 
     [ -d "${meteor_build_cache_dir}" ] && rm -rf "${meteor_build_cache_dir}"
-    [ -d "${cache_dir}/meteor-local" ] && cp -r "${cache_dir}/meteor-local" "${meteor_build_cache_dir}" 
+    [ -d "${cache_dir}/meteor-local" ] && cp -r "${cache_dir}/meteor-local" "${meteor_build_cache_dir}"
     cached_meteor_version=$(cat "$cache_dir/meteor-version")
   fi
 
