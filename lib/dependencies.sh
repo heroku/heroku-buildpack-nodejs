@@ -31,14 +31,16 @@ run_if_present() {
 
 yarn_node_modules() {
   local build_dir=${1:-}
+  $NODE_VERBOSE && local opt_verbose='--verbose' || local opt_verbose=''
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir"
-  yarn install --pure-lockfile --ignore-engines 2>&1
+  yarn install --pure-lockfile --ignore-engines $opt_verbose 2>&1
 }
 
 npm_node_modules() {
   local build_dir=${1:-}
+  $NODE_VERBOSE && local opt_verbose='--verbose' || local opt_verbose=''
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
@@ -48,7 +50,7 @@ npm_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --unsafe-perm --userconfig $build_dir/.npmrc $opt_verbose 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -56,6 +58,7 @@ npm_node_modules() {
 
 npm_rebuild() {
   local build_dir=${1:-}
+  $NODE_VERBOSE && local opt_verbose='--verbose' || local opt_verbose=''
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
@@ -66,7 +69,7 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --unsafe-perm --userconfig $build_dir/.npmrc $opt_verbose 2>&1
   else
     echo "Skipping (no package.json)"
   fi
