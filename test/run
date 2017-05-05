@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testVerboseYarn() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "true" > $env_dir/NODE_VERBOSE
+  compile "yarn" $cache $env_dir
+  assertCaptured "verbose 0.908 Copying"
+  assertCaptured "yarn list"
+  assertCapturedSuccess
+}
+
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
