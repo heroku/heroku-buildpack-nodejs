@@ -103,8 +103,12 @@ install_bins() {
     install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
     mcount "version.node.$(node --version)"
   fi
-  if $YARN; then
+
+  if $YARN || [ -n "$yarn_engine" ]; then
     install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+  fi
+
+  if $YARN; then
     mcount "version.yarn.$(yarn --version)"
   else
     mcount "version.npm.$(npm --version)"
