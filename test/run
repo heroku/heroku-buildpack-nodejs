@@ -68,6 +68,19 @@ testBuildWithCache() {
   assertCapturedSuccess
 }
 
+testCacheWithPrebuild() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo 'true' > "$env_dir"/PREBUILD
+
+  compile "cache-prebuild" $cache
+  assertCapturedSuccess
+
+  compile "cache-prebuild" $cache $env_dir
+  assertCaptured "Skipping cache restore (new-signature"
+  assertCapturedSuccess
+}
+
 testYarnSemver() {
   compile "yarn-semver"
   assertCaptured "Resolving yarn version ~0.17"
