@@ -93,7 +93,7 @@ testYarnEngine() {
 # though we will only install using yarn if a yarn.lock exists
 testYarnOnlyEngine() {
   compile "yarn-only-engine"
-  assertCaptured "installing yarn (0.16.1)"
+  assertCaptured "installing yarn (0.24.5)"
   assertCapturedSuccess
 }
 
