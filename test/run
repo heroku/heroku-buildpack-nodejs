@@ -184,6 +184,27 @@ testWarningsOnFailure() {
   assertCapturedError
 }
 
+testDotHerokuCollision() {
+  compile "dot-heroku-collision"
+  assertCaptured "The directory .heroku could not be created"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+
+  compile "dot-heroku-collision-2"
+  assertCaptured "Build succeeded!"
+  assertNotCaptured ".heroku file is checked into this project"
+  assertCapturedSuccess
+}
+
+testDotHerokuNodeCollision() {
+  compile "dot-heroku-node-collision"
+  assertCaptured "The directory .heroku/node could not be created"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
 testMultipleRuns() {
   local compileDir=$(mktmpdir)
   local cacheDir=$(mktmpdir)
