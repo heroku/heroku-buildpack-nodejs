@@ -29,6 +29,36 @@ run_if_present() {
   fi
 }
 
+log_build_scripts() {
+  local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
+  local heroku_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")
+  local heroku_postbuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
+
+  if [ -n "$build" ]; then
+    mcount "scripts.build"
+
+    if [ -z "$heroku_postbuild" ]; then
+      mcount "scripts.build-without-heroku-postbuild"
+    fi
+  fi
+
+  if [ -n "$heroku_prebuild" ]; then
+    mcount "scripts.heroku-prebuild"
+  fi
+
+  if [ -n "$heroku_postbuild" ]; then
+    mcount "scripts.heroku-postbuild"
+  fi
+
+  if [ -n "$heroku_postbuild" ] && [ -n "$build" ]; then
+    mcount "scripts.build-and-heroku-postbuild"
+
+    if [ "$heroku_postbuild" != "$build" ]; then
+      mcount "scripts.different-build-and-heroku-postbuild"
+    fi
+  fi
+}
+
 yarn_node_modules() {
   local build_dir=${1:-}
 
