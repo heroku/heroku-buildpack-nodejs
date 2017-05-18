@@ -18,20 +18,9 @@ BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
-
-<<<<<<< HEAD
-mkdir -p "$BUILD_DIR/.heroku/node/"
-cd $BUILD_DIR
-export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
-
-LOG_FILE=$(mktemp -t node-build-log.XXXXX)
-echo "" > "$LOG_FILE"
-
 STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 BUILDPACK_LOG_FILE=${BUILDPACK_LOG_FILE:-/dev/null}
 
-=======
->>>>>>> Check for .heroku/node
 ### Load dependencies
 
 curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v2/stdlib.sh' > "$STDLIB_FILE"
