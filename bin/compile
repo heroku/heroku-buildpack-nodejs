@@ -172,6 +172,7 @@ build_dependencies() {
 
   run_if_present 'heroku-postbuild'
   # TODO: run_if_present 'build'
+  log_build_scripts
 }
 
 header "Building dependencies"
@@ -206,6 +207,7 @@ summarize_build() {
 }
 
 header "Build succeeded!"
+mcount "compile"
 summarize_build | output "$LOG_FILE"
 
 warn_no_start "$LOG_FILE"
