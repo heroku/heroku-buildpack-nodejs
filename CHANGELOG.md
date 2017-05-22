@@ -2,6 +2,12 @@
 
 ## Master
 
+## v104 (2017-05-22)
+
+- Add `$PREBUILD` to cache signature
+- Check for `.heroku/node` existence
+- Add `NODE_ENV=test` to `test-compile`
+
 ## v101 (2017-04-26)
 
 - Instrument metrics logging
