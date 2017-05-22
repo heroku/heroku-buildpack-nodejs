@@ -207,7 +207,7 @@ summarize_build() {
 }
 
 header "Build succeeded!"
-mcount "buildpack.nodejs.compile"
+mcount "compile"
 summarize_build | output "$LOG_FILE"
 
 warn_no_start "$LOG_FILE"
