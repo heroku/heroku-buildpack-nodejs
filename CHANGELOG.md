@@ -4,9 +4,10 @@
 
 ## v104 (2017-05-22)
 
-- Add `$PREBUILD` to cache signature
-- Check for `.heroku/node` existence
-- Add `NODE_ENV=test` to `test-compile`
+- Add `$PREBUILD` to cache signature (#405)
+- Check for `.heroku/node` existence (#384)
+- Add `NODE_ENV=test` to `test-compile` (#403)
+- Install `yarn` if a version is defined in `engines` (#404)
 
 ## v101 (2017-04-26)
 
