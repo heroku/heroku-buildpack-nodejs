@@ -14,7 +14,7 @@ BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
 
-BUILD_DIR=${1:-}
+BUILD_DIR=$(cd ${1:-}; cd components/react; pwd)
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
@@ -177,6 +177,7 @@ build_dependencies() {
 
 header "Building dependencies"
 build_dependencies | output "$LOG_FILE"
+npm run build-webpack
 
 cache_build() {
   local cache_directories=$(get_cache_directories)
