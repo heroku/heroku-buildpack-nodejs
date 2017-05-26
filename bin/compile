@@ -170,7 +170,11 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  run_if_present 'heroku-postbuild'
+  # Don't run heroku-postbuild script when running tests
+  if [ "$NODE_ENV" != "test" ]; then
+    run_if_present 'heroku-postbuild'
+  fi
+
   # TODO: run_if_present 'build'
   log_build_scripts
 }
