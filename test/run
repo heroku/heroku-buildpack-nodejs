@@ -113,7 +113,7 @@ testYarnOnlyEngine() {
 testErrorYarnAndNpmLockfiles() {
   compile "yarn-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "package-lock.json and yarn.lock files conflict with each other"
+  assertCaptured "Two different lock files found: package-lock.json and yarn.lock"
   assertCaptured "Both npm and yarn have created lock files"
   assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files"
   assertCapturedError
