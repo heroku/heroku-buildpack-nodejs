@@ -2,6 +2,10 @@
 
 ## Master
 
+## v105 (2017-05-26)
+
+- Break the build if yarn and npm lockfiles are both included (#411)
+
 ## v104 (2017-05-22)
 
 - Add `$PREBUILD` to cache signature (#405)
