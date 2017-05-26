@@ -63,6 +63,31 @@ fail_dot_heroku_node() {
   fi
 }
 
+fail_yarn_and_npm_lockfiles() {
+  if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
+    header "Build failed"
+    warn "package-lock.json and yarn.lock files conflict with each other
+
+       Both npm and yarn have created lock files for this application,
+       but only one can be used to install dependencies. Installing
+       dependencies using the wrong package manager can result in missing
+       packages or subtle bugs in production.
+
+       - To use npm to install your application's dependencies please delete
+         the yarn.lock file.
+
+         $ rm yarn.lock
+
+       - To use yarn to install your application's dependences please delete
+         the package-lock.json file.
+
+         $ rm package-lock.json
+    "
+
+    exit 1
+  fi
+}
+
 warning() {
   local tip=${1:-}
   local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}
