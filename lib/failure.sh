@@ -65,6 +65,7 @@ fail_dot_heroku_node() {
 
 fail_yarn_and_npm_lockfiles() {
   if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
+    mcount "failures.two-lock-files"
     header "Build failed"
     warn "package-lock.json and yarn.lock files conflict with each other
 
