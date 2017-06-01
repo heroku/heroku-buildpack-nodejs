@@ -1,0 +1,16 @@
+{
+  "name": "ci-tests",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "yarn": "0.21.2"
+  },
+  "scripts": {
+    "test": "jest *.test.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^19.0.2"
+  }
+}
