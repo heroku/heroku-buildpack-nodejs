@@ -55,6 +55,7 @@ trap 'handle_failure' ERR
 
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Failures that should be caught immediately
 
@@ -106,7 +107,7 @@ install_bins() {
   else
     warn_node_engine "$node_engine"
     install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
-    install_npm "$npm_engine" "$BUILD_DIR/.heroku/node"
+    install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
     mcount "version.node.$(node --version)"
   fi
 

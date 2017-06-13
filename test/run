@@ -119,6 +119,13 @@ testErrorYarnAndNpmLockfiles() {
   assertCapturedError
 }
 
+testDefaultToNpm5() {
+  compile "npm-lockfile-no-version"
+  assertCaptured "Detected package-lock.json"
+  assertCaptured "Downloading and installing npm 5."
+  assertCapturedSuccess
+}
+
 testWarnUnmetDepNpm() {
   compile "unmet-dep"
   assertCaptured "fail npm install"

@@ -74,6 +74,13 @@ install_iojs() {
 
 install_npm() {
   local version="$1"
+  local dir="$2"
+  local npm_lock="$3"
+
+  if $npm_lock && [ "$version" == "" ]; then
+    echo "Detected package-lock.json: defaulting npm to version 5.x.x"
+    version="5.x.x"
+  fi
 
   if [ "$version" == "" ]; then
     echo "Using default npm version: `npm --version`"
