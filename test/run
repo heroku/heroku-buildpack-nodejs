@@ -539,6 +539,12 @@ testDefaultProcType() {
   assertCapturedSuccess
 }
 
+testYarnDefaltProcType() {
+  release "yarn"
+  assertCaptured "web: yarn start"
+  assertCapturedSuccess
+}
+
 testDynamicProcfile() {
   compile "dynamic-procfile"
   assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"

@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
+local start_command="npm start"
+if $YARN; then
+  start_command="yarn start"
+fi
+
 cat << EOF
 addons: []
 default_process_types:
-  web: npm start
+  web: $start_command
 EOF
