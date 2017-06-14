@@ -216,3 +216,4 @@ summarize_build | output "$LOG_FILE"
 
 warn_no_start "$LOG_FILE"
 warn_unmet_dep "$LOG_FILE"
+warn_old_npm_lockfile $NPM_LOCK

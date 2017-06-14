@@ -143,6 +143,16 @@ warn_old_npm() {
   fi
 }
 
+warn_old_npm_lockfile() {
+  local npm_lock=$1
+  local npm_version="$(npm --version)"
+  if $npm_lock && [ "${npm_version:0:1}" -lt "5" ]; then
+    warn "This version of npm ($npm_version) does not support package-lock.json. Please
+       update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+    mcount 'warnings.npm.old-and-lockfile'
+  fi
+}
+
 warn_young_yarn() {
   if $YARN; then
     warning "This project was built with yarn, which is new and under development. Some projects can still be built more reliably with npm" "https://devcenter.heroku.com/articles/nodejs-support#build-behavior"
