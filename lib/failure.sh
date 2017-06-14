@@ -63,13 +63,18 @@ fail_dot_heroku_node() {
   fi
 }
 
-fail_yarn_and_npm_lockfiles() {
+fail_multiple_lockfiles() {
+  local has_modern_lockfile=false
+  if [ -f "${1:-}/yarn.lock" ] || [ -f "${1:-}/package-lock.json" ]; then
+    has_modern_lockfile=true
+  fi
+
   if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
     mcount "failures.two-lock-files"
     header "Build failed"
-    warn "Two different lock files found: package-lock.json and yarn.lock
+    warn "Two different lockfiles found: package-lock.json and yarn.lock
 
-       Both npm and yarn have created lock files for this application,
+       Both npm and yarn have created lockfiles for this application,
        but only one can be used to install dependencies. Installing
        dependencies using the wrong package manager can result in missing
        packages or subtle bugs in production.
@@ -83,6 +88,29 @@ fail_yarn_and_npm_lockfiles() {
          the package-lock.json file.
 
          $ git rm package-lock.json
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
+    exit 1
+  fi
+
+  if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
+    mcount "failures.shrinkwrap-lock-file-conflict"
+    header "Build failed"
+    warn "Two different lock files found
+
+       Your application has two lockfiles defined, but only one can be used
+       to install dependencies. Installing dependencies using the wrong lockfile
+       can result in missing packages or subtle bugs in production.
+
+       It's most likely that you recently installed yarn which has it's own
+       lockfile by default, which conflicts with the shrinkwrap file you've been
+       using.
+
+       Please make sure there is only one of the following files in your
+       application directory:
+
+       - yarn.lock
+       - package-lock.json
+       - npm-shrinkwrap.json
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
     exit 1
   fi
