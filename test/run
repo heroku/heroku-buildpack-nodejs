@@ -126,6 +126,13 @@ testDefaultToNpm5() {
   assertCapturedSuccess
 }
 
+testOldNpmWithLockfile() {
+  compile "npm-lockfile-old-version"
+  assertCaptured "This version of npm"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+  assertCapturedSuccess
+}
+
 testWarnUnmetDepNpm() {
   compile "unmet-dep"
   assertCaptured "fail npm install"
