@@ -2,6 +2,10 @@
 
 ## Master
 
+## v106 (2017-06-19)
+
+- Default to npm v5 if `package-lock.json` is present (#429)
+
 ## v105 (2017-05-26)
 
 - Break the build if yarn and npm lockfiles are both included (#411)
