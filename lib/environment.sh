@@ -7,7 +7,6 @@ create_default_env() {
 }
 
 list_node_config() {
-  echo ""
   printenv | grep ^NPM_CONFIG_ || true
   printenv | grep ^YARN_ || true
   printenv | grep ^NODE_ || true

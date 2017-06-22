@@ -40,7 +40,7 @@ echo "" > "$LOG_FILE"
 ### Handle errors
 
 handle_failure() {
-  header "Build failed"
+  error "Build failed"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE"
