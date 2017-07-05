@@ -9,7 +9,7 @@ needs_resolution() {
 
 install_yarn() {
   local dir="$1"
-  local version="$2"
+  local version=${2:-0.24.x}
 
   if needs_resolution "$version"; then
     echo "Resolving yarn version ${version:-(latest)} via semver.io..."
