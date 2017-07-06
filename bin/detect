@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
-if [ -f $1/package.json ]; then
+
+# Necessary to determine between standard nodejs web app and serverless cloudfunction nodejs.
+if [ -f $1/package.json ] && [ ! -f $1/serverless.yml ] ; then
   echo "Node.js"
   exit 0
 fi
