@@ -10,15 +10,16 @@ needs_resolution() {
 install_yarn() {
   local dir="$1"
   local version="$2"
+  local number
+  local url
 
-  if needs_resolution "$version"; then
-    echo "Resolving yarn version ${version:-(latest)} via semver.io..."
-    local version=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/yarn/resolve)
+  echo "Resolving yarn version ${version:-(latest)}..."
+  if ! read number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt"); then
+    echo "Unable to resolve; does that version exist?" && false
   fi
 
-  echo "Downloading and installing yarn ($version)..."
-  local download_url="https://yarnpkg.com/downloads/$version/yarn-v$version.tar.gz"
-  local code=$(curl "$download_url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
+  echo "Downloading and installing yarn ($number)..."
+  local code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
     echo "Unable to download yarn: $code" && false
   fi
