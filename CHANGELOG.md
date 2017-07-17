@@ -2,6 +2,8 @@
 
 ## Master
 
+- Log output now differentiates between an empty cache and a new cache signature
+
 ## v106 (2017-06-19)
 
 - Default to npm v5 if `package-lock.json` is present (#429)
