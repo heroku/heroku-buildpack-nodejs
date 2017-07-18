@@ -1,5 +1,5 @@
 info() {
-  echo "       $*" || true
+  echo "$*" || true
 }
 
 # format output and send a copy to the log
@@ -8,17 +8,25 @@ output() {
 
   while read LINE;
   do
-    echo "       $LINE" || true
+    echo "$LINE" || true
     echo "$LINE" >> "$logfile" || true
   done
 }
 
 header() {
   echo "" || true
-  echo "-----> $*" || true
+  puts_step "$*"
+}
+
+warn() {
+  local message=${1:-}
+  local suggestion=${2:-https://devcenter.heroku.com/articles/nodejs-support}
+  echo "" || true
+  puts_warn $message
+  echo "$suggestion"
 }
 
 error() {
-  echo " !     $*" >&2 || true
   echo "" || true
+  puts_error "$*" >&2
 }
