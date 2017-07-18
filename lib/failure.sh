@@ -101,7 +101,7 @@ fail_multiple_lockfiles() {
        to install dependencies. Installing dependencies using the wrong lockfile
        can result in missing packages or subtle bugs in production.
 
-       It's most likely that you recently installed yarn which has it's own
+       It's most likely that you recently installed yarn which has its own
        lockfile by default, which conflicts with the shrinkwrap file you've been
        using.
 
