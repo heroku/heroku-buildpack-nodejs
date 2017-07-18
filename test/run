@@ -539,7 +539,7 @@ testDefaultProcType() {
   assertCapturedSuccess
 }
 
-testYarnDefaltProcType() {
+testYarnDefaultProcType() {
   release "yarn"
   assertCaptured "web: yarn start"
   assertCapturedSuccess
