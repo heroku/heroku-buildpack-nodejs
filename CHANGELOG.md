@@ -2,7 +2,9 @@
 
 ## Master
 
+- Add `$STACK` to the cache signature (#445)
 - Log output now differentiates between an empty cache and a new cache signature
+
 
 ## v106 (2017-06-19)
 

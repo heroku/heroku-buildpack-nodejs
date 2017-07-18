@@ -60,6 +60,7 @@ testBuildWithCache() {
 
   compile "stable-node" $cache
   assertNotCaptured "- node_modules (not cached - skipping)"
+  assertFileContains "${STACK}" "${cache}/node/signature"
   assertCapturedSuccess
 
   rm -rf "$cache/node/node_modules"
