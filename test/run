@@ -123,7 +123,7 @@ testErrorYarnAndNpmLockfiles() {
 testErrorYarnAndNpmShrinkwrap() {
   compile "yarn-and-shrinkwrap-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Two different lock files foundk"
+  assertCaptured "Two different lockfiles foundk"
   assertCaptured "Please make sure there is only one of the following files"
   assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files"
   assertCapturedError
