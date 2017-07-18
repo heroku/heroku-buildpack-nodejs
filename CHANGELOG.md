@@ -5,6 +5,9 @@
 - Add `$STACK` to the cache signature (#445)
 - Log output now differentiates between an empty cache and a new cache signature
 
+## v107 (2017-07-17)
+
+- Switch to using nodebin to download the yarn binary (#444)
 
 ## v106 (2017-06-19)
 
