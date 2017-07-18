@@ -2,6 +2,10 @@
 
 ## Master
 
+## v107 (2017-07-17)
+
+- Switch to using nodebin to download the yarn binary (#444)
+
 ## v106 (2017-06-19)
 
 - Default to npm v5 if `package-lock.json` is present (#429)
