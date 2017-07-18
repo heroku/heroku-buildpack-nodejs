@@ -73,7 +73,9 @@ npm_node_modules() {
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
 
-    if [ -e $build_dir/npm-shrinkwrap.json ]; then
+    if [ -e $build_dir/package-lock.json ]; then
+      echo "Installing node modules (package.json + package-lock)"
+    elif [ -e $build_dir/npm-shrinkwrap.json ]; then
       echo "Installing node modules (package.json + shrinkwrap)"
     else
       echo "Installing node modules (package.json)"
