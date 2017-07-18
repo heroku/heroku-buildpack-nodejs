@@ -95,7 +95,7 @@ fail_multiple_lockfiles() {
   if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
     mcount "failures.shrinkwrap-lock-file-conflict"
     header "Build failed"
-    warn "Two different lock files found
+    warn "Two different lockfiles found
 
        Your application has two lockfiles defined, but only one can be used
        to install dependencies. Installing dependencies using the wrong lockfile
