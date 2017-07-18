@@ -1,7 +1,7 @@
 source $BP_DIR/lib/binaries.sh
 
 create_signature() {
-  echo "$(node --version); $(npm --version); $(yarn --version 2>/dev/null || true) $PREBUILD"
+  echo "${STACK}; $(node --version); $(npm --version); $(yarn --version 2>/dev/null || true); ${PREBUILD}"
 }
 
 save_signature() {
@@ -19,6 +19,8 @@ load_signature() {
 get_cache_status() {
   if ! ${NODE_MODULES_CACHE:-true}; then
     echo "disabled"
+  elif ! test -d "${CACHE_DIR}/node/"; then
+    echo "not-found"
   elif [ "$(create_signature)" != "$(load_signature)" ]; then
     echo "new-signature"
   else
