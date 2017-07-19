@@ -85,16 +85,13 @@ install_npm() {
 
   if [ "$version" == "" ]; then
     echo "Using default npm version: `npm --version`"
+  elif [[ `npm --version` == "$version" ]]; then
+    echo "npm `npm --version` already installed with node"
   else
-    if needs_resolution "$version"; then
-      echo "Resolving npm version ${version} via semver.io..."
-      version=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/npm/resolve)
+    echo "Bootstrapping npm $version (replacing `npm --version`)..."
+    if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
+      echo "Unable to install npm $version; does it exist?" && false
     fi
-    if [[ `npm --version` == "$version" ]]; then
-      echo "npm `npm --version` already installed with node"
-    else
-      echo "Downloading and installing npm $version (replacing version `npm --version`)..."
-      npm install --unsafe-perm --quiet -g npm@$version 2>&1 >/dev/null
-    fi
+    echo "npm `npm --version` installed"
   fi
 }
