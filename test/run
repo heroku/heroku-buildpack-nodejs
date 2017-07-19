@@ -132,7 +132,7 @@ testErrorYarnAndNpmShrinkwrap() {
 testDefaultToNpm5() {
   compile "npm-lockfile-no-version"
   assertCaptured "Detected package-lock.json"
-  assertCaptured "Downloading and installing npm 5."
+  assertCaptured "Bootstrapping npm 5"
   assertCapturedSuccess
 }
 
@@ -431,7 +431,7 @@ testOldNpm2() {
 
 testNonexistentNpm() {
   compile "nonexistent-npm"
-  assertCaptured "version not found: npm@1.1.65"
+  assertCaptured "Unable to install npm 1.1.65"
   assertCapturedError 1 ""
 }
 
@@ -443,15 +443,13 @@ testSameNpm() {
 
 testNpmVersionRange() {
   compile "npm-version-range"
-  assertCaptured "Resolving npm version"
-  assertCaptured "installing npm 1.4."
+  assertCaptured "Bootstrapping npm 1.4.x"
   assertCapturedSuccess
 }
 
 testNpmVersionSpecific() {
   compile "npm-version-specific"
-  assertCaptured "installing npm 2.1.11"
-  assertNotCaptured "Resolving npm version"
+  assertCaptured "Bootstrapping npm 2.1.11"
   assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
