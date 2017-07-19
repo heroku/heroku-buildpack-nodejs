@@ -60,16 +60,18 @@ install_iojs() {
   local version="$1"
   local dir="$2"
 
-  if needs_resolution "$version"; then
-    echo "Resolving iojs version ${version:-(latest stable)} via semver.io..."
-    version=$(curl --silent --get  --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/iojs/resolve)
+  echo "Resolving iojs version ${version:-(latest stable)}..."
+  if ! read number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/iojs/$platform/latest.txt"); then
+    echo "Unable to resolve; does that version exist?" && false
   fi
 
-  echo "Downloading and installing iojs $version..."
-  local download_url="https://iojs.org/dist/v$version/iojs-v$version-$os-$cpu.tar.gz"
-  curl "$download_url" --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz || (echo "Unable to download iojs $version; does it exist?" && false)
-  tar xzf /tmp/node.tar.gz -C /tmp
-  mv /tmp/iojs-v$version-$os-$cpu/* $dir
+  echo "Downloading and installing iojs $number..."
+  local code=$(curl "$url" --silent --fail --retry 5 --retry-max-time 15 -o /tmp/iojs.tar.gz --write-out "%{http_code}")
+  if [ "$code" != "200" ]; then
+    echo "Unable to download iojs: $code" && false
+  fi
+  tar xzf /tmp/iojs.tar.gz -C /tmp
+  mv /tmp/iojs-v$number-$os-$cpu/* $dir
   chmod +x $dir/bin/*
 }
 
