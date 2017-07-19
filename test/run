@@ -344,7 +344,6 @@ testInvalidNode() {
 testInvalidIo() {
   compile "invalid-io"
   assertCaptured "Resolving iojs version 2.0.99"
-  assertCaptured "Downloading and installing iojs 2.0.99"
   assertCaptured "Unable to resolve"
   assertCapturedError
 }
