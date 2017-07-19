@@ -131,6 +131,9 @@ fail_yarn_lockfile_outdated() {
        in the new yarn.lock file:
 
        $ yarn install
+       $ git add yarn.lock
+       $ git commit -m \"Updated Yarn lockfile\"
+       $ git push heroku master
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile
   fi
   exit 1
