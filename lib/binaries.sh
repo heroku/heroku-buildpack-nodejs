@@ -39,20 +39,19 @@ install_nodejs() {
   local version=${1:-6.x}
   local dir="$2"
 
-  if needs_resolution "$version"; then
-    echo "Resolving node version $version via semver.io..."
-    local version=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=${version}" https://semver.herokuapp.com/node/resolve)
+  echo "Resolving node version $version..."
+  if ! read number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt"); then
+    echo "Unable to resolve; does that version exist?" && false
   fi
 
-  echo "Downloading and installing node $version..."
-  local download_url="https://s3pository.heroku.com/node/v$version/node-v$version-$os-$cpu.tar.gz"
-  local code=$(curl "$download_url" --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
+  echo "Downloading and installing node $number..."
+  local code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
-    echo "Unable to download node $version; does it exist?" && false
+    echo "Unable to download node: $code" && false
   fi
   tar xzf /tmp/node.tar.gz -C /tmp
   rm -rf $dir/*
-  mv /tmp/node-v$version-$os-$cpu/* $dir
+  mv /tmp/node-v$number-$os-$cpu/* $dir
   chmod +x $dir/bin/*
 }
 
