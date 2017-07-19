@@ -397,7 +397,7 @@ testIoJs() {
 
 testSpecificVersion() {
   compile "specific-version"
-  assertNotCaptured "Resolving node version"
+  assertCaptured "Resolving node version"
   assertCaptured "Downloading and installing node 0.10.29"
   assertCaptured "Using default npm version: 1.4.14"
   assertCapturedSuccess
