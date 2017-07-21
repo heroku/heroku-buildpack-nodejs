@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-cat << EOF
+if $YARN; then
+  cat << EOF
+addons: []
+default_process_types:
+  web: yarn start
+EOF
+else
+  cat << EOF
 addons: []
 default_process_types:
   web: npm start
 EOF
+fi
