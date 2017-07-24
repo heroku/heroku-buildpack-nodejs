@@ -4,7 +4,7 @@
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version 6.x via semver.io"
+  assertCaptured "Resolving node version 6.x"
   assertCaptured "Downloading and installing node 6."
   assertCapturedSuccess
 }
@@ -344,8 +344,8 @@ testConcurrencyCustomLimit() {
 
 testInvalidNode() {
   compile "invalid-node"
-  assertCaptured "Downloading and installing node 0.11.333"
-  assertCaptured "Unable to download node 0.11.333"
+  assertCaptured "Resolving node version 0.11.333"
+  assertCaptured "Unable to resolve"
   assertCapturedError
 }
 
@@ -405,7 +405,7 @@ testIoJs() {
 
 testSpecificVersion() {
   compile "specific-version"
-  assertNotCaptured "Resolving node version"
+  assertCaptured "Resolving node version"
   assertCaptured "Downloading and installing node 0.10.29"
   assertCaptured "Using default npm version: 1.4.14"
   assertCapturedSuccess
@@ -420,7 +420,7 @@ testStableVersion() {
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Resolving node version 0.11.x via semver.io"
+  assertCaptured "Resolving node version 0.11.x"
   assertCaptured "Downloading and installing node 0.11."
   assertCapturedSuccess
 }
@@ -490,7 +490,7 @@ testInfoEmpty() {
 testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version * via semver.io"
+  assertCaptured "Resolving node version *"
   assertCaptured "Downloading and installing node 8."
   assertCapturedError
 }
@@ -498,14 +498,14 @@ testDangerousRangeStar() {
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version >0.4 via semver.io"
+  assertCaptured "Resolving node version >0.4"
   assertCaptured "Downloading and installing node 8."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
-  assertCaptured "Resolving node version >= 0.8.x via semver.io"
+  assertCaptured "Resolving node version >= 0.8.x"
   assertCaptured "Downloading and installing node 8."
   assertCapturedSuccess
 }
