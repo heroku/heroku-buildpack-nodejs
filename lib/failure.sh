@@ -123,9 +123,9 @@ fail_yarn_lockfile_outdated() {
     echo ""
     warn "Outdated Yarn lockfile
 
-       Your application contains a Yarn lockfile: yarn.lock which does not match
-       the requirements in your package.json file. This can happen if you use
-       npm to install or update a dependency instead of Yarn.
+       Your application contains a Yarn lockfile (yarn.lock) which does not 
+       match the dependencies in package.json. This can happen if you use npm
+       to install or update a dependency instead of Yarn.
 
        Please run the following command in your application directory and check
        in the new yarn.lock file:
