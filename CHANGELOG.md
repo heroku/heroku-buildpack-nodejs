@@ -2,8 +2,12 @@
 
 ## Master
 
+## v108 (2017-07-24)
+
 - Add `$STACK` to the cache signature (#445)
-- Log output now differentiates between an empty cache and a new cache signature
+- Log output now differentiates between an empty cache and a new cache signature (#448)
+- Remove the use of semver.io to bootstrap npm (#452)
+- Switch to using nodebin to download iojs binaries (#450)
 
 ## v107 (2017-07-17)
 
