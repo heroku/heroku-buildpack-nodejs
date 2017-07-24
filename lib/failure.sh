@@ -116,6 +116,29 @@ fail_multiple_lockfiles() {
   fi
 }
 
+fail_yarn_lockfile_outdated() {
+  local log_file="$1"
+  if grep -qi 'error Your lockfile needs to be updated' "$log_file"; then
+    mcount "failures.outdated-yarn-lockfile"
+    echo ""
+    warn "Outdated Yarn lockfile
+
+       Your application contains a Yarn lockfile (yarn.lock) which does not 
+       match the dependencies in package.json. This can happen if you use npm
+       to install or update a dependency instead of Yarn.
+
+       Please run the following command in your application directory and check
+       in the new yarn.lock file:
+
+       $ yarn install
+       $ git add yarn.lock
+       $ git commit -m \"Updated Yarn lockfile\"
+       $ git push heroku master
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile
+    exit 1
+  fi
+}
+
 warning() {
   local tip=${1:-}
   local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}
