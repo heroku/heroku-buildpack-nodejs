@@ -2,6 +2,10 @@
 
 ## Master
 
+## v109 (2017-07-25)
+
+- Switch to using nodebin to download the node binary (#451)
+
 ## v108 (2017-07-24)
 
 - Add `$STACK` to the cache signature (#445)
