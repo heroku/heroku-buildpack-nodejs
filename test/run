@@ -93,7 +93,7 @@ testYarnInvalid() {
   compile "yarn-invalid"
   assertCaptured "Resolving yarn version 0.171"
   assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
-  assertCaptured "No version of Node for requirement: 0.171"
+  assertCaptured "No version of Yarn for requirement: 0.171"
   assertCapturedError
 }
 
@@ -377,7 +377,7 @@ testInvalidNodeSemver() {
 testInvalidIo() {
   compile "invalid-io"
   assertCaptured "Resolving iojs version 2.0.99"
-  assertCaptured "Unable to resolve"
+  assertCaptured "Could not find Iojs version corresponding to version requirement: 2.0.99"
   assertCapturedError
 }
 
