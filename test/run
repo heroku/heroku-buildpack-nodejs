@@ -89,6 +89,22 @@ testYarnSemver() {
   assertCapturedSuccess
 }
 
+testYarnInvalid() {
+  compile "yarn-invalid"
+  assertCaptured "Resolving yarn version 0.171"
+  assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
+  assertCaptured "No version of Node for requirement: 0.171"
+  assertCapturedError
+}
+
+testYarnSemverInvalid() {
+  compile "yarn-invalid-semver"
+  assertCaptured "Resolving yarn version 0.17q"
+  assertCaptured "Error: Invalid semantic version \"0.17q\""
+  assertCaptured "Invalid semver requirement"
+  assertCapturedError
+}
+
 testYarnRun() {
   compile "yarn-run"
   assertCaptured "Running heroku-postbuild (yarn)"
@@ -345,7 +361,16 @@ testConcurrencyCustomLimit() {
 testInvalidNode() {
   compile "invalid-node"
   assertCaptured "Resolving node version 0.11.333"
-  assertCaptured "Unable to resolve"
+  assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
+  assertCaptured "No version of Node for requirement: 0.11.333"
+  assertCapturedError
+}
+
+testInvalidNodeSemver() {
+  compile "invalid-node-semver"
+  assertCaptured "Resolving node version stable"
+  assertCaptured "Error: Invalid semantic version \"stable\""
+  assertCaptured "Invalid semver requirement"
   assertCapturedError
 }
 
