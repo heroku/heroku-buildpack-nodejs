@@ -2,6 +2,10 @@
 
 ## Master
 
+## v110 (2017-07-26)
+
+- Improve error messages when bin version requirements are invalid (#457)
+
 ## v109 (2017-07-25)
 
 - Switch to using nodebin to download the node binary (#451)
