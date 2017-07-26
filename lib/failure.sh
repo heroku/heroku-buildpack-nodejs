@@ -169,7 +169,7 @@ fail_node_install() {
   if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
     mcount "failures.invalid-node-version"
     echo ""
-    warn "No version of Node for requirement: $node_engine
+    warn "No matching version found for Node: $node_engine
 
        Heroku supports the latest Stable version of Node.js as well as all
        active LTS (Long-Term-Support) versions, however you have specified
@@ -188,8 +188,7 @@ fail_node_install() {
        \"engines\": {
          \"node\": \"6.11.1\"
        }
-    " https://devcenter.heroku.com/articles/nodejs-support\#specifying-a-node-js-version
-
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions
     exit 1
   fi
 }
@@ -201,7 +200,7 @@ fail_yarn_install() {
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
     mcount "failures.invalid-yarn-version"
     echo ""
-    warn "No version of Yarn for requirement: $yarn_engine
+    warn "No matching version found for Yarn: $yarn_engine
 
        Heroku supports every version of Yarn published on npm, however you have
        specified a version in package.json ($yarn_engine) that does not correspond
@@ -222,8 +221,7 @@ fail_yarn_install() {
        \"engines\": {
          \"yarn\": \"0.27.5\"
        }
-    " https://devcenter.heroku.com/articles/nodejs-support\#specifying-a-node-js-version
-
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions
     exit 1
   fi
 }
@@ -242,8 +240,7 @@ fail_invalid_semver() {
 
        However you have specified a version requirement that does is not a valid
        semantic version.
-    " https://devcenter.heroku.com/articles/nodejs-support\#specifying-a-node-js-version
-
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
     exit 1
   fi
 }
