@@ -94,6 +94,7 @@ testYarnInvalid() {
   assertCaptured "Resolving yarn version 0.171"
   assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
   assertCaptured "No matching version found for Yarn: 0.171"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions"
   assertCapturedError
 }
 
@@ -102,6 +103,7 @@ testYarnSemverInvalid() {
   assertCaptured "Resolving yarn version 0.17q"
   assertCaptured "Error: Invalid semantic version \"0.17q\""
   assertCaptured "Invalid semver requirement"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement"
   assertCapturedError
 }
 
@@ -363,6 +365,7 @@ testInvalidNode() {
   assertCaptured "Resolving node version 0.11.333"
   assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
   assertCaptured "No matching version found for Node: 0.11.333"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions"
   assertCapturedError
 }
 
