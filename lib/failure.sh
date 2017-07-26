@@ -238,7 +238,7 @@ fail_invalid_semver() {
 
        http://semver.org/
 
-       However you have specified a version requirement that does is not a valid
+       However you have specified a version requirement that is not a valid
        semantic version.
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
     exit 1
