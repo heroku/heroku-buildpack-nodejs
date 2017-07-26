@@ -123,7 +123,7 @@ fail_yarn_lockfile_outdated() {
     echo ""
     warn "Outdated Yarn lockfile
 
-       Your application contains a Yarn lockfile (yarn.lock) which does not 
+       Your application contains a Yarn lockfile (yarn.lock) which does not
        match the dependencies in package.json. This can happen if you use npm
        to install or update a dependency instead of Yarn.
 
@@ -135,6 +135,112 @@ fail_yarn_lockfile_outdated() {
        $ git commit -m \"Updated Yarn lockfile\"
        $ git push heroku master
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile
+    exit 1
+  fi
+}
+
+fail_bin_install() {
+  local bin="$1"
+  local version="$2"
+
+  # re-curl the result, saving off the reason for the failure this time
+  local error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")
+
+  if [[ $error = "No result" ]]; then
+    case $bin in
+      node)
+        echo "Could not find Node version corresponding to version requirement: $version";;
+      iojs)
+        echo "Could not find Iojs version corresponding to version requirement: $version";;
+      yarn)
+        echo "Could not find Yarn version corresponding to version requirement: $version";;
+    esac
+  else
+    echo "Error: Invalid semantic version \"$version\""
+  fi
+
+  false
+}
+
+fail_node_install() {
+  local log_file="$1"
+  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+
+  if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
+    mcount "failures.invalid-node-version"
+    echo ""
+    warn "No matching version found for Node: $node_engine
+
+       Heroku supports the latest Stable version of Node.js as well as all
+       active LTS (Long-Term-Support) versions, however you have specified
+       a version in package.json ($node_engine) that does not correspond to
+       any published version of Node.js.
+
+       You should always specify a Node.js version that matches the runtime
+       you’re developing and testing with. To find your version locally:
+
+       $ node --version
+       v6.11.1
+
+       Use the engines section of your package.json to specify the version of
+       Node.js to use on Heroku. Drop the ‘v’ to save only the version number:
+
+       \"engines\": {
+         \"node\": \"6.11.1\"
+       }
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions
+    exit 1
+  fi
+}
+
+fail_yarn_install() {
+  local log_file="$1"
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
+  if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
+    mcount "failures.invalid-yarn-version"
+    echo ""
+    warn "No matching version found for Yarn: $yarn_engine
+
+       Heroku supports every version of Yarn published on npm, however you have
+       specified a version in package.json ($yarn_engine) that does not correspond
+       to any published version of Yarn. You can see a list of all published
+       versions of Yarn with the following command:
+
+       $ yarn info yarn versions
+
+       You should always specify a Yarn version that matches the version
+       you’re developing and testing with. To find your version locally:
+
+       $ yarn --version
+       0.27.5
+
+       Use the engines section of your package.json to specify the version of
+       Yarn to use on Heroku.
+
+       \"engines\": {
+         \"yarn\": \"0.27.5\"
+       }
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions
+    exit 1
+  fi
+}
+
+fail_invalid_semver() {
+  local log_file="$1"
+  if grep -qi 'Error: Invalid semantic version' "$log_file"; then
+    mcount "failures.invalid-semver-requirement"
+    echo ""
+    warn "Invalid semver requirement
+
+       Node, Yarn, and npm adhere to semver, the semantic versioning convention
+       popularized by GitHub.
+
+       http://semver.org/
+
+       However you have specified a version requirement that is not a valid
+       semantic version.
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
     exit 1
   fi
 }

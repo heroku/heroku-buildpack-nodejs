@@ -89,6 +89,24 @@ testYarnSemver() {
   assertCapturedSuccess
 }
 
+testYarnInvalid() {
+  compile "yarn-invalid"
+  assertCaptured "Resolving yarn version 0.171"
+  assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
+  assertCaptured "No matching version found for Yarn: 0.171"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions"
+  assertCapturedError
+}
+
+testYarnSemverInvalid() {
+  compile "yarn-invalid-semver"
+  assertCaptured "Resolving yarn version 0.17q"
+  assertCaptured "Error: Invalid semantic version \"0.17q\""
+  assertCaptured "Invalid semver requirement"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement"
+  assertCapturedError
+}
+
 testYarnRun() {
   compile "yarn-run"
   assertCaptured "Running heroku-postbuild (yarn)"
@@ -345,14 +363,24 @@ testConcurrencyCustomLimit() {
 testInvalidNode() {
   compile "invalid-node"
   assertCaptured "Resolving node version 0.11.333"
-  assertCaptured "Unable to resolve"
+  assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
+  assertCaptured "No matching version found for Node: 0.11.333"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions"
+  assertCapturedError
+}
+
+testInvalidNodeSemver() {
+  compile "invalid-node-semver"
+  assertCaptured "Resolving node version stable"
+  assertCaptured "Error: Invalid semantic version \"stable\""
+  assertCaptured "Invalid semver requirement"
   assertCapturedError
 }
 
 testInvalidIo() {
   compile "invalid-io"
   assertCaptured "Resolving iojs version 2.0.99"
-  assertCaptured "Unable to resolve"
+  assertCaptured "Could not find Iojs version corresponding to version requirement: 2.0.99"
   assertCapturedError
 }
 
