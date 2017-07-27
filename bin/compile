@@ -22,6 +22,7 @@ STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 
 ### Load dependencies
 

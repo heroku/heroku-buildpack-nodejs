@@ -63,6 +63,18 @@ testYarnCacheDirectory() {
   assertCapturedSuccess
 }
 
+testNpm5CacheDirectory() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  echo "${cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
+  compile "npm5" $cache $env_dir
+  # These will be created if npm is using the directory for its cache
+  assertDirectoryExists ${cache_dir}/npm
+  assertDirectoryExists ${cache_dir}/npm/_cacache
+  assertCapturedSuccess
+}
+
 testBuildWithCache() {
   cache=$(mktmpdir)
 
