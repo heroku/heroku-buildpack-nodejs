@@ -46,6 +46,16 @@ testYarn() {
   compile "yarn"
   assertCaptured "installing yarn"
   assertCaptured "Installing node modules (yarn.lock)"
+  assertNotCaptured "Enabling yarn workspaces"
+  assertNotCaptured "Installing node modules (package.json"
+  assertCapturedSuccess
+}
+
+testYarnWorkspaces() {
+  compile "yarn-workspaces"
+  assertCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertCaptured "Enabling yarn workspaces"
   assertNotCaptured "Installing node modules (package.json"
   assertCapturedSuccess
 }

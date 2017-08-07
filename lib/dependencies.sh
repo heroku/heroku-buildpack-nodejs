@@ -70,10 +70,25 @@ yarn_supports_frozen_lockfile() {
   fi
 }
 
+project_uses_yarn_workspaces() {
+  local workspaces=$(read_json "$build_dir/package.json" ".workspaces")
+  if [[ "$workspaces" == "" ]]; then
+    false
+  else
+    true
+  fi
+}
+
 yarn_node_modules() {
   local build_dir=${1:-}
 
   echo "Installing node modules (yarn.lock)"
+  if project_uses_yarn_workspaces; then
+    echo "Enabling yarn workspaces"
+    # https://github.com/yarnpkg/yarn/blob/fa0fb69a567e1c44320d6f2a5f2a8ee42bc226ea/src/util/user-home-dir.js#L8
+    echo "workspaces-experimental true" >> /usr/local/share/.yarnrc
+    echo "workspaces-experimental true" >> "$HOME/.yarnrc"
+  fi;
   cd "$build_dir"
   if yarn_supports_frozen_lockfile; then
     yarn install --frozen-lockfile --ignore-engines 2>&1
