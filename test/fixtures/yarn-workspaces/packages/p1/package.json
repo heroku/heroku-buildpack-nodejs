@@ -1,0 +1,7 @@
+{
+  "name": "p1",
+  "version": "0.0.0",
+  "dependencies": {
+    "debug": ">=2 <3"
+  }
+}
