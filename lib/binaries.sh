@@ -9,11 +9,11 @@ needs_resolution() {
 
 install_yarn() {
   local dir="$1"
-  local version="$2"
+  local version=${2:-0.28.4}
   local number
   local url
 
-  echo "Resolving yarn version ${version:-(latest)}..."
+  echo "Resolving yarn version $version..."
   if ! read number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt"); then
     fail_bin_install yarn $version;
   fi
