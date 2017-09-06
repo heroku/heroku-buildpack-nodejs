@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+# TODO: check this test on heroku-16
+# testBowerAngularResolution() {
+#  compile "bower-angular-resolution"
+#  assertCaptured "Bower may need a resolution hint for angular"
+#  assertCapturedError
+#}
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
@@ -286,12 +293,6 @@ testMultipleRuns() {
   assertCapturedSuccess
   compileDir "$compileDir" "$cacheDir"
   assertCapturedSuccess
-}
-
-testBowerAngularResolution() {
-  compile "bower-angular-resolution"
-  assertCaptured "Bower may need a resolution hint for angular"
-  assertCapturedError
 }
 
 testUntrackedDependencies() {
