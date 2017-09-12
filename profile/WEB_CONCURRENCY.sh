@@ -15,15 +15,12 @@ log_concurrency() {
 
 detect_memory() {
   local default=$1
-  local limit=$(ulimit -u)
 
-  case $limit in
-    256) echo "512";;      # Standard-1X
-    512) echo "1024";;     # Standard-2X
-    16384) echo "2560";;   # Performance-M
-    32768) echo "14336";;  # Performance-L
-    *) echo "$default";;
-  esac
+  if [ -e /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
+    expr "$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)" / 1048576
+  else
+    echo "$default"
+  fi
 }
 
 export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(detect_memory 512)}
