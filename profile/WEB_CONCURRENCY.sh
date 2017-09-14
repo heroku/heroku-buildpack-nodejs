@@ -30,6 +30,6 @@ export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(detect_memory 512)}
 export WEB_MEMORY=${WEB_MEMORY-512}
 export WEB_CONCURRENCY=$(calculate_concurrency)
 
-if [ "$LOG_CONCURRENCY" = "true" ]; then
+if [[ "${LOG_CONCURRENCY+isset}" && "$LOG_CONCURRENCY" == "true" ]]; then
   log_concurrency
 fi
