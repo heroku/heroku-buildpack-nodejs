@@ -1,12 +1,3 @@
-needs_resolution() {
-  local semver=$1
-  if ! [[ "$semver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 install_yarn() {
   local dir="$1"
   local version=${2:-0.28.4}
