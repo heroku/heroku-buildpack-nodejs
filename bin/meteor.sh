@@ -18,14 +18,19 @@ get_meteor_minor_version() {
 meteor_node_version() {
   minor=$(get_meteor_minor_version)
   if [ "$minor" -gt 3 ] ; then
-    echo "4.4.x"
+    echo "4.8.x"
   else
     echo "0.10.x"
   fi
 }
 
 meteor_npm_version() {
-  echo "3.x"
+  minor=$(get_meteor_minor_version)
+  if [ "$minor" -gt 3 ] ; then
+    echo "4.6.x"
+  else
+    echo "3.x"
+  fi
 }
 
 create_meteor_settings_profile() {
