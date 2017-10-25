@@ -53,7 +53,6 @@ handle_failure() {
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE"
   warn_econnreset "$LOG_FILE"
-  warn_young_yarn "$LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR

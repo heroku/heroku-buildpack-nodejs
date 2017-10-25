@@ -310,13 +310,6 @@ warn_old_npm_lockfile() {
   fi
 }
 
-warn_young_yarn() {
-  if $YARN; then
-    warning "This project was built with yarn, which is new and under development. Some projects can still be built more reliably with npm" "https://devcenter.heroku.com/articles/nodejs-support#build-behavior"
-    mcount 'warnings.yarn.young'
-  fi
-}
-
 warn_untracked_dependencies() {
   local log_file="$1"
   if grep -qi 'gulp: not found' "$log_file" || grep -qi 'gulp: command not found' "$log_file"; then
