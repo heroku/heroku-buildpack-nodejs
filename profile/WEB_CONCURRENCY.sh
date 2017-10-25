@@ -4,6 +4,9 @@ calculate_concurrency() {
   WEB_CONCURRENCY=${WEB_CONCURRENCY-$((MEMORY_AVAILABLE/WEB_MEMORY))}
   if (( WEB_CONCURRENCY < 1 )); then
     WEB_CONCURRENCY=1
+  elif (( WEB_CONCURRENCY > 100 )); then
+    # Ex: This will happen on Dokku on DO
+    WEB_CONCURRENCY=1
   fi
   echo $WEB_CONCURRENCY
 }
@@ -22,6 +25,22 @@ detect_memory() {
     echo "$default"
   fi
 }
+
+warn_bad_web_concurrency() {
+  local memory=${MEMORY_AVAILABLE-$(detect_memory 512)}
+
+  # No webserver will have 10000GB of RAM
+  if [ $memory -gt "10000000" ]; then
+    echo "Could not determine a reasonable value for WEB_CONCCURENCY.
+This is likely due to running the Heroku NodeJS buildpack on a non-Heroku
+platform.
+
+WEB_CONCURRENCY has been set to 1. Please review whether this value is
+appropriate for your application."
+  fi
+}
+
+warn_bad_web_concurrency
 
 export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(detect_memory 512)}
 export WEB_MEMORY=${WEB_MEMORY-512}

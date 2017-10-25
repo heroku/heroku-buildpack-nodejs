@@ -386,6 +386,15 @@ testConcurrencyCustomLimit() {
   assertCapturedSuccess
 }
 
+# When /sys/fs/cgroup/memory/memory.limit_in_bytes lies and gives a ridiculous value
+# This happens on Dokku for example
+testConcurrencyTooHigh() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Could not determine a reasonable value for WEB_CONCCURENCY"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
 testInvalidNode() {
   compile "invalid-node"
   assertCaptured "Resolving node version 0.11.333"
