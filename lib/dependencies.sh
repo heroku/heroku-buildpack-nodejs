@@ -33,12 +33,29 @@ log_build_scripts() {
   local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
   local heroku_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")
   local heroku_postbuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
+  local postinstall=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
 
   if [ -n "$build" ]; then
     mcount "scripts.build"
 
     if [ -z "$heroku_postbuild" ]; then
       mcount "scripts.build-without-heroku-postbuild"
+    fi
+
+    if [ -z "$postinstall" ]; then
+      mcount "scripts.build-without-postinstall"
+    fi
+
+    if [ -z "$postinstall" ] && [ -z "$heroku_postbuild" ]; then
+      mcount "scripts.build-without-other-hooks"
+    fi
+  fi
+
+  if [ -n "$postinstall" ]; then
+    mcount "scripts.postinstall"
+
+    if [ "$postinstall" == "npm run build" ]; then
+      mcount "scripts.postinstall-is-npm-build"
     fi
   fi
 
@@ -48,6 +65,10 @@ log_build_scripts() {
 
   if [ -n "$heroku_postbuild" ]; then
     mcount "scripts.heroku-postbuild"
+
+    if [ "$heroku_postbuild" == "npm run build" ]; then
+      mcount "scripts.heroku-postbuild-is-npm-build"
+    fi
   fi
 
   if [ -n "$heroku_postbuild" ] && [ -n "$build" ]; then
