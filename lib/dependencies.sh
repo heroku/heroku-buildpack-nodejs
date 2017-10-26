@@ -54,9 +54,12 @@ log_build_scripts() {
   if [ -n "$postinstall" ]; then
     mcount "scripts.postinstall"
 
-    if [ "$postinstall" == "npm run build" ]; then
+    if [ "$postinstall" == "npm run build" ] ||
+       [ "$postinstall" == "yarn run build" ] ||
+       [ "$postinstall" == "yarn build" ]; then
       mcount "scripts.postinstall-is-npm-build"
     fi
+
   fi
 
   if [ -n "$heroku_prebuild" ]; then
@@ -66,7 +69,9 @@ log_build_scripts() {
   if [ -n "$heroku_postbuild" ]; then
     mcount "scripts.heroku-postbuild"
 
-    if [ "$heroku_postbuild" == "npm run build" ]; then
+    if [ "$heroku_postbuild" == "npm run build" ] ||
+       [ "$heroku_postbuild" == "yarn run build" ] ||
+       [ "$heroku_postbuild" == "yarn build" ]; then
       mcount "scripts.heroku-postbuild-is-npm-build"
     fi
   fi
