@@ -554,7 +554,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version *"
-  assertCaptured "Downloading and installing node 8."
+  assertCaptured "Downloading and installing node 9."
   assertCapturedError
 }
 
@@ -562,14 +562,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4"
-  assertCaptured "Downloading and installing node 8."
+  assertCaptured "Downloading and installing node 9."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x"
-  assertCaptured "Downloading and installing node 8."
+  assertCaptured "Downloading and installing node 9."
   assertCapturedSuccess
 }
 
