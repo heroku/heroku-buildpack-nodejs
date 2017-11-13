@@ -2,6 +2,10 @@
 
 ## Master
 
+## v113 (2017-11-13)
+
+- Bump default version of Node to Node 8 (#497)
+
 ## v112 (2017-11-13)
 
 - Move default Yarn and npm cache directories to a temporary dir (#459)
