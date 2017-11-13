@@ -2,6 +2,18 @@
 
 ## Master
 
+## v112 (2017-11-13)
+
+- Move default Yarn and npm cache directories to a temporary dir (#459)
+- `LOG_CONCURRENCY` fix (#475)
+- Default Yarn to `1.x`
+- Add `BUILD_DIR` to env var blacklist
+
+## v111 (2017-09-06)
+
+- Move `WEB_CONCURRENCY` logic to separate file (#467)
+- Temporarily default Yarn to known-good version
+
 ## v110 (2017-07-26)
 
 - Improve error messages when bin version requirements are invalid (#457)
