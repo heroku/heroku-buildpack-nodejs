@@ -11,8 +11,8 @@
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version 6.x"
-  assertCaptured "Downloading and installing node 6."
+  assertCaptured "Resolving node version 8.x"
+  assertCaptured "Downloading and installing node 8."
   assertCapturedSuccess
 }
 
