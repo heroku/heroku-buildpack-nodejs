@@ -27,7 +27,7 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version=${1:-6.x}
+  local version=${1:-8.x}
   local dir="$2"
 
   echo "Resolving node version $version..."
