@@ -69,8 +69,11 @@ install_npm() {
   local version="$1"
   local dir="$2"
   local npm_lock="$3"
+  local npm_version="$(npm --version)"
 
-  if $npm_lock && [ "$version" == "" ]; then
+  # If the user has not specified a version of npm, but has an npm lockfile
+  # upgrade them to npm 5.x if a suitable version was not installed with Node
+  if $npm_lock && [ "$version" == "" ] && [ "${npm_version:0:1}" -lt "5" ]; then
     echo "Detected package-lock.json: defaulting npm to version 5.x.x"
     version="5.x.x"
   fi

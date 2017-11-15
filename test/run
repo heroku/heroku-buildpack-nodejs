@@ -189,8 +189,16 @@ testYarnLockfileOutOfDate() {
 
 testDefaultToNpm5() {
   compile "npm-lockfile-no-version"
+  assertCaptured "Using default npm version"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+testDefaultToNpm5WithNode6() {
+  compile "npm-lockfile-node-6-no-version"
   assertCaptured "Detected package-lock.json"
   assertCaptured "Bootstrapping npm 5"
+  assertCaptured "Installing node modules (package.json + package-lock)"
   assertCapturedSuccess
 }
 
