@@ -2,6 +2,10 @@
 
 ## Master
 
+## v114 (2017-11-16)
+
+- Don't default to npm 5.x if the user already has npm >= 5 (#499)
+
 ## v113 (2017-11-13)
 
 - Bump default version of Node to Node 8 (#497)
