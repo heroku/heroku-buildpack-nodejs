@@ -59,8 +59,14 @@ trap 'handle_failure' ERR
 
 ### Check initial state
 
+yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
-[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+if [ -f "$BUILD_DIR/yarn.lock" ] || [ -n "$yarn_engine" ]; then
+  YARN=true
+else
+  YARN=false
+fi
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Failures that should be caught immediately
@@ -92,7 +98,6 @@ install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
   local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
-  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"

@@ -158,6 +158,8 @@ testYarnEngine() {
 testYarnOnlyEngine() {
   compile "yarn-only-engine"
   assertCaptured "installing yarn (0.24.5)"
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertNotCaptured "Installing node modules (package.json"
   assertCapturedSuccess
 }
 
