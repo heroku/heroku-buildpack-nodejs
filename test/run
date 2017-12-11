@@ -152,9 +152,6 @@ testYarnEngine() {
   assertCapturedSuccess
 }
 
-# If they specify a version of yarn inside package.json but
-# don't have a yarn.lock file download and make yarn available
-# though we will only install using yarn if a yarn.lock exists
 testYarnOnlyEngine() {
   compile "yarn-only-engine"
   assertCaptured "installing yarn (0.24.5)"
