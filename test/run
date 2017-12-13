@@ -114,6 +114,14 @@ testCacheWithPrebuild() {
   assertCapturedSuccess
 }
 
+testYarnManagerPreference() {
+  compile "yarn-manager"
+  assertCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertNotCaptured "Installing node modules (package.json"
+  assertCapturedSuccess
+}
+
 testYarnSemver() {
   compile "yarn-semver"
   assertCaptured "Resolving yarn version ~0.17"
@@ -155,8 +163,6 @@ testYarnEngine() {
 testYarnOnlyEngine() {
   compile "yarn-only-engine"
   assertCaptured "installing yarn (0.24.5)"
-  assertCaptured "Installing node modules (yarn.lock)"
-  assertNotCaptured "Installing node modules (package.json"
   assertCapturedSuccess
 }
 

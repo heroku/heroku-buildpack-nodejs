@@ -67,16 +67,21 @@ warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
 ### Check initial state
-
-yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+package_manager=$(read_json "$BUILD_DIR/package.json" ".manager")
 
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
-if [ -f "$BUILD_DIR/yarn.lock" ] || [ -n "$yarn_engine" ]; then
+[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
+
+### Set package manager to be used
+
+if [ "$package_manager" == "yarn" ]; then
   YARN=true
-else
+fi
+
+if [ "$package_manager" == "npm" ]; then
   YARN=false
 fi
-[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Compile
 
@@ -98,6 +103,7 @@ install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
   local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"
