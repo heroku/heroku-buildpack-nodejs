@@ -57,6 +57,15 @@ handle_failure() {
 }
 trap 'handle_failure' ERR
 
+### Failures that should be caught immediately
+
+fail_dot_heroku "$BUILD_DIR"
+fail_dot_heroku_node "$BUILD_DIR"
+fail_invalid_package_json "$BUILD_DIR"
+fail_multiple_lockfiles "$BUILD_DIR"
+warn_prebuilt_modules "$BUILD_DIR"
+warn_missing_package_json "$BUILD_DIR"
+
 ### Check initial state
 
 yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
@@ -68,15 +77,6 @@ else
   YARN=false
 fi
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
-
-### Failures that should be caught immediately
-
-fail_dot_heroku "$BUILD_DIR"
-fail_dot_heroku_node "$BUILD_DIR"
-fail_invalid_package_json "$BUILD_DIR"
-fail_multiple_lockfiles "$BUILD_DIR"
-warn_prebuilt_modules "$BUILD_DIR"
-warn_missing_package_json "$BUILD_DIR"
 
 ### Compile
 
