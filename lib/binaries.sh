@@ -35,15 +35,27 @@ install_nodejs() {
     fail_bin_install node $version;
   fi
 
-  echo "Downloading and installing node $number..."
-  local code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
-  if [ "$code" != "200" ]; then
-    echo "Unable to download node: $code" && false
+  echo "Checking cache for node version $number..."
+  if [-f "/cache/node-v$number-$os-$cpu.tar.gz"]
+  then
+    echo "Cache found for node version $number..."
+    cp /cache/node-v$number-$os-$cpu.tar.gz /tmp/node.tar.gz
+    tar xzf /tmp/node.tar.gz -C /tmp
+    rm -rf $dir/*
+    mv /tmp/node-v$number-$os-$cpu/* $dir
+    chmod +x $dir/bin/*
+  else
+    echo "Downloading and installing node $number..."
+    local code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
+    if [ "$code" != "200" ]; then
+      echo "Unable to download node: $code" && false
+    fi
+    cp /tmp/node.tar.gz /cache/node-v$number-$os-$cpu.tar.gz
+    tar xzf /tmp/node.tar.gz -C /tmp
+    rm -rf $dir/*
+    mv /tmp/node-v$number-$os-$cpu/* $dir
+    chmod +x $dir/bin/*
   fi
-  tar xzf /tmp/node.tar.gz -C /tmp
-  rm -rf $dir/*
-  mv /tmp/node-v$number-$os-$cpu/* $dir
-  chmod +x $dir/bin/*
 }
 
 install_iojs() {
