@@ -36,7 +36,7 @@ install_nodejs() {
   fi
 
   echo "Checking cache for node version $number..."
-  if [-f "/cache/node-v$number-$os-$cpu.tar.gz"]
+  if [ -f "/cache/node-v$number-$os-$cpu.tar.gz" ]
   then
     echo "Cache found for node version $number..."
     cp /cache/node-v$number-$os-$cpu.tar.gz /tmp/node.tar.gz
