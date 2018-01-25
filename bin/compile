@@ -49,6 +49,7 @@ handle_failure() {
   fail_node_install "$LOG_FILE"
   fail_yarn_install "$LOG_FILE"
   fail_invalid_semver "$LOG_FILE"
+  log_other_failures "$LOG_FILE"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE"
