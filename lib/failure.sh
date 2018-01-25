@@ -37,6 +37,7 @@ fail_invalid_package_json() {
 
 fail_dot_heroku() {
   if [ -f "${1:-}/.heroku" ]; then
+    mcount "failures.dot-heroku"
     header "Build failed"
     warn "The directory .heroku could not be created
 
@@ -51,6 +52,7 @@ fail_dot_heroku() {
 
 fail_dot_heroku_node() {
   if [ -f "${1:-}/.heroku/node" ]; then
+    mcount "failures.dot-heroku-node"
     header "Build failed"
     warn "The directory .heroku/node could not be created
 
@@ -118,7 +120,7 @@ fail_multiple_lockfiles() {
 
 fail_yarn_lockfile_outdated() {
   local log_file="$1"
-  if grep -qi 'error Your lockfile needs to be updated' "$log_file"; then
+  if grep -qi 'Your lockfile needs to be updated' "$log_file"; then
     mcount "failures.outdated-yarn-lockfile"
     echo ""
     warn "Outdated Yarn lockfile
@@ -242,6 +244,51 @@ fail_invalid_semver() {
        semantic version.
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
     exit 1
+  fi
+}
+
+log_other_failures() {
+  local log_file="$1"
+  if grep -qi "sh: 1: .*: not found" "$log_file"; then
+    mcount "failures.dev-dependency-tool-not-installed"
+  fi
+
+  if grep -qi "Failed at the bcrypt@\d.\d.\d install script" "$log_file"; then
+    mcount "failures.bcrypt-permissions-issue"
+  fi
+
+  if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
+    mcount "failures.ng-cli-version-issue"
+  fi
+
+  if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
+    mcount "failures.npm-property-zero-issue"
+  fi
+
+  if grep -qi "npm is known not to run on Node.js v\d.\d.\d" "$log_file"; then
+    mcount "failures.npm-known-bad-version"
+  fi
+
+  # "notarget No matching version found for" = npm
+  # "error Couldn't find any versions for" = yarn
+  if grep -q -e "notarget No matching version found for" -e "error Couldn't find any versions for" "$log_file"; then
+    mcount "failures.bad-version-for-dependency"
+  fi
+
+  if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
+    mcount "failures.webpack-module-not-found"
+  fi
+
+  if greq -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
+    mcount "failures.node-9-npm-issue"
+  fi
+
+  if grep -qi "console.error(\`a bug known to break npm" "$log_file"; then
+    mcount "failures.old-node-new-npm"
+  fi
+
+  if grep -qi "sass-loader/lib/loader.js:3:14" "$log_file"; then
+    mcount "failures.webpack-sass-loader-error"
   fi
 }
 

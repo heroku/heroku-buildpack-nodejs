@@ -181,7 +181,7 @@ testErrorYarnAndNpmShrinkwrap() {
 
 testYarnLockfileOutOfDate() {
   compile "yarn-lockfile-out-of-date"
-  assertCaptured "error Your lockfile needs to be updated"
+  assertCaptured "Your lockfile needs to be updated"
   assertCaptured "Outdated Yarn lockfile"
   assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile"
   assertCapturedError
