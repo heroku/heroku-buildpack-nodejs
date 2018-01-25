@@ -261,10 +261,6 @@ log_other_failures() {
     mcount "failures.ng-cli-version-issue"
   fi
 
-  if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
-    mcount "failures.ng-cli-version-issue"
-  fi
-
   if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
     mcount "failures.npm-property-zero-issue"
   fi
