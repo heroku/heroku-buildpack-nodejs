@@ -279,7 +279,7 @@ log_other_failures() {
     mcount "failures.webpack-module-not-found"
   fi
 
-  if greq -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
+  if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
     mcount "failures.node-9-npm-issue"
   fi
 
