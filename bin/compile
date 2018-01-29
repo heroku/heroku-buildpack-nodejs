@@ -3,19 +3,21 @@
 
 ### Configure environment
 set -o errexit    # always exit on error
-set -o pipefail   # dont ignore exit codes when piping output
-set -o nounset    # fail on unset variables
+set -o pipefail   # don t ignore exit codes when piping output
+
 unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
 DEFAULT_CACHE="node_modules bower_components"
+BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
+STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
 mkdir -p "$BUILD_DIR/.scalingo/node/"
 cd $BUILD_DIR
@@ -24,7 +26,14 @@ export PATH="$BUILD_DIR/.scalingo/node/bin:$BUILD_DIR/.scalingo/yarn/bin":$PATH
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
+### Configure package manager cache directories
+[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+
 ### Load dependencies
+
+curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
+source "$STDLIB_FILE"
 source $BP_DIR/lib/output.sh
 source $BP_DIR/lib/json.sh
 source $BP_DIR/lib/failure.sh
@@ -42,11 +51,15 @@ fi
 ### Handle errors
 handle_failure() {
   header "Build failed"
+  fail_yarn_lockfile_outdated "$LOG_FILE"
+  fail_node_install "$LOG_FILE"
+  fail_yarn_install "$LOG_FILE"
+  fail_invalid_semver "$LOG_FILE"
+  log_other_failures "$LOG_FILE"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE"
   warn_econnreset "$LOG_FILE"
-  warn_young_yarn "$LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
@@ -54,6 +67,7 @@ trap 'handle_failure' ERR
 ### Check initial state
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Failures that should be caught immediately
 if test -z "$meteor_version"; then
@@ -61,6 +75,13 @@ if test -z "$meteor_version"; then
   warn_prebuilt_modules "$BUILD_DIR"
   warn_missing_package_json "$BUILD_DIR"
 fi
+
+fail_dot_scalingo "$BUILD_DIR"
+fail_dot_scalingo_node "$BUILD_DIR"
+fail_invalid_package_json "$BUILD_DIR"
+fail_multiple_lockfiles "$BUILD_DIR"
+warn_prebuilt_modules "$BUILD_DIR"
+warn_missing_package_json "$BUILD_DIR"
 
 ### Compile
 create_env() {
@@ -71,6 +92,7 @@ create_env() {
 }
 
 header "Creating runtime environment"
+
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 list_node_config | output "$LOG_FILE"
 
@@ -91,24 +113,34 @@ install_bins() {
     echo "engines.node (package.json):  ${node_engine:-unspecified}"
   fi
   echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  if $YARN; then
+    echo "engines.yarn (package.json):  ${yarn_engine:-unspecified (use default)}"
+  fi
   echo ""
 
   if [ -n "$iojs_engine" ]; then
     warn_node_engine "$iojs_engine"
     install_iojs "$iojs_engine" "$BUILD_DIR/.scalingo/node"
     echo "Using bundled npm version for iojs compatibility: `npm --version`"
+    mcount "version.iojs.$(node --version)"
   else
     warn_node_engine "$node_engine"
     install_nodejs "$node_engine" "$BUILD_DIR/.scalingo/node"
-    install_npm "$npm_engine" "$BUILD_DIR/.scalingo/node"
+    install_npm "$npm_engine" "$BUILD_DIR/.scalingo/node" $NPM_LOCK
+    mcount "version.node.$(node --version)"
   fi
 
-  # Only warn about old version of NPM for non-meteor applications
-  if test -z "$meteor_version"; then
-    warn_old_npm
-  fi
-  if $YARN; then
+  # Download yarn if there is a yarn.lock file or if the user
+  # has specified a version of yarn under "engines". We'll still
+  # only install using yarn if there is a yarn.lock file
+  if $YARN || [ -n "$yarn_engine" ]; then
     install_yarn "$BUILD_DIR/.scalingo/yarn" "$yarn_engine"
+  fi
+
+  if $YARN; then
+    mcount "version.yarn.$(yarn --version)"
+  else
+    mcount "version.npm.$(npm --version)"
   fi
 
   warn_old_npm
@@ -138,6 +170,8 @@ restore_cache() {
   else
     echo "Skipping cache restore ($cache_status)"
   fi
+
+  mcount "cache.$cache_status"
 }
 
 header "Restoring cache"
@@ -146,6 +180,10 @@ restore_cache | output "$LOG_FILE"
 build_dependencies() {
   run_if_present 'heroku-prebuild'
   run_if_present 'scalingo-prebuild'
+
+  local cache_status="$(get_cache_status)"
+  local start=$(nowms)
+
   if $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
@@ -154,9 +192,14 @@ build_dependencies() {
   else
     npm_node_modules "$BUILD_DIR"
   fi
+
+  mtime "modules.time.cache.$cache_status" "${start}"
+
   run_if_present 'heroku-postbuild'
   run_if_present 'scalingo-postbuild'
-  # TODO: run_if_present 'build'
+  run_if_present 'build'
+
+  log_build_scripts
 }
 
 header "Building dependencies"
@@ -192,12 +235,16 @@ summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"
   fi
+
+  mmeasure 'modules.size' "$(measure_size)"
 }
 
 header "Build succeeded!"
+mcount "compile"
 summarize_build | output "$LOG_FILE"
 
 if test -z "$meteor_version" ; then
   warn_no_start "$LOG_FILE"
   warn_unmet_dep "$LOG_FILE"
 fi
+warn_old_npm_lockfile $NPM_LOCK

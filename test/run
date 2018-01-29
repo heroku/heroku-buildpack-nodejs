@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+# TODO: check this test on heroku-16
+# testBowerAngularResolution() {
+#  compile "bower-angular-resolution"
+#  assertCaptured "Bower may need a resolution hint for angular"
+#  assertCapturedError
+#}
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version 6.x via semver.io"
-  assertCaptured "Downloading and installing node 6."
+  assertCaptured "Resolving node version 8.x"
+  assertCaptured "Downloading and installing node 8."
   assertCapturedSuccess
 }
 
@@ -50,16 +57,42 @@ testYarn() {
   assertCapturedSuccess
 }
 
+testYarnCacheDirectory() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  echo "${cache_dir}/yarn"> "$env_dir"/YARN_CACHE_FOLDER
+  compile "yarn" $cache $env_dir
+  # These will be created if yarn is using the directory for its cache
+  assertDirectoryExists ${cache_dir}/yarn
+  assertDirectoryExists ${cache_dir}/yarn/v1
+  assertDirectoryExists ${cache_dir}/yarn/v1/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
+  assertCapturedSuccess
+}
+
+testNpm5CacheDirectory() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  echo "${cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
+  compile "npm5" $cache $env_dir
+  # These will be created if npm is using the directory for its cache
+  assertDirectoryExists ${cache_dir}/npm
+  assertDirectoryExists ${cache_dir}/npm/_cacache
+  assertCapturedSuccess
+}
+
 testBuildWithCache() {
   cache=$(mktmpdir)
 
   compile "stable-node" $cache
-  assertCaptured "Skipping cache restore (new runtime"
+  assertCaptured "Skipping cache restore (not-found)"
   assertEquals "1" "$(ls -1 $cache/node/node_modules | grep hashish | wc -l | tr -d ' ')"
   assertCapturedSuccess
 
   compile "stable-node" $cache
   assertNotCaptured "- node_modules (not cached - skipping)"
+  assertFileContains "${STACK}" "${cache}/node/signature"
   assertCapturedSuccess
 
   rm -rf "$cache/node/node_modules"
@@ -68,11 +101,42 @@ testBuildWithCache() {
   assertCapturedSuccess
 }
 
+testCacheWithPrebuild() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo 'true' > "$env_dir"/PREBUILD
+
+  compile "cache-prebuild" $cache
+  assertCapturedSuccess
+
+  compile "cache-prebuild" $cache $env_dir
+  assertCaptured "Skipping cache restore (new-signature"
+  assertCapturedSuccess
+}
+
 testYarnSemver() {
   compile "yarn-semver"
   assertCaptured "Resolving yarn version ~0.17"
   assertCaptured "installing yarn (0.17."
   assertCapturedSuccess
+}
+
+testYarnInvalid() {
+  compile "yarn-invalid"
+  assertCaptured "Resolving yarn version 0.171"
+  assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
+  assertCaptured "No matching version found for Yarn: 0.171"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions"
+  assertCapturedError
+}
+
+testYarnSemverInvalid() {
+  compile "yarn-invalid-semver"
+  assertCaptured "Resolving yarn version 0.17q"
+  assertCaptured "Error: Invalid semantic version \"0.17q\""
+  assertCaptured "Invalid semver requirement"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement"
+  assertCapturedError
 }
 
 testYarnRun() {
@@ -88,8 +152,76 @@ testYarnEngine() {
   assertCapturedSuccess
 }
 
-testWarnUnmetDep() {
+# If they specify a version of yarn inside package.json but
+# don't have a yarn.lock file download and make yarn available
+# though we will only install using yarn if a yarn.lock exists
+testYarnOnlyEngine() {
+  compile "yarn-only-engine"
+  assertCaptured "installing yarn (0.24.5)"
+  assertCapturedSuccess
+}
+
+testErrorYarnAndNpmLockfiles() {
+  compile "yarn-and-npm-lockfiles"
+  assertNotCaptured "Creating runtime environment"
+  assertCaptured "Two different lockfiles found: package-lock.json and yarn.lock"
+  assertCaptured "Both npm and yarn have created lockfiles"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files"
+  assertCapturedError
+}
+
+testErrorYarnAndNpmShrinkwrap() {
+  compile "yarn-and-shrinkwrap-lockfiles"
+  assertNotCaptured "Creating runtime environment"
+  assertCaptured "Two different lockfiles found"
+  assertCaptured "Please make sure there is only one of the following files"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files"
+  assertCapturedError
+}
+
+testYarnLockfileOutOfDate() {
+  compile "yarn-lockfile-out-of-date"
+  assertCaptured "Your lockfile needs to be updated"
+  assertCaptured "Outdated Yarn lockfile"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile"
+  assertCapturedError
+}
+
+testDefaultToNpm5() {
+  compile "npm-lockfile-no-version"
+  assertCaptured "Using default npm version"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+testDefaultToNpm5WithNode6() {
+  compile "npm-lockfile-node-6-no-version"
+  assertCaptured "Detected package-lock.json"
+  assertCaptured "Bootstrapping npm 5"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+testOldNpmWithLockfile() {
+  compile "npm-lockfile-old-version"
+  assertCaptured "This version of npm"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+  assertCapturedSuccess
+}
+
+testWarnUnmetDepNpm() {
   compile "unmet-dep"
+  assertCaptured "fail npm install"
+  assertCaptured "may cause runtime issues"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may cause runtime issues"
+  assertCapturedSuccess
+}
+
+testWarnUnmetDepYarn() {
+  compile "unmet-dep-yarn"
+  assertCaptured "fail yarn install"
   assertCaptured "may cause runtime issues"
   assertCapturedSuccess
   compile "no-version"
@@ -164,6 +296,27 @@ testWarningsOnFailure() {
   assertCapturedError
 }
 
+testDotHerokuCollision() {
+  compile "dot-heroku-collision"
+  assertCaptured "The directory .heroku could not be created"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+
+  compile "dot-heroku-collision-2"
+  assertCaptured "Build succeeded!"
+  assertNotCaptured ".heroku file is checked into this project"
+  assertCapturedSuccess
+}
+
+testDotHerokuNodeCollision() {
+  compile "dot-heroku-node-collision"
+  assertCaptured "The directory .heroku/node could not be created"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
 testMultipleRuns() {
   local compileDir=$(mktmpdir)
   local cacheDir=$(mktmpdir)
@@ -173,12 +326,6 @@ testMultipleRuns() {
   assertCapturedSuccess
   compileDir "$compileDir" "$cacheDir"
   assertCapturedSuccess
-}
-
-testBowerAngularResolution() {
-  compile "bower-angular-resolution"
-  assertCaptured "Bower may need a resolution hint for angular"
-  assertCapturedError
 }
 
 testUntrackedDependencies() {
@@ -213,51 +360,70 @@ testBuildWithUserCacheDirectoriesCamel() {
 }
 
 testConcurrency1X() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture $(pwd)/profile/nodejs.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture $(pwd)/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=1"
   assertCapturedSuccess
 }
 
 testConcurrency2X() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture $(pwd)/profile/nodejs.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture $(pwd)/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=2"
   assertCapturedSuccess
 }
 
 testConcurrencyPerformanceM() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture $(pwd)/profile/nodejs.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture $(pwd)/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=5"
   assertCapturedSuccess
 }
 
 testConcurrencyPerformanceL() {
-   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture $(pwd)/profile/nodejs.sh
+   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture $(pwd)/profile/WEB_CONCURRENCY.sh
    assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
    assertCaptured "Recommending WEB_CONCURRENCY=28"
    assertCapturedSuccess
 }
 
 testConcurrencyCustomLimit() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/nodejs.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=4"
   assertCapturedSuccess
 }
 
+# When /sys/fs/cgroup/memory/memory.limit_in_bytes lies and gives a ridiculous value
+# This happens on Dokku for example
+testConcurrencyTooHigh() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Could not determine a reasonable value for WEB_CONCCURENCY"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
 testInvalidNode() {
   compile "invalid-node"
-  assertCaptured "Downloading and installing node 0.11.333"
-  assertCaptured "Unable to download node 0.11.333"
+  assertCaptured "Resolving node version 0.11.333"
+  assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
+  assertCaptured "No matching version found for Node: 0.11.333"
+  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions"
+  assertCapturedError
+}
+
+testInvalidNodeSemver() {
+  compile "invalid-node-semver"
+  assertCaptured "Resolving node version stable"
+  assertCaptured "Error: Invalid semantic version \"stable\""
+  assertCaptured "Invalid semver requirement"
   assertCapturedError
 }
 
 testInvalidIo() {
   compile "invalid-io"
-  assertCaptured "Downloading and installing iojs 2.0.99"
-  assertCaptured "Unable to download iojs 2.0.99"
+  assertCaptured "Resolving iojs version 2.0.99"
+  assertCaptured "Could not find Iojs version corresponding to version requirement: 2.0.99"
   assertCapturedError
 }
 
@@ -271,7 +437,7 @@ testSignatureInvalidation() {
 
   compile "node-0.12.7" $cache
   assertCaptured "Downloading and installing node 0.12.7"
-  assertCaptured "Skipping cache restore (new runtime"
+  assertCaptured "Skipping cache restore (new-signature"
   assertCapturedSuccess
 }
 
@@ -335,7 +501,7 @@ testIoJs() {
 
 testSpecificVersion() {
   compile "specific-version"
-  assertNotCaptured "Resolving node version"
+  assertCaptured "Resolving node version"
   assertCaptured "Downloading and installing node 0.10.29"
   assertCaptured "Using default npm version: 1.4.14"
   assertCapturedSuccess
@@ -350,7 +516,7 @@ testStableVersion() {
 
 testUnstableVersion() {
   compile "unstable-version"
-  assertCaptured "Resolving node version 0.11.x via semver.io"
+  assertCaptured "Resolving node version 0.11.x"
   assertCaptured "Downloading and installing node 0.11."
   assertCapturedSuccess
 }
@@ -369,7 +535,7 @@ testOldNpm2() {
 
 testNonexistentNpm() {
   compile "nonexistent-npm"
-  assertCaptured "version not found: npm@1.1.65"
+  assertCaptured "Unable to install npm 1.1.65"
   assertCapturedError 1 ""
 }
 
@@ -381,15 +547,13 @@ testSameNpm() {
 
 testNpmVersionRange() {
   compile "npm-version-range"
-  assertCaptured "Resolving npm version"
-  assertCaptured "installing npm 1.4."
+  assertCaptured "Bootstrapping npm 1.4.x"
   assertCapturedSuccess
 }
 
 testNpmVersionSpecific() {
   compile "npm-version-specific"
-  assertCaptured "installing npm 2.1.11"
-  assertNotCaptured "Resolving npm version"
+  assertCaptured "Bootstrapping npm 2.1.11"
   assertNotCaptured "WARNING"
   assertCapturedSuccess
 }
@@ -422,23 +586,23 @@ testInfoEmpty() {
 testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version * via semver.io"
-  assertCaptured "Downloading and installing node 7."
+  assertCaptured "Resolving node version *"
+  assertCaptured "Downloading and installing node 9."
   assertCapturedError
 }
 
 testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version >0.4 via semver.io"
-  assertCaptured "Downloading and installing node 7."
+  assertCaptured "Resolving node version >0.4"
+  assertCaptured "Downloading and installing node 9."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
-  assertCaptured "Resolving node version >= 0.8.x via semver.io"
-  assertCaptured "Downloading and installing node 7."
+  assertCaptured "Resolving node version >= 0.8.x"
+  assertCaptured "Downloading and installing node 9."
   assertCapturedSuccess
 }
 
@@ -593,6 +757,7 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
+
 # Utils
 
 pushd $(dirname 0) >/dev/null
@@ -649,6 +814,15 @@ release() {
 
 assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
+}
+
+assertDirectoryExists() {
+  if [[ ! -e "$1" ]]; then
+    fail "$1 does not exist"
+  fi
+  if [[ ! -d $1 ]]; then
+    fail "$1 is not a directory"
+  fi
 }
 
 source $(pwd)/test/shunit2

@@ -1,3 +1,7 @@
+measure_size() {
+  echo "$((du -s node_modules 2>/dev/null || echo 0) | awk '{print $1}')"
+}
+
 list_dependencies() {
   local build_dir="$1"
 
@@ -25,12 +29,83 @@ run_if_present() {
   fi
 }
 
+log_build_scripts() {
+  local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
+  local scalingo_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"scalingo-prebuild\"]")
+  local scalingo_postbuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"scalingo-postbuild\"]")
+  local postinstall=$(read_json "$BUILD_DIR/package.json" ".scripts[\"scalingo-postbuild\"]")
+
+  if [ -n "$build" ]; then
+    mcount "scripts.build"
+
+    if [ -z "$scalingo_postbuild" ]; then
+      mcount "scripts.build-without-scalingo-postbuild"
+    fi
+
+    if [ -z "$postinstall" ]; then
+      mcount "scripts.build-without-postinstall"
+    fi
+
+    if [ -z "$postinstall" ] && [ -z "$scalingo_postbuild" ]; then
+      mcount "scripts.build-without-other-hooks"
+    fi
+  fi
+
+  if [ -n "$postinstall" ]; then
+    mcount "scripts.postinstall"
+
+    if [ "$postinstall" == "npm run build" ] ||
+       [ "$postinstall" == "yarn run build" ] ||
+       [ "$postinstall" == "yarn build" ]; then
+      mcount "scripts.postinstall-is-npm-build"
+    fi
+
+  fi
+
+  if [ -n "$scalingo_prebuild" ]; then
+    mcount "scripts.scalingo-prebuild"
+  fi
+
+  if [ -n "$scalingo_postbuild" ]; then
+    mcount "scripts.scalingo-postbuild"
+
+    if [ "$scalingo_postbuild" == "npm run build" ] ||
+       [ "$scalingo_postbuild" == "yarn run build" ] ||
+       [ "$scalingo_postbuild" == "yarn build" ]; then
+      mcount "scripts.scalingo-postbuild-is-npm-build"
+    fi
+  fi
+
+  if [ -n "$scalingo_postbuild" ] && [ -n "$build" ]; then
+    mcount "scripts.build-and-scalingo-postbuild"
+
+    if [ "$scalingo_postbuild" != "$build" ]; then
+      mcount "scripts.different-build-and-scalingo-postbuild"
+    fi
+  fi
+}
+
+yarn_supports_frozen_lockfile() {
+  local yarn_version="$(yarn --version)"
+  # Yarn versions lower than 0.19 will crash if passed --frozen-lockfile
+  if [[ "$yarn_version" =~ ^0\.(16|17|18).*$ ]]; then
+    mcount "yarn.doesnt-support-frozen-lockfile"
+    false
+  else
+    true
+  fi
+}
+
 yarn_node_modules() {
   local build_dir=${1:-}
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir"
-  yarn install --pure-lockfile --ignore-engines 2>&1
+  if yarn_supports_frozen_lockfile; then
+    yarn install --frozen-lockfile --ignore-engines 2>&1
+  else
+    yarn install --pure-lockfile --ignore-engines 2>&1
+  fi
 }
 
 npm_node_modules() {
@@ -39,7 +114,9 @@ npm_node_modules() {
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
 
-    if [ -e $build_dir/npm-shrinkwrap.json ]; then
+    if [ -e $build_dir/package-lock.json ]; then
+      echo "Installing node modules (package.json + package-lock)"
+    elif [ -e $build_dir/npm-shrinkwrap.json ]; then
       echo "Installing node modules (package.json + shrinkwrap)"
     else
       echo "Installing node modules (package.json)"

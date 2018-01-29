@@ -254,5 +254,4 @@ To run the test suite:
 make test
 ```
 
-The tests are run via the vendored [shunit2](http://shunit2.googlecode.com/svn/trunk/source/2.1/doc/shunit2.html)
-test framework.
+The tests are run via the vendored [shunit2](https://github.com/kward/shunit2) test framework.
