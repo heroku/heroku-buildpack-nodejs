@@ -9,6 +9,8 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
+echo "Test"
+
 DEFAULT_CACHE="node_modules bower_components"
 BPLOG_PREFIX="buildpack.nodejs"
 
