@@ -20,10 +20,6 @@ ENV_DIR=${3:-}
 BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
-### Configure package manager cache directories
-[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
-[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-
 ### Load dependencies
 
 curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
@@ -88,6 +84,10 @@ mkdir -p "$BUILD_DIR/.heroku/node/"
 cd $BUILD_DIR
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 list_node_config | output "$LOG_FILE"
+
+### Configure package manager cache directories
+[ ! "$YARN_CACHE_FOLDER" ] && export YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[ ! "$NPM_CONFIG_CACHE" ] && export NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 
 install_bins() {
   local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
