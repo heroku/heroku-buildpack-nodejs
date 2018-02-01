@@ -724,6 +724,24 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
+testCIEnvVars() {
+  compileTest "ci-env-test"
+  assertCaptured "NODE_ENV: test"
+  assertCaptured "NPM_CONFIG_PRODUCTION: false"
+  assertCapturedSuccess 
+}
+
+testCIEnvVarsOverride() {
+  env_dir=$(mktmpdir)
+  echo "banana" > $env_dir/NODE_ENV
+  echo "apple" > $env_dir/NPM_CONFIG_PRODUCTION
+
+  compileTest "ci-env-test" "$(mktmpdir)" $env_dir
+
+  assertCaptured "NODE_ENV: banana"
+  assertCaptured "NPM_CONFIG_PRODUCTION: apple"
+  assertCapturedSuccess 
+}
 
 # Utils
 
@@ -759,6 +777,28 @@ compile() {
   cp -a $(pwd)/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+compileTest() {
+  default_process_types_cleanup
+
+  local bp_dir=$(mktmpdir)
+  local compile_dir=$(mktmpdir)
+  local cache_dir=${2:-$(mktmpdir)}
+  local env_dir=$3
+
+  # On Heroku, $HOME is the /app dir, so we need to set it to
+  # the compile_dir here
+  export HOME=${compile_dir}
+
+  cp -a $(pwd)/* ${bp_dir}
+  cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+  capture ${bp_dir}/bin/test-compile ${compile_dir} ${2:-$(mktmpdir)} $3
+
+  # We need the runtime $PATH before we run the test
+  for f in ${compile_dir}/.profile.d/*; do source $f; done
+
+  capture ${bp_dir}/bin/test ${compile_dir}
 }
 
 compileDir() {
