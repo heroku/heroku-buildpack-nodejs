@@ -11,6 +11,6 @@
   "scripts" : {
     "heroku-prebuild" : "echo heroku-prebuild hook message",
     "heroku-postbuild" : "echo heroku-postbuild hook message",
-    "test": "echo NODE_ENV: $NODE_ENV && echo NPM_CONFIG_PRODUCTION: $NPM_CONFIG_PRODUCTION"
+    "test": "echo NODE_ENV: $NODE_ENV"
   }
 }

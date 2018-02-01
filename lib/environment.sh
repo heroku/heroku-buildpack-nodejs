@@ -64,6 +64,13 @@ write_profile() {
   cp $bp_dir/profile/* $build_dir/.profile.d/
 }
 
+write_ci_profile() {
+  local bp_dir="$1"
+  local build_dir="$2"
+  write_profile "$1" "$2"
+  cp $bp_dir/ci-profile/* $build_dir/.profile.d/ 
+}
+
 write_export() {
   local bp_dir="$1"
   local build_dir="$2"
