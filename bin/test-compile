@@ -2,8 +2,6 @@
 
 BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 
-echo "$BP_DIR"
-
 source $BP_DIR/lib/environment.sh
 
 export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-false}
