@@ -2,6 +2,22 @@
 
 ## Master
 
+## v118 (2018-02-02)
+
+- Fix issue with `NODE_ENV` in CI (#513)
+
+## v117 (2018-01-31)
+
+- Fix bug with previous default cache directories fix for npm and yarn (#511)
+
+## v116 (2018-01-29)
+
+- Fix metrics typo (#510)
+
+## v115 (2017-01-25)
+
+- Add metrics to track new types of failure (#509)
+
 ## v114 (2017-11-16)
 
 - Don't default to npm 5.x if the user already has npm >= 5 (#499)
