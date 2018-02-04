@@ -210,6 +210,22 @@ cache_build() {
 header "Caching build"
 cache_build | output "$LOG_FILE"
 
+prune_packages() {
+  if ${NODE_MODULES_PRUNE:-true}; then
+    echo "Pruning extraneous packages"
+    if $YARN; then
+      yarn install --production
+    else
+      npm prune --production
+    fi
+  else
+    echo "Skipping pruning extraneous packages"
+  fi
+}
+
+header "Cleanup"
+prune_packages | output "$LOG_FILE"
+
 summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"
