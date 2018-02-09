@@ -398,7 +398,7 @@ testConcurrencyCustomLimit() {
 # This happens on Dokku for example
 testConcurrencyTooHigh() {
   LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture $(pwd)/profile/WEB_CONCURRENCY.sh
-  assertCaptured "Could not determine a reasonable value for WEB_CONCCURENCY"
+  assertCaptured "Could not determine a reasonable value for WEB_CONCURRENCY"
   assertCaptured "Recommending WEB_CONCURRENCY=1"
   assertCapturedSuccess
 }
@@ -727,7 +727,7 @@ testMultiExport() {
 testCIEnvVars() {
   compileTest "ci-env-test"
   assertCaptured "NODE_ENV: test"
-  assertCapturedSuccess 
+  assertCapturedSuccess
 }
 
 testCIEnvVarsOverride() {
@@ -737,7 +737,7 @@ testCIEnvVarsOverride() {
   compileTest "ci-env-test" "$(mktmpdir)" $env_dir
 
   assertCaptured "NODE_ENV: banana"
-  assertCapturedSuccess 
+  assertCapturedSuccess
 }
 
 # Utils
