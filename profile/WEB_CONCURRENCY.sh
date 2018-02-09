@@ -29,7 +29,7 @@ detect_memory() {
 warn_bad_web_concurrency() {
   local concurrency=$((MEMORY_AVAILABLE/WEB_MEMORY))
   if [ "$concurrency" -gt "200" ]; then
-    echo "Could not determine a reasonable value for WEB_CONCCURENCY.
+    echo "Could not determine a reasonable value for WEB_CONCURRENCY.
 This is likely due to running the Heroku NodeJS buildpack on a non-Heroku
 platform.
 
