@@ -178,6 +178,10 @@ header "Restoring cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
+  # Prebuild hook let you execute commands before npm/yarn
+  # has installed dependencies, so it should not use any
+  # of them
+  run_if_present 'prebuild'
   run_if_present 'heroku-prebuild'
   run_if_present 'scalingo-prebuild'
 
@@ -195,9 +199,16 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
+  # Run build by default as it is the standard task to
+  # bundle applications in most javascript apps.
+  run_if_present 'build'
+
+  # Run postbuild script to trigger tasks unrelated to
+  # the build, like notifying some external services or
+  # applying migrations
+  run_if_present 'postbuild'
   run_if_present 'heroku-postbuild'
   run_if_present 'scalingo-postbuild'
-  run_if_present 'build'
 
   log_build_scripts
 }
