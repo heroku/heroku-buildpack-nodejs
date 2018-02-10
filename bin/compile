@@ -199,9 +199,11 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  # Run build by default as it is the standard task to
-  # bundle applications in most javascript apps.
-  run_if_present 'build'
+  if [ ! "$NPM_NO_BUILD" = "true" ] ; then
+    # Run build by default as it is the standard task to
+    # bundle applications in most javascript apps.
+    run_if_present 'build'
+  fi
 
   # Run postbuild script to trigger tasks unrelated to
   # the build, like notifying some external services or
