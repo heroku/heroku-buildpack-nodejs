@@ -93,6 +93,18 @@ yarn_node_modules() {
   yarn install --frozen-lockfile --ignore-engines 2>&1
 }
 
+yarn_prune_devdependencies() {
+  local build_dir=${1:-} 
+
+  echo "Pruning devDependencies (yarn.lock)"
+  cd "$build_dir" 
+  if yarn_supports_frozen_lockfile; then
+    yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+  else
+    yarn install --pure-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+  fi
+}
+
 npm_node_modules() {
   local build_dir=${1:-}
 
@@ -106,7 +118,7 @@ npm_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --production=false --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -124,8 +136,15 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --production=false --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
+}
+
+npm_prune_devdependencies() {
+  local build_dir=${1:-} 
+
+  cd "$build_dir" 
+  npm prune --userconfig $build_dir/.npmrc 2>&1
 }

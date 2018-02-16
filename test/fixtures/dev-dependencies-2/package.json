@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "node postinstall.js"
+    "postinstall": "node postinstall.js",
+    "heroku-postbuild": "node postinstall.js"
   },
   "keywords": [],
   "author": "",
