@@ -118,6 +118,29 @@ fail_multiple_lockfiles() {
   fi
 }
 
+fail_yarn_outdated() {
+  local log_file="$1"
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
+  if grep -qi 'error: unknown option .--frozen-lockfile' "$log_file"; then
+    echo "ran"
+    mcount "failures.outdated-yarn"
+    echo ""
+    warn "Outdated Yarn version: $yarn_engine
+
+       Your application is specifying a requirement on an old version of Yarn ($yarn_engine)
+       which does not support the --frozen-lockfile option. Please upgrade to a
+       newer version, at least 0.19, by updating your requirement in the 'engines'
+       field in your package.json.
+
+       \"engines\": {
+         \"yarn\": \"1.3.2\"
+       }
+    " https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version
+    exit 1
+  fi
+}
+
 fail_yarn_lockfile_outdated() {
   local log_file="$1"
   if grep -qi 'Your lockfile needs to be updated' "$log_file"; then
@@ -204,7 +227,7 @@ fail_yarn_install() {
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
 
-       Heroku supports every version of Yarn published on npm, however you have
+       Heroku supports most versions of Yarn published on npm, however you have
        specified a version in package.json ($yarn_engine) that does not correspond
        to any published version of Yarn. You can see a list of all published
        versions of Yarn with the following command:

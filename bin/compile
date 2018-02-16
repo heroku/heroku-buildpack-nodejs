@@ -41,6 +41,7 @@ echo "" > "$LOG_FILE"
 
 handle_failure() {
   header "Build failed"
+  fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
   fail_node_install "$LOG_FILE"
   fail_yarn_install "$LOG_FILE"

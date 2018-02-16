@@ -116,9 +116,20 @@ testCacheWithPrebuild() {
 
 testYarnSemver() {
   compile "yarn-semver"
-  assertCaptured "Resolving yarn version ~0.17"
-  assertCaptured "installing yarn (0.17."
+  assertCaptured "Resolving yarn version ~0.28"
+  assertCaptured "installing yarn (0.28."
   assertCapturedSuccess
+}
+
+testOldYarn() {
+  compile "yarn-old-deprecated-version"
+  assertCaptured "Resolving yarn version ~0.16"
+  assertCaptured "installing yarn (0.16."
+  assertCaptured "error: unknown option \`--frozen-lockfile'"
+  assertCaptured "Outdated Yarn version"
+  assertCaptured "Your application is specifying a requirement on an old version of Yarn"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version"
+  assertCapturedError
 }
 
 testYarnInvalid() {
@@ -148,7 +159,7 @@ testYarnRun() {
 
 testYarnEngine() {
   compile "yarn-engine"
-  assertCaptured "installing yarn (0.16.1)"
+  assertCaptured "installing yarn (1.4.0)"
   assertCapturedSuccess
 }
 
@@ -157,7 +168,7 @@ testYarnEngine() {
 # though we will only install using yarn if a yarn.lock exists
 testYarnOnlyEngine() {
   compile "yarn-only-engine"
-  assertCaptured "installing yarn (0.24.5)"
+  assertCaptured "installing yarn (1.4.0)"
   assertCapturedSuccess
 }
 

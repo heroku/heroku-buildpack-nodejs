@@ -85,27 +85,12 @@ log_build_scripts() {
   fi
 }
 
-yarn_supports_frozen_lockfile() {
-  local yarn_version="$(yarn --version)"
-  # Yarn versions lower than 0.19 will crash if passed --frozen-lockfile
-  if [[ "$yarn_version" =~ ^0\.(16|17|18).*$ ]]; then
-    mcount "yarn.doesnt-support-frozen-lockfile"
-    false
-  else
-    true
-  fi
-}
-
 yarn_node_modules() {
   local build_dir=${1:-}
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir"
-  if yarn_supports_frozen_lockfile; then
-    yarn install --frozen-lockfile --ignore-engines 2>&1
-  else
-    yarn install --pure-lockfile --ignore-engines 2>&1
-  fi
+  yarn install --frozen-lockfile --ignore-engines 2>&1
 }
 
 npm_node_modules() {
