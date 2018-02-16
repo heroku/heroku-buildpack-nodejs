@@ -740,6 +740,24 @@ testCIEnvVarsOverride() {
   assertCapturedSuccess
 }
 
+testPruneDependencies() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/NODE_MODULES_PRUNE
+  compile "prune" $(mktmpdir) $env_dir
+  assertCaptured "Pruning extraneous packages"
+  test ! -f ${BUILD_DIR}/node_modules/babel
+  assertCapturedSuccess
+}
+
+testPruneDependenciesSkip() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NODE_MODULES_PRUNE
+  compile "prune" $(mktmpdir) $env_dir
+  assertCaptured "Skipping pruning extraneous packages"
+  test -f ${BUILD_DIR}/node_modules/babel
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd $(dirname 0) >/dev/null
