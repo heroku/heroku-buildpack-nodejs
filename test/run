@@ -125,7 +125,7 @@ testOldYarn() {
   compile "yarn-old-deprecated-version"
   assertCaptured "Resolving yarn version ~0.16"
   assertCaptured "installing yarn (0.16."
-  assertCaptured "error: unknown option \`--frozen-lockfile'"
+  assertCaptured "error \`install\` has been replaced with \`add\`"
   assertCaptured "Outdated Yarn version"
   assertCaptured "Your application is specifying a requirement on an old version of Yarn"
   assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version"
@@ -644,13 +644,6 @@ testEnvVars() {
   assertCapturedSuccess
 }
 
-testNoEnvVars() {
-  env_dir=$(mktmpdir)
-  compile "stable-node" "$(mktmpdir)" $env_dir
-  assertCaptured "NPM_CONFIG_PRODUCTION=true"
-  assertCapturedSuccess
-}
-
 testNonFileEnvVars() {
   export NPM_CONFIG_FOO=bar
   export NPM_CONFIG_PRODUCTION=false
@@ -663,30 +656,71 @@ testNonFileEnvVars() {
 }
 
 testDevDependenciesInstalled() {
-  compile "dev-dependencies"
+  compile "dependencies"
   assertCaptured "lodash"
-  assertCapturedSuccess
-  compile "dev-dependencies-2"
-  assertCapturedSuccess
-}
-
-testDevDependenciesNotInstalled() {
-  env_dir=$(mktmpdir)
-  echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
-  compile "dev-dependencies" "$(mktmpdir)" $env_dir
-  assertNotCaptured "lodash"
-  assertNotCaptured "Pruning devDependencies"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "removed 1 package"
   assertCapturedSuccess
 }
 
-testDevDependencies() {
+testDevDependenciesInstalledYarn() {
+  compile "dependencies-yarn"
+  assertCaptured "lodash"
+  assertCaptured "Pruning devDependencies"
+  assertCapturedSuccess
+}
+
+testDevDepenenciesWithNoPruning() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
-  compile "dev-dependencies" "$(mktmpdir)" $env_dir
+  compile "dependencies" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
+  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION != 'true'"
   assertCapturedSuccess
 }
 
+testDevDepenenciesWithNoPruningYarn() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/YARN_PRODUCTION
+  compile "dependencies-yarn" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCaptured "Skipping because YARN_PRODUCTION != 'true'"
+  assertCapturedSuccess
+}
+
+testNodeEnvTestDepenencies() {
+  env_dir=$(mktmpdir)
+  echo "test" > $env_dir/NODE_ENV
+  compile "dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCaptured "Skipping because NODE_ENV != 'production'"
+  assertCapturedSuccess
+}
+
+testNodeEnvTestDepenenciesYarn() {
+  env_dir=$(mktmpdir)
+  echo "test" > $env_dir/NODE_ENV
+  compile "dependencies-yarn" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCaptured "Skipping because NODE_ENV != 'production'"
+  assertCapturedSuccess
+}
+
+testOnlyDependenciesInstalled() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
+  compile "dependencies" "$(mktmpdir)" $env_dir
+  assertNotCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testOnlyDependenciesInstalledYarn() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/YARN_PRODUCTION
+  compile "dependencies-yarn" "$(mktmpdir)" $env_dir
+  assertNotCaptured "lodash"
+  assertCapturedSuccess
+}
 
 testOptionalDependencies() {
   env_dir=$(mktmpdir)
@@ -768,6 +802,7 @@ testNodeEnv() {
   assertCaptured "preinstall: production"
   assertCaptured "postinstall: production"
   assertCaptured "heroku-postbuild: production"
+  # cat $STD_OUT
   assertCapturedSuccess
 }
 
@@ -786,6 +821,9 @@ testNodeEnvNpmConfigProductionFalse() {
 # https://github.com/npm/npm/issues/17781
 testNpmPrune53Issue() {
   compile "npm-prune-5-3-issue"
+  assertCaptured "npm 5.3.0 installed"
+  assertCaptured "Skipping because npm 5.3.0 fails"
+  assertCaptured "https://github.com/npm/npm/issues/17781"
   assertCapturedSuccess
 }
 
@@ -849,6 +887,10 @@ compileTest() {
   for f in ${compile_dir}/.profile.d/*; do source $f > /dev/null 2> /dev/null ; done
 
   capture ${bp_dir}/bin/test ${compile_dir}
+
+  unset HOME
+  unset NODE_ENV
+  unset NODE_HOME
 }
 
 compileDir() {

@@ -9,10 +9,14 @@
   "dependencies": {
     "hashish": "*"
   },
+  "license": "MIT",
   "engines": {
-    "node": "~0.10.0"
+    "yarn": "1.4.0"
   },
   "devDependencies": {
     "lodash": "^2.4.1"
+  },
+  "scripts": {
+    "heroku-postbuild": "ls node_modules"
   }
 }

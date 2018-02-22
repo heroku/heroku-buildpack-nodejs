@@ -216,7 +216,7 @@ prune_devdependencies() {
     yarn_prune_devdependencies "$BUILD_DIR"
   else
     npm_prune_devdependencies "$BUILD_DIR"
-  fi 
+  fi
 }
 
 header "Pruning devDependencies"
