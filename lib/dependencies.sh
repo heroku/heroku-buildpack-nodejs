@@ -97,11 +97,14 @@ yarn_node_modules() {
 yarn_prune_devdependencies() {
   local build_dir=${1:-} 
 
-  if [ $NODE_ENV != "production" ]; then
-    echo "Skipping because NODE_ENV != 'production'"
+  if [ $NODE_ENV == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    return 0
+  elif [ $NODE_ENV != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
     return 0
   elif [ -n "$YARN_PRODUCTION" ] && [ "$YARN_PRODUCTION" != "true" ]; then
-    echo "Skipping because YARN_PRODUCTION != 'true'"
+    echo "Skipping because YARN_PRODUCTION is not 'true'"
     return 0
   else 
     cd "$build_dir" 
@@ -151,11 +154,14 @@ npm_prune_devdependencies() {
   local build_dir=${1:-} 
   local npm_version=$(npm --version)
 
-  if [ $NODE_ENV != "production" ]; then
-    echo "Skipping because NODE_ENV != 'production'"
+  if [ $NODE_ENV == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    return 0
+  elif [ $NODE_ENV != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
     return 0
   elif [ -n "$NPM_CONFIG_PRODUCTION" ] && [ "$NPM_CONFIG_PRODUCTION" != "true" ]; then
-    echo "Skipping because NPM_CONFIG_PRODUCTION != 'true'"
+    echo "Skipping because NPM_CONFIG_PRODUCTION is not 'true'"
     return 0
   elif [ $npm_version == "5.3.0" ]; then
     mcount "skip-prune-issue-npm-5.3.0"

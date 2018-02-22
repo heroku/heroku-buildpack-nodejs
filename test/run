@@ -675,7 +675,7 @@ testDevDepenenciesWithNoPruning() {
   echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
   compile "dependencies" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
-  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION != 'true'"
+  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is not 'true'"
   assertCapturedSuccess
 }
 
@@ -684,25 +684,25 @@ testDevDepenenciesWithNoPruningYarn() {
   echo "false" > $env_dir/YARN_PRODUCTION
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
-  assertCaptured "Skipping because YARN_PRODUCTION != 'true'"
+  assertCaptured "Skipping because YARN_PRODUCTION is not 'true'"
   assertCapturedSuccess
 }
 
 testNodeEnvTestDepenencies() {
   env_dir=$(mktmpdir)
-  echo "test" > $env_dir/NODE_ENV
+  echo "not-production" > $env_dir/NODE_ENV
   compile "dependencies" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
-  assertCaptured "Skipping because NODE_ENV != 'production'"
+  assertCaptured "Skipping because NODE_ENV is not 'production'"
   assertCapturedSuccess
 }
 
 testNodeEnvTestDepenenciesYarn() {
   env_dir=$(mktmpdir)
-  echo "test" > $env_dir/NODE_ENV
+  echo "not-production" > $env_dir/NODE_ENV
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
-  assertCaptured "Skipping because NODE_ENV != 'production'"
+  assertCaptured "Skipping because NODE_ENV is not 'production'"
   assertCapturedSuccess
 }
 
@@ -793,6 +793,20 @@ testCIEnvVarsOverride() {
   compileTest "ci-env-test" "$(mktmpdir)" $env_dir
 
   assertCaptured "NODE_ENV: banana"
+  assertCapturedSuccess
+}
+
+testCIDependencies() {
+  compileTest "ci-dependencies"
+  assertCaptured "Skipping because NODE_ENV is 'test'"
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
+testCIDependenciesYarn() {
+  compileTest "ci-dependencies-yarn"
+  assertCaptured "Skipping because NODE_ENV is 'test'"
+  assertCaptured "lodash"
   assertCapturedSuccess
 }
 
