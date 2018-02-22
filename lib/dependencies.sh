@@ -134,6 +134,7 @@ npm_node_modules() {
 
 npm_rebuild() {
   local build_dir=${1:-}
+  local production=${NPM_CONFIG_PRODUCTION:-false}
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
@@ -144,7 +145,7 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --production=false --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
