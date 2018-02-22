@@ -655,6 +655,9 @@ testNonFileEnvVars() {
   unset NPM_CONFIG_PRODUCTION
 }
 
+# In the following tests "lodash" is defined as a devDependency
+# testing for lodash is equivalent to testing if devDependencies 
+# were installed
 testDevDependenciesInstalled() {
   compile "dependencies"
   assertCaptured "lodash"
