@@ -798,14 +798,12 @@ testCIEnvVarsOverride() {
 
 testCIDependencies() {
   compileTest "ci-dependencies"
-  assertCaptured "Skipping because NODE_ENV is 'test'"
   assertCaptured "lodash"
   assertCapturedSuccess
 }
 
 testCIDependenciesYarn() {
   compileTest "ci-dependencies-yarn"
-  assertCaptured "Skipping because NODE_ENV is 'test'"
   assertCaptured "lodash"
   assertCapturedSuccess
 }
@@ -816,7 +814,6 @@ testNodeEnv() {
   assertCaptured "preinstall: production"
   assertCaptured "postinstall: production"
   assertCaptured "heroku-postbuild: production"
-  # cat $STD_OUT
   assertCapturedSuccess
 }
 
