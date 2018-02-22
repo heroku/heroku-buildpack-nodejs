@@ -658,6 +658,8 @@ testNonFileEnvVars() {
 # In the following tests "lodash" is defined as a devDependency
 # testing for lodash is equivalent to testing if devDependencies 
 # were installed
+
+# Default behavior: install devDependencies then prunes them away
 testDevDependenciesInstalled() {
   compile "dependencies"
   assertCaptured "lodash"
@@ -666,6 +668,7 @@ testDevDependenciesInstalled() {
   assertCapturedSuccess
 }
 
+# Default behavior: install devDependencies then prunes them away with Yarn
 testDevDependenciesInstalledYarn() {
   compile "dependencies-yarn"
   assertCaptured "lodash"
@@ -673,6 +676,7 @@ testDevDependenciesInstalledYarn() {
   assertCapturedSuccess
 }
 
+# When NPM_CONFIG_PRODUCTION = false we should not prune the devDependencies
 testDevDepenenciesWithNoPruning() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
@@ -682,6 +686,7 @@ testDevDepenenciesWithNoPruning() {
   assertCapturedSuccess
 }
 
+# When NPM_CONFIG_PRODUCTION = false we should not prune the devDependencies with Yarn
 testDevDepenenciesWithNoPruningYarn() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/YARN_PRODUCTION
@@ -691,6 +696,7 @@ testDevDepenenciesWithNoPruningYarn() {
   assertCapturedSuccess
 }
 
+# When NODE_ENV != production we should not prune the devDependencies
 testNodeEnvTestDepenencies() {
   env_dir=$(mktmpdir)
   echo "not-production" > $env_dir/NODE_ENV
@@ -700,6 +706,7 @@ testNodeEnvTestDepenencies() {
   assertCapturedSuccess
 }
 
+# When NODE_ENV != production we should not prune the devDependencies with Yarn
 testNodeEnvTestDepenenciesYarn() {
   env_dir=$(mktmpdir)
   echo "not-production" > $env_dir/NODE_ENV
@@ -709,6 +716,7 @@ testNodeEnvTestDepenenciesYarn() {
   assertCapturedSuccess
 }
 
+# When NPM_CONFIG_PRODUCTION = true we should not install devDependencies
 testOnlyDependenciesInstalled() {
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
@@ -717,6 +725,7 @@ testOnlyDependenciesInstalled() {
   assertCapturedSuccess
 }
 
+# When NPM_CONFIG_PRODUCTION = true we should not install devDependencies with Yarn
 testOnlyDependenciesInstalledYarn() {
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/YARN_PRODUCTION
