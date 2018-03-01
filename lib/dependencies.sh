@@ -97,10 +97,10 @@ yarn_node_modules() {
 yarn_prune_devdependencies() {
   local build_dir=${1:-} 
 
-  if [ $NODE_ENV == "test" ]; then
+  if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
     return 0
-  elif [ $NODE_ENV != "production" ]; then
+  elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
     return 0
   elif [ -n "$YARN_PRODUCTION" ] && [ "$YARN_PRODUCTION" != "true" ]; then
