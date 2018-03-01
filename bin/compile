@@ -211,6 +211,17 @@ cache_build() {
 header "Caching build"
 cache_build | output "$LOG_FILE"
 
+prune_devdependencies() {
+  if $YARN; then
+    yarn_prune_devdependencies "$BUILD_DIR"
+  else
+    npm_prune_devdependencies "$BUILD_DIR"
+  fi
+}
+
+header "Pruning devDependencies"
+prune_devdependencies | output "$LOG_FILE"
+
 summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"

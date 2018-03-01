@@ -2,6 +2,8 @@
 
 ## Master
 
+- Install and prune devDependencies by default (#519)
+
 ## v118 (2018-02-02)
 
 - Fix issue with `NODE_ENV` in CI (#513)

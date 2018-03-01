@@ -122,8 +122,7 @@ fail_yarn_outdated() {
   local log_file="$1"
   local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
-  if grep -qi 'error: unknown option .--frozen-lockfile' "$log_file"; then
-    echo "ran"
+  if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
     mcount "failures.outdated-yarn"
     echo ""
     warn "Outdated Yarn version: $yarn_engine

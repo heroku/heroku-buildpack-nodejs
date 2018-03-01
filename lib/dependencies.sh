@@ -87,14 +87,34 @@ log_build_scripts() {
 
 yarn_node_modules() {
   local build_dir=${1:-}
+  local production=${YARN_PRODUCTION:-false}
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir"
-  yarn install --frozen-lockfile --ignore-engines 2>&1
+  yarn install --production=$production --frozen-lockfile --ignore-engines 2>&1
+}
+
+yarn_prune_devdependencies() {
+  local build_dir=${1:-} 
+
+  if [ "$NODE_ENV" == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    return 0
+  elif [ "$NODE_ENV" != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
+    return 0
+  elif [ -n "$YARN_PRODUCTION" ] && [ "$YARN_PRODUCTION" != "true" ]; then
+    echo "Skipping because YARN_PRODUCTION is not 'true'"
+    return 0
+  else 
+    cd "$build_dir" 
+    yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+  fi
 }
 
 npm_node_modules() {
   local build_dir=${1:-}
+  local production=${NPM_CONFIG_PRODUCTION:-false}
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
@@ -106,7 +126,7 @@ npm_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -114,6 +134,7 @@ npm_node_modules() {
 
 npm_rebuild() {
   local build_dir=${1:-}
+  local production=${NPM_CONFIG_PRODUCTION:-false}
 
   if [ -e $build_dir/package.json ]; then
     cd $build_dir
@@ -124,8 +145,32 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
+  fi
+}
+
+npm_prune_devdependencies() {
+  local build_dir=${1:-} 
+  local npm_version=$(npm --version)
+
+  if [ $NODE_ENV == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    return 0
+  elif [ $NODE_ENV != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
+    return 0
+  elif [ -n "$NPM_CONFIG_PRODUCTION" ] && [ "$NPM_CONFIG_PRODUCTION" != "true" ]; then
+    echo "Skipping because NPM_CONFIG_PRODUCTION is not 'true'"
+    return 0
+  elif [ $npm_version == "5.3.0" ]; then
+    mcount "skip-prune-issue-npm-5.3.0"
+    echo "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
+    echo "https://github.com/npm/npm/issues/17781"
+    return 0
+  else
+    cd "$build_dir" 
+    npm prune --userconfig $build_dir/.npmrc 2>&1
   fi
 }

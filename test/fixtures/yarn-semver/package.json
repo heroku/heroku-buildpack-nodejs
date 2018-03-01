@@ -8,5 +8,8 @@
   },
   "dependencies": {
     "lodash": "^4.16.4"
+  },
+  "devDependencies": {
+    "mocha": "^5.0.1"
   }
 }

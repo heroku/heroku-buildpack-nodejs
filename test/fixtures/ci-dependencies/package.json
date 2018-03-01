@@ -10,9 +10,12 @@
     "hashish": "*"
   },
   "engines": {
-    "node": "~0.10.0"
+    "node": "8.x"
   },
   "devDependencies": {
     "lodash": "^2.4.1"
+  },
+  "scripts": {
+    "test": "ls node_modules"
   }
 }

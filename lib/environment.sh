@@ -16,7 +16,6 @@ platform="$os-$cpu"
 export JQ="$BP_DIR/vendor/jq-$os"
 
 create_default_env() {
-  export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-true}
   export NPM_CONFIG_LOGLEVEL=${NPM_CONFIG_LOGLEVEL:-error}
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
@@ -68,7 +67,7 @@ write_ci_profile() {
   local bp_dir="$1"
   local build_dir="$2"
   write_profile "$1" "$2"
-  cp $bp_dir/ci-profile/* $build_dir/.profile.d/ 
+  cp $bp_dir/ci-profile/* $build_dir/.profile.d/
 }
 
 write_export() {
