@@ -682,7 +682,14 @@ testDevDepenenciesWithNoPruning() {
   echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
   compile "dependencies" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
-  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is not 'true'"
+  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is 'false'"
+  assertCapturedSuccess
+
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
+  compile "dependencies" "$(mktmpdir)" $env_dir
+  assertNotCaptured "lodash"
+  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is 'true'"
   assertCapturedSuccess
 }
 
@@ -692,7 +699,14 @@ testDevDepenenciesWithNoPruningYarn() {
   echo "false" > $env_dir/YARN_PRODUCTION
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
-  assertCaptured "Skipping because YARN_PRODUCTION is not 'true'"
+  assertCaptured "Skipping because YARN_PRODUCTION is 'false'"
+  assertCapturedSuccess
+
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/YARN_PRODUCTION
+  compile "dependencies-yarn" "$(mktmpdir)" $env_dir
+  assertNotCaptured "lodash"
+  assertCaptured "Skipping because YARN_PRODUCTION is 'true'"
   assertCapturedSuccess
 }
 

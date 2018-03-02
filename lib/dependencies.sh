@@ -103,8 +103,8 @@ yarn_prune_devdependencies() {
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
     return 0
-  elif [ -n "$YARN_PRODUCTION" ] && [ "$YARN_PRODUCTION" != "true" ]; then
-    echo "Skipping because YARN_PRODUCTION is not 'true'"
+  elif [ -n "$YARN_PRODUCTION" ]; then
+    echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     return 0
   else 
     local start=$(nowms)
@@ -163,8 +163,8 @@ npm_prune_devdependencies() {
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
     return 0
-  elif [ -n "$NPM_CONFIG_PRODUCTION" ] && [ "$NPM_CONFIG_PRODUCTION" != "true" ]; then
-    echo "Skipping because NPM_CONFIG_PRODUCTION is not 'true'"
+  elif [ -n "$NPM_CONFIG_PRODUCTION" ]; then
+    echo "Skipping because NPM_CONFIG_PRODUCTION is '$NPM_CONFIG_PRODUCTION'"
     return 0
   elif [ "$npm_version" == "5.3.0" ]; then
     mcount "skip-prune-issue-npm-5.3.0"
