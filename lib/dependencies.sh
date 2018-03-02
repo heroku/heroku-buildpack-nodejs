@@ -175,6 +175,6 @@ npm_prune_devdependencies() {
     local start=$(nowms
     cd "$build_dir" 
     npm prune --userconfig $build_dir/.npmrc 2>&1
-    mtime "prune.yarn.time" "${start}"
+    mtime "prune.npm.time" "${start}"
   fi
 }
