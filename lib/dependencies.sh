@@ -172,7 +172,7 @@ npm_prune_devdependencies() {
     echo "https://github.com/npm/npm/issues/17781"
     return 0
   else
-    local start=$(nowms
+    local start=$(nowms)
     cd "$build_dir" 
     npm prune --userconfig $build_dir/.npmrc 2>&1
     mtime "prune.npm.time" "${start}"
