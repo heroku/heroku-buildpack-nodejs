@@ -10,7 +10,8 @@
     "hashish": "*"
   },
   "engines": {
-    "node": "8.x"
+    "node": "8.x",
+    "npm": "5.7.1"
   },
   "devDependencies": {
     "lodash": "^2.4.1"

@@ -185,7 +185,6 @@ npm_prune_devdependencies() {
     echo "Skipping because npm $npm_version sometimes fails when running 'npm prune' due to a known issue"
     echo "https://github.com/npm/npm/issues/19356"
     echo ""
-
     echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     return 0

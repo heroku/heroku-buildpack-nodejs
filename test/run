@@ -869,9 +869,9 @@ testNpmPrune53Issue() {
 
 # Avoid this issue for users with git dependencies
 # https://github.com/npm/npm/issues/19356
-testNpmPrune53Issue() {
+testNpmPrune56Issue() {
   compile "npm-prune-5-6-issue"
-  assertCaptured "npm 5.6.0 installed"
+  assertCaptured "npm 5.6.0"
   assertCaptured "Skipping because npm 5.6.0 sometimes fails"
   assertCaptured "https://github.com/npm/npm/issues/19356"
   assertCapturedSuccess
