@@ -157,19 +157,36 @@ npm_prune_devdependencies() {
   local build_dir=${1:-} 
   local npm_version=$(npm --version)
 
-  if [ $NODE_ENV == "test" ]; then
+  if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
     return 0
-  elif [ $NODE_ENV != "production" ]; then
+  elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
     return 0
   elif [ -n "$NPM_CONFIG_PRODUCTION" ] && [ "$NPM_CONFIG_PRODUCTION" != "true" ]; then
     echo "Skipping because NPM_CONFIG_PRODUCTION is not 'true'"
     return 0
-  elif [ $npm_version == "5.3.0" ]; then
+  elif [ "$npm_version" == "5.3.0" ]; then
     mcount "skip-prune-issue-npm-5.3.0"
     echo "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
     echo "https://github.com/npm/npm/issues/17781"
+    echo ""
+    echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
+    echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+    return 0
+  elif [ "$npm_version" == "5.6.0" ] ||
+       [ "$npm_version" == "5.5.1" ] ||
+       [ "$npm_version" == "5.5.0" ] ||
+       [ "$npm_version" == "5.4.2" ] ||
+       [ "$npm_version" == "5.4.1" ] ||
+       [ "$npm_version" == "5.2.0" ] ||
+       [ "$npm_version" == "5.1.0" ]; then
+    mcount "skip-prune-issue-npm-5.6.0"
+    echo "Skipping because npm $npm_version sometimes fails when running 'npm prune' due to a known issue"
+    echo "https://github.com/npm/npm/issues/19356"
+    echo ""
+    echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
+    echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     return 0
   else
     local start=$(nowms)
