@@ -18,9 +18,16 @@ log_concurrency() {
 
 detect_memory() {
   local default=$1
+  local detected max_detected_memory=8796093022207
 
   if [ -e /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
-    echo $(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) / 1048576))
+    detected=$(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) / 1048576))
+    # The hardcoded value is 16GB of memory
+    if (( detected > max_detected_memory )); then
+      echo "$max_detected_memory"
+    else
+      echo "$detected"
+    fi
   else
     echo "$default"
   fi
