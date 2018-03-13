@@ -2,6 +2,17 @@
 
 ## Master
 
+## v121 (2018-03-02)
+
+- Skip pruning if `NPM_CONFIG_PRODUCTION` or `YARN_PRODUCTION` is defined (#529)
+
+## v120 (2018-03-01)
+
+- Skip pruning for versions of npm with known issues with git submodules (#528)
+- Add timing metrics (#527)
+
+## v119 (2018-02-28)
+
 - Install and prune devDependencies by default (#519)
 
 ## v118 (2018-02-02)
