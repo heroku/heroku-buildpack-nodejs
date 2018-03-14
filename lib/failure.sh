@@ -433,7 +433,7 @@ log_other_failures() {
   fi
 
   # matches the subsequent lines of a stacktrace
-  if grep -q "at [^ ]* \([^ ]*:\d*\d*\)" "$log_file"; then
+  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
     mcount "failures.unknown-stacktrace"
     return 0
   fi
