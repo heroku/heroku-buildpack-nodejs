@@ -365,6 +365,11 @@ log_other_failures() {
     return 0
   fi
 
+  if grep -i -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+    mcount "failures.module-404"
+    return 0
+  fi
+
   if grep -qi "sh: 1: cd: can't cd to" "$log_file"; then
     mcount "failures.cd-command-fail"
     return 0
