@@ -409,6 +409,40 @@ log_other_failures() {
     return 0
   fi
 
+  # [^/C] means that the error is not for a file expected to be within the project
+  # Ex: Error: Cannot find module 'chalk'
+  if grep -q "Error: Cannot find module '[^/C\.]" "$log_file"; then
+    mcount "failures.missing-module.npm"
+    return 0
+  fi
+
+  # / means that the error is for a file expected within the local project
+  # Ex: Error: Cannot find module '/tmp/build_{hash}/...'
+  if grep -q "Error: Cannot find module '/" "$log_file"; then
+    mcount "failures.missing-module.local-absolute"
+    return 0
+  fi
+
+  # /. means that the error is for a file that's a relative require
+  # Ex: Error: Cannot find module './lib/utils'
+  if grep -q "Error: Cannot find module '\." "$log_file"; then
+    mcount "failures.missing-module.local-relative"
+    return 0
+  fi
+
+  # [^/C] means that the error is not for a file expected to be found on a C: drive
+  # Ex: Error: Cannot find module 'C:\Users...'
+  if grep -q "Error: Cannot find module 'C:" "$log_file"; then
+    mcount "failures.missing-module.local-windows"
+    return 0
+  fi
+
+  # matches the subsequent lines of a stacktrace
+  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
+    mcount "failures.unknown-stacktrace"
+    return 0
+  fi
+
   # If we've made it this far it's not an error we've added detection for yet
   mcount "failures.unknown"
 }
