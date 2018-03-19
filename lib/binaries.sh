@@ -84,7 +84,7 @@ install_npm() {
     echo "npm `npm --version` already installed with node"
   else
     echo "Bootstrapping npm $version (replacing `npm --version`)..."
-    if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
+    if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>&1>/dev/null; then
       echo "Unable to install npm $version; does it exist?" && false
     fi
     echo "npm `npm --version` installed"
