@@ -256,7 +256,9 @@ header "Build succeeded!"
 mcount "compile"
 summarize_build | output "$LOG_FILE"
 
-if test -z "$meteor_version" ; then
+if test -n "$meteor_version" ; then
+  rm -r "$BUILD_DIR/node_modules"
+else
   warn_no_start "$LOG_FILE"
   warn_unmet_dep "$LOG_FILE"
 fi
