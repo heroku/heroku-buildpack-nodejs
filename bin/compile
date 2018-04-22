@@ -241,6 +241,7 @@ cache_build | output "$LOG_FILE"
 # Build meteor app if required
 if test -n "$meteor_version"; then
   header "Meteor app detected: version ${meteor_version}"
+  setup_meteor_build_environment
   build_meteor_app $BUILD_DIR $CACHE_DIR
 fi
 

@@ -79,6 +79,16 @@ make your application work, out of the box.
 If you are using Meteor ≥ 1.3, the flag `--server-only` will be used automatically
 to build your application for Meteor mobile integration.
 
+### Memory in the build process
+
+
+By default the node process can only use ~3.7GB of RAM during the build process
+which can'y be too little for large Meteor application, that's why the
+buildpack is adding to the environment variable `TOOL_NODE_FLAGS`, the flag
+`--max-old-space-size=8192` (except if this precise flag is already defined).
+If the variable does not exist it is initialized. To update the value `8192`,
+the variable `BUILD_MAX_MEMORY` can be overriden.
+
 ### Starting flags for `node` process
 
 For some reasons, you may want to use custom flags to run your application.

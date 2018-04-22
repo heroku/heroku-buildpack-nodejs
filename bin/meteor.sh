@@ -37,6 +37,14 @@ meteor_npm_version() {
   fi
 }
 
+setup_meteor_build_environment() {
+  tnf="${TOOL_NODE_FLAGS}"
+  if echo $tnf | grep -v -q 'max-old-space-size' ; then
+    mem=${BUILD_MAX_MEMORY:-8192}
+    export TOOL_NODE_FLAGS="${tnf} --max-old-space-size=${mem}"
+  fi
+}
+
 create_meteor_settings_profile() {
   local build_dir=$1
   local settings=""
