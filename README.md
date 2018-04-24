@@ -81,13 +81,16 @@ to build your application for Meteor mobile integration.
 
 ### Memory in the build process
 
+Meteor build is handled by a Node.JS process which has a default limit:
+it can't use more than ~3.7GB of RAM. It can be too little for large Meteor
+applications and the build process will fail with the following error:
+`Allocation failed`.
 
-By default the node process can only use ~3.7GB of RAM during the build process
-which can'y be too little for large Meteor application, that's why the
-buildpack is adding to the environment variable `TOOL_NODE_FLAGS`, the flag
-`--max-old-space-size=8192` (except if this precise flag is already defined).
-If the variable does not exist it is initialized. To update the value `8192`,
-the variable `BUILD_MAX_MEMORY` can be overriden.
+The buildpack is fixing this issue by adding to the environment variable
+`TOOL_NODE_FLAGS`, the flag `--max-old-space-size=8192` (except if this
+precise flag is already defined).
+
+To update the value `8192`, the variable `BUILD_MAX_MEMORY` can be overriden.
 
 ### Starting flags for `node` process
 
