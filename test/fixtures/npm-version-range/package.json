@@ -7,7 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "0.10.12",
-    "npm": "1.4.x"
+    "node": "8.x",
+    "npm": "5.7.x"
   }
 }

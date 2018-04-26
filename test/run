@@ -536,7 +536,7 @@ testSameNpm() {
 
 testNpmVersionRange() {
   compile "npm-version-range"
-  assertCaptured "Bootstrapping npm 1.4.x"
+  assertCaptured "Bootstrapping npm 5.7.x"
   assertCapturedSuccess
 }
 
@@ -576,7 +576,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version *"
-  assertCaptured "Downloading and installing node 9."
+  assertCaptured "Downloading and installing node 10."
   assertCapturedError
 }
 
@@ -584,14 +584,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4"
-  assertCaptured "Downloading and installing node 9."
+  assertCaptured "Downloading and installing node 10."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x"
-  assertCaptured "Downloading and installing node 9."
+  assertCaptured "Downloading and installing node 10."
   assertCapturedSuccess
 }
 
