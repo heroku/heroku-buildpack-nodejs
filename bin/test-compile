@@ -1,3 +1,11 @@
 #!/usr/bin/env bash
 
-NPM_CONFIG_PRODUCTION=false NODE_ENV=test "$(dirname ${0:-})/compile" "$1" "$2" "$3"
+BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
+
+source $BP_DIR/lib/environment.sh
+
+export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-false}
+export NODE_ENV=${NODE_ENV:-test}
+"$BP_DIR/bin/compile" "$1" "$2" "$3"
+
+write_ci_profile "$BP_DIR" "$1"

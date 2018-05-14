@@ -37,6 +37,7 @@ fail_invalid_package_json() {
 
 fail_dot_heroku() {
   if [ -f "${1:-}/.heroku" ]; then
+    mcount "failures.dot-heroku"
     header "Build failed"
     warn "The directory .heroku could not be created
 
@@ -51,6 +52,7 @@ fail_dot_heroku() {
 
 fail_dot_heroku_node() {
   if [ -f "${1:-}/.heroku/node" ]; then
+    mcount "failures.dot-heroku-node"
     header "Build failed"
     warn "The directory .heroku/node could not be created
 
@@ -63,13 +65,18 @@ fail_dot_heroku_node() {
   fi
 }
 
-fail_yarn_and_npm_lockfiles() {
+fail_multiple_lockfiles() {
+  local has_modern_lockfile=false
+  if [ -f "${1:-}/yarn.lock" ] || [ -f "${1:-}/package-lock.json" ]; then
+    has_modern_lockfile=true
+  fi
+
   if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
     mcount "failures.two-lock-files"
     header "Build failed"
-    warn "Two different lock files found: package-lock.json and yarn.lock
+    warn "Two different lockfiles found: package-lock.json and yarn.lock
 
-       Both npm and yarn have created lock files for this application,
+       Both npm and yarn have created lockfiles for this application,
        but only one can be used to install dependencies. Installing
        dependencies using the wrong package manager can result in missing
        packages or subtle bugs in production.
@@ -86,6 +93,358 @@ fail_yarn_and_npm_lockfiles() {
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
     exit 1
   fi
+
+  if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
+    mcount "failures.shrinkwrap-lock-file-conflict"
+    header "Build failed"
+    warn "Two different lockfiles found
+
+       Your application has two lockfiles defined, but only one can be used
+       to install dependencies. Installing dependencies using the wrong lockfile
+       can result in missing packages or subtle bugs in production.
+
+       It's most likely that you recently installed yarn which has its own
+       lockfile by default, which conflicts with the shrinkwrap file you've been
+       using.
+
+       Please make sure there is only one of the following files in your
+       application directory:
+
+       - yarn.lock
+       - package-lock.json
+       - npm-shrinkwrap.json
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
+    exit 1
+  fi
+}
+
+fail_yarn_outdated() {
+  local log_file="$1"
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
+  if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
+    mcount "failures.outdated-yarn"
+    echo ""
+    warn "Outdated Yarn version: $yarn_engine
+
+       Your application is specifying a requirement on an old version of Yarn ($yarn_engine)
+       which does not support the --frozen-lockfile option. Please upgrade to a
+       newer version, at least 0.19, by updating your requirement in the 'engines'
+       field in your package.json.
+
+       \"engines\": {
+         \"yarn\": \"1.3.2\"
+       }
+    " https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version
+    exit 1
+  fi
+}
+
+fail_yarn_lockfile_outdated() {
+  local log_file="$1"
+  if grep -qi 'Your lockfile needs to be updated' "$log_file"; then
+    mcount "failures.outdated-yarn-lockfile"
+    echo ""
+    warn "Outdated Yarn lockfile
+
+       Your application contains a Yarn lockfile (yarn.lock) which does not
+       match the dependencies in package.json. This can happen if you use npm
+       to install or update a dependency instead of Yarn.
+
+       Please run the following command in your application directory and check
+       in the new yarn.lock file:
+
+       $ yarn install
+       $ git add yarn.lock
+       $ git commit -m \"Updated Yarn lockfile\"
+       $ git push heroku master
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile
+    exit 1
+  fi
+}
+
+fail_bin_install() {
+  local bin="$1"
+  local version="$2"
+
+  # re-curl the result, saving off the reason for the failure this time
+  local error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")
+
+  if [[ $error = "No result" ]]; then
+    case $bin in
+      node)
+        echo "Could not find Node version corresponding to version requirement: $version";;
+      iojs)
+        echo "Could not find Iojs version corresponding to version requirement: $version";;
+      yarn)
+        echo "Could not find Yarn version corresponding to version requirement: $version";;
+    esac
+  else
+    echo "Error: Invalid semantic version \"$version\""
+  fi
+
+  false
+}
+
+fail_node_install() {
+  local log_file="$1"
+  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+
+  if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
+    mcount "failures.invalid-node-version"
+    echo ""
+    warn "No matching version found for Node: $node_engine
+
+       Heroku supports the latest Stable version of Node.js as well as all
+       active LTS (Long-Term-Support) versions, however you have specified
+       a version in package.json ($node_engine) that does not correspond to
+       any published version of Node.js.
+
+       You should always specify a Node.js version that matches the runtime
+       you’re developing and testing with. To find your version locally:
+
+       $ node --version
+       v6.11.1
+
+       Use the engines section of your package.json to specify the version of
+       Node.js to use on Heroku. Drop the ‘v’ to save only the version number:
+
+       \"engines\": {
+         \"node\": \"6.11.1\"
+       }
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions
+    exit 1
+  fi
+}
+
+fail_yarn_install() {
+  local log_file="$1"
+  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
+  if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
+    mcount "failures.invalid-yarn-version"
+    echo ""
+    warn "No matching version found for Yarn: $yarn_engine
+
+       Heroku supports most versions of Yarn published on npm, however you have
+       specified a version in package.json ($yarn_engine) that does not correspond
+       to any published version of Yarn. You can see a list of all published
+       versions of Yarn with the following command:
+
+       $ yarn info yarn versions
+
+       You should always specify a Yarn version that matches the version
+       you’re developing and testing with. To find your version locally:
+
+       $ yarn --version
+       0.27.5
+
+       Use the engines section of your package.json to specify the version of
+       Yarn to use on Heroku.
+
+       \"engines\": {
+         \"yarn\": \"0.27.5\"
+       }
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions
+    exit 1
+  fi
+}
+
+fail_invalid_semver() {
+  local log_file="$1"
+  if grep -qi 'Error: Invalid semantic version' "$log_file"; then
+    mcount "failures.invalid-semver-requirement"
+    echo ""
+    warn "Invalid semver requirement
+
+       Node, Yarn, and npm adhere to semver, the semantic versioning convention
+       popularized by GitHub.
+
+       http://semver.org/
+
+       However you have specified a version requirement that is not a valid
+       semantic version.
+    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
+    exit 1
+  fi
+}
+
+log_other_failures() {
+  local log_file="$1"
+  if grep -qi "sh: 1: .*: not found" "$log_file"; then
+    mcount "failures.dev-dependency-tool-not-installed"
+    return 0
+  fi
+
+  if grep -qi "Failed at the bcrypt@\d.\d.\d install script" "$log_file"; then
+    mcount "failures.bcrypt-permissions-issue"
+    return 0
+  fi
+
+  if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
+    mcount "failures.ng-cli-version-issue"
+    return 0
+  fi
+
+  if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
+    mcount "failures.npm-property-zero-issue"
+    return 0
+  fi
+
+  if grep -qi "npm is known not to run on Node.js v\d.\d.\d" "$log_file"; then
+    mcount "failures.npm-known-bad-version"
+    return 0
+  fi
+
+  # "notarget No matching version found for" = npm
+  # "error Couldn't find any versions for" = yarn
+  if grep -q -e "notarget No matching version found for" -e "error Couldn't find any versions for" "$log_file"; then
+    mcount "failures.bad-version-for-dependency"
+    return 0
+  fi
+
+  if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
+    mcount "failures.node-9-npm-issue"
+    return 0
+  fi
+
+  if grep -qi "console.error(\`a bug known to break npm" "$log_file"; then
+    mcount "failures.old-node-new-npm"
+    return 0
+  fi
+
+  if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
+    mcount "failures.build-out-of-memory-error"
+    return 0
+  fi
+
+  if grep -qi "enoent ENOENT: no such file or directory" "$log_file"; then
+    mcount "failures.npm-enoent"
+    return 0
+  fi
+
+  if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
+    mcount "failures.uglifyjs"
+    return 0
+  fi
+
+  # https://github.com/angular/angular-cli/issues/4551
+  if grep -qi "Module not found: Error: Can't resolve '\.\/\$\$_gendir\/app\/app\.module\.ngfactory'" "$log_file"; then
+    mcount "failures.ng-cli-issue-4551"
+    return 0
+  fi
+
+  if grep -qi "Host key verification failed" "$log_file"; then
+    mcount "failures.private-git-dependency-without-auth"
+    return 0
+  fi
+
+  # same as the next test, but isolate bcyrpt specifically
+  if grep -qi "Failed at the bcrypt@\d\.\d\.\d install" "$log_file"; then
+    mcount "failures.bcrypt-failed-to-build"
+    return 0
+  fi
+
+  if grep -qi "Failed at the [^ ]* install script" "$log_file"; then
+    mcount "failures.dependency-failed-to-build"
+    return 0
+  fi
+
+  if grep -qi "Line \d*:  '.*' is not defined" "$log_file"; then
+    mcount "failures.undefined-variable-lint"
+    return 0
+  fi
+
+  if grep -qi "npm ERR! code EBADPLATFORM" "$log_file"; then
+    mcount "failures.npm-ebadplatform"
+    return 0
+  fi
+
+  if grep -qi "npm ERR! code EINVALIDPACKAGENAME" "$log_file"; then
+    mcount "failures.npm-package-name-typo"
+    return 0
+  fi
+
+  if grep -i -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+    mcount "failures.module-404"
+    return 0
+  fi
+
+  if grep -qi "sh: 1: cd: can't cd to" "$log_file"; then
+    mcount "failures.cd-command-fail"
+    return 0
+  fi
+
+  # Webpack Errors
+
+  if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
+    mcount "failures.webpack.module-not-found"
+    return 0
+  fi
+
+  if grep -qi "sass-loader/lib/loader.js:3:14" "$log_file"; then
+    mcount "failures.webpack.sass-loader-error"
+    return 0
+  fi
+
+  # Typescript errors
+
+  if grep -qi "Property '.*' does not exist on type '.*'" "$log_file"; then
+    mcount "failures.typescript.missing-property"
+    return 0
+  fi
+
+  if grep -qi "Property '.*' is private and only accessible within class '.*'" "$log_file"; then
+    mcount "failures.typescript.private-property"
+    return 0
+  fi
+
+  if grep -qi "error TS2307: Cannot find module '.*'" "$log_file"; then
+    mcount "failures.typescript.missing-module"
+    return 0
+  fi
+
+  if grep -qi "error TS2688: Cannot find type definition file for '.*'" "$log_file"; then
+    mcount "failures.typescript.missing-type-definition"
+    return 0
+  fi
+
+  # [^/C] means that the error is not for a file expected to be within the project
+  # Ex: Error: Cannot find module 'chalk'
+  if grep -q "Error: Cannot find module '[^/C\.]" "$log_file"; then
+    mcount "failures.missing-module.npm"
+    return 0
+  fi
+
+  # / means that the error is for a file expected within the local project
+  # Ex: Error: Cannot find module '/tmp/build_{hash}/...'
+  if grep -q "Error: Cannot find module '/" "$log_file"; then
+    mcount "failures.missing-module.local-absolute"
+    return 0
+  fi
+
+  # /. means that the error is for a file that's a relative require
+  # Ex: Error: Cannot find module './lib/utils'
+  if grep -q "Error: Cannot find module '\." "$log_file"; then
+    mcount "failures.missing-module.local-relative"
+    return 0
+  fi
+
+  # [^/C] means that the error is not for a file expected to be found on a C: drive
+  # Ex: Error: Cannot find module 'C:\Users...'
+  if grep -q "Error: Cannot find module 'C:" "$log_file"; then
+    mcount "failures.missing-module.local-windows"
+    return 0
+  fi
+
+  # matches the subsequent lines of a stacktrace
+  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
+    mcount "failures.unknown-stacktrace"
+    return 0
+  fi
+
+  # If we've made it this far it's not an error we've added detection for yet
+  mcount "failures.unknown"
 }
 
 warning() {
@@ -143,10 +502,13 @@ warn_old_npm() {
   fi
 }
 
-warn_young_yarn() {
-  if $YARN; then
-    warning "This project was built with yarn, which is new and under development. Some projects can still be built more reliably with npm" "https://devcenter.heroku.com/articles/nodejs-support#build-behavior"
-    mcount 'warnings.yarn.young'
+warn_old_npm_lockfile() {
+  local npm_lock=$1
+  local npm_version="$(npm --version)"
+  if $npm_lock && [ "${npm_version:0:1}" -lt "5" ]; then
+    warn "This version of npm ($npm_version) does not support package-lock.json. Please
+       update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+    mcount 'warnings.npm.old-and-lockfile'
   fi
 }
 

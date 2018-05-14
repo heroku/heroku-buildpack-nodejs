@@ -68,7 +68,7 @@ heroku buildpacks:set <your-github-url>#your-branch
 ## Tests
 
 The buildpack tests use [Docker](https://www.docker.com/) to simulate
-Heroku's Cedar and Cedar-14 containers.
+Heroku's Cedar-14 and Heroku-16 containers.
 
 To run the test suite:
 
@@ -79,8 +79,8 @@ make test
 Or to just test in cedar or cedar-14:
 
 ```
-make test-cedar-10
 make test-cedar-14
+make test-heroku-16
 ```
 
 The tests are run via the vendored

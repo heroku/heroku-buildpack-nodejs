@@ -5,5 +5,8 @@
   "license": "MIT",
   "dependencies": {
     "lodash": "^4.16.4"
+  },
+  "engines": {
+    "node": "8.9.1"
   }
 }

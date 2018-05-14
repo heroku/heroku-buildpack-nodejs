@@ -1,0 +1,22 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/example/example.git"
+  },
+  "dependencies": {
+    "hashish": "*"
+  },
+  "engines": {
+    "node": "8.x",
+    "npm": "5.7.1"
+  },
+  "devDependencies": {
+    "lodash": "^2.4.1"
+  },
+  "scripts": {
+    "heroku-postbuild": "ls node_modules"
+  }
+}

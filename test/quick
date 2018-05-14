@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source $(pwd)/lib/environment.sh
+
 mktmpdir() {
   local dir=$(mktemp -t testXXXXX)
   rm -rf $dir
@@ -21,5 +23,31 @@ compile() {
   "$bp_dir/bin/compile" "$build_dir" "$cache_dir"
 }
 
+compileTest() {
+  local fixture=$1
+  local bp_dir=$(mktmpdir)
+  local build_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo "Compiling $fixture"
+  echo "in $build_dir"
+  echo "(caching in $cache_dir)"
+  cp -a $(pwd)/* ${bp_dir}
+  cp -a ${bp_dir}/test/fixtures/$fixture/. ${build_dir}
+  "$bp_dir/bin/test-compile" "$build_dir" "$cache_dir"
+
+  export HOME=${build_dir}
+  export_env_dir $env_dir
+  for f in ${build_dir}/.profile.d/*; do source $f > /dev/null 2> /dev/null ; done
+
+  "$bp_dir/bin/test" "$build_dir"
+}
+
 fixture=${1:-'stable-node'}
-compile "$fixture"
+
+if [[ "$2" == "test" ]]; then
+  compileTest "$fixture"
+else
+  compile "$fixture"
+fi
+

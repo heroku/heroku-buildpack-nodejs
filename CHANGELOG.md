@@ -2,6 +2,74 @@
 
 ## Master
 
+## v121 (2018-03-02)
+
+- Skip pruning if `NPM_CONFIG_PRODUCTION` or `YARN_PRODUCTION` is defined (#529)
+
+## v120 (2018-03-01)
+
+- Skip pruning for versions of npm with known issues with git submodules (#528)
+- Add timing metrics (#527)
+
+## v119 (2018-02-28)
+
+- Install and prune devDependencies by default (#519)
+
+## v118 (2018-02-02)
+
+- Fix issue with `NODE_ENV` in CI (#513)
+
+## v117 (2018-01-31)
+
+- Fix bug with previous default cache directories fix for npm and yarn (#511)
+
+## v116 (2018-01-29)
+
+- Fix metrics typo (#510)
+
+## v115 (2017-01-25)
+
+- Add metrics to track new types of failure (#509)
+
+## v114 (2017-11-16)
+
+- Don't default to npm 5.x if the user already has npm >= 5 (#499)
+
+## v113 (2017-11-13)
+
+- Bump default version of Node to Node 8 (#497)
+
+## v112 (2017-11-13)
+
+- Move default Yarn and npm cache directories to a temporary dir (#459)
+- `LOG_CONCURRENCY` fix (#475)
+- Default Yarn to `1.x`
+- Add `BUILD_DIR` to env var blacklist
+
+## v111 (2017-09-06)
+
+- Move `WEB_CONCURRENCY` logic to separate file (#467)
+- Temporarily default Yarn to known-good version
+
+## v110 (2017-07-26)
+
+- Improve error messages when bin version requirements are invalid (#457)
+
+## v109 (2017-07-25)
+
+- Switch to using nodebin to download the node binary (#451)
+
+## v108 (2017-07-24)
+
+- Add `$STACK` to the cache signature (#445)
+- Log output now differentiates between an empty cache and a new cache signature (#448)
+- Remove the use of semver.io to bootstrap npm (#452)
+- Switch to using nodebin to download iojs binaries (#450)
+
+## v107 (2017-07-17)
+
+- Switch to using nodebin to download the yarn binary (#444)
+
 ## v106 (2017-06-19)
 
 - Default to npm v5 if `package-lock.json` is present (#429)

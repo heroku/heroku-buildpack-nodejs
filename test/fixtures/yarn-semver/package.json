@@ -4,9 +4,12 @@
   "main": "index.js",
   "license": "MIT",
   "engines": {
-    "yarn": "~0.17"
+    "yarn": "~0.28"
   },
   "dependencies": {
     "lodash": "^4.16.4"
+  },
+  "devDependencies": {
+    "mocha": "^5.0.1"
   }
 }
