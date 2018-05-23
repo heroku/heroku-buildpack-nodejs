@@ -3,6 +3,7 @@ sudo: required
 services:
   - docker
 env:
+  - STACK=heroku-18
   - STACK=heroku-16
   - STACK=cedar-14
 install: docker pull "heroku/${STACK/-/:}"
