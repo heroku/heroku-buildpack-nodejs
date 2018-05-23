@@ -1,4 +1,9 @@
-test: test-heroku-16 test-cedar-14
+test: test-heroku-18 test-heroku-16 test-cedar-14
+
+test-heroku-18:
+	@echo "Running tests in docker (heroku-18)..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18" heroku/heroku:18 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@echo ""
 
 test-heroku-16:
 	@echo "Running tests in docker (heroku-16)..."
