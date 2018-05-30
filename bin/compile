@@ -55,12 +55,6 @@ handle_failure() {
 }
 trap 'handle_failure' ERR
 
-### Check initial state
-
-[ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
-[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
-[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
-
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
@@ -69,6 +63,23 @@ fail_invalid_package_json "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
+
+### Check initial state
+package_manager=$(read_json "$BUILD_DIR/package.json" ".manager")
+
+[ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
+[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
+
+### Set package manager to be used
+
+if [ "$package_manager" == "yarn" ]; then
+  YARN=true
+fi
+
+if [ "$package_manager" == "npm" ]; then
+  YARN=false
+fi
 
 ### Compile
 
@@ -119,9 +130,6 @@ install_bins() {
     mcount "version.node.$(node --version)"
   fi
 
-  # Download yarn if there is a yarn.lock file or if the user
-  # has specified a version of yarn under "engines". We'll still
-  # only install using yarn if there is a yarn.lock file
   if $YARN || [ -n "$yarn_engine" ]; then
     install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
   fi

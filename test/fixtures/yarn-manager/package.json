@@ -1,0 +1,10 @@
+{
+  "name": "yarn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "manager": "yarn",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.16.4"
+  }
+}
