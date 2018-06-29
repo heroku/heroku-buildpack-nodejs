@@ -77,3 +77,18 @@ save_cache_directories() {
     fi
   done
 }
+
+save_binary_caches() {
+  local src
+  local dest
+
+  if [ -n "$ENABLE_BINARY_CACHE" ] && [ -f "$BINCACHE_FILE" ]; then
+    while read src dest
+    do
+      if [ -f "$src" ]; then
+        mkdir -p "$(dirname "$dest")"
+        mv "$src" "$dest"
+      fi
+    done < "$BINCACHE_FILE"
+  fi
+}

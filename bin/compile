@@ -19,6 +19,7 @@ CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
 STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
+BINCACHE_FILE=$(mktemp -t bincache.XXXXX)
 
 ### Load dependencies
 
@@ -205,6 +206,7 @@ cache_build() {
     echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
     save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
   fi
+  save_binary_caches
   save_signature
 }
 
