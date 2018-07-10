@@ -21,7 +21,7 @@ STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
 mkdir -p "$BUILD_DIR/.scalingo/node/"
 cd $BUILD_DIR
-export PATH="$BUILD_DIR/.scalingo/node/bin:$BUILD_DIR/.scalingo/yarn/bin":$PATH
+export PATH="$BUILD_DIR/.scalingo/node/bin:$BUILD_DIR/.scalingo/yarn/bin:$BUILD_DIR/node_modules/.bin":$PATH
 
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
