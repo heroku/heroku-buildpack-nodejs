@@ -21,18 +21,4 @@ git push origin refs/tags/$newVersion
 
 heroku buildpacks:publish "$BP_NAME" "$newVersion"
 
-if [ $(git tag | grep -q previous-version) ]; then
-    echo "Updating previous-version tag"
-    git tag -d previous-version
-    git push origin :previous-version
-    git tag previous-version latest-version
-fi
-if [ $(git tag | grep -q latest-version) ]; then
-    echo "Updating latest-version tag"
-    git tag -d latest-version
-    git push origin :latest-version
-    git tag latest-version "${originMaster:?}"
-    git push --tags
-fi
-
 echo "Done."
