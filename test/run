@@ -65,8 +65,8 @@ testYarnCacheDirectory() {
   compile "yarn" $cache $env_dir
   # These will be created if yarn is using the directory for its cache
   assertDirectoryExists ${cache_dir}/yarn
-  assertDirectoryExists ${cache_dir}/yarn/v1
-  assertDirectoryExists ${cache_dir}/yarn/v1/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
+  assertDirectoryExists ${cache_dir}/yarn/v2
+  assertFileExists ${cache_dir}/yarn/v2/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
   assertCapturedSuccess
 }
 
@@ -977,15 +977,6 @@ release() {
 
 assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
-}
-
-assertDirectoryExists() {
-  if [[ ! -e "$1" ]]; then
-    fail "$1 does not exist"
-  fi
-  if [[ ! -d $1 ]]; then
-    fail "$1 is not a directory"
-  fi
 }
 
 source $(pwd)/test/shunit2
