@@ -6,6 +6,9 @@ env:
   - TEST=heroku-18 STACK=heroku-18
   - TEST=heroku-16 STACK=heroku-16
   - TEST=cedar-14 STACK=cedar-14
-  - TEST=hatchet STACK=heroku-18
-install: docker pull "heroku/${STACK/-/:}"
+  - TEST=hatchet
+install:
+  - if [[ -n $STACK ]]; then
+      docker pull "heroku/${STACK/-/:}";
+    fi
 script: make ${TEST}
