@@ -20,7 +20,7 @@ detect_memory() {
   local default=$1
 
   if [ -e /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
-    expr "$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)" / 1048576
+    echo $(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) / 1048576))
   else
     echo "$default"
   fi

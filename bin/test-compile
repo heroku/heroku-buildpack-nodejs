@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
+BP_DIR=$(cd "$(dirname ${0:-})"; cd ..; pwd)
 
 source $BP_DIR/lib/environment.sh
 

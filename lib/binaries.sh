@@ -79,14 +79,14 @@ install_npm() {
   fi
 
   if [ "$version" == "" ]; then
-    echo "Using default npm version: `npm --version`"
-  elif [[ `npm --version` == "$version" ]]; then
-    echo "npm `npm --version` already installed with node"
+    echo "Using default npm version: $npm_version"
+  elif [[ "$npm_version" == "$version" ]]; then
+    echo "npm $npm_version already installed with node"
   else
-    echo "Bootstrapping npm $version (replacing `npm --version`)..."
+    echo "Bootstrapping npm $version (replacing $npm_version)..."
     if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
       echo "Unable to install npm $version; does it exist?" && false
     fi
-    echo "npm `npm --version` installed"
+    echo "npm $version installed"
   fi
 }

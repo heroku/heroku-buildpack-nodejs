@@ -23,7 +23,7 @@ testDisableCache() {
   echo "true" > $env_dir/NODE_VERBOSE
   compile "node-modules-cache-1" $cache $env_dir
   assertCaptured "lodash@1.0.0"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep lodash | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep -c lodash | tr -d ' ')"
   assertCapturedSuccess
 
   compile "node-modules-cache-2" $cache $env_dir
@@ -41,7 +41,7 @@ testNodeModulesCached() {
 
   compile "caching" $cache
   assertCaptured "- node_modules"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep express | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep -c express | tr -d ' ')"
   assertCapturedSuccess
 }
 
@@ -95,7 +95,7 @@ testBuildWithCache() {
 
   compile "stable-node" $cache
   assertNotCaptured "Restoring cache"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep hashish | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep -c hashish | tr -d ' ')"
   assertCapturedSuccess
 
   compile "stable-node" $cache
@@ -369,8 +369,8 @@ testBuildWithUserCacheDirectoriesCamel() {
 
   compile "cache-directories-camel" $cache
   assertCaptured "- non/existent (nothing to cache)"
-  assertEquals "1" "$(ls -1 $cache/node/server | grep node_modules | wc -l | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node/client | grep node_modules | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/server | grep -c node_modules | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/client | grep -c node_modules | tr -d ' ')"
   assertCapturedSuccess
 
   compile "cache-directories-camel" $cache
@@ -382,35 +382,35 @@ testBuildWithUserCacheDirectoriesCamel() {
 }
 
 testConcurrency1X() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=1"
   assertCapturedSuccess
 }
 
 testConcurrency2X() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=2"
   assertCapturedSuccess
 }
 
 testConcurrencyPerformanceM() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=5"
   assertCapturedSuccess
 }
 
 testConcurrencyPerformanceL() {
-   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
    assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
    assertCaptured "Recommending WEB_CONCURRENCY=28"
    assertCapturedSuccess
 }
 
 testConcurrencyCustomLimit() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
   assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
   assertCaptured "Recommending WEB_CONCURRENCY=4"
   assertCapturedSuccess
@@ -419,7 +419,7 @@ testConcurrencyCustomLimit() {
 # When /sys/fs/cgroup/memory/memory.limit_in_bytes lies and gives a ridiculous value
 # This happens on Dokku for example
 testConcurrencyTooHigh() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture $(pwd)/profile/WEB_CONCURRENCY.sh
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
   assertCaptured "Could not determine a reasonable value for WEB_CONCURRENCY"
   assertCaptured "Recommending WEB_CONCURRENCY=1"
   assertCapturedSuccess
@@ -614,8 +614,8 @@ testBuildWithUserCacheDirectories() {
 
   compile "cache-directories" $cache
   assertCaptured "Saving 2 cacheDirectories"
-  assertEquals "1" "$(ls -1 $cache/node | grep bower_components | wc -l | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node | grep node_modules | wc -l | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node | grep -c bower_components | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node | grep -c node_modules | tr -d ' ')"
   assertCapturedSuccess
 
   compile "cache-directories" $cache
@@ -967,11 +967,11 @@ testPluginInstallationUnsupportedNodeRunTime() {
 
 # Utils
 
-pushd $(dirname 0) >/dev/null
+pushd "$(dirname 0)" >/dev/null
 popd >/dev/null
 
-source $(pwd)/test/utils
-source $(pwd)/lib/environment.sh
+source "$(pwd)"/test/utils
+source "$(pwd)"/lib/environment.sh
 
 mktmpdir() {
   dir=$(mktemp -t testXXXXX)
@@ -981,7 +981,7 @@ mktmpdir() {
 }
 
 detect() {
-  capture $(pwd)/bin/detect $(pwd)/test/fixtures/$1
+  capture "$(pwd)"/bin/detect "$(pwd)"/test/fixtures/$1
 }
 
 compile_dir=""
@@ -997,7 +997,7 @@ compile() {
   default_process_types_cleanup
   bp_dir=$(mktmpdir)
   compile_dir=$(mktmpdir)
-  cp -a $(pwd)/* ${bp_dir}
+  cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
@@ -1036,7 +1036,7 @@ compileTest() {
   local cache_dir=${2:-$(mktmpdir)}
   local env_dir=$3
 
-  cp -a $(pwd)/* ${bp_dir}
+  cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/test-compile ${compile_dir} ${2:-$(mktmpdir)} $3
 
@@ -1065,13 +1065,13 @@ compileDir() {
   local cache_dir=${2:-$(mktmpdir)}
   local env_dir=$3
 
-  cp -a $(pwd)/* ${bp_dir}
+  cp -a "$(pwd)"/* ${bp_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${cache_dir} ${env_dir}
 }
 
 release() {
   bp_dir=$(mktmpdir)
-  cp -a $(pwd)/* ${bp_dir}
+  cp -a "$(pwd)"/* ${bp_dir}
   capture ${bp_dir}/bin/release ${bp_dir}/test/fixtures/$1
 }
 
@@ -1079,4 +1079,4 @@ assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
-source $(pwd)/test/shunit2
+source "$(pwd)"/test/shunit2
