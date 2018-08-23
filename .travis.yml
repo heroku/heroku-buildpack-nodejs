@@ -8,4 +8,4 @@ env:
   - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet STACK=heroku-18
 install: docker pull "heroku/${STACK/-/:}"
-script: make test-${TEST}
+script: make ${TEST}
