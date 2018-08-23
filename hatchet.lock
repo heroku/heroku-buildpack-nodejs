@@ -1,0 +1,7 @@
+---
+- - spec/fixtures/repos/metrics-test/node-metrics-test-app
+  - f9e14f5587898197d1b6d21c3c00a9cfaf02d0e4
+- - spec/fixtures/repos/multi-process/node-metrics-multi-process
+  - 52c9f1851353a777082ce712fdc5d90369fe88b6
+- - spec/fixtures/repos/single-process/node-metrics-single-process
+  - d07110a224339d0c29cba083ec59b9e011e91959
