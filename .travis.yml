@@ -3,8 +3,8 @@ sudo: required
 services:
   - docker
 env:
-  - STACK=heroku-18
-  - STACK=heroku-16
-  - STACK=cedar-14
-install: docker pull "heroku/${STACK/-/:}"
-script: make test-${STACK}
+  - TEST=heroku-18
+  - TEST=heroku-16
+  - TEST=cedar-14
+  - TEST=hatchet
+script: make test-${TEST}

@@ -30,9 +30,13 @@ GEM
       minitest (>= 5.0)
     moneta (0.8.1)
     multi_json (1.13.1)
+    parallel (1.12.1)
+    parallel_tests (2.22.0)
+      parallel
     platform-api (2.1.0)
       heroics (~> 0.0.23)
       moneta (~> 0.8.1)
+    rake (12.3.1)
     repl_runner (0.0.3)
       activesupport
     rrrretry (1.0.0)
@@ -56,9 +60,11 @@ PLATFORMS
 
 DEPENDENCIES
   heroku_hatchet
+  parallel_tests
+  rake
   rspec-expectations
   rspec-retry
   sem_version
 
 BUNDLED WITH
-   1.16.1
+   1.16.4
