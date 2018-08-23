@@ -36,7 +36,7 @@ capture()
 
   LAST_COMMAND="$@"
 
-  $@ >${STD_OUT} 2>${STD_ERR}
+  "$@" >${STD_OUT} 2>${STD_ERR}
   RETURN=$?
   rtrn=${RETURN} # deprecated
 }
