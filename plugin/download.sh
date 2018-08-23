@@ -5,7 +5,7 @@ set -o errexit    # always exit on error
 set -o pipefail   # don't ignore exit codes when piping output
 
 TAG_NAME=${1:-}
-PLUGIN_DIR=$(dirname ${0:-})
+PLUGIN_DIR=$(dirname $0)
 
 handle_failure() {
     echo "Failure running script."
@@ -25,8 +25,8 @@ get_latest_release() {
 download() {
     local url=${1}
     local file=${2}
-    local code=$(curl "$url" -L --fail --retry 5 --retry-max-time 15 -o ${file} --write-out "%{http_code}")
-    if [ "$code" != "200" ]; then
+    local code=$(curl "$url" -L --fail --retry 5 --retry-max-time 15 -o "${file}" --write-out "%{http_code}")
+    if [[ "$code" != "200" ]]; then
         echo "Unable to download from url: $url http code: $code"
         exit 1
     fi
