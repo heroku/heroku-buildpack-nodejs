@@ -2,7 +2,7 @@
 
 set -e
 
-BUILDPACK_NAME="heroku-nodejs-metrics-buildpack"
+BUILDPACK_NAME="heroku-buildpack-nodejs"
 
 if [ "$CIRCLECI" == "true" ] && [ -n "$CI_PULL_REQUEST" ]; then
   if [ "$CIRCLE_PR_USERNAME" != "heroku" ]; then
