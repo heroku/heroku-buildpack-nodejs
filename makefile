@@ -18,7 +18,7 @@ cedar-14:
 hatchet:
 	@echo "Running hatchet integration tests"
 	bash etc/ci-setup.sh
-	bash etc/hatchet.sh spec/
+	bash etc/hatchet.sh
 	@echo ""
 
 shell:
