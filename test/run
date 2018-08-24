@@ -946,6 +946,17 @@ testPluginInstallationRunTime() {
   cleanupStartup
 }
 
+testPluginInstallationUnsupportedNodeRunTime() {
+  local env_dir=$(mktmpdir)
+  compile "node-6" "$(mktmpdir)" $env_dir
+
+  # This can happen if a user opts-in to the feature but is not using a supported node version
+  export HEROKU_METRICS_URL=https://localhost:5000
+  executeStartup $env_dir
+  assertEquals "" "$NODE_OPTIONS"
+  cleanupStartup
+}
+
 # Utils
 
 pushd $(dirname 0) >/dev/null
