@@ -33,7 +33,6 @@ fi
 
 gem install bundler
 bundle install
-bundle exec hatchet install
 
 export HATCHET_RETRIES=3
 export HATCHET_APP_LIMIT=20
