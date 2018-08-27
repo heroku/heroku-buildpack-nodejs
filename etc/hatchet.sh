@@ -2,8 +2,6 @@
 
 set -e
 
-BUILDPACK_NAME="heroku-buildpack-nodejs"
-
 if [ "$CIRCLECI" == "true" ] && [ -n "$CI_PULL_REQUEST" ]; then
   if [ "$CIRCLE_PR_USERNAME" != "heroku" ]; then
     echo "Skipping integration tests on forked PR."
@@ -12,7 +10,7 @@ if [ "$CIRCLECI" == "true" ] && [ -n "$CI_PULL_REQUEST" ]; then
 fi
 
 if [ "$TRAVIS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-  if [ "$TRAVIS_PULL_REQUEST_SLUG" != "heroku/$BUILDPACK_NAME" ]; then
+  if [ "$TRAVIS_PULL_REQUEST_SLUG" != "heroku/heroku-buildpack-nodejs" ]; then
     echo "Skipping integration tests on forked PR."
     exit 0
   fi
@@ -26,6 +24,7 @@ fi
 if [ -n "$CIRCLE_BRANCH" ]; then
   export HATCHET_BUILDPACK_BRANCH="$CIRCLE_BRANCH"
 elif [ -n "$TRAVIS_PULL_REQUEST_BRANCH" ]; then
+  export IS_RUNNING_ON_TRAVIS=true
   export HATCHET_BUILDPACK_BRANCH="$TRAVIS_PULL_REQUEST_BRANCH"
 else
   export HATCHET_BUILDPACK_BRANCH=$(git name-rev HEAD 2> /dev/null | sed 's#HEAD\ \(.*\)#\1#')
@@ -37,6 +36,6 @@ bundle install
 export HATCHET_RETRIES=3
 export HATCHET_APP_LIMIT=20
 export HATCHET_DEPLOY_STRATEGY=git
-export HATCHET_BUILDPACK_BASE="https://github.com/heroku/$BUILDPACK_NAME"
+export HATCHET_BUILDPACK_BASE="https://github.com/heroku/heroku-buildpack-nodejs"
 
 bundle exec rspec "$@"
