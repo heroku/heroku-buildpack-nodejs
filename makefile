@@ -16,9 +16,15 @@ cedar-14:
 	@echo ""
 
 hatchet:
-	@echo "Running hatchet integration tests"
-	bash etc/ci-setup.sh
-	bash etc/hatchet.sh
+	@echo "Running hatchet integration tests..."
+	@bash etc/ci-setup.sh
+	@bash etc/hatchet.sh spec/ci/
+	@echo ""
+
+nodebin-test:
+	@echo "Running test for Node v${TEST_NODE_VERSION}..."
+	@bash etc/ci-setup.sh
+	@bash etc/hatchet.sh spec/nodebin/
 	@echo ""
 
 shell:

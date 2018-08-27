@@ -1,10 +1,10 @@
-require_relative 'spec_helper'
+require_relative '../spec_helper'
 
-describe "Node Metrics for v9.x" do
-  context "test metrics for Node v9.x app" do
+describe "Node Metrics for v10.x" do
+  context "test metrics for Node v10.x app" do
     let(:app) {
       Hatchet::Runner.new(
-        "spec/fixtures/repos/node-9-metrics",
+        "spec/fixtures/repos/node-10-metrics",
         config: {
           "HEROKU_METRICS_URL" => "http://localhost:3000",
           "METRICS_INTERVAL_OVERRIDE" => "10000"

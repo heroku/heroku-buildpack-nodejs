@@ -1,4 +1,4 @@
-require_relative 'spec_helper'
+require_relative '../spec_helper'
 
 describe "Hello World for Node v8.x" do
   context "a single-process Node v8.x app" do
