@@ -1,4 +1,4 @@
-require_relative 'spec_helper'
+require_relative '../spec_helper'
 
 describe "Node Metrics for v8.x" do
   context "test metrics for Node v8.x app" do

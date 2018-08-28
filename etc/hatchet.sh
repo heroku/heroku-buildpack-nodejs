@@ -17,7 +17,11 @@ if [ "$TRAVIS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
 fi
 
 if [ -z "$HEROKU_API_KEY" ]; then
+  echo ""
   echo "ERROR: Missing \$HEROKU_API_KEY."
+  echo ""
+  echo "NOTE: You can create token this by running: heroku authorizations:create --description \"For Travis\""
+  echo ""
   exit 1
 fi
 
