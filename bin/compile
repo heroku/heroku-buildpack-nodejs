@@ -31,6 +31,7 @@ source $BP_DIR/lib/environment.sh
 source $BP_DIR/lib/binaries.sh
 source $BP_DIR/lib/cache.sh
 source $BP_DIR/lib/dependencies.sh
+source $BP_DIR/lib/plugin.sh
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -229,6 +230,8 @@ summarize_build() {
 
   mmeasure 'modules.size' "$(measure_size)"
 }
+
+install_plugin $BP_DIR $BUILD_DIR
 
 header "Build succeeded!"
 mcount "compile"

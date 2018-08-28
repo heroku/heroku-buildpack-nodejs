@@ -65,8 +65,8 @@ testYarnCacheDirectory() {
   compile "yarn" $cache $env_dir
   # These will be created if yarn is using the directory for its cache
   assertDirectoryExists ${cache_dir}/yarn
-  assertDirectoryExists ${cache_dir}/yarn/v1
-  assertDirectoryExists ${cache_dir}/yarn/v1/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
+  assertDirectoryExists ${cache_dir}/yarn/v2
+  assertFileExists ${cache_dir}/yarn/v2/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
   assertCapturedSuccess
 }
 
@@ -536,7 +536,7 @@ testSameNpm() {
 
 testNpmVersionRange() {
   compile "npm-version-range"
-  assertCaptured "Bootstrapping npm 1.4.x"
+  assertCaptured "Bootstrapping npm 5.7.x"
   assertCapturedSuccess
 }
 
@@ -576,7 +576,7 @@ testDangerousRangeStar() {
   compile "dangerous-range-star"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version *"
-  assertCaptured "Downloading and installing node 9."
+  assertCaptured "Downloading and installing node 10."
   assertCapturedError
 }
 
@@ -584,14 +584,14 @@ testDangerousRangeGreaterThan() {
   compile "dangerous-range-greater-than"
   assertCaptured "Dangerous semver range"
   assertCaptured "Resolving node version >0.4"
-  assertCaptured "Downloading and installing node 9."
+  assertCaptured "Downloading and installing node 10."
   assertCapturedError
 }
 
 testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version >= 0.8.x"
-  assertCaptured "Downloading and installing node 9."
+  assertCaptured "Downloading and installing node 10."
   assertCapturedSuccess
 }
 
@@ -891,6 +891,72 @@ testNpmPrune56Issue() {
   assertCapturedSuccess
 }
 
+testPluginInstallationBuildTime() {
+  # The plugin should be installed for Node 8, 9, 10
+  compile "node-8"
+  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+
+  compile "node-9"
+  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+
+  compile "node-10"
+  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+
+  # but not for earlier versions
+  compile "node-6"
+  assertFileDoesNotExist "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+}
+
+testPluginInstallationRunTime() {
+  local env_dir=$(mktmpdir)
+  compile "node-8" "$(mktmpdir)" $env_dir
+
+  # by default $NODE_OPTIONS is unmodifed
+  executeStartup $env_dir
+  assertEquals "" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # If $HEROKU_METRICS_URL is defined at run time, the script
+  # should add a require statement to $NODE_OPTIONS
+  export HEROKU_METRICS_URL=https://localhost:5000
+  executeStartup $env_dir
+  assertEquals "--require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # unless $HEROKU_SKIP_NODE_PLUGIN is defined
+  export HEROKU_METRICS_URL=https://localhost:5000
+  export HEROKU_SKIP_NODE_PLUGIN=true
+  executeStartup $env_dir
+  assertEquals "" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # if $NODE_OPTIONS already exists, it will append the require command
+  export HEROKU_METRICS_URL=https://localhost:5000
+  export NODE_OPTIONS="--max-old-space-size=128"
+  executeStartup $env_dir
+  assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
+  export HEROKU_METRICS_URL=https://localhost:5000
+  export NODE_OPTIONS="--max-old-space-size=128"
+  export HEROKU_SKIP_NODE_PLUGIN=true
+  executeStartup $env_dir
+  assertEquals "--max-old-space-size=128" "$NODE_OPTIONS"
+  cleanupStartup
+}
+
+testPluginInstallationUnsupportedNodeRunTime() {
+  local env_dir=$(mktmpdir)
+  compile "node-6" "$(mktmpdir)" $env_dir
+
+  # This can happen if a user opts-in to the feature but is not using a supported node version
+  export HEROKU_METRICS_URL=https://localhost:5000
+  executeStartup $env_dir
+  assertEquals "" "$NODE_OPTIONS"
+  cleanupStartup
+}
+
 # Utils
 
 pushd $(dirname 0) >/dev/null
@@ -926,6 +992,32 @@ compile() {
   cp -a $(pwd)/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+# This is meant to be run after `compile`. `cleanupStartup` must be run
+# after this function is called before other tests are executed
+executeStartup() {
+  local env_dir=$1
+
+  # On Heroku, $HOME is the /app dir, so we need to set it to
+  # the compile_dir here
+  export HOME=${compile_dir}
+
+  # we need to set any environment variables set via the env_dir and run
+  # all of the .profile.d scripts
+  export_env_dir $env_dir
+
+  for f in ${compile_dir}/.profile.d/*; do source $f > /dev/null 2> /dev/null ; done
+}
+
+cleanupStartup() {
+  unset HOME
+  unset NODE_ENV
+  unset NODE_HOME
+  unset NODE_OPTIONS
+  unset DYNO
+  unset HEROKU_METRICS_URL
+  unset HEROKU_SKIP_NODE_PLUGIN
 }
 
 compileTest() {
@@ -977,15 +1069,6 @@ release() {
 
 assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
-}
-
-assertDirectoryExists() {
-  if [[ ! -e "$1" ]]; then
-    fail "$1 does not exist"
-  fi
-  if [[ ! -d $1 ]]; then
-    fail "$1 is not a directory"
-  fi
 }
 
 source $(pwd)/test/shunit2
