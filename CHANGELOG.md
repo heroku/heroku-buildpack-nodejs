@@ -2,6 +2,8 @@
 
 ## Master
 
+- Add plugin for [Node.js Language Metrics](https://devcenter.heroku.com/articles/language-runtime-metrics-nodejs)
+
 ## v121 (2018-03-02)
 
 - Skip pruning if `NPM_CONFIG_PRODUCTION` or `YARN_PRODUCTION` is defined (#529)
