@@ -39,9 +39,33 @@ get_cache_directories() {
   fi
 }
 
-restore_cache_directories() {
+restore_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
+
+  # node_modules
+  if [[ -e "$build_dir/node_modules" ]]; then
+    echo "- node_modules is checked into source control and cannot be cached"
+  elif [[ -e "$cache_dir/node/node_modules" ]]; then
+    echo "- node_modules"
+    mkdir -p $(dirname "$build_dir/node_modules")
+    mv "$cache_dir/node/node_modules" "$build_dir/node_modules"
+  else
+    echo "- node_modules (not cached - skipping)"
+  fi
+
+  # bower_components, should be silent if it is not in the cache
+  if [[ -e "$cache_dir/node/bower_components" ]]; then
+    echo "- bower_components"
+  fi
+}
+
+restore_custom_cache_directories() {
+  local build_dir=${1:-}
+  local cache_dir=${2:-}
+  local cache_directories="${@:3}"
+
+  echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
 
   for cachepath in ${@:3}; do
     if [ -e "$build_dir/$cachepath" ]; then
@@ -63,9 +87,36 @@ clear_cache() {
   mkdir -p $CACHE_DIR/node
 }
 
-save_cache_directories() {
+save_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
+
+  # node_modules
+  if [[ -e "$build_dir/node_modules" ]]; then
+    echo "- node_modules"
+    mkdir -p "$cache_dir/node/node_modules"
+    cp -a "$build_dir/node_modules" $(dirname "$cache_dir/node/node_modules")
+  else
+    # this can happen if there are no dependencies
+    mcount "cache.no-node-modules"
+    echo "- node_modules (nothing to cache)"
+  fi
+
+  # bower_components
+  if [[ -e "$build_dir/bower_components" ]]; then
+    mcount "cache.saved-bower-components"
+    echo "- bower_components"
+    mkdir -p "$cache_dir/node/bower_components"
+    cp -a "$build_dir/bower_components" $(dirname "$cache_dir/node/bower_components")
+  fi
+}
+
+save_custom_cache_directories() {
+  local build_dir=${1:-}
+  local cache_dir=${2:-}
+  local cache_directories="${@:3}"
+
+  echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
 
   for cachepath in ${@:3}; do
     if [ -e "$build_dir/$cachepath" ]; then
