@@ -106,7 +106,7 @@ testCacheWithPrebuild() {
   assertCapturedSuccess
 
   compile "cache-prebuild" $cache $env_dir
-  assertCaptured "Cached directories were not be restored because of a change in versions of node"
+  assertCaptured "Cached directories were not restored because of a change in versions of node"
   assertCapturedSuccess
 }
 
@@ -447,7 +447,7 @@ testSignatureInvalidation() {
 
   compile "node-0.12.7" $cache
   assertCaptured "Downloading and installing node 0.12.7"
-  assertCaptured "Cached directories were not be restored because of a change in versions of node"
+  assertCaptured "Cached directories were not restored because of a change in versions of node"
   assertCapturedSuccess
 }
 
