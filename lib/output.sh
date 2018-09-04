@@ -8,7 +8,12 @@ output() {
 
   while read LINE;
   do
-    echo "       $LINE" || true
+    # do not indent headers that are being piped through the output
+    if [[ "$LINE" =~ ^-----\>.* ]]; then
+      echo "$LINE" || true
+    else
+      echo "       $LINE" || true
+    fi
     echo "$LINE" >> "$logfile" || true
   done
 }

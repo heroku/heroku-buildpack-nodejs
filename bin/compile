@@ -80,7 +80,7 @@ create_env() {
   create_default_env
 }
 
-header "Creating runtime environment"
+header "Creating runtime environment" | output "$LOG_FILE"
 
 mkdir -p "$BUILD_DIR/.heroku/node/"
 cd $BUILD_DIR
@@ -136,7 +136,7 @@ install_bins() {
   warn_old_npm
 }
 
-header "Installing binaries"
+header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
 
 restore_cache() {
@@ -164,7 +164,7 @@ restore_cache() {
   mcount "cache.$cache_status"
 }
 
-header "Restoring cache"
+header "Restoring cache" | output "$LOG_FILE"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
@@ -189,7 +189,7 @@ build_dependencies() {
   log_build_scripts
 }
 
-header "Building dependencies"
+header "Building dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
@@ -220,7 +220,7 @@ prune_devdependencies() {
   fi
 }
 
-header "Pruning devDependencies"
+header "Pruning devDependencies" | output "$LOG_FILE"
 prune_devdependencies | output "$LOG_FILE"
 
 summarize_build() {
@@ -233,7 +233,7 @@ summarize_build() {
 
 install_plugin $BP_DIR $BUILD_DIR
 
-header "Build succeeded!"
+header "Build succeeded!" | output "$LOG_FILE"
 mcount "compile"
 summarize_build | output "$LOG_FILE"
 
