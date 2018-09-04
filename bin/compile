@@ -85,6 +85,7 @@ mkdir -p "$BUILD_DIR/.heroku/node/"
 cd $BUILD_DIR
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 list_node_config | output "$LOG_FILE"
+create_build_env
 
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && export YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)

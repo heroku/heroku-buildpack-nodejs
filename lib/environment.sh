@@ -22,6 +22,14 @@ create_default_env() {
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
 }
 
+create_build_env() {
+  # if the user hasn't set NODE_OPTIONS, increase the default amount of space
+  # that a node process can address to match that of the build dynos (2.5GB)
+  if [[ -z $NODE_OPTIONS ]]; then
+    export NODE_OPTIONS="--max_old_space_size=2560"
+  fi
+}
+
 list_node_config() {
   echo ""
   printenv | grep ^NPM_CONFIG_ || true

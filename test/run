@@ -45,6 +45,18 @@ testNodeModulesCached() {
   assertCapturedSuccess
 }
 
+testSetBuildEnv() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "print-node-options"
+  assertCaptured "NODE_OPTIONS=--max_old_space_size=2560"
+
+  echo "--max_old_space_size=1234" > $env_dir/NODE_OPTIONS
+  compile "print-node-options" $cache $env_dir
+  assertCaptured "NODE_OPTIONS=--max_old_space_size=1234"
+}
+
 testYarn() {
   compile "yarn"
   assertCaptured "installing yarn"
