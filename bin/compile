@@ -9,7 +9,6 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
-DEFAULT_CACHE="node_modules bower_components"
 BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
@@ -141,6 +140,7 @@ install_bins | output "$LOG_FILE"
 
 restore_cache() {
   local cache_status="$(get_cache_status)"
+  local cache_directories="$(get_cache_directories)"
 
   if $YARN; then
     if [ -e "$BUILD_DIR/node_modules" ]; then
@@ -148,23 +148,38 @@ restore_cache() {
       rm -rf "$BUILD_DIR/node_modules"
     fi
   fi
-  if [ "$cache_status" == "valid" ]; then
-    local cache_directories=$(get_cache_directories)
-    if [ "$cache_directories" == "" ]; then
-      echo "Loading 2 from cacheDirectories (default):"
-      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
+
+  if [[ "$cache_status" == "disabled" ]]; then
+    header "Restoring cache"
+    echo "Caching has been disabled because NODE_MODULES_CACHE=${NODE_MODULES_CACHE}"
+  elif [[ "$cache_status" == "valid" ]]; then
+    header "Restoring cache"
+    if [[ "$cache_directories" == "" ]]; then
+      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR"
     else
-      echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
-      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    fi
+  elif [[ "$cache_status" == "new-signature" ]]; then
+    header "Restoring cache"
+    if [[ "$cache_directories" == "" ]]; then
+      echo "Cached directories were not restored because of a change in versions of node, npm, or yarn"
+      echo "Module installation may take longer for this build"
+    else
+      # If the user has specified custom cache directories, be more explicit
+      echo "Invalidating cache due to a change in node, npm, or yarn versions"
+      echo "Will not restore the following directories for this build:"
+      for directory in $(< $cache_directories); do
+        echo "  $directory"
+      done
     fi
   else
-    echo "Skipping cache restore ($cache_status)"
+    # No cache exists, be silent
+    :
   fi
 
   mcount "cache.$cache_status"
 }
 
-header "Restoring cache" | output "$LOG_FILE"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
@@ -195,21 +210,21 @@ build_dependencies | output "$LOG_FILE"
 cache_build() {
   local cache_directories=$(get_cache_directories)
 
-  echo "Clearing previous node cache"
   clear_cache
   if ! ${NODE_MODULES_CACHE:-true}; then
-    echo "Skipping cache save (disabled by config)"
-  elif [ "$cache_directories" == "" ]; then
-    echo "Saving 2 cacheDirectories (default):"
-    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
+    # we've already warned that caching is disabled in the restore step
+    # so be silent here
+    :
+  elif [[ "$cache_directories" == "" ]]; then
+    header "Caching build"
+    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR"
   else
-    echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
-    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    header "Caching build"
+    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
   fi
   save_signature
 }
 
-header "Caching build"
 cache_build | output "$LOG_FILE"
 
 prune_devdependencies() {

@@ -28,13 +28,11 @@ testDisableCache() {
 
   compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.0.0"
-  assertCaptured "Saving 2 cacheDirectories"
   assertCapturedSuccess
 
   echo "false" > $env_dir/NODE_MODULES_CACHE
   compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.3.1"
-  assertNotCaptured "Saving 2 cacheDirectories"
   assertCapturedSuccess
 }
 
@@ -42,9 +40,7 @@ testNodeModulesCached() {
   cache=$(mktmpdir)
 
   compile "caching" $cache
-  assertCaptured "Saving 2 cacheDirectories (default)"
   assertCaptured "- node_modules"
-  assertCaptured "- bower_components (nothing to cache)"
   assertEquals "1" "$(ls -1 $cache/node/node_modules | grep express | wc -l | tr -d ' ')"
   assertCapturedSuccess
 }
@@ -86,12 +82,12 @@ testBuildWithCache() {
   cache=$(mktmpdir)
 
   compile "stable-node" $cache
-  assertCaptured "Skipping cache restore (not-found)"
+  assertNotCaptured "Restoring cache"
   assertEquals "1" "$(ls -1 $cache/node/node_modules | grep hashish | wc -l | tr -d ' ')"
   assertCapturedSuccess
 
   compile "stable-node" $cache
-  assertNotCaptured "- node_modules (not cached - skipping)"
+  assertCaptured "- node_modules"
   assertFileContains "${STACK}" "${cache}/node/signature"
   assertCapturedSuccess
 
@@ -110,7 +106,7 @@ testCacheWithPrebuild() {
   assertCapturedSuccess
 
   compile "cache-prebuild" $cache $env_dir
-  assertCaptured "Skipping cache restore (new-signature"
+  assertCaptured "Cached directories were not restored because of a change in versions of node"
   assertCapturedSuccess
 }
 
@@ -451,7 +447,7 @@ testSignatureInvalidation() {
 
   compile "node-0.12.7" $cache
   assertCaptured "Downloading and installing node 0.12.7"
-  assertCaptured "Skipping cache restore (new-signature"
+  assertCaptured "Cached directories were not restored because of a change in versions of node"
   assertCapturedSuccess
 }
 
