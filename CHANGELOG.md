@@ -2,10 +2,13 @@
 
 ## master
 
+## v126 (2018-09-06)
+
 - Icrease Node memory default during builds (#561)
 - Rework output when caching directories (#559)
 - Only write export script if directory is writeable (#539)
 - Testing changes (#552, #557, #558)
+- Upgrade the Node Metrics plugin (#564)
 
 ## v125 (2018-08-24)
 
