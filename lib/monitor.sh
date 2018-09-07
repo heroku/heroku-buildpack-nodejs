@@ -25,6 +25,12 @@ monitor_memory_usage() {
 
   # ps gives us kb, let's convert to mb for convenience
   echo "$(($peak / 1024))" > $output_file
+
+  # After wait returns we can get the exit code of $command
+  wait $pid
+
+  # return the exit code of $command
+  return $?
 }
 
 monitor() {
