@@ -450,9 +450,11 @@ log_other_failures() {
 warning() {
   local tip=${1:-}
   local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}
-  echo "- $tip" >> $warnings
-  echo "  $url" >> $warnings
-  echo "" >> $warnings
+  {
+  echo "- $tip"
+  echo "  $url"
+  echo ""
+  } >> $warnings
 }
 
 warn() {

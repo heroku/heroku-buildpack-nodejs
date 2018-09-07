@@ -186,7 +186,7 @@ assertFileMD5()
     fail "no suitable MD5 hashing command found on this system"
   fi
 
-  assertEquals "${expected_md5_cmd_output}" "`${md5_cmd}`"
+  assertEquals "${expected_md5_cmd_output}" "$(${md5_cmd})"
 }
 
 assertDirectoryExists() {

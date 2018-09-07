@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source $(pwd)/lib/environment.sh
+source "$(pwd)"/lib/environment.sh
 
 mktmpdir() {
   local dir=$(mktemp -t testXXXXX)
@@ -18,7 +18,7 @@ compile() {
   echo "Compiling $fixture"
   echo "in $build_dir"
   echo "(caching in $cache_dir)"
-  cp -a $(pwd)/* ${bp_dir}
+  cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$fixture/. ${build_dir}
   "$bp_dir/bin/compile" "$build_dir" "$cache_dir"
 }
@@ -32,7 +32,7 @@ compileTest() {
   echo "Compiling $fixture"
   echo "in $build_dir"
   echo "(caching in $cache_dir)"
-  cp -a $(pwd)/* ${bp_dir}
+  cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$fixture/. ${build_dir}
   "$bp_dir/bin/test-compile" "$build_dir" "$cache_dir"
 
