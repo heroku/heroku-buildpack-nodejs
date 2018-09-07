@@ -21,10 +21,10 @@ run_if_present() {
   if [ -n "$has_script" ]; then
     if $YARN; then
       echo "Running $script_name (yarn)"
-      yarn run "$script_name"
+      monitor "$script_name" yarn run "$script_name"
     else
       echo "Running $script_name"
-      npm run "$script_name" --if-present
+      monitor "$script_name" npm run "$script_name" --if-present
     fi
   fi
 }
@@ -91,7 +91,7 @@ yarn_node_modules() {
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir"
-  yarn install --production=$production --frozen-lockfile --ignore-engines 2>&1
+  monitor "yarn-install" yarn install --production=$production --frozen-lockfile --ignore-engines 2>&1
 }
 
 yarn_prune_devdependencies() {
@@ -107,10 +107,8 @@ yarn_prune_devdependencies() {
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     return 0
   else 
-    local start=$(nowms)
     cd "$build_dir" 
-    yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
-    mtime "prune.yarn.time" "${start}"
+    monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
   fi
 }
 
@@ -128,7 +126,7 @@ npm_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    monitor "npm-install" npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -147,7 +145,7 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    monitor "npm-rebuild" npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -189,9 +187,7 @@ npm_prune_devdependencies() {
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     return 0
   else
-    local start=$(nowms)
     cd "$build_dir" 
-    npm prune --userconfig $build_dir/.npmrc 2>&1
-    mtime "prune.npm.time" "${start}"
+    monitor "npm-prune" npm prune --userconfig $build_dir/.npmrc 2>&1
   fi
 }
