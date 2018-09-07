@@ -1,8 +1,30 @@
 # Node.js Buildpack Changelog
 
-## Master
+## master
+
+## v126 (2018-09-06)
+
+- Icrease Node memory default during builds (#561)
+- Rework output when caching directories (#559)
+- Only write export script if directory is writeable (#539)
+- Testing changes (#552, #557, #558)
+- Upgrade the Node Metrics plugin (#564)
+
+## v125 (2018-08-24)
+
+- Fix issue with old Node and metrics plugin (#555)
+
+## v124 (2018-08-23)
 
 - Add plugin for [Node.js Language Metrics](https://devcenter.heroku.com/articles/language-runtime-metrics-nodejs)
+
+## v123 (2018-03-14)
+
+- Internal logging changes
+
+## v122 (2018-03-13)
+
+- Internal logging changes
 
 ## v121 (2018-03-02)
 
