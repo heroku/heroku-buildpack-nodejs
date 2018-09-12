@@ -6,7 +6,7 @@ monitor_memory_usage() {
   shift
 
   # Run the command in the background
-  exec "${@:-}" &
+  "${@:-}" &
 
   # save the PID of the running command
   pid=$!
@@ -44,7 +44,8 @@ monitor_memory_usage() {
 
 monitor() {
   local command_name=$1
-  local command="${@:2}"
+  shift
+  local command="${@:-}"
   local peak_mem_output=$(mktemp)
   local start=$(nowms)
 

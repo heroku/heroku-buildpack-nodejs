@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# testing monitor_memory_usage
+
+# allocate ~14 mb of memory and wait a bit
+use_memory() {
+  for index in $(seq 10); do
+    value=$(seq -w -s '' $index $(($index + 100000)))
+    eval array$index=$value
+  done
+  sleep 0.5
+}
+
+# print each argument to a separate line on stdout
+print_args() {
+  while (( "$#" )); do 
+    echo $1 
+    shift 
+  done
+}
+
+testMonitorMemory() {
+  local mem_output=$(mktemp)
+  local stdout_capture=$(mktemp)
+
+  monitor_memory_usage $mem_output echo "this is a test" > /dev/null
+  assertTrue "should use less than 2mb" "[[ $(cat $mem_output) -lt 2 ]]"
+
+  monitor_memory_usage $mem_output use_memory
+  assertTrue "should use more than 10mb" "[[ $(cat $mem_output) -gt 10 ]]"
+
+  monitor_memory_usage $mem_output print_args --foo --bar="baz lol hi" > $stdout_capture
+  assertTrue "should use less than 2mb" "[[ $(cat $mem_output) -lt 2 ]]"
+  assertTrue "should output 2 lines" "[[ $(wc -l < $stdout_capture) -eq 2 ]]"
+  assertEquals "first line" "$(head -n 1 $stdout_capture)" "--foo"
+  assertEquals "second line" "$(tail -n 1 $stdout_capture)" "--bar=baz lol hi"
+}
+
+# the modules to be tested
+source "$(pwd)"/lib/monitor.sh
+
+# import the testing framework
+source "$(pwd)"/test/shunit2

@@ -7,6 +7,7 @@ env:
   - TEST=heroku-16 STACK=heroku-16
   - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet
+  - TEST=unit
 install:
   - if [[ -n $STACK ]]; then
       docker pull "heroku/${STACK/-/:}";
