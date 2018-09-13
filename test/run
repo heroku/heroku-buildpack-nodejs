@@ -965,6 +965,31 @@ testPluginInstallationUnsupportedNodeRunTime() {
   cleanupStartup
 }
 
+testMemoryMetrics() {
+  env_dir=$(mktmpdir)
+  local metrics_log=$(mktemp)
+  echo "$metrics_log" > $env_dir/BUILDPACK_LOG_FILE
+
+  compile "pre-post-build-scripts" "$(mktmpdir)" $env_dir
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild.memory=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.npm-install.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.npm-install.memory=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-postbuild.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-postbuild.memory=" $metrics_log
+
+  # erase the metrics log
+  echo "" > $metrics_log
+  compile "yarn" "$(mktmpdir)" $env_dir
+  assertFileContains "measure#buildpack.nodejs.exec.yarn-install.memory=" "$metrics_log"
+  assertFileContains "measure#buildpack.nodejs.exec.yarn-install.time=" "$metrics_log"
+  # this fixture does not have pre or post-build scripts
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-prebuild.time=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-prebuild.memory=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild.time=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild.memory=" $metrics_log
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
