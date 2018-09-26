@@ -167,11 +167,11 @@ restore_cache() {
   elif [[ "$cache_status" == "new-signature" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      echo "Cached directories were not restored because of a change in versions of node, npm, or yarn"
+      echo "Cached directories were not restored due to a change in version of node, npm, yarn or stack"
       echo "Module installation may take longer for this build"
     else
       # If the user has specified custom cache directories, be more explicit
-      echo "Invalidating cache due to a change in node, npm, or yarn versions"
+      echo "Invalidating cache due to a change in version of node, npm, yarn or stack"
       echo "Will not restore the following directories for this build:"
       for directory in $(< $cache_directories); do
         echo "  $directory"
