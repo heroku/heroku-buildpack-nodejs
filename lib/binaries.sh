@@ -1,6 +1,6 @@
 install_yarn() {
   local dir="$1"
-  local version=${2:-1.9.x}
+  local version=${2:-1.x}
   local number
   local url
 
