@@ -18,9 +18,9 @@ get_meteor_minor_version() {
 meteor_node_version() {
   minor=$(get_meteor_minor_version)
   if [ "$minor" -ge 6 ] ; then
-    echo "8.8.x"
+    echo "8.11.x"
   elif [ "$minor" -ge 4 ] ; then
-    echo "4.8.x"
+    echo "4.9.x"
   else
     echo "0.10.x"
   fi
