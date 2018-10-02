@@ -73,8 +73,8 @@ testYarnCacheDirectory() {
   compile "yarn" $cache $env_dir
   # These will be created if yarn is using the directory for its cache
   assertDirectoryExists ${cache_dir}/yarn
-  assertDirectoryExists ${cache_dir}/yarn/v2
-  assertFileExists ${cache_dir}/yarn/v2/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
+  assertDirectoryExists ${cache_dir}/yarn/v3
+  assertFileExists ${cache_dir}/yarn/v3/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
   assertCapturedSuccess
 }
 
