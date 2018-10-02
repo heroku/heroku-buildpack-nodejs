@@ -32,12 +32,23 @@ testMonitorMemory() {
   monitor_memory_usage $mem_output print_args --foo --bar="baz lol hi" > $stdout_capture
   assertTrue "should use less than 2mb" "[[ $(cat $mem_output) -lt 2 ]]"
   assertTrue "should output 2 lines" "[[ $(wc -l < $stdout_capture) -eq 2 ]]"
-  assertEquals "first line" "$(head -n 1 $stdout_capture)" "--foo"
-  assertEquals "second line" "$(tail -n 1 $stdout_capture)" "--bar=baz lol hi"
+  assertEquals "first line" "--foo" "$(head -n 1 $stdout_capture)"
+  assertEquals "second line" "--bar=baz lol hi" "$(tail -n 1 $stdout_capture)"
+}
+
+testOutput() {
+  local stdout
+
+  stdout=$(echo '    Indented line' | output /dev/null)
+  assertEquals 'should preserve leading whitespace' '           Indented line' "${stdout}"
+
+  stdout=$(echo 'Foo \ bar' | output /dev/null)
+  assertEquals 'should preserve unescaped backslashes' '       Foo \ bar' "${stdout}"
 }
 
 # the modules to be tested
 source "$(pwd)"/lib/monitor.sh
+source "$(pwd)"/lib/output.sh
 
 # import the testing framework
 source "$(pwd)"/test/shunit2
