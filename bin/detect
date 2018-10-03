@@ -6,5 +6,35 @@ if [ -f $1/package.json ]; then
   exit 0
 fi
 
->&2 echo 'Node.js: package.json not found in application root'
+if [[ -f "$1/.slugignore" ]] && grep -Fxq "package.json" "$1/.slugignore"; then
+  error <<-EOF
+    "package.json" listed in ".slugignore" file
+  EOF
+elif [[ -f "$1/.gitignore" ]] && grep -Fxq "package.json" "$1/.gitignore"; then
+  error <<-EOF
+    "package.json" listed in ".gitignore" file
+  EOF
+else
+  error <<-EOF
+    Application not supported by this buildpack!
+		
+    The 'heroku/nodejs' buildpack is set on this application, but was
+    unable to detect a Node.js codebase.
+        
+    A Node.js app on Heroku requires a 'package.json' at the root of
+    the directory structure.
+        
+    If you are trying to deploy a Node.js application, ensure that this
+    file is present at the top level directory.
+        
+    If you are trying to deploy an application written in another
+    language, you need to change the list of buildpacks set on your
+    Heroku app using the 'heroku buildpacks' command.
+        
+    For more information, refer to the following documentation:
+    https://devcenter.heroku.com/articles/buildpacks
+    https://devcenter.heroku.com/articles/nodejs-support#activation
+  EOF
+fi
+
 exit 1
