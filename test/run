@@ -990,6 +990,22 @@ testMemoryMetrics() {
   assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild.memory=" $metrics_log
 }
 
+testBinDetectWarnings() {
+  detect "slugignore-package-json"
+  assertCapturedError "'package.json' listed in '.slugignore' file"
+  assertCapturedError "https://devcenter.heroku.com/articles/slug-compiler#ignoring-files-with-slugignore"
+
+  detect "gitignore-package-json"
+  assertCapturedError "'package.json' listed in '.gitignore' file"
+  assertCapturedError "https://devcenter.heroku.com/articles/gitignore"
+
+  detect "node-project-missing-package-json"
+  assertCapturedError "Application not supported by 'heroku/nodejs' buildpack"
+  assertCapturedError "https://devcenter.heroku.com/articles/nodejs-support#activation"
+  assertCapturedError "index.js"
+  assertCapturedError "src/"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
@@ -1016,6 +1032,15 @@ default_process_types_cleanup() {
   if [ -f "$file" ]; then
     rm "$file"
   fi
+}
+
+detect() {
+  default_process_types_cleanup
+  bp_dir=$(mktmpdir)
+  compile_dir=$(mktmpdir)
+  cp -a "$(pwd)"/* ${bp_dir}
+  cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+  capture ${bp_dir}/bin/detect ${compile_dir}
 }
 
 compile() {
