@@ -37,6 +37,17 @@ meteor_npm_version() {
   fi
 }
 
+downloadable_release() {
+  local release=$1
+  # 1.5.4.2 is not available on the CDN The only change from 1.5.4.1 is NodeJS
+  # version which is anyway managed by the buildpack, so no problem to
+  # substitute it.
+  if [ $release = "1.5.4.2" ] ; then
+    release="1.5.4.1"
+  fi
+  echo -n $release
+}
+
 setup_meteor_build_environment() {
   tnf="${TOOL_NODE_FLAGS}"
   if echo $tnf | grep -v -q 'max-old-space-size' ; then
@@ -118,13 +129,13 @@ clean_meteor_installation() {
 # Params: install_meteor $release
 # Install directory is .vendor/meteor
 install_meteor_dist() {
-  release=$1
+  local release=$1
 
   if echo $release | grep -q "@" ; then
     release=$(echo $release | cut -d '@' -f2)
   fi
 
-  linux_arch=$(uname -m)
+  local linux_arch=$(uname -m)
   if [ "${linux_arch}" = "i686" ] ; then
     platform="os.linux.x86_32"
   elif [ "${linux_arch}" = "x86_64" ] ; then
@@ -141,7 +152,9 @@ install_meteor_dist() {
     rm -rf "$METEOR_HOME/.meteor"
   fi
 
-  tarball_url="https://d3sqy0vbqsdhku.cloudfront.net/packages-bootstrap/${release}/meteor-bootstrap-${platform}.tar.gz"
+  local cdn_release="$(downloadable_release $release)"
+
+  tarball_url="https://d3sqy0vbqsdhku.cloudfront.net/packages-bootstrap/${cdn_release}/meteor-bootstrap-${platform}.tar.gz"
 
   header "Downloading Meteor distribution"
   curl --silent --fail "${tarball_url}" | tar -xzf - -C "${METEOR_HOME}" -o
