@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "engines": {
-    "npm": "5.5.1"
+    "npm": "6.x"
   },
   "scripts": {
     "heroku-prebuild": "echo 'heroku-prebuild:' $NODE_ENV",
