@@ -62,7 +62,7 @@ def resolve_all_supported_node_versions(options = {})
 end
 
 def version_supports_metrics(version)
-  SemVersion.new(version).satisfies?('>= 8.0.0') && SemVersion.new(version).satisfies?('< 11.0.0')
+  SemVersion.new(version).satisfies?('>= 8.0.0') && SemVersion.new(version).satisfies?('< 12.0.0')
 end
 
 def get_test_versions
@@ -71,7 +71,7 @@ def get_test_versions
   elsif ENV['TEST_ALL_NODE_VERSIONS'] == 'true'
     versions = resolve_all_supported_node_versions()
   else
-    versions = resolve_node_version(['6.x', '8.x', '9.x', '10.x'])
+    versions = resolve_node_version(['6.x', '8.x', '9.x', '10.x', '11.x'])
   end
   puts("Running tests for Node versions: #{versions.join(', ')}")
   versions
