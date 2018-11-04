@@ -8,6 +8,45 @@
 #  assertCapturedError
 #}
 
+testBuildScriptBehavior() {
+  # opt in to new build script behavior
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/NEW_BUILD_SCRIPT_BEHAVIOR
+
+  # The 'build' script is run by default
+  compile "build-script" $cache $env_dir
+  assertCaptured "Running build"
+  assertCapturedSuccess
+
+  # the 'heroku-postbuild' script takes precedence over the 'build' script
+  compile "build-script-override" $cache $env_dir
+  assertCaptured "Detected both 'build' and 'heroku-postbuild' scripts"
+  assertCaptured "Running heroku-postbuild"
+  assertCapturedSuccess
+}
+
+testPrePostBuildScripts() {
+  compile "pre-post-build-scripts"
+  assertCaptured "Running heroku-prebuild"
+  assertCaptured "echo heroku-prebuild hook message"
+  assertCaptured "Running heroku-postbuild"
+  assertCaptured "echo heroku-postbuild hook message"
+  assertCapturedSuccess
+
+  compile "stable-node"
+  assertNotCaptured "Running heroku-prebuild"
+  assertNotCaptured "Running heroku-postbuild"
+  assertCapturedSuccess
+}
+
+testYarnRun() {
+  compile "yarn-run"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertCaptured "foobar"
+  assertCapturedSuccess
+}
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
@@ -165,13 +204,6 @@ testYarnSemverInvalid() {
   assertCapturedError
 }
 
-testYarnRun() {
-  compile "yarn-run"
-  assertCaptured "Running heroku-postbuild (yarn)"
-  assertCaptured "foobar"
-  assertCapturedSuccess
-}
-
 testYarnEngine() {
   compile "yarn-engine"
   assertCaptured "installing yarn (1.4.0)"
@@ -292,20 +324,6 @@ testEnvBlacklist() {
   compile "echo-lang" $cache $env_dir
   assertCaptured "safeVar"
   assertNotCaptured "tr_TR.UTF-8"
-  assertCapturedSuccess
-}
-
-testPrePostBuildScripts() {
-  compile "pre-post-build-scripts"
-  assertCaptured "Running heroku-prebuild"
-  assertCaptured "echo heroku-prebuild hook message"
-  assertCaptured "Running heroku-postbuild"
-  assertCaptured "echo heroku-postbuild hook message"
-  assertCapturedSuccess
-
-  compile "stable-node"
-  assertNotCaptured "Running heroku-prebuild"
-  assertNotCaptured "Running heroku-postbuild"
   assertCapturedSuccess
 }
 

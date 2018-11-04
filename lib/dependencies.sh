@@ -29,6 +29,23 @@ run_if_present() {
   fi
 }
 
+run_build_script() {
+  local has_build_script=$(read_json "$BUILD_DIR/package.json" ".scripts.build")
+  local has_heroku_build_script=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
+
+  if [[ -n "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]]; then
+    echo "Detected both 'build' and 'heroku-postbuild' scripts"
+    mcount "scripts.heroku-postbuild-and-build"
+    run_if_present 'heroku-postbuild'
+  elif [[ -n "$has_heroku_build_script" ]]; then
+    mcount "scripts.heroku-postbuild"
+    run_if_present 'heroku-postbuild'
+  elif [[ -n "$has_build_script" ]]; then
+    mcount "scripts.build"
+    run_if_present 'build'
+  fi
+}
+
 log_build_scripts() {
   local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
   local heroku_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")
