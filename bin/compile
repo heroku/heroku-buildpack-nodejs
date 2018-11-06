@@ -62,9 +62,6 @@ trap 'handle_failure' ERR
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
-### Behavior flags
-[ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=false
-
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
