@@ -26,8 +26,6 @@ testBuildScriptBehavior() {
   assertCapturedSuccess
 }
 
-<<<<<<< HEAD
-=======
 testBuildScriptOptIn() {
   compile "build-script-opt-in"
   assertCaptured "Running build"
@@ -35,7 +33,6 @@ testBuildScriptOptIn() {
   assertCapturedSuccess
 }
 
->>>>>>> Allow user to opt-in to the build script changes
 testPrePostBuildScripts() {
   compile "pre-post-build-scripts"
   assertCaptured "Running heroku-prebuild"

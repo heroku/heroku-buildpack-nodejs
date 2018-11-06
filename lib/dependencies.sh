@@ -46,8 +46,6 @@ run_build_script() {
   fi
 }
 
-<<<<<<< HEAD
-=======
 warn_build_script_behavior_opt_in() {
   local opted_in="$1"
   if [[ "$opted_in" = true ]]; then
@@ -59,7 +57,6 @@ warn_build_script_behavior_opt_in() {
   fi
 }
 
->>>>>>> Allow user to opt-in to the build script changes
 log_build_scripts() {
   local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
   local heroku_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")
