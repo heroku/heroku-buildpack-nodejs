@@ -208,12 +208,14 @@ build_dependencies() {
   mtime "modules.time.cache.$cache_status" "${start}"
 
   if [[ "$NEW_BUILD_SCRIPT_BEHAVIOR" = true ]]; then
+    mcount "build-script.new-behavior"
     run_build_script
   else
+    mcount "build-script.legacy-behavior"
     run_if_present 'heroku-postbuild'
-    # TODO: run_if_present 'build'
-    log_build_scripts
   fi
+
+  log_build_scripts
 }
 
 header "Building dependencies" | output "$LOG_FILE"
