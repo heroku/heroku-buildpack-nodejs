@@ -62,6 +62,9 @@ trap 'handle_failure' ERR
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
+### Behavior flags
+[ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=false
+
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
@@ -204,8 +207,14 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  run_if_present 'heroku-postbuild'
-  # TODO: run_if_present 'build'
+  if [[ "$NEW_BUILD_SCRIPT_BEHAVIOR" = true ]]; then
+    mcount "build-script.new-behavior"
+    run_build_script
+  else
+    mcount "build-script.legacy-behavior"
+    run_if_present 'heroku-postbuild'
+  fi
+
   log_build_scripts
 }
 
