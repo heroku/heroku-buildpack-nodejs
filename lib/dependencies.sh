@@ -46,6 +46,17 @@ run_build_script() {
   fi
 }
 
+warn_build_script_behavior_opt_in() {
+  local opted_in="$1"
+  if [[ "$opted_in" = true ]]; then
+    header "Opting in to new default build script behavior"
+    echo "You have set \"heroku-run-build-script\" = true in your package.json"
+    echo ""
+    echo "- If a \"build\" script is defined in package.json it will be executed by default"
+    echo "- The \"heroku-postbuild\" script will be executed instead if present"
+  fi
+}
+
 log_build_scripts() {
   local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
   local heroku_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")

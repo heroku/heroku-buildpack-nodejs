@@ -26,6 +26,13 @@ testBuildScriptBehavior() {
   assertCapturedSuccess
 }
 
+testBuildScriptOptIn() {
+  compile "build-script-opt-in"
+  assertCaptured "Running build"
+  assertCaptured "Opting in to new default build script behavior"
+  assertCapturedSuccess
+}
+
 testPrePostBuildScripts() {
   compile "pre-post-build-scripts"
   assertCaptured "Running heroku-prebuild"
