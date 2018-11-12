@@ -2,6 +2,34 @@
 
 ## master
 
+## v132 (2018-11-12)
+
+- Quietly add new build script behavior behind a flag (#584, #585)
+- Move cache directory layout (#587)
+
+## v131 (2018-10-31)
+
+- Improve bin/detect error messages (#575)
+- Add support for Node 11 (#578, #582, #580)
+- Update default Node version to 10.x
+
+## v130 (2018-10-03)
+
+- Unpin Yarn from 1.9.x (#569)
+
+## v129 (2018-10-02)
+
+- Fix a bug with formatting (#572)
+- internal changes (#567)
+
+## v128 (2018-09-13)
+
+- Default to Yarn 1.9.x to avoid a bug (#568)
+
+## v127 (2018-09-13)
+
+- interal changes (#566)
+
 ## v126 (2018-09-06)
 
 - Icrease Node memory default during builds (#561)
