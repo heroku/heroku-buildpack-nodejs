@@ -118,9 +118,14 @@ testYarnCacheDirectory() {
   echo "${cache_dir}/yarn"> "$env_dir"/YARN_CACHE_FOLDER
   compile "yarn" $cache $env_dir
   # These will be created if yarn is using the directory for its cache
+
   assertDirectoryExists ${cache_dir}/yarn
-  assertDirectoryExists ${cache_dir}/yarn/v3
-  assertFileExists ${cache_dir}/yarn/v3/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
+  # yarn frequently bumps the version number used in its cache
+  # so use a wildcard here to prevent frequent CI failures
+  ls ${cache_dir}/yarn/v*/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
+
+  # assert that the above ls command exited successfully, which only happens if the file exists
+  assertEquals "0" "$?"
   assertCapturedSuccess
 }
 
