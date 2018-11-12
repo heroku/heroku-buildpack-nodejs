@@ -55,7 +55,7 @@ restore_default_cache_directories() {
   fi
 
   # bower_components, should be silent if it is not in the cache
-  if [[ -e "$cache_dir/node/bower_components" ]]; then
+  if [[ -e "$cache_dir/node/cache/bower_components" ]]; then
     echo "- bower_components"
   fi
 }
@@ -95,7 +95,7 @@ save_default_cache_directories() {
   # node_modules
   if [[ -e "$build_dir/node_modules" ]]; then
     echo "- node_modules"
-    mkdir -p "$cache_dir/node/node_modules"
+    mkdir -p "$cache_dir/node/cache/node_modules"
     cp -a "$build_dir/node_modules" "$(dirname "$cache_dir/node/cache/node_modules")"
   else
     # this can happen if there are no dependencies
