@@ -69,7 +69,7 @@ testDisableCache() {
   echo "true" > $env_dir/NODE_VERBOSE
   compile "node-modules-cache-1" $cache $env_dir
   assertCaptured "lodash@1.0.0"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep -c lodash | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c lodash | tr -d ' ')"
   assertCapturedSuccess
 
   compile "node-modules-cache-2" $cache $env_dir
@@ -87,7 +87,7 @@ testNodeModulesCached() {
 
   compile "caching" $cache
   assertCaptured "- node_modules"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep -c express | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c express | tr -d ' ')"
   assertCapturedSuccess
 }
 
@@ -115,7 +115,7 @@ testYarnCacheDirectory() {
   local cache=$(mktmpdir)
   local env_dir=$(mktmpdir)
   local cache_dir=$(mktmpdir)
-  echo "${cache_dir}/yarn"> "$env_dir"/YARN_CACHE_FOLDER
+  echo "${cache_dir}/yarn"> "$env_dir/YARN_CACHE_FOLDER"
   compile "yarn" $cache $env_dir
   # These will be created if yarn is using the directory for its cache
 
@@ -146,7 +146,7 @@ testBuildWithCache() {
 
   compile "stable-node" $cache
   assertNotCaptured "Restoring cache"
-  assertEquals "1" "$(ls -1 $cache/node/node_modules | grep -c hashish | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c hashish | tr -d ' ')"
   assertCapturedSuccess
 
   compile "stable-node" $cache
@@ -154,7 +154,7 @@ testBuildWithCache() {
   assertFileContains "${STACK}" "${cache}/node/signature"
   assertCapturedSuccess
 
-  rm -rf "$cache/node/node_modules"
+  rm -rf "$cache/node/cache/node_modules"
   compile "stable-node" $cache
   assertCaptured "- node_modules (not cached - skipping)"
   assertCapturedSuccess
@@ -399,8 +399,8 @@ testBuildWithUserCacheDirectoriesCamel() {
 
   compile "cache-directories-camel" $cache
   assertCaptured "- non/existent (nothing to cache)"
-  assertEquals "1" "$(ls -1 $cache/node/server | grep -c node_modules | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node/client | grep -c node_modules | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/server | grep -c node_modules | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/client | grep -c node_modules | tr -d ' ')"
   assertCapturedSuccess
 
   compile "cache-directories-camel" $cache
@@ -644,8 +644,8 @@ testBuildWithUserCacheDirectories() {
 
   compile "cache-directories" $cache
   assertCaptured "Saving 2 cacheDirectories"
-  assertEquals "1" "$(ls -1 $cache/node | grep -c bower_components | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node | grep -c node_modules | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache | grep -c bower_components | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache | grep -c node_modules | tr -d ' ')"
   assertCapturedSuccess
 
   compile "cache-directories" $cache
