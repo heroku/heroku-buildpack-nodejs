@@ -365,7 +365,8 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -i -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+  if grep -qi -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+    mcount "failures.module-404"
 
     if grep -qi "flatmap-stream" "$log_file"; then
       mcount "flatmap-stream-404"
@@ -376,9 +377,9 @@ log_other_failures() {
        npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
        and taking ownership of the event-stream package to prevent further abuse.
       " https://kb.heroku.com/4OM7X18J/why-am-i-seeing-npm-404-errors-for-event-stream-flatmap-stream-in-my-build-logs
+      exit 1
     fi
 
-    mcount "failures.module-404"
     return 0
   fi
 
