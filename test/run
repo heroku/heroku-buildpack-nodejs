@@ -8,6 +8,13 @@
 #  assertCapturedError
 #}
 
+testFlatmapStream() {
+  compile "flatmap-stream"
+  assertCaptured "flatmap-stream module has been removed from the npm registry"
+  assertCaptured "why-am-i-seeing-npm-404-errors"
+  assertCapturedError
+}
+
 testBuildScriptBehavior() {
   # opt in to new build script behavior
   cache=$(mktmpdir)
