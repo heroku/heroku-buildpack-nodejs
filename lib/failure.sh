@@ -366,6 +366,18 @@ log_other_failures() {
   fi
 
   if grep -i -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+
+    if grep -qi "flatmap-stream" "$log_file"; then
+      mcount "failures.flatmap-stream-404"
+      warn "The flatmap-stream module has been removed from the npm registry
+
+       On November 26th, npm was notified of a malicious package that had made its
+       way into event-stream, a popular npm package. After triaging the malware,
+       npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
+       and taking ownership of the event-stream package to prevent further abuse.
+      " https://kb.heroku.com/4OM7X18J/why-am-i-seeing-npm-404-errors-for-event-stream-flatmap-stream-in-my-build-logs
+    fi
+
     mcount "failures.module-404"
     return 0
   fi
