@@ -27,8 +27,8 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version=${1:-10.x}
-  local dir="${2:?}"
+  local dir="${1:?}"
+  local version=${2:-10.x}
 
   echo "Resolving node version $version..."
   if ! read number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt"); then
@@ -66,9 +66,9 @@ install_iojs() {
 }
 
 install_npm() {
-  local version="$1"
-  local dir="$2"
-  local npm_lock="$3"
+  local dir="$1"
+  local npm_lock="$2"
+  local version="$3"
   local npm_version="$(npm --version)"
 
   # If the user has not specified a version of npm, but has an npm lockfile
