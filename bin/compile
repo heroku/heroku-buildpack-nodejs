@@ -122,8 +122,8 @@ install_bins() {
     mcount "version.iojs.$node_version"
   else
     warn_node_engine "$node_engine"
-    install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
-    install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
+    monitor "install-node-binary" install_nodejs "$BUILD_DIR/.heroku/node" "$node_engine"
+    monitor "install-npm-binary" install_npm "$BUILD_DIR/.heroku/node" $NPM_LOCK "$npm_engine"
     local node_version="$(node --version)"
     mcount "version.node.$node_version"
   fi
@@ -132,7 +132,7 @@ install_bins() {
   # has specified a version of yarn under "engines". We'll still
   # only install using yarn if there is a yarn.lock file
   if $YARN || [ -n "$yarn_engine" ]; then
-    install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+    monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
   fi
 
   if $YARN; then
