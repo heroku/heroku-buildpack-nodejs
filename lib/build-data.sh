@@ -39,13 +39,6 @@ bd_bool() {
   kv_set $BUILD_DATA_FILE $1 "$result"
 }
 
-bd_time() {
-  local start="${2}"
-  local end="${3:-$(nowms)}"
-  local time="$(echo \"${start}\" \"${end}\" | awk '{ printf "%.3f", ($2 - $1)/1000 }')"
-  kv_set $BUILD_DATA_FILE $1 "$time"
-}
-
 log_build_data() {
   kv_list $BUILD_DATA_FILE
 }
