@@ -122,8 +122,8 @@ install_bins() {
     mcount "version.iojs.$node_version"
   else
     warn_node_engine "$node_engine"
-    monitor "install-node-binary" install_nodejs "$BUILD_DIR/.heroku/node" "$node_engine"
-    monitor "install-npm-binary" install_npm "$BUILD_DIR/.heroku/node" $NPM_LOCK "$npm_engine"
+    monitor "install-node-binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
+    monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
     local node_version="$(node --version)"
     mcount "version.node.$node_version"
   fi
