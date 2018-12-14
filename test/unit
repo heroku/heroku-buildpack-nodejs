@@ -148,6 +148,35 @@ testKeyValueNoFile() {
   assertEquals "$(kv_list $space)" ""
 }
 
+testBuildData() {
+  local cache_dir=$(mktemp -d)
+
+  bd_create $cache_dir
+
+  bd_set "test" "foo"
+  assertEquals "test=foo" "$(log_build_data)"
+
+  bd_set "test" "different-foo"
+  assertEquals "test=different-foo" "$(log_build_data)"
+
+  bd_bool "bool" "[[ 2 -eq 2 ]]"
+  assertEquals "true" "$(bd_get "bool")"
+
+  bd_bool "bool" "[[ 2 -eq 3 ]]"
+  assertEquals "false" "$(bd_get "bool")"
+
+  # no argument = false
+  bd_bool "empty"
+  assertEquals "false" "$(bd_get "empty")"
+
+  # tests the return value of a command
+  bd_bool "return-value" "0"
+  assertEquals "true" "$(bd_get "return-value")"
+
+  bd_bool "return-value" "1"
+  assertEquals "false" "$(bd_get "return-value")"
+}
+
 # mocks
 source "$(pwd)"/test/mocks/stdlib.sh
 
@@ -155,6 +184,7 @@ source "$(pwd)"/test/mocks/stdlib.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
+source "$(pwd)"/lib/build-data.sh
 
 # import the testing framework
 source "$(pwd)"/test/shunit2
