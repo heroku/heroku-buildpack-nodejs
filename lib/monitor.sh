@@ -45,12 +45,13 @@ monitor_memory_usage() {
 monitor() {
   local command_name=$1
   shift
-  local command="${@:-}"
+
+  local command=( "$@" )
   local peak_mem_output=$(mktemp)
   local start=$(nowms)
 
   # execute the subcommand and save the peak memory usage
-  monitor_memory_usage $peak_mem_output $command
+  monitor_memory_usage $peak_mem_output "${command[@]}"
 
   mtime "exec.$command_name.time" "${start}"
   mmeasure "exec.$command_name.memory" "$(cat $peak_mem_output)"
