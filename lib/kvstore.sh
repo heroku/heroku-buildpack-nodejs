@@ -24,12 +24,24 @@ kv_set() {
   fi
 }
 
-kv_get() {
+# get the value, but don't unwrap quotes
+kv_get_literal() {
   if [[ $# -eq 2 ]]; then
     local f=$1
     if [[ -f $f ]]; then
       grep "^$2=" $f | sed -e "s/^$2=//" | tail -n 1
     fi
+  fi
+}
+
+kv_get() {
+  local value=$(kv_get_literal $1 $2 $3)
+
+  # if the value has been wrapped in quotes, unwrap it
+  if [[ $value =~ ^\".+\"$ ]]; then
+    echo "${value:1:${#value}-2}"
+  else
+    echo $value
   fi
 }
 
@@ -52,7 +64,7 @@ kv_list() {
 
   kv_keys $f | tr ' ' '\n' | while read -r key; do
     if [[ -n $key ]]; then
-      echo "$key=$(kv_get $f $key)"
+      echo "$key=$(kv_get_literal $f $key)"
     fi
   done
 }
