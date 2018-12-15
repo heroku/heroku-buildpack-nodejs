@@ -158,23 +158,6 @@ testBuildData() {
 
   bd_set "test" "different-foo"
   assertEquals "test=different-foo" "$(log_build_data)"
-
-  bd_bool "bool" "[[ 2 -eq 2 ]]"
-  assertEquals "true" "$(bd_get "bool")"
-
-  bd_bool "bool" "[[ 2 -eq 3 ]]"
-  assertEquals "false" "$(bd_get "bool")"
-
-  # no argument = false
-  bd_bool "empty"
-  assertEquals "false" "$(bd_get "empty")"
-
-  # tests the return value of a command
-  bd_bool "return-value" "0"
-  assertEquals "true" "$(bd_get "return-value")"
-
-  bd_bool "return-value" "1"
-  assertEquals "false" "$(bd_get "return-value")"
 }
 
 # mocks
