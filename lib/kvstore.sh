@@ -14,7 +14,12 @@ kv_set() {
   if [[ $# -eq 3 ]]; then
     local f=$1
     if [[ -f $f ]]; then
-      echo "$2=$3" >> $f
+      # if the value has any spaces, wrap it in quotes
+      if [[ $3 =~ [[:space:]]+ ]]; then
+        echo "$2=\"$3\"" >> $f
+      else
+        echo "$2=$3" >> $f
+      fi
     fi
   fi
 }
