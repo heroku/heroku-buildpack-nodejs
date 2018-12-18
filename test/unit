@@ -168,6 +168,48 @@ testBuildData() {
   assertEquals "a=\"this should come first\" foo=\"value with spaces\" test=different-foo" "$(log_build_data)"
 }
 
+testWebConcurrencyProfileScript() {
+  # this was set when we sourced the WEB_CONCURRENCY.sh file
+  unset WEB_MEMORY
+  unset MEMORY_AVAILABLE
+  unset WEB_CONCURRENCY
+
+  # memory in MB of a 2X dyno
+  assertEquals "512" "$(bound_memory 512)"
+
+  # memory in MB of a 2X dyno
+  assertEquals "1024" "$(bound_memory 1024)"
+
+  # memory in MB of a Peformance-M dyno
+  assertEquals "2560" "$(bound_memory 2560)"
+
+  # memory in MB of a Peformance-L dyno
+  assertEquals "14336" "$(bound_memory 14336)"
+
+  # one more MB
+  assertEquals "14336" "$(bound_memory 14337)"
+
+  # On non-Heroku systems `detect_memory` can return non-sensically large values
+  # In this case, we should bound
+  assertEquals "14336" "$(bound_memory 1000000)"
+
+  # test calculate_concurrency
+
+  # 1x
+  assertEquals "1" "$(calculate_concurrency 512 512)"
+  # 2x
+  assertEquals "2" "$(calculate_concurrency 1024 512)"
+  # Performance-M
+  assertEquals "5" "$(calculate_concurrency 2560 512)"
+  # Performance-L
+  assertEquals "28" "$(calculate_concurrency 14336 512)"
+
+  # In case some very large memory available value gets passed in
+  assertEquals "1" "$(calculate_concurrency 103401 512)"
+  # of if web memory is set really low
+  assertEquals "1" "$(calculate_concurrency 512 1)"
+}
+
 # mocks
 source "$(pwd)"/test/mocks/stdlib.sh
 
@@ -176,6 +218,7 @@ source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/build-data.sh
+source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # import the testing framework
 source "$(pwd)"/test/shunit2
