@@ -160,7 +160,12 @@ testBuildData() {
   assertEquals "test=different-foo" "$(log_build_data)"
 
   bd_set "foo" "value with spaces"
-  assertEquals "test=different-foo foo=\"value with spaces\"" "$(log_build_data)"
+  assertEquals "foo=\"value with spaces\" test=different-foo" "$(log_build_data)"
+
+  # values are printed with the keys sorted alphabetically
+  # this isn't required, and this test serves as documentation
+  bd_set "a" "this should come first"
+  assertEquals "a=\"this should come first\" foo=\"value with spaces\" test=different-foo" "$(log_build_data)"
 }
 
 # mocks

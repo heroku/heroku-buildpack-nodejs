@@ -16,5 +16,7 @@ bd_set() {
 }
 
 log_build_data() {
-  kv_list $BUILD_DATA_FILE
+  # print all values on one line in logfmt format
+  # https://brandur.org/logfmt
+  echo $(kv_list $BUILD_DATA_FILE)
 }
