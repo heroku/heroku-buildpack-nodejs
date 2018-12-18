@@ -1008,6 +1008,8 @@ testMemoryMetrics() {
   echo "$metrics_log" > $env_dir/BUILDPACK_LOG_FILE
 
   compile "pre-post-build-scripts" "$(mktmpdir)" $env_dir
+  assertFileContains "measure#buildpack.nodejs.exec.install-node-binary.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.install-npm-binary.time=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild.time=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild.memory=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.npm-install.time=" $metrics_log
@@ -1018,6 +1020,8 @@ testMemoryMetrics() {
   # erase the metrics log
   echo "" > $metrics_log
   compile "yarn" "$(mktmpdir)" $env_dir
+  assertFileContains "measure#buildpack.nodejs.exec.install-node-binary.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.install-yarn-binary.time=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.yarn-install.memory=" "$metrics_log"
   assertFileContains "measure#buildpack.nodejs.exec.yarn-install.time=" "$metrics_log"
   # this fixture does not have pre or post-build scripts
