@@ -148,6 +148,26 @@ testKeyValueNoFile() {
   assertEquals "$(kv_list $space)" ""
 }
 
+testBuildData() {
+  local cache_dir=$(mktemp -d)
+
+  bd_create $cache_dir
+
+  bd_set "test" "foo"
+  assertEquals "test=foo" "$(log_build_data)"
+
+  bd_set "test" "different-foo"
+  assertEquals "test=different-foo" "$(log_build_data)"
+
+  bd_set "foo" "value with spaces"
+  assertEquals "foo=\"value with spaces\" test=different-foo" "$(log_build_data)"
+
+  # values are printed with the keys sorted alphabetically
+  # this isn't required, and this test serves as documentation
+  bd_set "a" "this should come first"
+  assertEquals "a=\"this should come first\" foo=\"value with spaces\" test=different-foo" "$(log_build_data)"
+}
+
 # mocks
 source "$(pwd)"/test/mocks/stdlib.sh
 
@@ -155,6 +175,7 @@ source "$(pwd)"/test/mocks/stdlib.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
+source "$(pwd)"/lib/build-data.sh
 
 # import the testing framework
 source "$(pwd)"/test/shunit2
