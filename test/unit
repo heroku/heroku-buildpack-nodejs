@@ -108,6 +108,16 @@ testKeyValue() {
   assertEquals "" "$(kv_list $store)"
 }
 
+testKeyValueEscaping() {
+  local store=$(mktemp)
+
+  kv_create $store
+
+  kv_set $store "key" "value with a space"
+  assertEquals "key=\"value with a space\"" "$(kv_list $store)"
+  assertEquals "value with a space" "$(kv_get $store "key")"
+}
+
 # if the file doesn't exist, everything should be a no-op
 testKeyValueNoFile() {
   # empty file argument

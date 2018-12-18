@@ -19,12 +19,22 @@ kv_set() {
   fi
 }
 
+# get the value, but don't unwrap quotes
 kv_get() {
   if [[ $# -eq 2 ]]; then
     local f=$1
     if [[ -f $f ]]; then
       grep "^$2=" $f | sed -e "s/^$2=//" | tail -n 1
     fi
+  fi
+}
+
+kv_get_escaped() {
+  local value=$(kv_get $1 $2 $3)
+  if [[ $value =~ [[:space:]]+ ]]; then
+    echo "\"$value\""
+  else
+    echo $value
   fi
 }
 
@@ -47,7 +57,7 @@ kv_list() {
 
   kv_keys $f | tr ' ' '\n' | while read -r key; do
     if [[ -n $key ]]; then
-      echo "$key=$(kv_get $f $key)"
+      echo "$key=$(kv_get_escaped $f $key)"
     fi
   done
 }
