@@ -158,6 +158,9 @@ testBuildData() {
 
   bd_set "test" "different-foo"
   assertEquals "test=different-foo" "$(log_build_data)"
+
+  bd_set "foo" "value with spaces"
+  assertEquals "test=different-foo foo=\"value with spaces\"" "$(log_build_data)"
 }
 
 # mocks
