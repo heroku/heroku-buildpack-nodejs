@@ -18,6 +18,3 @@ bd_set() {
 log_build_data() {
   kv_list $BUILD_DATA_FILE
 }
-
- # bootstrap
-bd_create
