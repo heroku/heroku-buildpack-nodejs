@@ -6,11 +6,9 @@ BUILD_DATA_FILE=""
 bd_create() {
   local cache_dir="$1"
   BUILD_DATA_FILE="$cache_dir/build-data/node"
-
-  # if this build data file already exists clear it
-  echo "" > "$BUILD_DATA_FILE"
-
   kv_create "$BUILD_DATA_FILE"
+  # make sure this doesnt grow over time
+  kv_clear "$BUILD_DATA_FILE"
 }
 
 bd_get() {
