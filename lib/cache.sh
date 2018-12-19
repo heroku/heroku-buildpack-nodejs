@@ -114,10 +114,13 @@ save_default_cache_directories() {
   # bower_components
   if [[ -e "$build_dir/bower_components" ]]; then
     mcount "cache.saved-bower-components"
+    bd_set "cached-bower-components" "true"
     echo "- bower_components"
     mkdir -p "$cache_dir/node/cache/bower_components"
     cp -a "$build_dir/bower_components" "$(dirname "$cache_dir/node/cache/bower_components")"
   fi
+
+  bd_set "node-custom-cache-dirs" "false"
 }
 
 save_custom_cache_directories() {
@@ -138,4 +141,6 @@ save_custom_cache_directories() {
       echo "- $cachepath (nothing to cache)"
     fi
   done
+
+  bd_set "node-custom-cache-dirs" "true"
 }
