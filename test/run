@@ -1067,6 +1067,18 @@ testBuildMetaData() {
   assertFileContains "heroku-postbuild-memory=" $log_file
   assertFileContains "npm-prune-memory=" $log_file
   assertFileContains "npm-prune-time=" $log_file
+
+  # erase the log file
+  echo "" > $log_file
+  compile "yarn" "$(mktmpdir)" $env_dir
+
+  assertFileContains "node-package-manager=yarn" $log_file
+  assertFileContains "has-node-lock-file=true" $log_file
+  assertFileContains "yarn-version-request=1.x" $log_file
+  assertFileContains "yarn-version=1." $log_file
+  assertFileContains "install-yarn-binary-memory=" $log_file
+  assertFileContains "install-yarn-binary-time=" $log_file
+  assertFileContains "node-build-success=true" $log_file
 }
 
 testBinDetectWarnings() {
