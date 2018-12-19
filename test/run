@@ -1065,8 +1065,8 @@ testBuildMetaData() {
   assertFileContains "npm-install-memory=" $log_file
   assertFileContains "heroku-postbuild-time=" $log_file
   assertFileContains "heroku-postbuild-memory=" $log_file
-  assertFileContains "npm-prune-memory=49" $log_file
-  assertFileContains "npm-prune-time=0.010" $log_file
+  assertFileContains "npm-prune-memory=" $log_file
+  assertFileContains "npm-prune-time=" $log_file
 }
 
 testBinDetectWarnings() {
