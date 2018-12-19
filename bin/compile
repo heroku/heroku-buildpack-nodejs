@@ -326,4 +326,4 @@ warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
 
-log_build_data
+log_build_data >> $BUILDPACK_LOG_FILE
