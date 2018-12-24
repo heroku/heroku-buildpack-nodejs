@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-BP_DIR=$(cd "$(dirname ${0:-})"; cd ..; pwd)
+BP_DIR=$(cd "$(dirname "${0:-}")" || exit; cd ..; pwd)
 
-source $BP_DIR/lib/environment.sh
+# shellcheck source=lib/environment.sh
+source "$BP_DIR/lib/environment.sh"
 
 export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-false}
 export NODE_ENV=${NODE_ENV:-test}
