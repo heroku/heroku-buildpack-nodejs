@@ -194,7 +194,7 @@ restore_cache() {
       # If the user has specified custom cache directories, be more explicit
       echo "Invalidating cache due to a change in version of node, npm, yarn or stack"
       echo "Will not restore the following directories for this build:"
-      for directory in $(< "$cache_directories"); do
+      for directory in $cache_directories; do
         echo "  $directory"
       done
     fi
