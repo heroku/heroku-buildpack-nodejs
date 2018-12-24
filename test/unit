@@ -208,6 +208,14 @@ testBuildDataPreviousBuild() {
   assertFileContains "test=foo" "$PREVIOUS_BUILD_DATA_FILE"
   assertEquals "$(bd_get test)" ""
   assertEquals "$(bd_prev_get test)" "foo"
+  bd_set "test" "bar"
+
+  # doing it once more does not result in an error
+  bd_create "$cache_dir"
+  assertFileExists "$BUILD_DATA_FILE"
+  assertFileExists "$PREVIOUS_BUILD_DATA_FILE" 
+  assertEquals "$(bd_prev_get test)" "bar"
+  assertEquals "$(bd_get test)" ""
 }
 
 # mocks
