@@ -9,6 +9,8 @@ log_initial_state() {
   fi
 
   bd_set "new-build-script-opt-in" "false"
+
+  bd_set "stack" "$STACK"
 }
 
 log_build_script_opt_in() {
