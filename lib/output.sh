@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # TODO: Merge these with the output helpers in buildpack-stdlib:
 # https://github.com/heroku/buildpack-stdlib
 
