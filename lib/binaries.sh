@@ -24,7 +24,7 @@ install_yarn() {
   else
     tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1
   fi
-  chmod +x "$dir/bin/*"
+  chmod +x "$dir"/bin/*
   echo "Installed yarn $(yarn --version)"
 }
 
@@ -49,8 +49,8 @@ install_nodejs() {
   fi
   tar xzf /tmp/node.tar.gz -C /tmp
   rm -rf "${dir:?}"/*
-  mv "/tmp/node-v$number-$os-$cpu/*" "$dir"
-  chmod +x "$dir/bin/*"
+  mv /tmp/node-v"$number"-"$os"-"$cpu"/* "$dir"
+  chmod +x "$dir"/bin/*
 }
 
 install_iojs() {
@@ -72,8 +72,8 @@ install_iojs() {
     echo "Unable to download iojs: $code" && false
   fi
   tar xzf /tmp/iojs.tar.gz -C /tmp
-  mv "/tmp/iojs-v$number-$os-$cpu/*" "$dir"
-  chmod +x "$dir/bin/*"
+  mv /tmp/iojs-v"$number"-"$os"-"$cpu"/* "$dir"
+  chmod +x "$dir"/bin/*
 }
 
 install_npm() {
