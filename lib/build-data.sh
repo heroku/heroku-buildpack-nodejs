@@ -20,5 +20,7 @@ bd_set() {
 log_build_data() {
   # print all values on one line in logfmt format
   # https://brandur.org/logfmt
-  kv_list "$BUILD_DATA_FILE"
+  # the echo call ensures that all values are printed on a single line
+  # shellcheck disable=SC2005 disable=SC2046
+  echo $(kv_list "$BUILD_DATA_FILE")
 }
