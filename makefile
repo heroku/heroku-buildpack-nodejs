@@ -3,8 +3,8 @@ test: heroku-18 heroku-16 cedar-14
 shellcheck:
 	@shellcheck -x bin/compile bin/detect bin/release bin/test bin/test-compile
 	@shellcheck -x lib/**
-	@echo TODO shellcheck -x ci-profile/**/*.sh
-	@echo TODO shellcheck -x etc/**/*.sh
+	@shellcheck -x ci-profile/**
+	@shellcheck -x etc/**
 
 heroku-18:
 	@echo "Running tests in docker (heroku-18)..."
