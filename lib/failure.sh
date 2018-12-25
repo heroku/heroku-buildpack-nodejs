@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 warnings=$(mktemp -t heroku-buildpack-nodejs-XXXX)
 
 detect_package_manager() {
@@ -28,7 +30,11 @@ failure_message() {
 }
 
 fail_invalid_package_json() {
-  if ! cat ${1:-}/package.json | $JQ "." 1>/dev/null; then
+  local is_invalid
+
+  is_invalid=$(is_invalid_json_file "${1:-}/package.json")
+
+  if $is_invalid; then
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
     return 1
@@ -166,6 +172,7 @@ fail_yarn_lockfile_outdated() {
 fail_bin_install() {
   local bin="$1"
   local version="$2"
+  local platform="$3"
 
   # re-curl the result, saving off the reason for the failure this time
   local error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")

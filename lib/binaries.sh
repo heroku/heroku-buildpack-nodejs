@@ -8,7 +8,7 @@ install_yarn() {
 
   echo "Resolving yarn version $version..."
   if ! read -r number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt"); then
-    fail_bin_install yarn "$version";
+    fail_bin_install yarn "$version" "$platform";
   fi
 
   echo "Downloading and installing yarn ($number)..."
@@ -39,7 +39,7 @@ install_nodejs() {
 
   echo "Resolving node version $version..."
   if ! read -r number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt"); then
-    fail_bin_install node "$version";
+    fail_bin_install node "$version" "$platform";
   fi
 
   echo "Downloading and installing node $number..."
@@ -56,6 +56,7 @@ install_nodejs() {
 install_iojs() {
   local version="$1"
   local dir="$2"
+  local platform="$3"
   local code os cpu
 
   os=$(get_os)
@@ -63,7 +64,7 @@ install_iojs() {
 
   echo "Resolving iojs version ${version:-(latest stable)}..."
   if ! read -r number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/iojs/$platform/latest.txt"); then
-    fail_bin_install iojs "$version";
+    fail_bin_install iojs "$version" "$platform";
   fi
 
   echo "Downloading and installing iojs $number..."
