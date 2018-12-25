@@ -37,7 +37,7 @@ fail_invalid_package_json() {
 
   is_invalid=$(is_invalid_json_file "${1:-}/package.json")
 
-  if $is_invalid; then
+  if "$is_invalid"; then
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
     return 1
@@ -130,11 +130,9 @@ fail_multiple_lockfiles() {
 fail_yarn_outdated() {
   local yarn_engine
   local log_file="$1"
-  local build_dir="$2"
-
-  yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
 
   if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
+    yarn_engine=$(yarn --version)
     mcount "failures.outdated-yarn"
     echo ""
     warn "Outdated Yarn version: $yarn_engine
@@ -205,9 +203,8 @@ fail_node_install() {
   local log_file="$1"
   local build_dir="$2"
 
-  node_engine=$(read_json "$build_dir/package.json" ".engines.node")
-
   if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
+    node_engine=$(read_json "$build_dir/package.json" ".engines.node")
     mcount "failures.invalid-node-version"
     echo ""
     warn "No matching version found for Node: $node_engine
@@ -239,9 +236,8 @@ fail_yarn_install() {
   local log_file="$1"
   local build_dir="$2"
 
-  yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
-
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
+    yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
     mcount "failures.invalid-yarn-version"
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
