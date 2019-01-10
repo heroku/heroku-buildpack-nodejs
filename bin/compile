@@ -41,6 +41,7 @@ echo "" > "$LOG_FILE"
 ### Handle errors
 
 handle_failure() {
+  exit_status=$?
   header "Build failed"
   fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
@@ -53,6 +54,7 @@ handle_failure() {
   warn_missing_devdeps "$LOG_FILE"
   warn_econnreset "$LOG_FILE"
   failure_message | output "$LOG_FILE"
+  exit "$exit_status"
 }
 trap 'handle_failure' ERR
 
