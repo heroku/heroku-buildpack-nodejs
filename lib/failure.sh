@@ -10,7 +10,10 @@ detect_package_manager() {
 }
 
 failure_message() {
-  local warn="$(cat $warnings)"
+  local warn
+
+  warn="$(cat "$warnings")"
+
   echo ""
   echo "We're sorry this build is failing! You can troubleshoot common issues here:"
   echo "https://devcenter.heroku.com/articles/troubleshooting-node-deploys"
@@ -34,7 +37,7 @@ fail_invalid_package_json() {
 
   is_invalid=$(is_invalid_json_file "${1:-}/package.json")
 
-  if $is_invalid; then
+  if "$is_invalid"; then
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
     return 1
@@ -125,10 +128,11 @@ fail_multiple_lockfiles() {
 }
 
 fail_yarn_outdated() {
+  local yarn_engine
   local log_file="$1"
-  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
+    yarn_engine=$(yarn --version)
     mcount "failures.outdated-yarn"
     echo ""
     warn "Outdated Yarn version: $yarn_engine
@@ -170,12 +174,13 @@ fail_yarn_lockfile_outdated() {
 }
 
 fail_bin_install() {
+  local error
   local bin="$1"
   local version="$2"
   local platform="$3"
 
   # re-curl the result, saving off the reason for the failure this time
-  local error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")
+  error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")
 
   if [[ $error = "No result" ]]; then
     case $bin in
@@ -194,10 +199,12 @@ fail_bin_install() {
 }
 
 fail_node_install() {
+  local node_engine
   local log_file="$1"
-  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  local build_dir="$2"
 
   if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
+    node_engine=$(read_json "$build_dir/package.json" ".engines.node")
     mcount "failures.invalid-node-version"
     echo ""
     warn "No matching version found for Node: $node_engine
@@ -225,10 +232,12 @@ fail_node_install() {
 }
 
 fail_yarn_install() {
+  local yarn_engine
   local log_file="$1"
-  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  local build_dir="$2"
 
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
+    yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
     mcount "failures.invalid-yarn-version"
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
@@ -474,7 +483,7 @@ warning() {
   echo "- $tip"
   echo "  $url"
   echo ""
-  } >> $warnings
+  } >> "$warnings"
 }
 
 warn() {
@@ -493,7 +502,7 @@ warn_node_engine() {
   elif [ "$node_engine" == "*" ]; then
     warning "Dangerous semver range (*) in engines.node" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
     mcount 'warnings.node.star'
-  elif [ ${node_engine:0:1} == ">" ]; then
+  elif [ "${node_engine:0:1}" == ">" ]; then
     warning "Dangerous semver range (>) in engines.node" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
     mcount 'warnings.node.greater'
   fi
@@ -516,17 +525,23 @@ warn_missing_package_json() {
 }
 
 warn_old_npm() {
-  local npm_version="$(npm --version)"
+  local npm_version latest_npm
+
+  npm_version="$(npm --version)"
+
   if [ "${npm_version:0:1}" -lt "2" ]; then
-    local latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 https://semver.herokuapp.com/npm/stable)"
+    latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 https://semver.herokuapp.com/npm/stable)"
     warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     mcount 'warnings.npm.old'
   fi
 }
 
 warn_old_npm_lockfile() {
+  local npm_version
   local npm_lock=$1
-  local npm_version="$(npm --version)"
+
+  npm_version="$(npm --version)"
+
   if $npm_lock && [ "${npm_version:0:1}" -lt "5" ]; then
     warn "This version of npm ($npm_version) does not support package-lock.json. Please
        update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
@@ -559,13 +574,16 @@ warn_angular_resolution() {
 }
 
 warn_missing_devdeps() {
+  local dev_deps
   local log_file="$1"
+  local build_dir="$2"
+
   if grep -qi 'cannot find module' "$log_file"; then
     warning "A module may be missing from 'dependencies' in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
     mcount 'warnings.modules.missing'
     if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
-      local devDeps=$(read_json "$BUILD_DIR/package.json" ".devDependencies")
-      if [ "$devDeps" != "" ]; then
+      dev_deps=$(read_json "$build_dir/package.json" ".devDependencies")
+      if [ "$dev_deps" != "" ]; then
         warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
         mcount 'warnings.modules.devdeps'
       fi
@@ -574,11 +592,13 @@ warn_missing_devdeps() {
 }
 
 warn_no_start() {
-  local log_file="$1"
-  if ! [ -e "$BUILD_DIR/Procfile" ]; then
-    local startScript=$(read_json "$BUILD_DIR/package.json" ".scripts.start")
-    if [ "$startScript" == "" ]; then
-      if ! [ -e "$BUILD_DIR/server.js" ]; then
+  local start_script
+  local build_dir="$1"
+
+  if ! [ -e "$build_dir/Procfile" ]; then
+    start_script=$(read_json "$build_dir/package.json" ".scripts.start")
+    if [ "$start_script" == "" ]; then
+      if ! [ -e "$build_dir/server.js" ]; then
         warn "This app may not specify any way to start a node process" "https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type"
         mcount 'warnings.unstartable'
       fi
@@ -595,8 +615,11 @@ warn_econnreset() {
 }
 
 warn_unmet_dep() {
+  local package_manager
   local log_file="$1"
-  local package_manager=$(detect_package_manager)
+
+  package_manager=$(detect_package_manager)
+
   if grep -qi 'unmet dependency' "$log_file" || grep -qi 'unmet peer dependency' "$log_file"; then
     warn "Unmet dependencies don't fail $package_manager install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
     mcount 'warnings.modules.unmet'
