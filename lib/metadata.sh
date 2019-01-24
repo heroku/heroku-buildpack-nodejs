@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 log_initial_state() {
   if "$YARN"; then
