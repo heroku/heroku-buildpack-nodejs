@@ -2,8 +2,7 @@ test: heroku-18 heroku-16 cedar-14
 
 shellcheck:
 	@shellcheck -x bin/compile bin/detect bin/release bin/test bin/test-compile
-	@shellcheck -x lib/binaries.sh lib/build-data.sh lib/cache.sh lib/dependencies.sh lib/environment.sh lib/json.sh lib/failure.sh
-	@echo TODO shellcheck -x lib/**/*.sh 
+	@shellcheck -x lib/**
 	@echo TODO shellcheck -x ci-profile/**/*.sh
 	@echo TODO shellcheck -x etc/**/*.sh
 
