@@ -165,8 +165,8 @@ install_bins | output "$LOG_FILE"
 restore_cache() {
   local cache_status cache_directories
 
-  cache_status="$(get_cache_status)"
-  cache_directories="$(get_cache_directories)"
+  cache_status="$(get_cache_status "$CACHE_DIR")"
+  cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
   if $YARN; then
     if [ -e "$BUILD_DIR/node_modules" ]; then
@@ -213,7 +213,7 @@ build_dependencies() {
 
   run_if_present 'heroku-prebuild'
 
-  cache_status="$(get_cache_status)"
+  cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
 
   if $YARN; then
@@ -243,9 +243,9 @@ build_dependencies | output "$LOG_FILE"
 
 cache_build() {
   local cache_directories
-  cache_directories="$(get_cache_directories)"
+  cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
-  clear_cache
+  clear_cache "$CACHE_DIR"
   if ! ${NODE_MODULES_CACHE:-true}; then
     # we've already warned that caching is disabled in the restore step
     # so be silent here
@@ -257,7 +257,7 @@ cache_build() {
     header "Caching build"
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
   fi
-  save_signature
+  save_signature "$CACHE_DIR"
 }
 
 cache_build | output "$LOG_FILE"
