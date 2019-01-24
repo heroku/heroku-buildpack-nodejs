@@ -2,6 +2,15 @@
 
 ## master
 
+## v134 (2018-12-20)
+
+- Internal changes (#593, #591)
+- Handle `$MEMORY_AVAILABLE` when `memory.limit_in_bytes` is nonsensically large (#531)
+
+## v133 (2018-11-28)
+
+- Add warning for flatmap-stream 404 failure (#590)
+
 ## v132 (2018-11-12)
 
 - Quietly add new build script behavior behind a flag (#584, #585)
