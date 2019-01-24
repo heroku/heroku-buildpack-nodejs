@@ -17,6 +17,16 @@ bd_set() {
   kv_set "$BUILD_DATA_FILE" "$1" "$2"
 }
 
+# similar to mtime from stdlib
+bd_time() {
+  local key="$1"
+  local start="$2"
+  local end="${3:-$(nowms)}"
+  local time
+  time="$(echo "${start}" "${end}" | awk '{ printf "%.3f", ($2 - $1)/1000 }')"
+  kv_set "$BUILD_DATA_FILE" "$key" "$time"
+}
+
 log_build_data() {
   # print all values on one line in logfmt format
   # https://brandur.org/logfmt
