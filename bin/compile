@@ -26,7 +26,6 @@ STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
 # shellcheck source=/dev/null
 source "$STDLIB_FILE"
-<<<<<<< HEAD
 # shellcheck source=lib/output.sh
 source "$BP_DIR/lib/output.sh"
 # shellcheck source=lib/monitor.sh
@@ -45,20 +44,10 @@ source "$BP_DIR/lib/cache.sh"
 source "$BP_DIR/lib/dependencies.sh"
 # shellcheck source=lib/plugin.sh
 source "$BP_DIR/lib/plugin.sh"
-=======
-source $BP_DIR/lib/output.sh
-source $BP_DIR/lib/monitor.sh
-source $BP_DIR/lib/json.sh
-source $BP_DIR/lib/failure.sh
-source $BP_DIR/lib/environment.sh
-source $BP_DIR/lib/binaries.sh
-source $BP_DIR/lib/cache.sh
-source $BP_DIR/lib/dependencies.sh
-source $BP_DIR/lib/plugin.sh
-source $BP_DIR/lib/metadata.sh
-source $BP_DIR/lib/kvstore.sh
-source $BP_DIR/lib/build-data.sh
->>>>>>> Add some build data calls
+# shellcheck source=lib/metadata.sh
+source "$BP_DIR/lib/metadata.sh"
+# shellcheck source=lib/build-data.sh
+source "$BP_DIR/lib/build-data.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -107,10 +96,7 @@ warn_missing_package_json "$BUILD_DIR"
 ### Behavior flags
 [ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=$(read_json "$BUILD_DIR/package.json" ".[\"heroku-run-build-script\"]")
 warn_build_script_behavior_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" | output "$LOG_FILE"
-<<<<<<< HEAD
-=======
 log_build_script_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR"
->>>>>>> Add some build data calls
 
 ### Compile
 
