@@ -22,8 +22,9 @@ bd_time() {
   local key="$1"
   local start="$2"
   local end="${3:-$(nowms)}"
-  local time="$(echo ${start} ${end} | awk '{ printf "%.3f", ($2 - $1)/1000 }')"
-  kv_set $BUILD_DATA_FILE $1 "$time"
+  local time
+  time="$(echo "${start}" "${end}" | awk '{ printf "%.3f", ($2 - $1)/1000 }')"
+  kv_set "$BUILD_DATA_FILE" "$key" "$time"
 }
 
 log_build_data() {
