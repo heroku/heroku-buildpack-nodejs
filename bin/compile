@@ -211,7 +211,7 @@ restore_cache | output "$LOG_FILE"
 build_dependencies() {
   local cache_status start
 
-  run_if_present 'heroku-prebuild'
+  run_if_present "$BUILD_DIR" 'heroku-prebuild'
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
@@ -229,13 +229,13 @@ build_dependencies() {
 
   if [[ "$NEW_BUILD_SCRIPT_BEHAVIOR" = true ]]; then
     mcount "build-script.new-behavior"
-    run_build_script
+    run_build_script "$BUILD_DIR"
   else
     mcount "build-script.legacy-behavior"
-    run_if_present 'heroku-postbuild'
+    run_if_present "$BUILD_DIR" 'heroku-postbuild'
   fi
 
-  log_build_scripts
+  log_build_scripts "$BUILD_DIR"
 }
 
 header "Building dependencies" | output "$LOG_FILE"

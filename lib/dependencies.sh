@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 measure_size() {
   (du -s node_modules 2>/dev/null || echo 0) | awk '{print $1}'
 }
@@ -5,7 +7,7 @@ measure_size() {
 list_dependencies() {
   local build_dir="$1"
 
-  cd "$build_dir"
+  cd "$build_dir" || return
   if $YARN; then
     echo ""
     (yarn list --depth=0 || true) 2>/dev/null
@@ -16,8 +18,12 @@ list_dependencies() {
 }
 
 run_if_present() {
-  local script_name=${1:-}
-  local has_script=$(read_json "$BUILD_DIR/package.json" ".scripts[\"$script_name\"]")
+  local build_dir=${1:-}
+  local script_name=${2:-}
+  local has_script
+
+  has_script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
+
   if [ -n "$has_script" ]; then
     if $YARN; then
       echo "Running $script_name (yarn)"
@@ -30,19 +36,22 @@ run_if_present() {
 }
 
 run_build_script() {
-  local has_build_script=$(read_json "$BUILD_DIR/package.json" ".scripts.build")
-  local has_heroku_build_script=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
+  local build_dir=${1:-}
+  local has_build_script has_heroku_build_script
+
+  has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
+  has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
 
   if [[ -n "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]]; then
     echo "Detected both 'build' and 'heroku-postbuild' scripts"
     mcount "scripts.heroku-postbuild-and-build"
-    run_if_present 'heroku-postbuild'
+    run_if_present "$build_dir" 'heroku-postbuild'
   elif [[ -n "$has_heroku_build_script" ]]; then
     mcount "scripts.heroku-postbuild"
-    run_if_present 'heroku-postbuild'
+    run_if_present "$build_dir" 'heroku-postbuild'
   elif [[ -n "$has_build_script" ]]; then
     mcount "scripts.build"
-    run_if_present 'build'
+    run_if_present "$build_dir" 'build'
   fi
 }
 
@@ -58,10 +67,13 @@ warn_build_script_behavior_opt_in() {
 }
 
 log_build_scripts() {
-  local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
-  local heroku_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")
-  local heroku_postbuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
-  local postinstall=$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")
+  local build heroku_prebuild heroku_postbuild postinstall
+  local build_dir=${1:-}
+
+  build=$(read_json "$build_dir/package.json" ".scripts[\"build\"]")
+  heroku_prebuild=$(read_json "$build_dir/package.json" ".scripts[\"heroku-prebuild\"]")
+  heroku_postbuild=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
+  postinstall=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
 
   if [ -n "$build" ]; then
     mcount "scripts.build"
@@ -118,8 +130,8 @@ yarn_node_modules() {
   local production=${YARN_PRODUCTION:-false}
 
   echo "Installing node modules (yarn.lock)"
-  cd "$build_dir"
-  monitor "yarn-install" yarn install --production=$production --frozen-lockfile --ignore-engines 2>&1
+  cd "$build_dir" || return
+  monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
 }
 
 yarn_prune_devdependencies() {
@@ -135,7 +147,7 @@ yarn_prune_devdependencies() {
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     return 0
   else 
-    cd "$build_dir" 
+    cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
   fi
 }
@@ -144,17 +156,17 @@ npm_node_modules() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
 
-  if [ -e $build_dir/package.json ]; then
-    cd $build_dir
+  if [ -e "$build_dir/package.json" ]; then
+    cd "$build_dir" || return
 
-    if [ -e $build_dir/package-lock.json ]; then
+    if [ -e "$build_dir/package-lock.json" ]; then
       echo "Installing node modules (package.json + package-lock)"
-    elif [ -e $build_dir/npm-shrinkwrap.json ]; then
+    elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then
       echo "Installing node modules (package.json + shrinkwrap)"
     else
       echo "Installing node modules (package.json)"
     fi
-    monitor "npm-install" npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -164,24 +176,26 @@ npm_rebuild() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
 
-  if [ -e $build_dir/package.json ]; then
-    cd $build_dir
+  if [ -e "$build_dir/package.json" ]; then
+    cd "$build_dir" || return
     echo "Rebuilding any native modules"
     npm rebuild 2>&1
-    if [ -e $build_dir/npm-shrinkwrap.json ]; then
+    if [ -e "$build_dir/npm-shrinkwrap.json" ]; then
       echo "Installing any new modules (package.json + shrinkwrap)"
     else
       echo "Installing any new modules (package.json)"
     fi
-    monitor "npm-rebuild" npm install --production=$production --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    monitor "npm-rebuild" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
   else
     echo "Skipping (no package.json)"
   fi
 }
 
 npm_prune_devdependencies() {
+  local npm_version
   local build_dir=${1:-} 
-  local npm_version=$(npm --version)
+
+  npm_version=$(npm --version)
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
@@ -215,7 +229,7 @@ npm_prune_devdependencies() {
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     return 0
   else
-    cd "$build_dir" 
-    monitor "npm-prune" npm prune --userconfig $build_dir/.npmrc 2>&1
+    cd "$build_dir" || return
+    monitor "npm-prune" npm prune --userconfig "$build_dir/.npmrc" 2>&1
   fi
 }
