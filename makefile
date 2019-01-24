@@ -1,5 +1,12 @@
 test: heroku-18 heroku-16 cedar-14
 
+shellcheck:
+	@shellcheck -x bin/compile 
+	@echo TODO shellcheck bin/detect bin/release bin/test bin/test-compile
+	@echo TODO shellcheck -x lib/**/*.sh 
+	@echo TODO shellcheck -x ci-profile/**/*.sh
+	@echo TODO shellcheck -x etc/**/*.sh
+
 heroku-18:
 	@echo "Running tests in docker (heroku-18)..."
 	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18" heroku/heroku:18 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'

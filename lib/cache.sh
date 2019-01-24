@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 source $BP_DIR/lib/binaries.sh
 
 create_signature() {
@@ -29,8 +31,9 @@ get_cache_status() {
 }
 
 get_cache_directories() {
-  local dirs1=$(read_json "$BUILD_DIR/package.json" ".cacheDirectories | .[]?")
-  local dirs2=$(read_json "$BUILD_DIR/package.json" ".cache_directories | .[]?")
+  local dirs1 dirs2
+  dirs1=$(read_json "$BUILD_DIR/package.json" ".cacheDirectories | .[]?")
+  dirs2=$(read_json "$BUILD_DIR/package.json" ".cache_directories | .[]?")
 
   if [ -n "$dirs1" ]; then
     echo "$dirs1"
@@ -61,9 +64,11 @@ restore_default_cache_directories() {
 }
 
 restore_custom_cache_directories() {
+  local cache_directories
   local build_dir=${1:-}
   local cache_dir=${2:-}
-  local cache_directories=("${@:3}")
+  # Parse the input string with multiple lines: "a\nb\nc" into an array
+  mapfile -t cache_directories <<< "$3"
 
   echo "Loading ${#cache_directories[@]} from cacheDirectories (package.json):"
 
@@ -113,9 +118,11 @@ save_default_cache_directories() {
 }
 
 save_custom_cache_directories() {
+  local cache_directories
   local build_dir=${1:-}
   local cache_dir=${2:-}
-  local cache_directories=("${@:3}")
+  # Parse the input string with multiple lines: "a\nb\nc" into an array
+  mapfile -t cache_directories <<< "$3"
 
   echo "Saving ${#cache_directories[@]} cacheDirectories (package.json):"
 

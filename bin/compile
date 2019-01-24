@@ -9,6 +9,8 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
+# This is used by the buildpack stdlib for metrics
+# shellcheck disable=SC2034 
 BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
@@ -16,22 +18,32 @@ BPLOG_PREFIX="buildpack.nodejs"
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
-BP_DIR=$(cd "$(dirname ${0:-})"; cd ..; pwd)
+BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
 ### Load dependencies
 
 curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
+# shellcheck source=/dev/null
 source "$STDLIB_FILE"
-source $BP_DIR/lib/output.sh
-source $BP_DIR/lib/monitor.sh
-source $BP_DIR/lib/json.sh
-source $BP_DIR/lib/failure.sh
-source $BP_DIR/lib/environment.sh
-source $BP_DIR/lib/binaries.sh
-source $BP_DIR/lib/cache.sh
-source $BP_DIR/lib/dependencies.sh
-source $BP_DIR/lib/plugin.sh
+# shellcheck source=lib/output.sh
+source "$BP_DIR/lib/output.sh"
+# shellcheck source=lib/monitor.sh
+source "$BP_DIR/lib/monitor.sh"
+# shellcheck source=lib/json.sh
+source "$BP_DIR/lib/json.sh"
+# shellcheck source=lib/failure.sh
+source "$BP_DIR/lib/failure.sh"
+# shellcheck source=lib/environment.sh
+source "$BP_DIR/lib/environment.sh"
+# shellcheck source=lib/binaries.sh
+source "$BP_DIR/lib/binaries.sh"
+# shellcheck source=lib/cache.sh
+source "$BP_DIR/lib/cache.sh"
+# shellcheck source=lib/dependencies.sh
+source "$BP_DIR/lib/dependencies.sh"
+# shellcheck source=lib/plugin.sh
+source "$BP_DIR/lib/plugin.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -73,7 +85,7 @@ warn_missing_package_json "$BUILD_DIR"
 
 ### Behavior flags
 [ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=$(read_json "$BUILD_DIR/package.json" ".[\"heroku-run-build-script\"]")
-warn_build_script_behavior_opt_in $NEW_BUILD_SCRIPT_BEHAVIOR | output "$LOG_FILE"
+warn_build_script_behavior_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" | output "$LOG_FILE"
 
 ### Compile
 
@@ -87,20 +99,23 @@ create_env() {
 header "Creating runtime environment" | output "$LOG_FILE"
 
 mkdir -p "$BUILD_DIR/.heroku/node/"
-cd $BUILD_DIR
+cd "$BUILD_DIR"
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 list_node_config | output "$LOG_FILE"
 create_build_env
 
 ### Configure package manager cache directories
-[ ! "$YARN_CACHE_FOLDER" ] && export YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
-[ ! "$NPM_CONFIG_CACHE" ] && export NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
-  local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
-  local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
-  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  local node_engine iojs_engine npm_engine yarn_engine npm_version node_version
+
+  node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
+  npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+  yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"
@@ -116,15 +131,15 @@ install_bins() {
   if [ -n "$iojs_engine" ]; then
     warn_node_engine "$iojs_engine"
     install_iojs "$iojs_engine" "$BUILD_DIR/.heroku/node"
-    local npm_version="$(npm --version)"
-    local node_version="$(node --version)"
+    npm_version="$(npm --version)"
+    node_version="$(node --version)"
     echo "Using bundled npm version for iojs compatibility: $npm_version"
     mcount "version.iojs.$node_version"
   else
     warn_node_engine "$node_engine"
     monitor "install-node-binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
     monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
-    local node_version="$(node --version)"
+    node_version="$(node --version)"
     mcount "version.node.$node_version"
   fi
 
@@ -148,8 +163,10 @@ header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
 
 restore_cache() {
-  local cache_status="$(get_cache_status)"
-  local cache_directories="$(get_cache_directories)"
+  local cache_status cache_directories
+
+  cache_status="$(get_cache_status)"
+  cache_directories="$(get_cache_directories)"
 
   if $YARN; then
     if [ -e "$BUILD_DIR/node_modules" ]; then
@@ -166,7 +183,7 @@ restore_cache() {
     if [[ "$cache_directories" == "" ]]; then
       restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR"
     else
-      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
   elif [[ "$cache_status" == "new-signature" ]]; then
     header "Restoring cache"
@@ -177,7 +194,7 @@ restore_cache() {
       # If the user has specified custom cache directories, be more explicit
       echo "Invalidating cache due to a change in version of node, npm, yarn or stack"
       echo "Will not restore the following directories for this build:"
-      for directory in $(< $cache_directories); do
+      for directory in $cache_directories; do
         echo "  $directory"
       done
     fi
@@ -192,10 +209,12 @@ restore_cache() {
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
+  local cache_status start
+
   run_if_present 'heroku-prebuild'
 
-  local cache_status="$(get_cache_status)"
-  local start=$(nowms)
+  cache_status="$(get_cache_status)"
+  start=$(nowms)
 
   if $YARN; then
     yarn_node_modules "$BUILD_DIR"
@@ -223,7 +242,8 @@ header "Building dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
-  local cache_directories="$(get_cache_directories)"
+  local cache_directories
+  cache_directories="$(get_cache_directories)"
 
   clear_cache
   if ! ${NODE_MODULES_CACHE:-true}; then
@@ -235,7 +255,7 @@ cache_build() {
     save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR"
   else
     header "Caching build"
-    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
   fi
   save_signature
 }
@@ -261,7 +281,7 @@ summarize_build() {
   mmeasure 'modules.size' "$(measure_size)"
 }
 
-install_plugin $BP_DIR $BUILD_DIR
+install_plugin "$BP_DIR" "$BUILD_DIR"
 
 header "Build succeeded!" | output "$LOG_FILE"
 mcount "compile"
