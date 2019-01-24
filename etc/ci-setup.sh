@@ -2,7 +2,7 @@
 
 [ "$CI" != "true" ] && echo "Not running on CI!" && exit 1
 
-git config --global user.email ${HEROKU_API_USER:-"buildpack@example.com"}
+git config --global user.email "${HEROKU_API_USER:-"buildpack@example.com"}"
 git config --global user.name 'BuildpackTester'
 
 cat <<EOF >> ~/.ssh/config
