@@ -1,7 +1,46 @@
 #!/usr/bin/env bash
+# bin/test <build-dir> <env-dir>
+
+### Configure directories
 
 BUILD_DIR=${1:-}
-if yarn --version > /dev/null 2>&1; then
+BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+
+### Load dependencies
+
+# shellcheck source=lib/output.sh
+source "$BP_DIR/lib/output.sh"
+
+### Check initial state
+
+[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+
+### Test to see if tests are defined
+
+# if we've made it this far, we know that package.json exists, and if it doesn't
+# this will fail harmlessly into the "no tests" case anyway
+node -e "require('$BUILD_DIR/package.json').scripts.test || process.exit(1)" > /dev/null 2> /dev/null
+RETURN=$?
+
+# catch the "no tests defined" case
+if [[ "$RETURN" != "0" ]]; then
+  pipeError << EOF
+No tests defined in package.json for this application
+
+By default Heroku will run the "test" script defined in "scripts" in
+package.json.
+
+To take advantage of Heroku CI, you must either define a "test" script in package.json
+or configure your testing setup in app.json.
+
+For more information, refer to the following documentation:
+https://devcenter.heroku.com/articles/heroku-ci#node
+EOF
+fi
+
+### Execute tests
+
+if $YARN; then
   cd "$BUILD_DIR" && yarn test
 else
   cd "$BUILD_DIR" && npm test

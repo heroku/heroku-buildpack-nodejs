@@ -896,6 +896,18 @@ testCIDependenciesYarn() {
   assertCapturedSuccess
 }
 
+testBinTestNoTests() {
+  compileTest "no-test-script"
+  assertCapturedError "No tests defined in package.json for this application"
+  assertCapturedError "https://devcenter.heroku.com/articles/heroku-ci#node"
+}
+
+testBinTestWithTests() {
+  compileTest "has-test-script"
+  assertCaptured "has tests"
+  assertCapturedSuccess
+}
+
 testNodeEnv() {
   compile "node-env-consistency"
   assertCaptured "heroku-prebuild: production"

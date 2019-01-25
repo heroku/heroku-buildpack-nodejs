@@ -1,0 +1,12 @@
+{
+  "name": "no-start",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo has tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
