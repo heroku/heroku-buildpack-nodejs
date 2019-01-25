@@ -4,6 +4,7 @@
 ### Configure directories
 
 BUILD_DIR=${1:-}
+# shellcheck disable=SC2164
 BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 ### Load dependencies
