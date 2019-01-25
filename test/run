@@ -874,6 +874,12 @@ testCIEnvVars() {
   assertCapturedSuccess
 }
 
+# If compile fails, test-compile should also fail
+testCICompileFails() {
+  testCompile "failing-build"
+  assertCapturedError
+}
+
 testCIEnvVarsOverride() {
   env_dir=$(mktmpdir)
   echo "banana" > $env_dir/NODE_ENV
@@ -1091,6 +1097,15 @@ compile() {
   cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+testCompile() {
+  default_process_types_cleanup
+  bp_dir=$(mktmpdir)
+  compile_dir=$(mktmpdir)
+  cp -a "$(pwd)"/* ${bp_dir}
+  cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+  capture ${bp_dir}/bin/test-compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
 # This is meant to be run after `compile`. `cleanupStartup` must be run
