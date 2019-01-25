@@ -562,11 +562,6 @@ testOldNpm() {
   assertCapturedError
 }
 
-testOldNpm2() {
-  compile "failing-build"
-  assertCaptured "This version of npm (1.4.28) has several known issues"
-}
-
 testNonexistentNpm() {
   compile "nonexistent-npm"
   assertCaptured "Unable to install npm 1.1.65"
