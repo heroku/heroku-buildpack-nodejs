@@ -1,27 +1,30 @@
-source $BP_DIR/lib/binaries.sh
+#!/usr/bin/env bash
 
 create_signature() {
   echo "v2; ${STACK}; $(node --version); $(npm --version); $(yarn --version 2>/dev/null || true); ${PREBUILD}"
 }
 
 save_signature() {
-  create_signature > $CACHE_DIR/node/signature
+  local cache_dir="$1"
+  create_signature > "$cache_dir/node/signature"
 }
 
 load_signature() {
-  if test -f $CACHE_DIR/node/signature; then
-    cat $CACHE_DIR/node/signature
+  local cache_dir="$1"
+  if test -f "$cache_dir/node/signature"; then
+    cat "$cache_dir/node/signature"
   else
     echo ""
   fi
 }
 
 get_cache_status() {
+  local cache_dir="$1"
   if ! ${NODE_MODULES_CACHE:-true}; then
     echo "disabled"
-  elif ! test -d "${CACHE_DIR}/node/"; then
+  elif ! test -d "$cache_dir/node/"; then
     echo "not-found"
-  elif [ "$(create_signature)" != "$(load_signature)" ]; then
+  elif [ "$(create_signature)" != "$(load_signature "$cache_dir")" ]; then
     echo "new-signature"
   else
     echo "valid"
@@ -29,8 +32,10 @@ get_cache_status() {
 }
 
 get_cache_directories() {
-  local dirs1=$(read_json "$BUILD_DIR/package.json" ".cacheDirectories | .[]?")
-  local dirs2=$(read_json "$BUILD_DIR/package.json" ".cache_directories | .[]?")
+  local build_dir="$1"
+  local dirs1 dirs2
+  dirs1=$(read_json "$build_dir/package.json" ".cacheDirectories | .[]?")
+  dirs2=$(read_json "$build_dir/package.json" ".cache_directories | .[]?")
 
   if [ -n "$dirs1" ]; then
     echo "$dirs1"
@@ -61,9 +66,11 @@ restore_default_cache_directories() {
 }
 
 restore_custom_cache_directories() {
+  local cache_directories
   local build_dir=${1:-}
   local cache_dir=${2:-}
-  local cache_directories=("${@:3}")
+  # Parse the input string with multiple lines: "a\nb\nc" into an array
+  mapfile -t cache_directories <<< "$3"
 
   echo "Loading ${#cache_directories[@]} from cacheDirectories (package.json):"
 
@@ -83,9 +90,10 @@ restore_custom_cache_directories() {
 }
 
 clear_cache() {
-  rm -rf $CACHE_DIR/node
-  mkdir -p $CACHE_DIR/node
-  mkdir -p $CACHE_DIR/node/cache
+  local cache_dir="$1"
+  rm -rf "$cache_dir/node"
+  mkdir -p "$cache_dir/node"
+  mkdir -p "$cache_dir/node/cache"
 }
 
 save_default_cache_directories() {
@@ -116,9 +124,11 @@ save_default_cache_directories() {
 }
 
 save_custom_cache_directories() {
+  local cache_directories
   local build_dir=${1:-}
   local cache_dir=${2:-}
-  local cache_directories=("${@:3}")
+  # Parse the input string with multiple lines: "a\nb\nc" into an array
+  mapfile -t cache_directories <<< "$3"
 
   echo "Saving ${#cache_directories[@]} cacheDirectories (package.json):"
 

@@ -17,7 +17,7 @@ error() {
 	exit 1
 }
 
-if [ -f $1/package.json ]; then
+if [ -f "$1/package.json" ]; then
   echo 'Node.js'
   exit 0
 fi
@@ -59,7 +59,7 @@ If you are trying to deploy a Node.js application, ensure that this
 file is present at the top level directory. This directory has the
 following files:
 
-$(ls -1p $1)
+$(ls -1p "$1")
     
 If you are trying to deploy an application written in another
 language, you need to change the list of buildpacks set on your
