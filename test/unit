@@ -180,6 +180,44 @@ testBuildData() {
   assertEquals "30.002" "$(bd_get time)"
 }
 
+testBuildDataPreviousBuild() {
+  local cache_dir=$(mktemp -d)
+
+  # the first time, there will be no previous build file
+  bd_create "$cache_dir"
+  assertContains "nodejs" "$BUILD_DATA_FILE"
+  assertContains "nodejs-prev" "$PREVIOUS_BUILD_DATA_FILE"
+  assertFileExists "$BUILD_DATA_FILE"
+
+  # set a value in the build data file
+  bd_set "test" "foo"
+  assertFileContains "test=foo" "$BUILD_DATA_FILE"
+  assertFileDoesNotExist "$PREVIOUS_BUILD_DATA_FILE"
+
+  assertEquals "$(bd_get test)" "foo"
+  assertEquals "$(bd_prev_get test)" ""
+
+  # the second time this is called (cache restored)
+  # there will be a previous build file
+  bd_create "$cache_dir"
+  assertFileExists "$BUILD_DATA_FILE"
+  assertFileExists "$PREVIOUS_BUILD_DATA_FILE"
+
+  # the data stored in the previous build should now be in the second file
+  assertFileNotContains "test=foo" "$BUILD_DATA_FILE"
+  assertFileContains "test=foo" "$PREVIOUS_BUILD_DATA_FILE"
+  assertEquals "$(bd_get test)" ""
+  assertEquals "$(bd_prev_get test)" "foo"
+  bd_set "test" "bar"
+
+  # doing it once more does not result in an error
+  bd_create "$cache_dir"
+  assertFileExists "$BUILD_DATA_FILE"
+  assertFileExists "$PREVIOUS_BUILD_DATA_FILE" 
+  assertEquals "$(bd_prev_get test)" "bar"
+  assertEquals "$(bd_get test)" ""
+}
+
 testWebConcurrencyProfileScript() {
   # this was set when we sourced the WEB_CONCURRENCY.sh file
   unset WEB_MEMORY
@@ -231,6 +269,9 @@ source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/build-data.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+# testing utils
+source "$(pwd)"/test/utils
 
 # import the testing framework
 source "$(pwd)"/test/shunit2

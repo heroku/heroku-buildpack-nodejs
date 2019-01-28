@@ -134,6 +134,10 @@ install_bins() {
   bd_set "npm-version-request" "$npm_engine"
   bd_set "yarn-version-request" "$yarn_engine"
 
+  bd_set "node-version-request" "$node_engine"
+  bd_set "npm-version-request" "$npm_engine"
+  bd_set "yarn-version-request" "$yarn_engine"
+
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"
   else

@@ -80,6 +80,11 @@ log_build_scripts() {
   bd_set "heroku-prebuild-script" "$heroku_prebuild"
   bd_set "heroku-postbuild-script" "$heroku_prebuild"
 
+  bd_set "build-script" "$build"
+  bd_set "postinstall-script" "$postinstall"
+  bd_set "heroku-prebuild-script" "$heroku_prebuild"
+  bd_set "heroku-postbuild-script" "$heroku_prebuild"
+
   if [ -n "$build" ]; then
     mcount "scripts.build"
 
