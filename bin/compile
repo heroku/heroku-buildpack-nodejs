@@ -44,6 +44,12 @@ source "$BP_DIR/lib/cache.sh"
 source "$BP_DIR/lib/dependencies.sh"
 # shellcheck source=lib/plugin.sh
 source "$BP_DIR/lib/plugin.sh"
+# shellcheck source=lib/kvstore.sh
+source "$BP_DIR/lib/kvstore.sh"
+# shellcheck source=lib/metadata.sh
+source "$BP_DIR/lib/metadata.sh"
+# shellcheck source=lib/build-data.sh
+source "$BP_DIR/lib/build-data.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -68,12 +74,18 @@ handle_failure() {
 }
 trap 'handle_failure' ERR
 
+### Initalize metadata store
+bd_create "$CACHE_DIR"
+
 ### Check initial state
 
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
+### Save build info
+log_initial_state
+ 
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
@@ -86,6 +98,7 @@ warn_missing_package_json "$BUILD_DIR"
 ### Behavior flags
 [ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=$(read_json "$BUILD_DIR/package.json" ".[\"heroku-run-build-script\"]")
 warn_build_script_behavior_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" | output "$LOG_FILE"
+log_build_script_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR"
 
 ### Compile
 
@@ -117,6 +130,10 @@ install_bins() {
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
+  bd_set "node-version-request" "$node_engine"
+  bd_set "npm-version-request" "$npm_engine"
+  bd_set "yarn-version-request" "$yarn_engine"
+
   if [ -n "$iojs_engine" ]; then
     echo "engines.iojs (package.json):  $iojs_engine (iojs)"
   else
@@ -141,6 +158,7 @@ install_bins() {
     monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
     node_version="$(node --version)"
     mcount "version.node.$node_version"
+    bd_set "node-version" "$node_version"
   fi
 
   # Download yarn if there is a yarn.lock file or if the user
@@ -152,8 +170,10 @@ install_bins() {
 
   if $YARN; then
     mcount "version.yarn.$(yarn --version)"
+    bd_set "yarn-version" "$(yarn --version)"
   else
     mcount "version.npm.$(npm --version)"
+    bd_set "npm-version" "$(npm --version)"
   fi
 
   warn_old_npm
@@ -204,6 +224,7 @@ restore_cache() {
   fi
 
   mcount "cache.$cache_status"
+  bd_set "cache-status" "$cache_status"
 }
 
 restore_cache | output "$LOG_FILE"
@@ -279,6 +300,7 @@ summarize_build() {
   fi
 
   mmeasure 'modules.size' "$(measure_size)"
+  bd_set "node-modules-size" "$(measure_size)"
 }
 
 install_plugin "$BP_DIR" "$BUILD_DIR"
@@ -286,7 +308,10 @@ install_plugin "$BP_DIR" "$BUILD_DIR"
 header "Build succeeded!" | output "$LOG_FILE"
 mcount "compile"
 summarize_build | output "$LOG_FILE"
+bd_set "node-build-success" "true"
 
 warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
+
+log_build_data >> "$BUILDPACK_LOG_FILE"

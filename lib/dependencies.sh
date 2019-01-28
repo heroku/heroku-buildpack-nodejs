@@ -75,6 +75,11 @@ log_build_scripts() {
   heroku_postbuild=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
   postinstall=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
 
+  bd_set "build-script" "$build"
+  bd_set "postinstall-script" "$postinstall"
+  bd_set "heroku-prebuild-script" "$heroku_prebuild"
+  bd_set "heroku-postbuild-script" "$heroku_prebuild"
+
   if [ -n "$build" ]; then
     mcount "scripts.build"
 
@@ -139,16 +144,20 @@ yarn_prune_devdependencies() {
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
+    bd_set "skipped-prune" "true"
     return 0
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
+    bd_set "skipped-prune" "true"
     return 0
   elif [ -n "$YARN_PRODUCTION" ]; then
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
+    bd_set "skipped-prune" "true"
     return 0
   else 
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+    bd_set "skipped-prune" "false"
   fi
 }
 
@@ -199,12 +208,15 @@ npm_prune_devdependencies() {
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
+    bd_set "skipped-prune" "true"
     return 0
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
+    bd_set "skipped-prune" "true"
     return 0
   elif [ -n "$NPM_CONFIG_PRODUCTION" ]; then
     echo "Skipping because NPM_CONFIG_PRODUCTION is '$NPM_CONFIG_PRODUCTION'"
+    bd_set "skipped-prune" "true"
     return 0
   elif [ "$npm_version" == "5.3.0" ]; then
     mcount "skip-prune-issue-npm-5.3.0"
@@ -213,6 +225,7 @@ npm_prune_devdependencies() {
     echo ""
     echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+    bd_set "skipped-prune" "true"
     return 0
   elif [ "$npm_version" == "5.6.0" ] ||
        [ "$npm_version" == "5.5.1" ] ||
@@ -227,9 +240,11 @@ npm_prune_devdependencies() {
     echo ""
     echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+    bd_set "skipped-prune" "true"
     return 0
   else
     cd "$build_dir" || return
     monitor "npm-prune" npm prune --userconfig "$build_dir/.npmrc" 2>&1
+    bd_set "skipped-prune" "false"
   fi
 }
