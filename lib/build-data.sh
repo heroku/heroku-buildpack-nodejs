@@ -42,8 +42,9 @@ bd_time() {
   local key="$1"
   local start="$2"
   local end="${3:-$(nowms)}"
-  local time="$(echo ${start} ${end} | awk '{ printf "%.3f", ($2 - $1)/1000 }')"
-  kv_set $BUILD_DATA_FILE $1 "$time"
+  local time
+  time="$(echo "$start" "$end" | awk '{ printf "%.3f", ($2 - $1)/1000 }')"
+  kv_set "$BUILD_DATA_FILE" "$1" "$time"
 }
 
 # Retrieve a value from a previous build if it exists
@@ -53,7 +54,7 @@ bd_time() {
 #   - deployed with a new major version of Node
 #   - etc
 bd_prev_get() {
-  kv_get $PREVIOUS_BUILD_DATA_FILE "$1"
+  kv_get "$PREVIOUS_BUILD_DATA_FILE" "$1"
 }
 
 log_build_data() {
