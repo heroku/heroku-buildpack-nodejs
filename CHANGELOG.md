@@ -2,6 +2,8 @@
 
 ## master
 
+- Cache `$YARN_CACHE_FOLDER` (#615)
+
 ## v134 (2018-12-20)
 
 - Internal changes (#593, #591)
