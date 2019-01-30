@@ -59,6 +59,17 @@ restore_default_cache_directories() {
     echo "- node_modules (not cached - skipping)"
   fi
 
+  # $YARN_CACHE_FOLDER
+  if $YARN; then
+    if [[ -e "$cache_dir/node/cache/yarn_cache_dir" ]]; then
+      echo "- $YARN_CACHE_FOLDER"
+      mkdir -p "$(dirname "$YARN_CACHE_FOLDER")"
+      mv "$cache_dir/node/cache/yarn_cache_dir" "$YARN_CACHE_FOLDER"
+    else
+      echo "- $YARN_CACHE_FOLDER (not cached - skipping)"
+    fi
+  fi
+
   # bower_components, should be silent if it is not in the cache
   if [[ -e "$cache_dir/node/cache/bower_components" ]]; then
     echo "- bower_components"
@@ -109,6 +120,17 @@ save_default_cache_directories() {
     # this can happen if there are no dependencies
     mcount "cache.no-node-modules"
     echo "- node_modules (nothing to cache)"
+  fi
+
+  # $YARN_CACHE_FOLDER
+  if $YARN; then
+    if [[ -e "$YARN_CACHE_FOLDER" ]]; then
+      echo "- $YARN_CACHE_FOLDER"
+      mkdir -p "$cache_dir/node/cache/yarn_cache_dir"
+      cp -a "$YARN_CACHE_FOLDER" "$(dirname "$cache_dir/node/cache/yarn_cache_dir")"
+    else
+      echo "- $YARN_CACHE_FOLDER (nothing to cache)"
+    fi
   fi
 
   # bower_components
