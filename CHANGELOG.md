@@ -2,6 +2,13 @@
 
 ## master
 
+- Add warning for the upcoming run build change (#616)
+
+## v135 (2018-02-06)
+
+- Fix bug where failing builds on CI would not fail CI (#613)
+- Internal logging changes (#596, #600)
+
 ## v134 (2018-12-20)
 
 - Internal changes (#593, #591)
