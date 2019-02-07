@@ -63,6 +63,31 @@ warn_build_script_behavior_opt_in() {
     echo ""
     echo "- If a \"build\" script is defined in package.json it will be executed by default"
     echo "- The \"heroku-postbuild\" script will be executed instead if present"
+    echo ""
+    echo "Your app will be unaffected by the change on March 11, 2019"
+  fi
+}
+
+warn_build_script_behavior_change() {
+  local opted_in="$1"
+  local build_dir="$2"
+  local has_build_script has_heroku_build_script
+
+  has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
+  has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
+
+  if [[ -z "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]] && [[ "$opted_in" != "true" ]]; then
+    header "Change to Node.js build process"
+    echo "On March 11, 2019 Heroku will begin executing the \"build\" script defined in package.json"
+    echo "by default. This application may be affected by this change."
+    echo ""
+    echo "To make this transition easier, we've published a tool that will automatically" 
+    echo "update your app for you. You can run it with one command in your app's"
+    echo "root directory:"
+    echo ""
+    echo "$ npx @heroku/update-node-build-script"
+    echo ""
+    echo "Please see https://help.heroku.com/P5IMU3MP/heroku-node-js-build-script-change-faq for more information"
   fi
 }
 

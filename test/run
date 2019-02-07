@@ -15,6 +15,18 @@ testFlatmapStream() {
   assertCapturedError
 }
 
+testBuildScriptWarning() {
+  compile "build-script"
+
+  # Without opting in, having a build script will display a warning
+  assertCaptured "Warning: On March 11, 2019 Heroku will begin executing the \"build\" script defined in package.json by default"
+  assertCaptured "https://help.heroku.com/P5IMU3MP/heroku-node-js-build-script-change-faq"
+
+  # We shouldn't see the opt-in success message
+  assertNotCaptured "Opting in to new default build script behavior"
+  assertCapturedSuccess
+}
+
 testBuildScriptBehavior() {
   # opt in to new build script behavior
   cache=$(mktmpdir)
@@ -37,6 +49,9 @@ testBuildScriptOptIn() {
   compile "build-script-opt-in"
   assertCaptured "Running build"
   assertCaptured "Opting in to new default build script behavior"
+  # We shouldn't see this warning once they opt-in
+  assertNotCaptured "Warning: On March 11, 2019 Heroku will begin executing the \"build\" script defined in package.json by default"
+  assertNotCaptured "https://help.heroku.com/P5IMU3MP/heroku-node-js-build-script-change-faq"
   assertCapturedSuccess
 }
 
