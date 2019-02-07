@@ -22,8 +22,6 @@ log_build_script_opt_in() {
   has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
   has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
 
-  echo $BUILDPACK_LOG_FILE
-
   # if this app will be affected by the change
   if [[ -z "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]]; then
     mcount "affected-by-build-change"
