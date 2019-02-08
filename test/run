@@ -47,8 +47,8 @@ testBuildScriptBehavior() {
   assertCapturedSuccess
 
   # the 'heroku-postbuild' script takes precedence over the 'build' script
-  compile "build-script-override" $cache $env_dir
-  assertCaptured "Detected both 'build' and 'heroku-postbuild' scripts"
+  compile "build-script-override"
+  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
   assertCaptured "Running heroku-postbuild"
   assertCapturedSuccess
 }

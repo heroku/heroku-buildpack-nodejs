@@ -43,7 +43,7 @@ run_build_script() {
   has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
 
   if [[ -n "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]]; then
-    echo "Detected both 'build' and 'heroku-postbuild' scripts"
+    echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
     mcount "scripts.heroku-postbuild-and-build"
     run_if_present "$build_dir" 'heroku-postbuild'
   elif [[ -n "$has_heroku_build_script" ]]; then
@@ -60,9 +60,6 @@ warn_build_script_behavior_opt_in() {
   if [[ "$opted_in" = true ]]; then
     header "Opting in to new default build script behavior"
     echo "You have set \"heroku-run-build-script\" = true in your package.json"
-    echo ""
-    echo "- If a \"build\" script is defined in package.json it will be executed by default"
-    echo "- The \"heroku-postbuild\" script will be executed instead if present"
     echo ""
     echo "Your app will be unaffected by the change on March 11, 2019"
   fi
@@ -88,6 +85,7 @@ warn_build_script_behavior_change() {
     echo "$ npx @heroku/update-node-build-script"
     echo ""
     echo "Please see https://help.heroku.com/P5IMU3MP/heroku-node-js-build-script-change-faq for more information"
+    echo ""
   fi
 }
 
