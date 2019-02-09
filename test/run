@@ -15,6 +15,26 @@ testFlatmapStream() {
   assertCapturedError
 }
 
+testBuildScriptWarning() {
+  local env_dir=$(mktmpdir)
+  local metrics_log=$(mktemp)
+  echo "$metrics_log" > $env_dir/BUILDPACK_LOG_FILE
+
+  compile "build-script" "$(mktmpdir)" $env_dir
+
+  # Without opting in, having a build script will display a warning
+  assertCaptured "On March 11, 2019 Heroku will begin executing the \"build\" script defined in package.json"
+  assertCaptured "https://help.heroku.com/P5IMU3MP/heroku-node-js-build-script-change-faq"
+
+  # make sure metrics are being captured as we expect
+  assertFileContains "count#buildpack.nodejs.affected-by-build-change=1" "$metrics_log"
+  assertFileNotContains "affected-by-build-change-opted-in" "$metrics_log"
+
+  # We shouldn't see the opt-in success message
+  assertNotCaptured "Opting in to new default build script behavior"
+  assertCapturedSuccess
+}
+
 testBuildScriptBehavior() {
   # opt in to new build script behavior
   cache=$(mktmpdir)
@@ -27,16 +47,28 @@ testBuildScriptBehavior() {
   assertCapturedSuccess
 
   # the 'heroku-postbuild' script takes precedence over the 'build' script
-  compile "build-script-override" $cache $env_dir
-  assertCaptured "Detected both 'build' and 'heroku-postbuild' scripts"
+  compile "build-script-override"
+  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
   assertCaptured "Running heroku-postbuild"
   assertCapturedSuccess
 }
 
 testBuildScriptOptIn() {
-  compile "build-script-opt-in"
+  local env_dir=$(mktmpdir)
+  local metrics_log=$(mktemp)
+  echo "$metrics_log" > $env_dir/BUILDPACK_LOG_FILE
+
+  compile "build-script-opt-in" "$(mktmpdir)" $env_dir
   assertCaptured "Running build"
   assertCaptured "Opting in to new default build script behavior"
+  # We shouldn't see this warning once they opt-in
+  assertNotCaptured "Warning: On March 11, 2019 Heroku will begin executing the \"build\" script defined in package.json by default"
+  assertNotCaptured "https://help.heroku.com/P5IMU3MP/heroku-node-js-build-script-change-faq"
+
+  # make sure metrics are being captured as we expect
+  assertFileContains "count#buildpack.nodejs.affected-by-build-change=1" "$metrics_log"
+  assertFileContains "count#buildpack.nodejs.affected-by-build-change-opted-in=1" "$metrics_log"
+
   assertCapturedSuccess
 }
 

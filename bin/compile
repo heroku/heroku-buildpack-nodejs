@@ -97,8 +97,7 @@ warn_missing_package_json "$BUILD_DIR"
 
 ### Behavior flags
 [ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=$(read_json "$BUILD_DIR/package.json" ".[\"heroku-run-build-script\"]")
-warn_build_script_behavior_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" | output "$LOG_FILE"
-log_build_script_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR"
+
 
 ### Compile
 
@@ -317,5 +316,9 @@ bd_set "node-build-success" "true"
 warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
+
+warn_build_script_behavior_change "$NEW_BUILD_SCRIPT_BEHAVIOR" "$BUILD_DIR" | output "$LOG_FILE"
+warn_build_script_behavior_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" | output "$LOG_FILE"
+log_build_script_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" "$BUILD_DIR"
 
 log_build_data >> "$BUILDPACK_LOG_FILE"

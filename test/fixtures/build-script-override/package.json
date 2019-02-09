@@ -7,10 +7,11 @@
     "url": "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "~0.10.0"
+    "node": "10.x"
   },
   "scripts" : {
     "build": "echo build hook message",
     "heroku-postbuild": "echo heroku-postbuild hook message"
-  }
+  },
+  "heroku-run-build-script": true
 }
