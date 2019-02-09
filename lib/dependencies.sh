@@ -59,9 +59,9 @@ warn_build_script_behavior_opt_in() {
   local opted_in="$1"
   if [[ "$opted_in" = true ]]; then
     header "Opting in to new default build script behavior"
-    echo "You have set \"heroku-run-build-script\" = true in your package.json"
-    echo ""
+    echo "You have set \"heroku-run-build-script\"=true in your package.json"
     echo "Your app will be unaffected by the change on March 11, 2019"
+    echo ""
   fi
 }
 
