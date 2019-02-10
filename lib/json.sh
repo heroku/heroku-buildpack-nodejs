@@ -19,6 +19,7 @@ has_script() {
   local key="$2"
 
   if test -f "$file"; then
+    # shellcheck disable=SC2002
     cat "$file" | $JQ ".[\"scripts\"] | has(\"$key\")"
   else
     echo "false"
