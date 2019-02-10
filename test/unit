@@ -260,10 +260,23 @@ testWebConcurrencyProfileScript() {
   assertEquals "1" "$(calculate_concurrency 512 1)"
 }
 
+testHasScript() {
+  local file="$(pwd)/test/fixtures/has-script-fixtures/package.json"
+  assertEquals "true" "$(has_script "$file" "build")"
+  assertEquals "true" "$(has_script "$file" "heroku-postbuild")"
+  assertEquals "false" "$(has_script "$file" "postinstall")"
+  assertEquals "true" "$(has_script "$file" "random-script-name")"
+}
+
+BP_DIR="$(pwd)"
+
 # mocks
 source "$(pwd)"/test/mocks/stdlib.sh
 
 # the modules to be tested
+source "$(pwd)"/lib/environment.sh
+source "$(pwd)"/lib/json.sh
+source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh

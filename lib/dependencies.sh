@@ -22,7 +22,7 @@ run_if_present() {
   local script_name=${2:-}
   local has_script
 
-  has_script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
+  has_script=$(has_script "$build_dir/package.json" "$script_name")
 
   if [ -n "$has_script" ]; then
     if $YARN; then
@@ -39,8 +39,11 @@ run_build_script() {
   local build_dir=${1:-}
   local has_build_script has_heroku_build_script
 
-  has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
-  has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
+  # has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
+  # has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
+
+  has_build_script=$(has_script "$build_dir/package.json" "build")
+  has_heroku_build_script=$(has_script "$build_dir/package.json" "heroku-postbuild")
 
   if [[ -n "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]]; then
     echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
