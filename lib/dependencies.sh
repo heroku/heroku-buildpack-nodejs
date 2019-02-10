@@ -39,9 +39,6 @@ run_build_script() {
   local build_dir=${1:-}
   local has_build_script has_heroku_build_script
 
-  # has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
-  # has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
-
   has_build_script=$(has_script "$build_dir/package.json" "build")
   has_heroku_build_script=$(has_script "$build_dir/package.json" "heroku-postbuild")
 
