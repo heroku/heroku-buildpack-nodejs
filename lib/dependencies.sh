@@ -62,6 +62,7 @@ warn_build_script_behavior_opt_in() {
     echo "You have set \"heroku-run-build-script\"=true in your package.json"
     echo "Your app will be unaffected by the change on March 11, 2019"
     echo ""
+    mcount "build-change-opt-in"
   fi
 }
 
