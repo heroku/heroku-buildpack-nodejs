@@ -14,6 +14,18 @@ log_initial_state() {
   bd_set "stack" "$STACK"
 }
 
+generate_uuids() {
+  # generate a unique id for each build
+  bd_set "build-uuid" "$(uuid)"
+
+  # propagate an app-uuid forward unless the cache is cleared
+  if [[ -n "$(bd_prev_get "app-uuid")" ]]; then
+    bd_set "app-uuid" "$(bd_prev_get "app-uuid")"
+  else
+    bd_set "app-uuid" "$(uuid)"
+  fi
+}
+
 log_build_script_opt_in() {
   local opted_in="$1"
   local build_dir="$2"

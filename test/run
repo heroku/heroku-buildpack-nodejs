@@ -1085,6 +1085,8 @@ testBuildMetaData() {
   assertFileContains "has-node-lock-file=false" $log_file
   assertFileContains "cache-status=not-found" $log_file
   assertFileContains "node-build-success=true" $log_file
+  assertFileContains "app-uuid=" $log_file
+  assertFileContains "build-uuid=" $log_file
 
   # binary versions
   assertFileContains "node-version-request=~0.10.0" $log_file
@@ -1120,6 +1122,28 @@ testBuildMetaData() {
   assertFileContains "install-yarn-binary-memory=" $log_file
   assertFileContains "install-yarn-binary-time=" $log_file
   assertFileContains "node-build-success=true" $log_file
+}
+
+testPropagateAppUUID() {
+  env_dir=$(mktmpdir)
+  local log_file=$(mktemp)
+  local cache_dir=${2:-$(mktmpdir)}
+  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
+
+  # save the generated app-uuid for the first build
+  compile "node-10" $cache_dir $env_dir
+  assertFileContains "app-uuid=" $log_file
+  local uuid=$(cat $log_file | sed -n -e 's/^.*app-uuid=\([^ ]*\).*/\1/p')
+
+  # create a new log file
+  log_file=$(mktemp)
+  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
+
+  # recompile with the same cache directory
+  compile "node-10" $cache_dir $env_dir
+  assertFileContains "app-uuid" $log_file
+  # make sure that the app-uuid is the same
+  assertEquals "$uuid" "$(cat $log_file | sed -n -e 's/^.*app-uuid=\([^ ]*\).*/\1/p')"
 }
 
 testBinDetectWarnings() {

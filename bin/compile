@@ -44,6 +44,8 @@ source "$BP_DIR/lib/cache.sh"
 source "$BP_DIR/lib/dependencies.sh"
 # shellcheck source=lib/plugin.sh
 source "$BP_DIR/lib/plugin.sh"
+# shellcheck source=lib/uuid.sh
+source "$BP_DIR/lib/uuid.sh"
 # shellcheck source=lib/kvstore.sh
 source "$BP_DIR/lib/kvstore.sh"
 # shellcheck source=lib/metadata.sh
@@ -85,6 +87,7 @@ bd_create "$CACHE_DIR"
 
 ### Save build info
 log_initial_state
+generate_uuids
  
 ### Failures that should be caught immediately
 
