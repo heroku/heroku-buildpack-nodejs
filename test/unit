@@ -280,8 +280,8 @@ testUUID() {
 
 testUUIDFallback() {
   local first second
-  first=$(uuid-fallback)
-  second=$(uuid-fallback)
+  first=$(uuid_fallback)
+  second=$(uuid_fallback)
 
   assertNotEquals "$first" "$second"
   assertEquals "true" "$(isUUID "$first")"

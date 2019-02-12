@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-uuid-fallback()
+uuid_fallback()
 {
     local N B C='89ab'
 
@@ -36,6 +36,6 @@ uuid() {
     uuidgen | tr "[:upper:]" "[:lower:]"
   # fallback just to be sure
   else
-    uuid-fallback
+    uuid_fallback
   fi
 }
