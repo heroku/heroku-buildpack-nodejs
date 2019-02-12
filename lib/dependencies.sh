@@ -20,11 +20,11 @@ list_dependencies() {
 run_if_present() {
   local build_dir=${1:-}
   local script_name=${2:-}
-  local has_script
+  local has_script_name
 
-  has_script=$(has_script "$build_dir/package.json" "$script_name")
+  has_script_name=$(has_script "$build_dir/package.json" "$script_name")
 
-  if [[ "$has_script" == "true" ]]; then
+  if [[ "$has_script_name" == "true" ]]; then
     if $YARN; then
       echo "Running $script_name (yarn)"
       monitor "$script_name" yarn run "$script_name"
