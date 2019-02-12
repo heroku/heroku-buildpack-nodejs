@@ -56,6 +56,8 @@ export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
+build_start_time=$(nowms)
+
 ### Handle errors
 
 handle_failure() {
@@ -312,6 +314,7 @@ header "Build succeeded!" | output "$LOG_FILE"
 mcount "compile"
 summarize_build | output "$LOG_FILE"
 bd_set "node-build-success" "true"
+bd_time "build-time" "$build_start_time"
 
 warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"

@@ -9,8 +9,6 @@ log_initial_state() {
     bd_set "has-node-lock-file" "$NPM_LOCK"
   fi
 
-  bd_set "new-build-script-opt-in" "false"
-
   bd_set "stack" "$STACK"
 }
 
