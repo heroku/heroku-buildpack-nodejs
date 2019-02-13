@@ -34,7 +34,13 @@ uuid() {
   # on macOS there is also a command
   elif [[ -x "$(command -v uuidgen)" ]]; then
     uuidgen | tr "[:upper:]" "[:lower:]"
-  # fallback just to be sure
+  # If you are running this buildpack on an image without either of the above binaries
+  # then let's provide something that approximates this functionality, but beware that
+  # we can make no guarantees of true randomness or uniqueness of this ID. However it is
+  # likely only being piped to /dev/null
+  #
+  # If that's not true for you, please file an issue and let us know: 
+  # https://github.com/heroku/heroku-buildpack-nodejs/issues
   else
     uuid_fallback
   fi
