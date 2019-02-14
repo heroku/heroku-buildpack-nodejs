@@ -260,6 +260,34 @@ testWebConcurrencyProfileScript() {
   assertEquals "1" "$(calculate_concurrency 512 1)"
 }
 
+isUUID() {
+  if [[ ${1//-/} =~ ^[[:xdigit:]]{32}$ ]]; then
+    echo true
+  else
+    echo false
+  fi
+}
+
+testUUID() {
+  local first second
+  first=$(uuid)
+  second=$(uuid)
+
+  assertNotEquals "$first" "$second"
+  assertEquals "true" "$(isUUID "$first")"
+  assertEquals "true" "$(isUUID "$second")"
+}
+
+testUUIDFallback() {
+  local first second
+  first=$(uuid_fallback)
+  second=$(uuid_fallback)
+
+  assertNotEquals "$first" "$second"
+  assertEquals "true" "$(isUUID "$first")"
+  assertEquals "true" "$(isUUID "$second")"
+}
+
 testHasScript() {
   local file="$(pwd)/test/fixtures/has-script-fixtures/package.json"
   assertEquals "true" "$(has_script "$file" "build")"
@@ -274,6 +302,8 @@ BP_DIR="$(pwd)"
 source "$(pwd)"/test/mocks/stdlib.sh
 
 # the modules to be tested
+
+source "$(pwd)"/lib/uuid.sh
 source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/json.sh
