@@ -1085,6 +1085,7 @@ testBuildMetaData() {
   assertFileContains "has-node-lock-file=false" $log_file
   assertFileContains "cache-status=not-found" $log_file
   assertFileContains "node-build-success=true" $log_file
+  assertFileContains "build-time=" $log_file
 
   # binary versions
   assertFileContains "node-version-request=~0.10.0" $log_file
