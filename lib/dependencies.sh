@@ -20,11 +20,11 @@ list_dependencies() {
 run_if_present() {
   local build_dir=${1:-}
   local script_name=${2:-}
-  local has_script
+  local has_script_name
 
-  has_script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
+  has_script_name=$(has_script "$build_dir/package.json" "$script_name")
 
-  if [ -n "$has_script" ]; then
+  if [[ "$has_script_name" == "true" ]]; then
     if $YARN; then
       echo "Running $script_name (yarn)"
       monitor "$script_name" yarn run "$script_name"
@@ -39,17 +39,17 @@ run_build_script() {
   local build_dir=${1:-}
   local has_build_script has_heroku_build_script
 
-  has_build_script=$(read_json "$build_dir/package.json" ".scripts.build")
-  has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
+  has_build_script=$(has_script "$build_dir/package.json" "build")
+  has_heroku_build_script=$(has_script "$build_dir/package.json" "heroku-postbuild")
 
-  if [[ -n "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]]; then
+  if [[ "$has_heroku_build_script" == "true" ]] && [[ "$has_build_script" == "true" ]]; then
     echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
     mcount "scripts.heroku-postbuild-and-build"
     run_if_present "$build_dir" 'heroku-postbuild'
-  elif [[ -n "$has_heroku_build_script" ]]; then
+  elif [[ "$has_heroku_build_script" == "true" ]]; then
     mcount "scripts.heroku-postbuild"
     run_if_present "$build_dir" 'heroku-postbuild'
-  elif [[ -n "$has_build_script" ]]; then
+  elif [[ "$has_build_script" == "true" ]]; then
     mcount "scripts.build"
     run_if_present "$build_dir" 'build'
   fi
@@ -62,6 +62,7 @@ warn_build_script_behavior_opt_in() {
     echo "You have set \"heroku-run-build-script\"=true in your package.json"
     echo "Your app will be unaffected by the change on March 11, 2019"
     echo ""
+    mcount "build-change-opt-in"
   fi
 }
 

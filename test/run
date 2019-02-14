@@ -72,6 +72,14 @@ testBuildScriptOptIn() {
   assertCapturedSuccess
 }
 
+testPreferEmptyHerokuPostbuildOverBuild() {
+  compile "empty-heroku-postbuild"
+  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
+  assertCaptured "Running heroku-postbuild"
+  assertNotCaptured "build hook message"
+  assertCapturedSuccess
+}
+
 testPrePostBuildScripts() {
   compile "pre-post-build-scripts"
   assertCaptured "Running heroku-prebuild"

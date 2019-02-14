@@ -14,6 +14,18 @@ read_json() {
   fi
 }
 
+has_script() {
+  local file="$1"
+  local key="$2"
+
+  if test -f "$file"; then
+    # shellcheck disable=SC2002
+    cat "$file" | $JQ ".[\"scripts\"] | has(\"$key\")"
+  else
+    echo "false"
+  fi
+}
+
 is_invalid_json_file() {
   local file="$1"
   # shellcheck disable=SC2002
