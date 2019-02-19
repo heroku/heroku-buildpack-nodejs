@@ -198,6 +198,7 @@ yarn_prune_devdependencies() {
 npm_node_modules() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
+  local ci=${NPM_CONFIG_CI:-false}
 
   if [ -e "$build_dir/package.json" ]; then
     cd "$build_dir" || return
@@ -209,7 +210,12 @@ npm_node_modules() {
     else
       echo "Installing node modules (package.json)"
     fi
-    monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+
+    if [ "$ci"  ] && [ -e "$BUILD_DIR/package-lock.json" ]; then
+      monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+    else
+      monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+    fi
   else
     echo "Skipping (no package.json)"
   fi
@@ -218,6 +224,7 @@ npm_node_modules() {
 npm_rebuild() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
+  local ci=${NPM_CONFIG_CI:-false}
 
   if [ -e "$build_dir/package.json" ]; then
     cd "$build_dir" || return
@@ -228,7 +235,12 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    monitor "npm-rebuild" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+
+    if [ "$ci"  ] && [ -e "$BUILD_DIR/package-lock.json" ]; then
+      monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+    else
+      monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+    fi
   else
     echo "Skipping (no package.json)"
   fi
