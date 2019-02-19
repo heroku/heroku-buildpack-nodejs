@@ -28,6 +28,10 @@ header() {
   echo "-----> $*" || true
 }
 
+header_skip_newline() {
+  echo "-----> $*" || true
+}
+
 error() {
   echo " !     $*" >&2 || true
   echo "" || true
