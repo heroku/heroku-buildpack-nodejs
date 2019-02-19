@@ -21,13 +21,18 @@ run_if_present() {
   local build_dir=${1:-}
   local script_name=${2:-}
   local has_script_name
+  local script
 
   has_script_name=$(has_script "$build_dir/package.json" "$script_name")
+  script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
   if [[ "$has_script_name" == "true" ]]; then
     if $YARN; then
       echo "Running $script_name (yarn)"
-      monitor "$script_name" yarn run "$script_name"
+      # yarn will throw an error if the script is an empty string, so check for this case
+      if [[ -n "$script" ]]; then
+        monitor "$script_name" yarn run "$script_name"
+      fi
     else
       echo "Running $script_name"
       monitor "$script_name" npm run "$script_name" --if-present
