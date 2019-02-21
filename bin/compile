@@ -257,6 +257,13 @@ build_dependencies() {
   mtime "modules.time.cache.$cache_status" "${start}"
 
   if [[ "$NEW_BUILD_SCRIPT_BEHAVIOR" = true ]]; then
+    if $YARN; then
+      header "Build"
+    else
+      # npm already prints a new line after the install
+      # without skipping the newline there's an awkward double line break
+      header_skip_newline "Build"
+    fi
     mcount "build-script.new-behavior"
     run_build_script "$BUILD_DIR"
   else
