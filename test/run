@@ -87,6 +87,14 @@ testPreferEmptyHerokuPostbuildOverBuild() {
   assertCapturedSuccess
 }
 
+testEmptyHerokuPostbuildWithYarn() {
+  compile "empty-heroku-postbuild-yarn"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertNotCaptured "build hook message"
+  assertNotCaptured "Script must exist"
+  assertCapturedSuccess
+}
+
 testPrePostBuildScripts() {
   compile "pre-post-build-scripts"
   assertCaptured "Running heroku-prebuild"
