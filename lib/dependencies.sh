@@ -211,7 +211,7 @@ npm_node_modules() {
       echo "Installing node modules (package.json)"
     fi
 
-    if [ "$ci"  ] && [ -e "$BUILD_DIR/package-lock.json" ]; then
+    if [ "$ci"  ] && [ -e "$build_dir/package-lock.json" ]; then
       monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
       monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
@@ -236,7 +236,7 @@ npm_rebuild() {
       echo "Installing any new modules (package.json)"
     fi
 
-    if [ "$ci"  ] && [ -e "$BUILD_DIR/package-lock.json" ]; then
+    if [ "$ci"  ] && [ -e "$build_dir/package-lock.json" ]; then
       monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
       monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
