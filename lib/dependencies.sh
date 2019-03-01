@@ -80,7 +80,7 @@ warn_build_script_behavior_change() {
   has_heroku_build_script=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
 
   if [[ -z "$has_heroku_build_script" ]] && [[ -n "$has_build_script" ]] && [[ "$opted_in" != "true" ]]; then
-    header "Change to Node.js build process"
+    bright_header "Change to Node.js build process"
     echo "On March 11, 2019 Heroku will begin executing the \"build\" script defined in package.json"
     echo "by default. This application may be affected by this change."
     echo ""
