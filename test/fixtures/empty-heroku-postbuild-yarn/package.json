@@ -9,6 +9,5 @@
   "scripts" : {
     "build" : "echo build hook message",
     "heroku-postbuild": ""
-  },
-  "heroku-run-build-script": true
+  }
 }
