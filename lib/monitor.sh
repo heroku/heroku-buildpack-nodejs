@@ -59,6 +59,6 @@ monitor() {
   mtime "exec.$command_name.time" "${start}"
   mmeasure "exec.$command_name.memory" "$(cat "$peak_mem_output")"
 
-  bd_time "$command_name-time" "$start"
-  bd_set "$command_name-memory" "$(cat "$peak_mem_output")"
+  meta_time "$command_name-time" "$start"
+  meta_set "$command_name-memory" "$(cat "$peak_mem_output")"
 }
