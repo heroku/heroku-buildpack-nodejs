@@ -82,7 +82,7 @@
 ## v119 (2018-02-28)
 
 - Install and prune devDependencies by default (#519)
-- Split `NPM_CONFIG_PRODUCTION` into `NPM_CONFIG_PRODUCTION` and `YARN_PRODUCTION` (for npm and Yarn respectively) (#519)
+- [Breaking] Stop setting the env var `NPM_CONFIG_PRODUCTION=true` by default
 
 ## v118 (2018-02-02)
 
