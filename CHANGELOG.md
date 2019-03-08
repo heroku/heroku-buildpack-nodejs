@@ -2,9 +2,21 @@
 
 ## master
 
+## v139 (2019-03-04)
+- Make breaking change warning header brighter (#627)
+
+## v138 (2019-02-20)
+- Add new Build header (#625)
+- Fix yarn run error when script is empty string (#624)
+
+## v137 (2019-02-14)
+- Internal logging changes (#620, #618, #621)
+- Detect build scripts even when they are empty (#617)
+
+## v136 (2019-02-09)
 - Add warning for the upcoming run build change (#616)
 
-## v135 (2018-02-06)
+## v135 (2019-02-06)
 
 - Fix bug where failing builds on CI would not fail CI (#613)
 - Internal logging changes (#596, #600)
