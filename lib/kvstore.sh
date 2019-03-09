@@ -45,9 +45,17 @@ kv_keys() {
   local keys=()
 
   if [[ -f $f ]]; then
-    # get list of keys
-    while IFS="=" read -r key value; do
-      keys+=("$key")
+    # Iterate over each line, splitting on the '=' character
+    #
+    # The || [[ -n "$key" ]] statement addresses an issue with reading the last line
+    # of a file when there is no newline at the end. This will not happen if the file
+    # is created with this module, but can happen if it is written by hand.
+    # See: https://stackoverflow.com/questions/12916352/shell-script-read-missing-last-line
+    while IFS="=" read -r key value || [[ -n "$key" ]]; do
+      # if there are any empty lines in the store, skip them
+      if [[ -n $key ]]; then
+        keys+=("$key")
+      fi
     done < "$f"
 
     echo "${keys[@]}" | tr ' ' '\n' | sort -u

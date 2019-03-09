@@ -108,6 +108,26 @@ testKeyValue() {
   assertEquals "" "$(kv_list $store)"
 }
 
+testKeyValueNoNewLine() {
+  local store
+
+  # use a fixture that does not have an empty line after the final entry
+  store="$(pwd)/test/unit-fixtures/kvstore/no-new-line"
+
+  assertEquals "$(printf "%s\n" a=b b=c)" "$(kv_list $store)"
+  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)" 
+}
+
+testKeyValueEmptyLine() {
+  local store
+
+  # use a fixture that has an extra empty line
+  store="$(pwd)/test/unit-fixtures/kvstore/empty-line"
+
+  assertEquals "$(printf "%s\n" a=b b=c)" "$(kv_list $store)"
+  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)" 
+}
+
 testKeyValueEscaping() {
   local store=$(mktemp)
 
