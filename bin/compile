@@ -320,10 +320,10 @@ warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
 
 bright_header "Change to Node.js build process"
-echo "Heroku has begun executing the \"build\" script defined in package.json"
-echo "during Node.js builds."
+echo "       Heroku has begun executing the \"build\" script defined in package.json"
+echo "       during Node.js builds."
 echo ""
-echo "Read more: https://devcenter.heroku.com/changelog-items/1557"
+echo "       Read more: https://devcenter.heroku.com/changelog-items/1557"
 echo ""
 
 log_build_data >> "$BUILDPACK_LOG_FILE"
