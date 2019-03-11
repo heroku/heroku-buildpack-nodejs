@@ -252,18 +252,12 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  if $YARN; then
-    header "Build"
-  else
-    # npm already prints a new line after the install
-    # without skipping the newline there's an awkward double line break
-    header_skip_newline "Build"
-  fi
+  header "Build"
   run_build_script "$BUILD_DIR"
   log_build_scripts "$BUILD_DIR"
 }
 
-header "Building dependencies" | output "$LOG_FILE"
+header "Installing dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
