@@ -324,5 +324,6 @@ echo "Heroku has begun executing the \"build\" script defined in package.json"
 echo "during Node.js builds."
 echo ""
 echo "Read more: https://devcenter.heroku.com/changelog-items/1557"
+echo ""
 
 log_build_data >> "$BUILDPACK_LOG_FILE"
