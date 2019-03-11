@@ -63,6 +63,13 @@ build_start_time=$(nowms)
 ### Handle errors
 
 handle_failure() {
+  bright_header "Change to Node.js build process"
+  echo "       Heroku has begun executing the \"build\" script defined in package.json"
+  echo "       during Node.js builds."
+  echo ""
+  echo "       Read more: https://devcenter.heroku.com/changelog-items/1573"
+  echo ""
+
   header "Build failed"
   fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
