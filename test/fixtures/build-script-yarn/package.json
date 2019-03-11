@@ -6,11 +6,8 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
-  "engines": {
-    "node": "10.x"
-  },
   "scripts" : {
     "build" : "echo build hook message"
   },
-  "heroku-run-build-script": true
+  "license": "MIT"
 }

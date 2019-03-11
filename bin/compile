@@ -100,10 +100,6 @@ fail_multiple_lockfiles "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
-### Behavior flags
-[ ! "$NEW_BUILD_SCRIPT_BEHAVIOR" ] && NEW_BUILD_SCRIPT_BEHAVIOR=$(read_json "$BUILD_DIR/package.json" ".[\"heroku-run-build-script\"]")
-
-
 ### Compile
 
 create_env() {
@@ -256,21 +252,14 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  if [[ "$NEW_BUILD_SCRIPT_BEHAVIOR" = true ]]; then
-    if $YARN; then
-      header "Build"
-    else
-      # npm already prints a new line after the install
-      # without skipping the newline there's an awkward double line break
-      header_skip_newline "Build"
-    fi
-    mcount "build-script.new-behavior"
-    run_build_script "$BUILD_DIR"
+  if $YARN; then
+    header "Build"
   else
-    mcount "build-script.legacy-behavior"
-    run_if_present "$BUILD_DIR" 'heroku-postbuild'
+    # npm already prints a new line after the install
+    # without skipping the newline there's an awkward double line break
+    header_skip_newline "Build"
   fi
-
+  run_build_script "$BUILD_DIR"
   log_build_scripts "$BUILD_DIR"
 }
 
@@ -329,9 +318,5 @@ bd_time "build-time" "$build_start_time"
 warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
-
-warn_build_script_behavior_change "$NEW_BUILD_SCRIPT_BEHAVIOR" "$BUILD_DIR"
-warn_build_script_behavior_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" | output "$LOG_FILE"
-log_build_script_opt_in "$NEW_BUILD_SCRIPT_BEHAVIOR" "$BUILD_DIR"
 
 log_build_data >> "$BUILDPACK_LOG_FILE"
