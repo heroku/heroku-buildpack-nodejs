@@ -600,7 +600,6 @@ testNpmVersionSpecific() {
 
 testFailingBuild() {
   compile "failing-build"
-  assertCaptured "Building dependencies"
   assertCaptured "Build failed"
   assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Checking startup method"

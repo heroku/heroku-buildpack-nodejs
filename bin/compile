@@ -252,18 +252,12 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  if $YARN; then
-    header "Build"
-  else
-    # npm already prints a new line after the install
-    # without skipping the newline there's an awkward double line break
-    header_skip_newline "Build"
-  fi
+  header "Build"
   run_build_script "$BUILD_DIR"
   log_build_scripts "$BUILD_DIR"
 }
 
-header "Building dependencies" | output "$LOG_FILE"
+header "Installing dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
@@ -318,5 +312,12 @@ bd_time "build-time" "$build_start_time"
 warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
+
+bright_header "Change to Node.js build process"
+echo "       Heroku has begun executing the \"build\" script defined in package.json"
+echo "       during Node.js builds."
+echo ""
+echo "       Read more: https://devcenter.heroku.com/changelog-items/1573"
+echo ""
 
 log_build_data >> "$BUILDPACK_LOG_FILE"
