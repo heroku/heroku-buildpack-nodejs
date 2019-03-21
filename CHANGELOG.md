@@ -2,6 +2,9 @@
 
 ## master
 
+## v140 (2019-03-11)
+- Run the build script by default (#628)
+
 ## v139 (2019-03-04)
 - Make breaking change warning header brighter (#627)
 
