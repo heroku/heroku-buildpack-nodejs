@@ -357,6 +357,14 @@ testEnvBlacklist() {
   assertCapturedSuccess
 }
 
+testDotEnvVarsBlacklist() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo "secret" > "$env_dir/KPI_HTTP_GATEWAY_URL_EU_HEROKU.COM"
+  compile "node-10" $cache $env_dir
+  assertCapturedSuccess
+}
+
 testWarningsOnFailure() {
   compile "many-warnings"
   assertCaptured "troubleshooting-node-deploys"
