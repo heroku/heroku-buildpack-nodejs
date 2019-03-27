@@ -316,6 +316,47 @@ testHasScript() {
   assertEquals "true" "$(has_script "$file" "random-script-name")"
 }
 
+testExperiments() {
+  local schema="$(pwd)/test/unit-fixtures/experiments/experiments-v1"
+  local schema_next="$(pwd)/test/unit-fixtures/experiments/experiments-v1-next"
+  local schema_v2="$(pwd)/test/unit-fixtures/experiments/experiments-v2"
+  local cache_dir=$(mktemp -d)
+  local val
+
+  experiments_init "nodejs" "$cache_dir" "$schema"
+
+  # these should always be the same
+  assertEquals "true" "$(experiments_get "all-on")"
+  assertEquals "false" "$(experiments_get "all-off")"
+  # this will change, but stay the same between runs
+  val="$(experiments_get "ab-test")"
+
+  # pretend this is the next time this build is run
+  experiments_init "nodejs" "$cache_dir" "$schema"
+
+  # these should always be the same
+  assertEquals "true" "$(experiments_get "all-on")"
+  assertEquals "false" "$(experiments_get "all-off")"
+  # val should be the same as it was before
+  assertEquals "$val" "$(experiments_get "ab-test")"
+
+  # now we add a new feature to the schema
+  experiments_init "nodejs" "$cache_dir" "$schema_next"
+
+  assertEquals "true" "$(experiments_get "all-on")"
+  assertEquals "false" "$(experiments_get "all-off")"
+  assertEquals "$val" "$(experiments_get "ab-test")"
+  assertEquals "true" "$(experiments_get "new-always-on")"
+
+  # reset the schema
+  experiments_init "nodejs" "$cache_dir" "$schema_v2"
+  assertNotNull "$(experiments_get "new-feature")"
+  assertNull "$(experiments_get "all-on")"
+  assertNull "$(experiments_get "all-off")"
+  assertNull "$(experiments_get "ab-test")"
+  assertNull "$(experiments_get "new-always-on")"
+}
+
 BP_DIR="$(pwd)"
 
 # mocks
@@ -331,6 +372,7 @@ source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/build-data.sh
+source "$(pwd)"/lib/experiments.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
