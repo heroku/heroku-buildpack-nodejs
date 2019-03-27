@@ -46,7 +46,7 @@ fail_invalid_package_json() {
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
     meta_set "failure" "invalid-package-json"
-    return 1
+    fail
   fi
 }
 
@@ -428,7 +428,7 @@ log_other_failures() {
        npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
        and taking ownership of the event-stream package to prevent further abuse.
       " https://kb.heroku.com/4OM7X18J/why-am-i-seeing-npm-404-errors-for-event-stream-flatmap-stream-in-my-build-logs
-      exit 1
+      fail
     fi
 
     return 0
