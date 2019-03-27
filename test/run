@@ -1082,7 +1082,7 @@ testBuildMetaData() {
 
   # erase the log file
   echo "" > $log_file
-  BUILDPACK_LOG_FILE="$log_file" compile "yarn" "$(mktmpdir)" $env_dir
+  BUILDPACK_LOG_FILE="$log_file" compile "yarn"
 
   assertFileContains "node-package-manager=yarn" $log_file
   assertFileContains "has-node-lock-file=true" $log_file

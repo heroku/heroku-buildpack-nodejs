@@ -46,6 +46,8 @@ fail_invalid_package_json() {
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
     meta_set "failure" "invalid-package-json"
+    header "Build failed"
+    failure_message
     fail
   fi
 }
