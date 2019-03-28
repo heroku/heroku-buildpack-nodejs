@@ -1043,11 +1043,9 @@ testMemoryMetrics() {
 }
 
 testBuildMetaData() {
-  env_dir=$(mktmpdir)
   local log_file=$(mktemp)
-  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
 
-  compile "pre-post-build-scripts" "$(mktmpdir)" $env_dir
+  BUILDPACK_LOG_FILE="$log_file" compile "pre-post-build-scripts"
 
   # build info
   assertFileContains "node-package-manager=npm" $log_file
@@ -1084,7 +1082,7 @@ testBuildMetaData() {
 
   # erase the log file
   echo "" > $log_file
-  compile "yarn" "$(mktmpdir)" $env_dir
+  BUILDPACK_LOG_FILE="$log_file" compile "yarn"
 
   assertFileContains "node-package-manager=yarn" $log_file
   assertFileContains "has-node-lock-file=true" $log_file
@@ -1093,6 +1091,19 @@ testBuildMetaData() {
   assertFileContains "install-yarn-binary-memory=" $log_file
   assertFileContains "install-yarn-binary-time=" $log_file
   assertFileContains "node-build-success=true" $log_file
+}
+
+testFailingBuildMetaData() {
+  local log_file=$(mktemp)
+
+  BUILDPACK_LOG_FILE="$log_file" compile "bad-json"
+  assertFileContains "failure=invalid-package-json" $log_file
+  assertCapturedError
+
+  echo "" > $log_file
+  BUILDPACK_LOG_FILE="$log_file" compile "yarn-lockfile-out-of-date"
+  assertFileContains "failure=outdated-yarn-lockfile" $log_file
+  assertCapturedError
 }
 
 testPropagateAppUUID() {

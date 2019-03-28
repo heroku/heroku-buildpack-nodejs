@@ -9,6 +9,11 @@ detect_package_manager() {
   esac
 }
 
+fail() {
+  log_meta_data >> "$BUILDPACK_LOG_FILE"
+  exit 1
+}
+
 failure_message() {
   local warn
 
@@ -40,13 +45,17 @@ fail_invalid_package_json() {
   if "$is_invalid"; then
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
-    return 1
+    meta_set "failure" "invalid-package-json"
+    header "Build failed"
+    failure_message
+    fail
   fi
 }
 
 fail_dot_heroku() {
   if [ -f "${1:-}/.heroku" ]; then
     mcount "failures.dot-heroku"
+    meta_set "failure" "dot-heroku"
     header "Build failed"
     warn "The directory .heroku could not be created
 
@@ -55,13 +64,14 @@ fail_dot_heroku() {
        binaries like the node runtime and npm. You should remove the
        .heroku file or ignore it by adding it to .slugignore
        "
-    exit 1
+    fail
   fi
 }
 
 fail_dot_heroku_node() {
   if [ -f "${1:-}/.heroku/node" ]; then
     mcount "failures.dot-heroku-node"
+    meta_set "failure" "dot-heroku-node"
     header "Build failed"
     warn "The directory .heroku/node could not be created
 
@@ -70,7 +80,7 @@ fail_dot_heroku_node() {
        binaries like the node runtime and npm. You should remove the
        .heroku file or ignore it by adding it to .slugignore
        "
-    exit 1
+    fail
   fi
 }
 
@@ -82,6 +92,7 @@ fail_multiple_lockfiles() {
 
   if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
     mcount "failures.two-lock-files"
+    meta_set "failure" "two-lock-files"
     header "Build failed"
     warn "Two different lockfiles found: package-lock.json and yarn.lock
 
@@ -100,11 +111,12 @@ fail_multiple_lockfiles() {
 
          $ git rm package-lock.json
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
-    exit 1
+    fail
   fi
 
   if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
     mcount "failures.shrinkwrap-lock-file-conflict"
+    meta_set "failure" "shrinkwrap-lock-file-conflict"
     header "Build failed"
     warn "Two different lockfiles found
 
@@ -123,7 +135,7 @@ fail_multiple_lockfiles() {
        - package-lock.json
        - npm-shrinkwrap.json
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
-    exit 1
+    fail
   fi
 }
 
@@ -134,6 +146,7 @@ fail_yarn_outdated() {
   if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
     yarn_engine=$(yarn --version)
     mcount "failures.outdated-yarn"
+    meta_set "failure" "outdated-yarn"
     echo ""
     warn "Outdated Yarn version: $yarn_engine
 
@@ -146,7 +159,7 @@ fail_yarn_outdated() {
          \"yarn\": \"1.3.2\"
        }
     " https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version
-    exit 1
+    fail
   fi
 }
 
@@ -154,6 +167,7 @@ fail_yarn_lockfile_outdated() {
   local log_file="$1"
   if grep -qi 'Your lockfile needs to be updated' "$log_file"; then
     mcount "failures.outdated-yarn-lockfile"
+    meta_set "failure" "outdated-yarn-lockfile"
     echo ""
     warn "Outdated Yarn lockfile
 
@@ -169,7 +183,7 @@ fail_yarn_lockfile_outdated() {
        $ git commit -m \"Updated Yarn lockfile\"
        $ git push heroku master
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile
-    exit 1
+    fail
   fi
 }
 
@@ -206,6 +220,7 @@ fail_node_install() {
   if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
     node_engine=$(read_json "$build_dir/package.json" ".engines.node")
     mcount "failures.invalid-node-version"
+    meta_set "failure" "invalid-node-version"
     echo ""
     warn "No matching version found for Node: $node_engine
 
@@ -227,7 +242,7 @@ fail_node_install() {
          \"node\": \"6.11.1\"
        }
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions
-    exit 1
+    fail
   fi
 }
 
@@ -239,6 +254,7 @@ fail_yarn_install() {
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
     yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
     mcount "failures.invalid-yarn-version"
+    meta_set "failure" "invalid-yarn-version"
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
 
@@ -262,7 +278,7 @@ fail_yarn_install() {
          \"yarn\": \"0.27.5\"
        }
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions
-    exit 1
+    fail
   fi
 }
 
@@ -270,6 +286,7 @@ fail_invalid_semver() {
   local log_file="$1"
   if grep -qi 'Error: Invalid semantic version' "$log_file"; then
     mcount "failures.invalid-semver-requirement"
+    meta_set "invalid-semver-requirement"
     echo ""
     warn "Invalid semver requirement
 
@@ -281,7 +298,7 @@ fail_invalid_semver() {
        However you have specified a version requirement that is not a valid
        semantic version.
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
-    exit 1
+    fail
   fi
 }
 
@@ -289,26 +306,31 @@ log_other_failures() {
   local log_file="$1"
   if grep -qi "sh: 1: .*: not found" "$log_file"; then
     mcount "failures.dev-dependency-tool-not-installed"
+    meta_set "failure" "dev-dependency-tool-not-installed"
     return 0
   fi
 
   if grep -qi "Failed at the bcrypt@\d.\d.\d install script" "$log_file"; then
     mcount "failures.bcrypt-permissions-issue"
+    meta_set "failure" "bcrypt-permissions-issue"
     return 0
   fi
 
   if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
     mcount "failures.ng-cli-version-issue"
+    meta_set "failure" "ng-cli-version-issue"
     return 0
   fi
 
   if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
     mcount "failures.npm-property-zero-issue"
+    meta_set "failure" "npm-property-zero-issue"
     return 0
   fi
 
   if grep -qi "npm is known not to run on Node.js v\d.\d.\d" "$log_file"; then
     mcount "failures.npm-known-bad-version"
+    meta_set "failure" "npm-known-bad-version"
     return 0
   fi
 
@@ -316,76 +338,91 @@ log_other_failures() {
   # "error Couldn't find any versions for" = yarn
   if grep -q -e "notarget No matching version found for" -e "error Couldn't find any versions for" "$log_file"; then
     mcount "failures.bad-version-for-dependency"
+    meta_set "failure" "bad-version-for-dependency"
     return 0
   fi
 
   if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
     mcount "failures.node-9-npm-issue"
+    meta_set "failure" "node-9-npm-issue"
     return 0
   fi
 
   if grep -qi "console.error(\`a bug known to break npm" "$log_file"; then
     mcount "failures.old-node-new-npm"
+    meta_set "failure" "old-node-new-npm"
     return 0
   fi
 
   if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
     mcount "failures.build-out-of-memory-error"
+    meta_set "failure" "build-out-of-memory-error"
     return 0
   fi
 
   if grep -qi "enoent ENOENT: no such file or directory" "$log_file"; then
     mcount "failures.npm-enoent"
+    meta_set "failure" "npm-enoent"
     return 0
   fi
 
   if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
     mcount "failures.uglifyjs"
+    meta_set "failure" "uglifyjs"
     return 0
   fi
 
   # https://github.com/angular/angular-cli/issues/4551
   if grep -qi "Module not found: Error: Can't resolve '\.\/\$\$_gendir\/app\/app\.module\.ngfactory'" "$log_file"; then
     mcount "failures.ng-cli-issue-4551"
+    meta_set "failure" "ng-cli-issue-4551"
     return 0
   fi
 
   if grep -qi "Host key verification failed" "$log_file"; then
     mcount "failures.private-git-dependency-without-auth"
+    meta_set "failure" "private-git-dependency-without-auth"
     return 0
   fi
 
   # same as the next test, but isolate bcyrpt specifically
   if grep -qi "Failed at the bcrypt@\d\.\d\.\d install" "$log_file"; then
     mcount "failures.bcrypt-failed-to-build"
+    meta_set "failure" "bcrypt-failed-to-build"
     return 0
   fi
 
   if grep -qi "Failed at the [^ ]* install script" "$log_file"; then
     mcount "failures.dependency-failed-to-build"
+    meta_set "failure" "dependency-failed-to-build"
     return 0
   fi
 
   if grep -qi "Line \d*:  '.*' is not defined" "$log_file"; then
     mcount "failures.undefined-variable-lint"
+    meta_set "failure" "undefined-variable-lint"
     return 0
   fi
 
   if grep -qi "npm ERR! code EBADPLATFORM" "$log_file"; then
     mcount "failures.npm-ebadplatform"
+    meta_set "failure" "npm-ebadplatform"
     return 0
   fi
 
   if grep -qi "npm ERR! code EINVALIDPACKAGENAME" "$log_file"; then
     mcount "failures.npm-package-name-typo"
+    meta_set "failure" "npm-package-name-typo"
     return 0
   fi
 
   if grep -qi -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
     mcount "failures.module-404"
+    meta_set "failure" "module-404"
 
     if grep -qi "flatmap-stream" "$log_file"; then
       mcount "flatmap-stream-404"
+      meta_set "failure" "flatmap-stream-404"
       warn "The flatmap-stream module has been removed from the npm registry
 
        On November 26th, npm was notified of a malicious package that had made its
@@ -393,7 +430,7 @@ log_other_failures() {
        npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
        and taking ownership of the event-stream package to prevent further abuse.
       " https://kb.heroku.com/4OM7X18J/why-am-i-seeing-npm-404-errors-for-event-stream-flatmap-stream-in-my-build-logs
-      exit 1
+      fail
     fi
 
     return 0
@@ -401,6 +438,7 @@ log_other_failures() {
 
   if grep -qi "sh: 1: cd: can't cd to" "$log_file"; then
     mcount "failures.cd-command-fail"
+    meta_set "failure" "cd-command-fail"
     return 0
   fi
 
@@ -408,11 +446,13 @@ log_other_failures() {
 
   if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
     mcount "failures.webpack.module-not-found"
+    meta_set "failure" "webpack-module-not-found"
     return 0
   fi
 
   if grep -qi "sass-loader/lib/loader.js:3:14" "$log_file"; then
     mcount "failures.webpack.sass-loader-error"
+    meta_set "failure" "webpack-sass-loader-error"
     return 0
   fi
 
@@ -420,21 +460,25 @@ log_other_failures() {
 
   if grep -qi "Property '.*' does not exist on type '.*'" "$log_file"; then
     mcount "failures.typescript.missing-property"
+    meta_set "failure" "typescript-missing-property"
     return 0
   fi
 
   if grep -qi "Property '.*' is private and only accessible within class '.*'" "$log_file"; then
     mcount "failures.typescript.private-property"
+    meta_set "failure" "typescript-private-property"
     return 0
   fi
 
   if grep -qi "error TS2307: Cannot find module '.*'" "$log_file"; then
     mcount "failures.typescript.missing-module"
+    meta_set "failure" "typescript-missing-module"
     return 0
   fi
 
   if grep -qi "error TS2688: Cannot find type definition file for '.*'" "$log_file"; then
     mcount "failures.typescript.missing-type-definition"
+    meta_set "failure" "typescript-missing-type-definition"
     return 0
   fi
 
@@ -442,6 +486,7 @@ log_other_failures() {
   # Ex: Error: Cannot find module 'chalk'
   if grep -q "Error: Cannot find module '[^/C\.]" "$log_file"; then
     mcount "failures.missing-module.npm"
+    meta_set "failure" "missing-module-npm"
     return 0
   fi
 
@@ -449,6 +494,7 @@ log_other_failures() {
   # Ex: Error: Cannot find module '/tmp/build_{hash}/...'
   if grep -q "Error: Cannot find module '/" "$log_file"; then
     mcount "failures.missing-module.local-absolute"
+    meta_set "failure" "missing-module-local-absolute"
     return 0
   fi
 
@@ -456,6 +502,7 @@ log_other_failures() {
   # Ex: Error: Cannot find module './lib/utils'
   if grep -q "Error: Cannot find module '\." "$log_file"; then
     mcount "failures.missing-module.local-relative"
+    meta_set "failure" "missing-module-local-relative"
     return 0
   fi
 
@@ -463,16 +510,19 @@ log_other_failures() {
   # Ex: Error: Cannot find module 'C:\Users...'
   if grep -q "Error: Cannot find module 'C:" "$log_file"; then
     mcount "failures.missing-module.local-windows"
+    meta_set "failure" "missing-module-local-windows"
     return 0
   fi
 
   # matches the subsequent lines of a stacktrace
   if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
     mcount "failures.unknown-stacktrace"
+    meta_set "failure" "unknown-stacktrace"
     return 0
   fi
 
   # If we've made it this far it's not an error we've added detection for yet
+  meta_set "failure" "unknown"
   mcount "failures.unknown"
 }
 

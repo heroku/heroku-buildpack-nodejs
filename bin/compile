@@ -70,6 +70,7 @@ handle_failure() {
   echo "       Read more: https://devcenter.heroku.com/changelog-items/1573"
   echo ""
 
+  meta_set "node-build-success" "false"
   header "Build failed"
   fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
@@ -81,6 +82,7 @@ handle_failure() {
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
   warn_econnreset "$LOG_FILE"
+  log_meta_data >> "$BUILDPACK_LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
