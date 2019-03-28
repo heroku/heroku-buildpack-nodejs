@@ -2,6 +2,15 @@
 
 ## master
 
+## v143 (2019-03-28)
+- Internal logging changes (#637, #631, #630)
+
+## v142 (2019-03-11)
+- Add temporary warning about "run build" when the build fails as well (#639)
+
+## v141 (2019-03-11)
+- Add temporary warning about "run build" change to log output (#636)
+
 ## v140 (2019-03-11)
 - Run the build script by default (#628)
 
