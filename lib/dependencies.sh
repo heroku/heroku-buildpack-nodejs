@@ -64,7 +64,7 @@ log_build_scripts() {
   local build_dir=${1:-}
 
   meta_set "build-script" "$(read_json "$build_dir/package.json" ".scripts[\"build\"]")"
-  meta_set "postinstall-script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")"
+  meta_set "postinstall-script" "$(read_json "$build_dir/package.json" ".scripts[\"postinstall\"]")"
   meta_set "heroku-prebuild-script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-prebuild\"]")"
   meta_set "heroku-postbuild-script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")"
 }
