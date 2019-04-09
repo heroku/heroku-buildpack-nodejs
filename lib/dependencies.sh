@@ -40,6 +40,19 @@ run_if_present() {
   fi
 }
 
+run_prebuild_script() {
+  local build_dir=${1:-}
+  local has_heroku_prebuild_script
+
+  has_heroku_prebuild_script=$(has_script "$build_dir/package.json" "heroku-prebuild")
+
+  if [[ "$has_heroku_prebuild_script" == "true" ]]; then
+    mcount "script.heroku-prebuild"
+    header "Prebuild"
+    run_if_present "$build_dir" 'heroku-prebuild'
+  fi
+}
+
 run_build_script() {
   local build_dir=${1:-}
   local has_build_script has_heroku_build_script
