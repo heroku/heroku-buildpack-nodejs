@@ -2,6 +2,9 @@
 
 ## master
 
+## v144 (2019-04-08)
+- Remove temporary wraning about "run build" change (#644)
+
 ## v143 (2019-03-28)
 - Internal logging changes (#637, #631, #630)
 
