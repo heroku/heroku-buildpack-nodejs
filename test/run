@@ -1058,7 +1058,7 @@ testBuildMetaData() {
   assertFileContains "build-uuid=" $log_file
 
   # binary versions
-  assertFileContains "node-version-request=~0.10.0" $log_file
+  assertFileContains "node-version-request=10.x" $log_file
   assertFileContains "npm-version-request= " $log_file
 
   # log build scripts
