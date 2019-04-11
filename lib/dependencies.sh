@@ -74,72 +74,12 @@ run_build_script() {
 }
 
 log_build_scripts() {
-  local build heroku_prebuild heroku_postbuild postinstall
   local build_dir=${1:-}
 
-  build=$(read_json "$build_dir/package.json" ".scripts[\"build\"]")
-  heroku_prebuild=$(read_json "$build_dir/package.json" ".scripts[\"heroku-prebuild\"]")
-  heroku_postbuild=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
-  postinstall=$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")
-
-  meta_set "build-script" "$build"
-  meta_set "postinstall-script" "$postinstall"
-  meta_set "heroku-prebuild-script" "$heroku_prebuild"
-  meta_set "heroku-postbuild-script" "$heroku_prebuild"
-
-  meta_set "build-script" "$build"
-  meta_set "postinstall-script" "$postinstall"
-  meta_set "heroku-prebuild-script" "$heroku_prebuild"
-  meta_set "heroku-postbuild-script" "$heroku_prebuild"
-
-  if [ -n "$build" ]; then
-    mcount "scripts.build"
-
-    if [ -z "$heroku_postbuild" ]; then
-      mcount "scripts.build-without-heroku-postbuild"
-    fi
-
-    if [ -z "$postinstall" ]; then
-      mcount "scripts.build-without-postinstall"
-    fi
-
-    if [ -z "$postinstall" ] && [ -z "$heroku_postbuild" ]; then
-      mcount "scripts.build-without-other-hooks"
-    fi
-  fi
-
-  if [ -n "$postinstall" ]; then
-    mcount "scripts.postinstall"
-
-    if [ "$postinstall" == "npm run build" ] ||
-       [ "$postinstall" == "yarn run build" ] ||
-       [ "$postinstall" == "yarn build" ]; then
-      mcount "scripts.postinstall-is-npm-build"
-    fi
-
-  fi
-
-  if [ -n "$heroku_prebuild" ]; then
-    mcount "scripts.heroku-prebuild"
-  fi
-
-  if [ -n "$heroku_postbuild" ]; then
-    mcount "scripts.heroku-postbuild"
-
-    if [ "$heroku_postbuild" == "npm run build" ] ||
-       [ "$heroku_postbuild" == "yarn run build" ] ||
-       [ "$heroku_postbuild" == "yarn build" ]; then
-      mcount "scripts.heroku-postbuild-is-npm-build"
-    fi
-  fi
-
-  if [ -n "$heroku_postbuild" ] && [ -n "$build" ]; then
-    mcount "scripts.build-and-heroku-postbuild"
-
-    if [ "$heroku_postbuild" != "$build" ]; then
-      mcount "scripts.different-build-and-heroku-postbuild"
-    fi
-  fi
+  meta_set "build-script" "$(read_json "$build_dir/package.json" ".scripts[\"build\"]")"
+  meta_set "postinstall-script" "$(read_json "$build_dir/package.json" ".scripts[\"postinstall\"]")"
+  meta_set "heroku-prebuild-script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-prebuild\"]")"
+  meta_set "heroku-postbuild-script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")"
 }
 
 yarn_node_modules() {

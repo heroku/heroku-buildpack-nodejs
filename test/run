@@ -1063,7 +1063,7 @@ testBuildMetaData() {
 
   # log build scripts
   assertFileContains "heroku-prebuild-script=\"echo heroku-prebuild hook message\"" $log_file
-  assertFileContains "heroku-postbuild-script=\"echo heroku-prebuild hook message\"" $log_file
+  assertFileContains "heroku-postbuild-script=\"echo heroku-postbuild hook message\"" $log_file
   assertFileContains "build-script= " $log_file
 
   # monitor calls
