@@ -7,7 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "~0.10.0"
+    "node": "10.x"
   },
   "scripts" : {
     "heroku-prebuild" : "echo heroku-prebuild hook message",

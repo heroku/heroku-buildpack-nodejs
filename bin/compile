@@ -238,8 +238,6 @@ restore_cache | output "$LOG_FILE"
 build_dependencies() {
   local cache_status start
 
-  run_if_present "$BUILD_DIR" 'heroku-prebuild'
-
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
 
@@ -258,6 +256,8 @@ build_dependencies() {
   run_build_script "$BUILD_DIR"
   log_build_scripts "$BUILD_DIR"
 }
+
+run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
 
 header "Installing dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
