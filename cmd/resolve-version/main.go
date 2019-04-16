@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"time"
 
 	"github.com/Masterminds/semver"
@@ -44,6 +45,41 @@ type matchResult struct {
 	versionRequirement string
 	release            release
 	matched            bool
+}
+
+func matchReleaseSemver(releases []release, versionRequirement string) (release, error) {
+	constraints, err := semver.NewConstraint(versionRequirement)
+	if err != nil {
+		return release{}, err
+	}
+
+	filtered := []release{}
+	for _, release := range releases {
+		if constraints.Check(release.version) {
+			filtered = append(filtered, release)
+		}
+	}
+
+	versions := make([]*semver.Version, len(filtered))
+	for i, rel := range filtered {
+		versions[i] = rel.version
+	}
+
+	coll := semver.Collection(versions)
+	sort.Sort(coll)
+
+	if len(coll) == 0 {
+		return release{}, errors.New("No matching version")
+	}
+
+	resolvedVersion := coll[len(coll)-1]
+
+	for _, rel := range filtered {
+		if rel.version.Equal(resolvedVersion) {
+			return rel, nil
+		}
+	}
+	return release{}, errors.New("Unknown error")
 }
 
 func matchReleaseExact(releases []release, version string) matchResult {
