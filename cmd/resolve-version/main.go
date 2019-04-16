@@ -40,6 +40,15 @@ type release struct {
 	version  *semver.Version
 }
 
+func matchReleaseExact(releases []release, version string) (release, error) {
+	for _, release := range releases {
+		if release.version.String() == version {
+			return release, nil
+		}
+	}
+	return release{}, errors.New("No matching version")
+}
+
 // Parses an S3 key into a struct of information about that release
 // Example input: node/release/linux-x64/node-v6.2.2-linux-x64.tar.gz
 func parseObject(key string) (release, error) {

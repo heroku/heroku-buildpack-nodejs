@@ -3,6 +3,8 @@ package main
 import (
 	"testing"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,4 +40,34 @@ func TestParseObject(t *testing.T) {
 	release, err = parseObject("something/weird")
 	assert.NotNil(t, err)
 	assert.Equal(t, err.Error(), "Failed to parse key: something/weird")
+}
+
+func genReleasesFromArray(versions []string) []release {
+	out := []release{}
+	for _, version := range versions {
+		out = append(out, release{
+			binary:   "node",
+			stage:    "release",
+			platform: "linux-x64",
+			url:      "https://heroku.com",
+			version:  semver.MustParse(version),
+		})
+	}
+	return out
+}
+
+func TestMatchReleaseExact(t *testing.T) {
+	releases := genReleasesFromArray([]string{"1.0.0", "1.0.1", "1.0.2"})
+
+	release, err := matchReleaseExact(releases, "1.0.1")
+	assert.Nil(t, err)
+	assert.Equal(t, release.version.String(), "1.0.1")
+
+	release, err = matchReleaseExact(releases, "1.0.2")
+	assert.Nil(t, err)
+	assert.Equal(t, release.version.String(), "1.0.2")
+
+	release, err = matchReleaseExact(releases, "1.0.3")
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "No matching version")
 }
