@@ -1,4 +1,6 @@
-language: bash
+language: go
+go:
+  - "1.12"
 sudo: required
 services:
   - docker
