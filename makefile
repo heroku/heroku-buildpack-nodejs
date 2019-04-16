@@ -4,10 +4,7 @@ build:
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./vendor/resolve-version-darwin ./cmd/resolve-version
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./vendor/resolve-version-linux ./cmd/resolve-version
 
-go-install:
-	go install -v ./cmd/...
-
-test-binary: go-install
+test-binary:
 	go test -v ./cmd/...
 
 shellcheck:
