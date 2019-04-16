@@ -9,6 +9,7 @@ env:
   - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet
   - TEST=unit
+  - TEST=test-binary
 install:
   - if [[ -n $STACK ]]; then
       docker pull "heroku/${STACK/-/:}";
