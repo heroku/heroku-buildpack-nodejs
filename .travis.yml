@@ -11,7 +11,7 @@ env:
   - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet
   - TEST=unit
-  - TEST=test-binary
+  - TEST=test-binary GO111MODULE=on
 install:
   - if [[ -n $STACK ]]; then
       docker pull "heroku/${STACK/-/:}";
