@@ -100,9 +100,7 @@ func fetchS3Result(bucketName string, options map[string]string) (result, error)
 		return result, err
 	}
 
-	xml.Unmarshal(body, &result)
-
-	return result, nil
+	return result, xml.Unmarshal(body, &result)
 }
 
 // Query the S3 API for a list of all the objects in an S3 bucket with a
