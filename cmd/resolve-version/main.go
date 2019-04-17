@@ -19,14 +19,14 @@ type release struct {
 // Parses an S3 key into a struct of information about that release
 // Example input: node/release/linux-x64/node-v6.2.2-linux-x64.tar.gz
 func parseObject(key string) (release, error) {
-	nodeRegex := regexp.MustCompile("node\\/([^\\/]+)\\/([^\\/]+)\\/node-v([0-9]+.[0-9]+.[0-9]+)-([^.]*)(.*).tar.gz")
-	yarnRegex := regexp.MustCompile("yarn\\/([^\\/]+)\\/yarn-v([0-9]+.[0-9]+.[0-9]+).tar.gz")
+	nodeRegex := regexp.MustCompile("node\\/([^\\/]+)\\/([^\\/]+)\\/node-v([0-9]+\\.[0-9]+\\.[0-9]+)-([^.]*)(.*)\\.tar\\.gz")
+	yarnRegex := regexp.MustCompile("yarn\\/([^\\/]+)\\/yarn-v([0-9]+\\.[0-9]+\\.[0-9]+)\\.tar\\.gz")
 
 	if nodeRegex.MatchString(key) {
 		match := nodeRegex.FindStringSubmatch(key)
 		version, err := semver.NewVersion(match[3])
 		if err != nil {
-			return release{}, errors.New("Failed to parse version as semver")
+			return release{}, fmt.Errorf("Failed to parse version as semver:%s\n%s", match[3], err.Error())
 		}
 		return release{
 			binary:   "node",
@@ -52,7 +52,7 @@ func parseObject(key string) (release, error) {
 		}, nil
 	}
 
-	return release{}, errors.New("Failed to parse key")
+	return release{}, fmt.Errorf("Failed to parse key: %s", key)
 }
 
 func main() {

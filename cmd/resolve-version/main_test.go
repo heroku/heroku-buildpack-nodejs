@@ -37,5 +37,5 @@ func TestParseObject(t *testing.T) {
 
 	release, err = parseObject("something/weird")
 	assert.NotNil(t, err)
-	assert.Errorf(t, err, "Failed to parse key")
+	assert.Equal(t, err.Error(), "Failed to parse key: something/weird")
 }
