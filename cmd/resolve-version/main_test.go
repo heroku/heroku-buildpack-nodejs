@@ -111,12 +111,14 @@ func TestMatchReleaseSemver(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		release, err := matchReleaseSemver(releases, c.input)
+		result, err := matchReleaseSemver(releases, c.input)
 		assert.Nil(t, err)
-		assert.Equal(t, release.version.String(), c.output)
+		assert.True(t, result.matched)
+		assert.Equal(t, result.release.version.String(), c.output)
 	}
 
-	_, err := matchReleaseSemver(releases, "99.x")
-	assert.NotNil(t, err)
-	assert.Equal(t, err.Error(), "No matching version for: 99.x")
+	result, err := matchReleaseSemver(releases, "99.x")
+	assert.Nil(t, err)
+	assert.False(t, result.matched)
+	assert.Equal(t, result.versionRequirement, "99.x")
 }

@@ -47,10 +47,10 @@ type matchResult struct {
 	matched            bool
 }
 
-func matchReleaseSemver(releases []release, versionRequirement string) (release, error) {
+func matchReleaseSemver(releases []release, versionRequirement string) (matchResult, error) {
 	constraints, err := semver.NewConstraint(versionRequirement)
 	if err != nil {
-		return release{}, err
+		return matchResult{}, err
 	}
 
 	filtered := []release{}
@@ -69,17 +69,25 @@ func matchReleaseSemver(releases []release, versionRequirement string) (release,
 	sort.Sort(coll)
 
 	if len(coll) == 0 {
-		return release{}, fmt.Errorf("No matching version for: %s", versionRequirement)
+		return matchResult{
+			versionRequirement: versionRequirement,
+			release:            release{},
+			matched:            false,
+		}, nil
 	}
 
 	resolvedVersion := coll[len(coll)-1]
 
 	for _, rel := range filtered {
 		if rel.version.Equal(resolvedVersion) {
-			return rel, nil
+			return matchResult{
+				versionRequirement: versionRequirement,
+				release:            rel,
+				matched:            true,
+			}, nil
 		}
 	}
-	return release{}, errors.New("Unknown error")
+	return matchResult{}, errors.New("Unknown error")
 }
 
 func matchReleaseExact(releases []release, version string) matchResult {
