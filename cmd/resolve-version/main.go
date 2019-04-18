@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"sort"
 	"time"
@@ -45,6 +46,53 @@ type matchResult struct {
 	versionRequirement string
 	release            release
 	matched            bool
+}
+
+func main() {
+	if len(os.Args) < 3 {
+		printUsage()
+		os.Exit(0)
+	}
+	binary := os.Args[1]
+	versionRequirement := os.Args[2]
+
+	if binary == "yarn" {
+		objects, err := listS3Objects("heroku-nodebin", "yarn")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		result, err := resolveYarn(objects, versionRequirement)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if result.matched {
+			fmt.Printf("%s %s\n", result.release.version.String(), result.release.url)
+		} else {
+			fmt.Println("No result")
+			os.Exit(1)
+		}
+	}
+}
+
+func printUsage() {
+	fmt.Println("resolve-version binary version-requirement")
+}
+
+func resolveYarn(objects []s3Object, versionRequirement string) (matchResult, error) {
+	releases := []release{}
+
+	for _, obj := range objects {
+		release, err := parseObject(obj.Key)
+		if err != nil {
+			continue
+		}
+
+		releases = append(releases, release)
+	}
+
+	return matchReleaseSemver(releases, versionRequirement)
 }
 
 func matchReleaseSemver(releases []release, versionRequirement string) (matchResult, error) {
@@ -192,8 +240,4 @@ func listS3Objects(bucketName string, prefix string) ([]s3Object, error) {
 	}
 
 	return out, nil
-}
-
-func main() {
-	fmt.Println("hello world")
 }
