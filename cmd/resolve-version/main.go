@@ -40,13 +40,27 @@ type release struct {
 	version  *semver.Version
 }
 
-func matchReleaseExact(releases []release, version string) (release, error) {
+type matchResult struct {
+	versionRequirement string
+	release            release
+	matched            bool
+}
+
+func matchReleaseExact(releases []release, version string) matchResult {
 	for _, release := range releases {
 		if release.version.String() == version {
-			return release, nil
+			return matchResult{
+				versionRequirement: version,
+				release:            release,
+				matched:            true,
+			}
 		}
 	}
-	return release{}, fmt.Errorf("No matching version for: %s", version)
+	return matchResult{
+		versionRequirement: version,
+		release:            release{},
+		matched:            false,
+	}
 }
 
 // Parses an S3 key into a struct of information about that release
