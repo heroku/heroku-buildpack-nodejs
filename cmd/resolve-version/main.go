@@ -46,7 +46,7 @@ func matchReleaseExact(releases []release, version string) (release, error) {
 			return release, nil
 		}
 	}
-	return release{}, errors.New("No matching version")
+	return release{}, fmt.Errorf("No matching version for: %s", version)
 }
 
 // Parses an S3 key into a struct of information about that release

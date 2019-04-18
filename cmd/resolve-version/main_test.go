@@ -69,5 +69,5 @@ func TestMatchReleaseExact(t *testing.T) {
 
 	release, err = matchReleaseExact(releases, "1.0.3")
 	assert.Error(t, err)
-	assert.Equal(t, err.Error(), "No matching version")
+	assert.Equal(t, err.Error(), "No matching version for: 1.0.3")
 }
