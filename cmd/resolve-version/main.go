@@ -69,7 +69,7 @@ func matchReleaseSemver(releases []release, versionRequirement string) (release,
 	sort.Sort(coll)
 
 	if len(coll) == 0 {
-		return release{}, errors.New("No matching version")
+		return release{}, fmt.Errorf("No matching version for: %s", versionRequirement)
 	}
 
 	resolvedVersion := coll[len(coll)-1]

@@ -94,6 +94,7 @@ func TestMatchReleaseSemver(t *testing.T) {
 		"8.9.1", "8.9.2", "8.9.3", "8.9.4",
 	})
 
+	// Semver requirements pulled from real apps
 	cases := []Case{
 		Case{input: "10.x", output: "10.15.3"},
 		Case{input: "10.*", output: "10.15.3"},
@@ -104,16 +105,18 @@ func TestMatchReleaseSemver(t *testing.T) {
 		Case{input: ">= 6.0.0", output: "11.14.0"},
 		Case{input: "^6.9.0 || ^8.9.0 || ^10.13.0", output: "10.15.3"},
 		Case{input: "6.* || 8.* || >= 10.*", output: "11.14.0"},
-		// TODO: these cause segfaults
+		// TODO: these fail to parse with the library
 		// Case{input: ">= 6.11.1 <= 10", output: "8.16.0"},
 		// Case{input: ">=8.10 <11", output: "10.15.3"},
 	}
 
 	for _, c := range cases {
-		// Semver requirements pulled from apps
 		release, err := matchReleaseSemver(releases, c.input)
 		assert.Nil(t, err)
 		assert.Equal(t, release.version.String(), c.output)
 	}
 
+	_, err := matchReleaseSemver(releases, "99.x")
+	assert.NotNil(t, err)
+	assert.Equal(t, err.Error(), "No matching version for: 99.x")
 }
