@@ -2,6 +2,10 @@
 
 ## master
 
+## v145 (2019-04-16)
+- Separate prebuild step in log output (#646)
+- Clean up script metrics and logging (#647)
+
 ## v144 (2019-04-08)
 - Remove temporary wraning about "run build" change (#644)
 
