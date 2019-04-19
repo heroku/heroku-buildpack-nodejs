@@ -1,12 +1,36 @@
 package main
 
 import (
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"regexp"
+	"time"
 
 	"github.com/Masterminds/semver"
 )
+
+type result struct {
+	Name                  string     `xml:"Name"`
+	KeyCount              int        `xml:"KeyCount"`
+	MaxKeys               int        `xml:"MaxKeys"`
+	IsTruncated           bool       `xml:"IsTruncated"`
+	ContinuationToken     string     `xml:"ContinuationToken"`
+	NextContinuationToken string     `xml:"NextContinuationToken"`
+	Prefix                string     `xml:"Prefix"`
+	Contents              []s3Object `xml:"Contents"`
+}
+
+type s3Object struct {
+	Key          string    `xml:"Key"`
+	LastModified time.Time `xml:"LastModified"`
+	ETag         string    `xml:"ETag"`
+	Size         int       `xml:"Size"`
+	StorageClass string    `xml:"StorageClass"`
+}
 
 type release struct {
 	binary   string
@@ -53,6 +77,54 @@ func parseObject(key string) (release, error) {
 	}
 
 	return release{}, fmt.Errorf("Failed to parse key: %s", key)
+}
+
+// Wrapper around the S3 API for listing objects
+// This maps directly to the API and parses the XML response but will not handle
+// paging and offsets automaticaly
+func fetchS3Result(bucketName string, options map[string]string) (result, error) {
+	var result result
+	v := url.Values{}
+	v.Set("list-type", "2")
+	for key, val := range options {
+		v.Set(key, val)
+	}
+	url := fmt.Sprintf("https://%s.s3.amazonaws.com?%s", bucketName, v.Encode())
+	resp, err := http.Get(url)
+	if err != nil {
+		return result, err
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return result, err
+	}
+
+	return result, xml.Unmarshal(body, &result)
+}
+
+// Query the S3 API for a list of all the objects in an S3 bucket with a
+// given prefix. This will handle the inherent 1000 item limit and paging
+// for you
+func listS3Objects(bucketName string, prefix string) ([]s3Object, error) {
+	var out = []s3Object{}
+	var options = map[string]string{"prefix": prefix}
+
+	for {
+		result, err := fetchS3Result(bucketName, options)
+		if err != nil {
+			return nil, err
+		}
+
+		out = append(out, result.Contents...)
+		if !result.IsTruncated {
+			break
+		}
+
+		options["continuation-token"] = result.NextContinuationToken
+	}
+
+	return out, nil
 }
 
 func main() {

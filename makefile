@@ -5,7 +5,7 @@ build:
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./vendor/resolve-version-linux ./cmd/resolve-version
 
 test-binary:
-	go test -v ./cmd/...
+	go test -v ./cmd/... -tags=integration
 
 shellcheck:
 	@shellcheck -x bin/compile bin/detect bin/release bin/test bin/test-compile
