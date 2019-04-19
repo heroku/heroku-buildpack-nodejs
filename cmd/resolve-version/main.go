@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"runtime"
 	"sort"
 	"time"
 
@@ -56,7 +57,24 @@ func main() {
 	binary := os.Args[1]
 	versionRequirement := os.Args[2]
 
-	if binary == "yarn" {
+	if binary == "node" {
+		objects, err := listS3Objects("heroku-nodebin", "node")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		result, err := resolveNode(objects, getPlatform(), versionRequirement)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if result.matched {
+			fmt.Printf("%s %s\n", result.release.version.String(), result.release.url)
+		} else {
+			fmt.Println("No result")
+			os.Exit(1)
+		}
+	} else if binary == "yarn" {
 		objects, err := listS3Objects("heroku-nodebin", "yarn")
 		if err != nil {
 			fmt.Println(err)
@@ -78,6 +96,57 @@ func main() {
 
 func printUsage() {
 	fmt.Println("resolve-version binary version-requirement")
+}
+
+func getPlatform() string {
+	if runtime.GOOS == "darwin" {
+		return "darwin-x64"
+	}
+	return "linux-x64"
+}
+
+func resolveNode(objects []s3Object, platform string, versionRequirement string) (matchResult, error) {
+	releases := []release{}
+	staging := []release{}
+
+	for _, obj := range objects {
+		release, err := parseObject(obj.Key)
+		if err != nil {
+			continue
+		}
+
+		// ignore any releases that are not for the given platform
+		if release.platform != platform {
+			continue
+		}
+
+		if release.stage == "release" {
+			releases = append(releases, release)
+		} else {
+			staging = append(staging, release)
+		}
+	}
+
+	result, err := matchReleaseSemver(releases, versionRequirement)
+	if err != nil {
+		return matchResult{}, err
+	}
+
+	// In order to accomodate integrated testing of staged Node binaries before they are
+	// released broadly, there is a special case where:
+	//
+	// - if there is no match to a Node binary AND
+	// - an exact version of a binary in `node/staging` is present
+	//
+	// the staging binary is used
+	if result.matched == false {
+		stagingResult := matchReleaseExact(staging, versionRequirement)
+		if stagingResult.matched {
+			return stagingResult, nil
+		}
+	}
+
+	return result, nil
 }
 
 func resolveYarn(objects []s3Object, versionRequirement string) (matchResult, error) {
