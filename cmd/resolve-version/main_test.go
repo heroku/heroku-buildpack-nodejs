@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Masterminds/semver"
 
@@ -121,4 +123,59 @@ func TestMatchReleaseSemver(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, result.matched)
 	assert.Equal(t, result.versionRequirement, "99.x")
+}
+
+func genYarnS3ObjectList(versions []string) []s3Object {
+	out := []s3Object{}
+	for _, version := range versions {
+		out = append(out, s3Object{
+			Key:          fmt.Sprintf("yarn/release/yarn-v%s.tar.gz", version),
+			LastModified: time.Time{},
+			ETag:         "abcdef",
+			Size:         0,
+			StorageClass: "normal",
+		})
+	}
+	return out
+}
+
+func TestResolveYarn(t *testing.T) {
+	// yarn releases as of 4/18/2019
+	objects := genYarnS3ObjectList([]string{
+		"0.16.0", "0.16.1", "0.17.0", "0.17.10", "0.17.2", "0.17.3", "0.17.4", "0.17.5", "0.17.6",
+		"0.17.7", "0.17.8", "0.17.9", "0.18.0", "0.18.1", "0.18.2", "0.19.0", "0.19.1", "0.20.0",
+		"0.20.3", "0.20.4", "0.21.0", "0.21.1", "0.21.2", "0.21.3", "0.22.0", "0.23.0", "0.23.2",
+		"0.23.3", "0.23.4", "0.24.0", "0.24.1", "0.24.2", "0.24.3", "0.24.4", "0.24.5", "0.24.6",
+		"0.25.1", "0.25.2", "0.25.3", "0.25.4", "0.26.1", "0.27.0", "0.27.1", "0.27.2", "0.27.3",
+		"0.27.4", "0.27.5", "0.28.1", "0.28.4", "1.0.0", "1.0.1", "1.0.2", "1.1.0", "1.10.0",
+		"1.10.1", "1.11.0", "1.11.1", "1.12.0", "1.12.1", "1.12.3", "1.13.0", "1.14.0", "1.15.0",
+		"1.15.1", "1.15.2", "1.2.0", "1.2.1", "1.3.2", "1.4.0", "1.5.1", "1.6.0", "1.7.0", "1.8.0",
+		"1.9.1", "1.9.2", "1.9.4",
+	})
+
+	cases := []Case{
+		Case{input: "1.13.0", output: "1.13.0"},
+		Case{input: "1.15.2", output: "1.15.2"},
+		Case{input: "1.x", output: "1.15.2"},
+		Case{input: "*", output: "1.15.2"},
+		Case{input: "^1.12.1", output: "1.15.2"},
+		Case{input: "^1.9.4", output: "1.15.2"},
+		Case{input: ">= 1.0.0", output: "1.15.2"},
+		Case{input: "^1.0", output: "1.15.2"},
+		Case{input: "0.24.6 - 1.x", output: "1.15.2"},
+		Case{input: "1.*.*", output: "1.15.2"},
+		Case{input: "^v1.0.1", output: "1.15.2"},
+		Case{input: "1.13 - 1.16", output: "1.15.2"},
+		// TODO: these fail to parse with the library
+		// Case{input: ">=1.9.4 <2.0.0", output: "1.15.2"},
+	}
+
+	for _, c := range cases {
+		result, err := resolveYarn(objects, c.input)
+		if assert.Nil(t, err) {
+			assert.True(t, result.matched)
+			assert.Equal(t, result.release.version.String(), c.output)
+			assert.Equal(t, result.release.url, fmt.Sprintf("https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v%s.tar.gz", c.output))
+		}
+	}
 }
