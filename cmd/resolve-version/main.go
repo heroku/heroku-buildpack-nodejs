@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"time"
 
 	"github.com/Masterminds/semver"
@@ -38,6 +39,72 @@ type release struct {
 	platform string
 	url      string
 	version  *semver.Version
+}
+
+type matchResult struct {
+	versionRequirement string
+	release            release
+	matched            bool
+}
+
+func matchReleaseSemver(releases []release, versionRequirement string) (matchResult, error) {
+	constraints, err := semver.NewConstraint(versionRequirement)
+	if err != nil {
+		return matchResult{}, err
+	}
+
+	filtered := []release{}
+	for _, release := range releases {
+		if constraints.Check(release.version) {
+			filtered = append(filtered, release)
+		}
+	}
+
+	versions := make([]*semver.Version, len(filtered))
+	for i, rel := range filtered {
+		versions[i] = rel.version
+	}
+
+	coll := semver.Collection(versions)
+	sort.Sort(coll)
+
+	if len(coll) == 0 {
+		return matchResult{
+			versionRequirement: versionRequirement,
+			release:            release{},
+			matched:            false,
+		}, nil
+	}
+
+	resolvedVersion := coll[len(coll)-1]
+
+	for _, rel := range filtered {
+		if rel.version.Equal(resolvedVersion) {
+			return matchResult{
+				versionRequirement: versionRequirement,
+				release:            rel,
+				matched:            true,
+			}, nil
+		}
+	}
+	return matchResult{}, errors.New("Unknown error")
+}
+
+func matchReleaseExact(releases []release, version string) matchResult {
+	for _, release := range releases {
+		if release.version.String() == version {
+			return matchResult{
+				versionRequirement: version,
+				release:            release,
+				matched:            true,
+			}
+		}
+	}
+	return matchResult{
+		versionRequirement: version,
+		release:            release{},
+		matched:            false,
+	}
 }
 
 // Parses an S3 key into a struct of information about that release
