@@ -85,8 +85,9 @@ fail_dot_heroku_node() {
 }
 
 fail_iojs_unsupported() {
+  local build_dir="$1"
   local iojs_engine
-  iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
+  iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
 
   if [ -n "$iojs_engine" ]; then
     mcount "failures.iojs-unsupported"
