@@ -1057,6 +1057,10 @@ testBuildMetaData() {
   assertFileContains "heroku-postbuild-script=\"echo heroku-postbuild hook message\"" $log_file
   assertFileContains "build-script= " $log_file
 
+  # log resolve logic dark-launch
+  assertFileContains "resolve-matches-nodebin-node=true" $log_file
+  assertFileContains "resolve-matches-nodebin-yarn=true" $log_file
+
   # monitor calls
   assertFileContains "install-node-binary-memory=" $log_file
   assertFileContains "install-node-binary-time=" $log_file
