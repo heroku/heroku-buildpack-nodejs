@@ -1,14 +1,31 @@
 #!/usr/bin/env bash
 
+RESOLVE="$BP_DIR/vendor/resolve-version-$(get_os)"
+
 install_yarn() {
   local dir="$1"
   local version=${2:-1.x}
   local platform="$3"
-  local number url code
+  local number url code nodebin_result resolve_result
 
   echo "Resolving yarn version $version..."
-  if ! read -r number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt"); then
+  nodebin_result=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt")
+  resolve_result=$($RESOLVE yarn "$version" || echo "failed")
+
+  if ! read -r number url < <(echo "$nodebin_result"); then
     fail_bin_install yarn "$version" "$platform";
+  fi
+
+  # log out whether the new logic matches the old logic
+  if [[ "$nodebin_result" != "$resolve_result" ]]; then
+    meta_set "resolve-matches-nodebin-yarn" "false"
+  else
+    meta_set "resolve-matches-nodebin-yarn" "true"
+  fi
+
+  # log out when the new logic fails
+  if [[ "$resolve_result" == "failed" ]]; then
+    meta_set "resolve-failed" "true"
   fi
 
   echo "Downloading and installing yarn ($number)..."
