@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/semver"
@@ -165,7 +166,8 @@ func resolveYarn(objects []s3Object, versionRequirement string) (matchResult, er
 }
 
 func matchReleaseSemver(releases []release, versionRequirement string) (matchResult, error) {
-	constraints, err := semver.NewConstraint(versionRequirement)
+	rewrittenRequirement := rewriteRange(versionRequirement)
+	constraints, err := semver.NewConstraint(rewrittenRequirement)
 	if err != nil {
 		return matchResult{}, err
 	}
@@ -309,4 +311,40 @@ func listS3Objects(bucketName string, prefix string) ([]s3Object, error) {
 	}
 
 	return out, nil
+}
+
+// regex matching the semver version definitions
+// Ex:
+//    v1.0.0
+//    9
+//    8.x
+const cvRegex string = `v?([0-9|x|X|\*]+)(\.[0-9|x|X|\*]+)?(\.[0-9|x|X|\*]+)?` +
+	`(-([0-9A-Za-z\-]+(\.[0-9A-Za-z\-]+)*))?` +
+	`(\+([0-9A-Za-z\-]+(\.[0-9A-Za-z\-]+)*))?`
+
+// regex matching the semver operators
+const ops string = `=<|~>|!=|>|<|>=|=>|<=|\^|=|~`
+
+// Masterminds/semver does not support constraints like: `>1 <2`, preferring
+// `>1, <2` with a comma separator. This catches this particular case and
+// rewrites it
+func rewriteRange(c string) string {
+	constraintRangeRegex := regexp.MustCompile(fmt.Sprintf(
+		`^\s*(%s)(\s*%s)\s*(%s)(\s*%s)$`,
+		ops, cvRegex, ops, cvRegex,
+	))
+
+	ors := strings.Split(c, "||")
+	out := make([]string, len(ors))
+
+	for i, v := range ors {
+		m := constraintRangeRegex.FindStringSubmatch(v)
+		if m != nil {
+			out[i] = fmt.Sprintf("%s%s, %s%s", m[1], m[2], m[12], m[13])
+		} else {
+			out[i] = v
+		}
+	}
+
+	return strings.Join(out, `||`)
 }
