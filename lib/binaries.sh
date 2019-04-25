@@ -53,30 +53,6 @@ install_nodejs() {
   chmod +x "$dir"/bin/*
 }
 
-install_iojs() {
-  local version="$1"
-  local dir="$2"
-  local platform="$3"
-  local code os cpu
-
-  os=$(get_os)
-  cpu=$(get_cpu)
-
-  echo "Resolving iojs version ${version:-(latest stable)}..."
-  if ! read -r number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/iojs/$platform/latest.txt"); then
-    fail_bin_install iojs "$version" "$platform";
-  fi
-
-  echo "Downloading and installing iojs $number..."
-  code=$(curl "$url" --silent --fail --retry 5 --retry-max-time 15 -o /tmp/iojs.tar.gz --write-out "%{http_code}")
-  if [ "$code" != "200" ]; then
-    echo "Unable to download iojs: $code" && false
-  fi
-  tar xzf /tmp/iojs.tar.gz -C /tmp
-  mv /tmp/iojs-v"$number"-"$os"-"$cpu"/* "$dir"
-  chmod +x "$dir"/bin/*
-}
-
 install_npm() {
   local npm_version
   local version="$1"

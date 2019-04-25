@@ -84,6 +84,35 @@ fail_dot_heroku_node() {
   fi
 }
 
+fail_iojs_unsupported() {
+  local build_dir="$1"
+  local iojs_engine
+  iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
+
+  if [ -n "$iojs_engine" ]; then
+    mcount "failures.iojs-unsupported"
+    meta_set "failure" "iojs-unsupported"
+    warn "io.js no longer supported
+
+       You are specifying an io.js version in your package.json:
+
+       \"engines\": {
+         ...
+         \"iojs\": \"${iojs_engine}\"
+       }
+
+       io.js merged back into Nodejs.org in 2015 and has been unsupported
+       for many years. It is likely to contain several large security 
+       vulnerabilities that have been patched in Node.
+
+       You can update your app to use the official Node.js release by 
+       removing the version specfication under \"engines\" in your
+       package.json.
+       "
+    fail
+  fi
+}
+
 fail_multiple_lockfiles() {
   local has_modern_lockfile=false
   if [ -f "${1:-}/yarn.lock" ] || [ -f "${1:-}/package-lock.json" ]; then

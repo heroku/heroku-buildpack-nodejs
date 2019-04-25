@@ -490,13 +490,6 @@ testInvalidNodeSemver() {
   assertCapturedError
 }
 
-testInvalidIo() {
-  compile "invalid-io"
-  assertCaptured "Resolving iojs version 2.0.99"
-  assertCaptured "Could not find Iojs version corresponding to version requirement: 2.0.99"
-  assertCapturedError
-}
-
 testSignatureInvalidation() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
@@ -538,10 +531,8 @@ testDetectWithoutPackageJson() {
 
 testIoJs() {
   compile "iojs"
-  assertCaptured "engines.iojs (package.json):  1.0."
-  assertCaptured "Downloading and installing iojs 1.0."
-  assertNotCaptured "Downloading and installing npm"
-  assertCapturedSuccess
+  assertCaptured "io.js no longer supported"
+  assertCapturedError
 }
 
 testSpecificVersion() {
