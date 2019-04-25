@@ -2,6 +2,10 @@
 
 ## master
 
+## v146 (2019-04-25)
+- Deprecate io.js as an alternative runtime (#658)
+- Prototyping new version resolution approach to replace Nodebin (#649 - #657)
+
 ## v145 (2019-04-16)
 - Separate prebuild step in log output (#646)
 - Clean up script metrics and logging (#647)
