@@ -9,12 +9,14 @@ install_yarn() {
   local number url code nodebin_result resolve_result
 
   echo "Resolving yarn version $version..."
-  nodebin_result=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt")
+  nodebin_result=$(curl --fail --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt" || echo "failed")
   resolve_result=$($RESOLVE yarn "$version" || echo "failed")
 
-  if ! read -r number url < <(echo "$nodebin_result"); then
-    fail_bin_install yarn "$version" "$platform";
+  if [[ "$nodebin_result" == "failed" ]]; then
+    fail_bin_install yarn "$version" "$platform"
   fi
+
+  read -r number url < <(echo "$nodebin_result")
 
   # log out whether the new logic matches the old logic
   if [[ "$nodebin_result" != "$resolve_result" ]]; then
