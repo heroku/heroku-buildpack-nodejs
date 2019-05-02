@@ -2,6 +2,17 @@
 
 ## master
 
+## v148 (2019-05-02)
+- Dark-launch new semver matching logic for node binaries (#663)
+
+## v147 (2019-05-01)
+- Dark-launch new semver matching logic for yarn binaries (#661)
+- Add node 12.x as a supported version for Node Metrics beta (#662)
+
+## v146 (2019-04-25)
+- Deprecate io.js as an alternative runtime (#658)
+- Prototyping new version resolution approach to replace Nodebin (#649 - #657)
+
 ## v145 (2019-04-16)
 - Separate prebuild step in log output (#646)
 - Clean up script metrics and logging (#647)
