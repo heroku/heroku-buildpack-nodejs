@@ -2,6 +2,9 @@
 
 ## master
 
+## v148 (2019-05-02)
+- Dark-launch new semver matching logic for node binaries (#663)
+
 ## v147 (2019-05-01)
 - Dark-launch new semver matching logic for yarn binaries (#661)
 - Add node 12.x as a supported version for Node Metrics beta (#662)
