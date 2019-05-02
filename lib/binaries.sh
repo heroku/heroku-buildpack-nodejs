@@ -27,7 +27,7 @@ install_yarn() {
 
   # log out when the new logic fails
   if [[ "$resolve_result" == "failed" ]]; then
-    meta_set "resolve-failed" "true"
+    meta_set "resolve-failed-yarn" "true"
   fi
 
   echo "Downloading and installing yarn ($number)..."
@@ -51,14 +51,31 @@ install_nodejs() {
   local version=${1:-10.x}
   local dir="${2:?}"
   local platform="$3"
-  local code os cpu
+  local code os cpu nodebin_result resolve_result
 
   os=$(get_os)
   cpu=$(get_cpu)
 
   echo "Resolving node version $version..."
-  if ! read -r number url < <(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt"); then
-    fail_bin_install node "$version" "$platform";
+  nodebin_result=$(curl --silent --fail --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt" || echo "failed")
+  resolve_result=$($RESOLVE node "$version" || echo "failed")
+
+  read -r number url < <(echo "$nodebin_result")
+
+  if [[ "$nodebin_result" == "failed" ]]; then
+    fail_bin_install node "$version" "$platform"
+  fi
+
+  # log out whether the new logic matches the old logic
+  if [[ "$nodebin_result" != "$resolve_result" ]]; then
+    meta_set "resolve-matches-nodebin-node" "false"
+  else
+    meta_set "resolve-matches-nodebin-node" "true"
+  fi
+
+  # log out when the new logic fails
+  if [[ "$resolve_result" == "failed" ]]; then
+    meta_set "resolve-failed-node" "true"
   fi
 
   echo "Downloading and installing node $number..."

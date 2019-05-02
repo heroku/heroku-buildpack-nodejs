@@ -1085,6 +1085,7 @@ testBuildMetaData() {
 
   # log resolve logic dark-launch
   assertFileContains "resolve-matches-nodebin-yarn=true" $log_file
+  assertFileContains "resolve-matches-nodebin-node=true" $log_file
 }
 
 testFailingBuildMetaData() {
