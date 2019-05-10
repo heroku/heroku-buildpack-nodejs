@@ -11,10 +11,9 @@ import (
 	"regexp"
 	"runtime"
 	"sort"
-	"strings"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/jmorrell/semver"
 )
 
 type result struct {
@@ -41,7 +40,7 @@ type release struct {
 	stage    string
 	platform string
 	url      string
-	version  *semver.Version
+	version  semver.Version
 }
 
 type matchResult struct {
@@ -57,6 +56,11 @@ func main() {
 	}
 	binary := os.Args[1]
 	versionRequirement := os.Args[2]
+
+	// special-case this string since nodebin does as well and some users use it
+	if versionRequirement == "latest" {
+		versionRequirement = "*"
+	}
 
 	if binary == "node" {
 		objects, err := listS3Objects("heroku-nodebin", "node")
@@ -166,25 +170,24 @@ func resolveYarn(objects []s3Object, versionRequirement string) (matchResult, er
 }
 
 func matchReleaseSemver(releases []release, versionRequirement string) (matchResult, error) {
-	rewrittenRequirement := rewriteRange(versionRequirement)
-	constraints, err := semver.NewConstraint(rewrittenRequirement)
+	constraints, err := semver.ParseRange(versionRequirement)
 	if err != nil {
 		return matchResult{}, err
 	}
 
 	filtered := []release{}
 	for _, release := range releases {
-		if constraints.Check(release.version) {
+		if constraints(release.version) {
 			filtered = append(filtered, release)
 		}
 	}
 
-	versions := make([]*semver.Version, len(filtered))
+	versions := make([]semver.Version, len(filtered))
 	for i, rel := range filtered {
 		versions[i] = rel.version
 	}
 
-	coll := semver.Collection(versions)
+	coll := semver.Versions(versions)
 	sort.Sort(coll)
 
 	if len(coll) == 0 {
@@ -198,7 +201,7 @@ func matchReleaseSemver(releases []release, versionRequirement string) (matchRes
 	resolvedVersion := coll[len(coll)-1]
 
 	for _, rel := range filtered {
-		if rel.version.Equal(resolvedVersion) {
+		if rel.version.Equals(resolvedVersion) {
 			return matchResult{
 				versionRequirement: versionRequirement,
 				release:            rel,
@@ -234,7 +237,7 @@ func parseObject(key string) (release, error) {
 
 	if nodeRegex.MatchString(key) {
 		match := nodeRegex.FindStringSubmatch(key)
-		version, err := semver.NewVersion(match[3])
+		version, err := semver.Make(match[3])
 		if err != nil {
 			return release{}, fmt.Errorf("Failed to parse version as semver:%s\n%s", match[3], err.Error())
 		}
@@ -249,7 +252,7 @@ func parseObject(key string) (release, error) {
 
 	if yarnRegex.MatchString(key) {
 		match := yarnRegex.FindStringSubmatch(key)
-		version, err := semver.NewVersion(match[2])
+		version, err := semver.Make(match[2])
 		if err != nil {
 			return release{}, errors.New("Failed to parse version as semver")
 		}
@@ -311,40 +314,4 @@ func listS3Objects(bucketName string, prefix string) ([]s3Object, error) {
 	}
 
 	return out, nil
-}
-
-// regex matching the semver version definitions
-// Ex:
-//    v1.0.0
-//    9
-//    8.x
-const cvRegex string = `v?([0-9|x|X|\*]+)(\.[0-9|x|X|\*]+)?(\.[0-9|x|X|\*]+)?` +
-	`(-([0-9A-Za-z\-]+(\.[0-9A-Za-z\-]+)*))?` +
-	`(\+([0-9A-Za-z\-]+(\.[0-9A-Za-z\-]+)*))?`
-
-// regex matching the semver operators
-const ops string = `=<|~>|!=|>|<|>=|=>|<=|\^|=|~`
-
-// Masterminds/semver does not support constraints like: `>1 <2`, preferring
-// `>1, <2` with a comma separator. This catches this particular case and
-// rewrites it
-func rewriteRange(c string) string {
-	constraintRangeRegex := regexp.MustCompile(fmt.Sprintf(
-		`^\s*(%s)(\s*%s)\s*(%s)(\s*%s)$`,
-		ops, cvRegex, ops, cvRegex,
-	))
-
-	ors := strings.Split(c, "||")
-	out := make([]string, len(ors))
-
-	for i, v := range ors {
-		m := constraintRangeRegex.FindStringSubmatch(v)
-		if m != nil {
-			out[i] = fmt.Sprintf("%s%s, %s%s", m[1], m[2], m[12], m[13])
-		} else {
-			out[i] = v
-		}
-	}
-
-	return strings.Join(out, `||`)
 }

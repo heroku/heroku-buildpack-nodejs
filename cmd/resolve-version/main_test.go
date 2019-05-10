@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Masterminds/semver"
+	"github.com/jmorrell/semver"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -108,8 +108,7 @@ func TestMatchReleaseSemver(t *testing.T) {
 		Case{input: "^6.9.0 || ^8.9.0 || ^10.13.0", output: "10.15.3"},
 		Case{input: "6.* || 8.* || >= 10.*", output: "11.14.0"},
 		Case{input: ">= 6.11.1 <= 10", output: "10.15.3"},
-		// TODO: Masterminds/semver interprets this as `< 11.x`
-		// Case{input: ">=8.10 <11", output: "10.15.3"},
+		Case{input: ">=8.10 <11", output: "10.15.3"},
 	}
 
 	for _, c := range cases {
@@ -167,6 +166,9 @@ func TestResolveYarn(t *testing.T) {
 		Case{input: "^v1.0.1", output: "1.15.2"},
 		Case{input: "1.13 - 1.16", output: "1.15.2"},
 		Case{input: ">=1.9.4 <2.0.0", output: "1.15.2"},
+		// Caret requirements work like ~ when the major is < 1
+		Case{input: "^0.27.5", output: "0.27.5"},
+		Case{input: "^0.27.2", output: "0.27.5"},
 	}
 
 	for _, c := range cases {
@@ -232,8 +234,8 @@ func TestResolveNode(t *testing.T) {
 		Case{input: "^6.9.0 || ^8.9.0 || ^10.13.0", output: "10.15.3"},
 		Case{input: "6.* || 8.* || >= 10.*", output: "11.14.0"},
 		Case{input: ">= 6.11.1 <= 10", output: "10.15.3"},
-		// TODO: Masterminds/semver interprets this as `< 11.x`
-		// Case{input: ">=8.10 <11", output: "10.15.3"},
+		Case{input: ">=8.10 <11", output: "10.15.3"},
+		Case{input: "8 - 10", output: "10.15.3"},
 	}
 
 	for _, c := range cases {
@@ -304,28 +306,5 @@ func TestResolveNodeStaging(t *testing.T) {
 			assert.False(t, result.matched)
 			assert.Equal(t, result.versionRequirement, "10.15.5")
 		}
-	}
-}
-
-func TestRewriteRange(t *testing.T) {
-	cases := []Case{
-		Case{input: "10.x", output: "10.x"},
-		Case{input: "10.*", output: "10.*"},
-		Case{input: "10", output: "10"},
-		Case{input: "8.x", output: "8.x"},
-		Case{input: "^8.11.3", output: "^8.11.3"},
-		Case{input: "~8.11.3", output: "~8.11.3"},
-		Case{input: ">= 6.0.0", output: ">= 6.0.0"},
-		Case{input: "^6.9.0 || ^8.9.0 || ^10.13.0", output: "^6.9.0 || ^8.9.0 || ^10.13.0"},
-		Case{input: "6.* || 8.* || >= 10.*", output: "6.* || 8.* || >= 10.*"},
-		Case{input: ">= 6.11.1 <= 10", output: ">= 6.11.1, <= 10"},
-		Case{input: ">=8.10 <11", output: ">=8.10, <11"},
-		Case{input: ">1<2", output: ">1, <2"},
-		Case{input: ">1<", output: ">1<"},
-	}
-
-	for _, c := range cases {
-		out := rewriteRange(c.input)
-		assert.Equal(t, c.output, out)
 	}
 }
