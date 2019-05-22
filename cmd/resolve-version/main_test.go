@@ -109,6 +109,7 @@ func TestMatchReleaseSemver(t *testing.T) {
 		Case{input: "6.* || 8.* || >= 10.*", output: "11.14.0"},
 		Case{input: ">= 6.11.1 <= 10", output: "10.15.3"},
 		Case{input: ">=8.10 <11", output: "10.15.3"},
+		Case{input: "v10.15.3", output: "10.15.3"},
 	}
 
 	for _, c := range cases {

@@ -2,6 +2,28 @@
 
 RESOLVE="$BP_DIR/vendor/resolve-version-$(get_os)"
 
+resolve() {
+  local binary="$1"
+  local versionRequirement="$2"
+  local n=0
+  local output
+
+  # retry this up to 5 times in case of spurious failed API requests
+  until [ $n -ge 5 ]
+  do
+    if output=$($RESOLVE "$binary" "$versionRequirement"); then
+        echo "$output"
+        return 0
+    else
+        n=$((n+1))
+        # break for a second with a linear backoff
+        sleep $((n+1))
+    fi
+  done
+
+  return 1
+}
+
 install_yarn() {
   local dir="$1"
   local version=${2:-1.x}
@@ -10,7 +32,7 @@ install_yarn() {
 
   echo "Resolving yarn version $version..."
   nodebin_result=$(curl --fail --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt" || echo "failed")
-  resolve_result=$($RESOLVE yarn "$version" || echo "failed")
+  resolve_result=$(resolve yarn "$version" || echo "failed")
 
   if [[ "$nodebin_result" == "failed" ]]; then
     fail_bin_install yarn "$version" "$platform"
@@ -58,7 +80,7 @@ install_nodejs() {
 
   echo "Resolving node version $version..."
   nodebin_result=$(curl --silent --fail --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt" || echo "failed")
-  resolve_result=$($RESOLVE node "$version" || echo "failed")
+  resolve_result=$(resolve node "$version" || echo "failed")
 
   read -r number url < <(echo "$nodebin_result")
 

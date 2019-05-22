@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/jmorrell/semver v0.0.0-20190510015448-6e33b7817be3 h1:GJFWuPOkujNfqSFra51a0w79yghHtIJrALFLq5Z3haI=
-github.com/jmorrell/semver v0.0.0-20190510015448-6e33b7817be3/go.mod h1:VxabTS3pB/A0ivrKFcm8NX6RT7Btqn+0hjn8jnozEW8=
+github.com/jmorrell/semver v0.0.0-20190521202929-0d1a4bb09cfa h1:r1iPuFpnBYOGRucEzPyY4TdeC6+HBUrd79Q9Qg6OdBg=
+github.com/jmorrell/semver v0.0.0-20190521202929-0d1a4bb09cfa/go.mod h1:VxabTS3pB/A0ivrKFcm8NX6RT7Btqn+0hjn8jnozEW8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
