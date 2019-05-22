@@ -16,7 +16,8 @@ resolve() {
         return 0
     else
         n=$((n+1))
-        sleep 1
+        # break for a second with a linear backoff
+        sleep $((n+1))
     fi
   done
 
