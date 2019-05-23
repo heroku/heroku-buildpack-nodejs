@@ -12,12 +12,17 @@ resolve() {
   until [ $n -ge 5 ]
   do
     if output=$($RESOLVE "$binary" "$versionRequirement"); then
-        echo "$output"
-        return 0
+      echo "$output"
+      return 0
+    # don't retry if we get a negative result
+    elif [[ $output = "No result" ]]; then
+      return 1
+    elif [[ $output =~ ^Could\snot\sparse.* ]]; then
+      return 1
     else
-        n=$((n+1))
-        # break for a second with a linear backoff
-        sleep $((n+1))
+      n=$((n+1))
+      # break for a second with a linear backoff
+      sleep $((n+1))
     fi
   done
 
