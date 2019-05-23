@@ -240,7 +240,7 @@ fail_bin_install() {
       yarn)
         echo "Could not find Yarn version corresponding to version requirement: $version";;
     esac
-  elif [[ $error == "Could not parse"* ]]; then
+  elif [[ $error == "Could not parse"* ]] || [[ $error == "Could not get"* ]]; then
     echo "Error: Invalid semantic version \"$version\""
   else
     echo "Error: Unknown error installing \"$version\" of $bin"

@@ -17,7 +17,7 @@ resolve() {
     # don't retry if we get a negative result
     elif [[ $output = "No result" ]]; then
       return 1
-    elif [[ $output =~ ^Could\snot\sparse.* ]]; then
+    elif [[ $output == "Could not parse"* ]] || [[ $output == "Could not get"* ]]; then
       return 1
     else
       n=$((n+1))
