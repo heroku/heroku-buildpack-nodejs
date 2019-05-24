@@ -54,9 +54,18 @@ func main() {
 		printUsage()
 		os.Exit(0)
 	}
-	binary := os.Args[1]
-	versionRequirement := os.Args[2]
 
+	if os.Args[1] == "list" {
+		binary := os.Args[2]
+		list(binary)
+	} else {
+		binary := os.Args[1]
+		versionRequirement := os.Args[2]
+		resolve(binary, versionRequirement)
+	}
+}
+
+func resolve(binary string, versionRequirement string) {
 	// special-case this string since nodebin does as well and some users use it
 	if versionRequirement == "latest" {
 		versionRequirement = "*"
@@ -99,8 +108,35 @@ func main() {
 	}
 }
 
+func list(binary string) {
+	platform := getPlatform()
+	objects, err := listS3Objects("heroku-nodebin", binary)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	for _, obj := range objects {
+		release, err := parseObject(obj.Key)
+		if err != nil {
+			continue
+		}
+
+		// ignore any releases that are not for the given platform
+		// unless the platform is empty (for yarn)
+		if release.platform != platform && release.platform != "" {
+			continue
+		}
+
+		if release.stage == "release" {
+			fmt.Printf("%s %s\n", release.version.String(), release.url)
+		}
+	}
+}
+
 func printUsage() {
-	fmt.Println("resolve-version binary version-requirement")
+	fmt.Println("resolve-version BINARY VERSION_REQUIREMENT")
+	fmt.Println("resolve-version list BINARY")
 }
 
 func getPlatform() string {
