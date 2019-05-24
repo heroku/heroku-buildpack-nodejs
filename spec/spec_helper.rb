@@ -42,20 +42,26 @@ def set_node_version(version)
   end
 end
 
+def run!(cmd)
+  out = `#{cmd}`
+  raise "Error running command #{cmd.inspect}: #{out}" unless $?.success?
+  out
+end
+
 def resolve_binary_path
-  (/darwin/ =~ RUBY_PLATFORM) != nil ? './vendor/resolve-version-darwin' : './vendor/resolve-version-linux'
+  RUBY_PLATFORM.match(/darwin/) ? './vendor/resolve-version-darwin' : './vendor/resolve-version-linux'
 end
 
 def resolve_node_version(requirements, options = {})
   requirements.map do |requirement|
-    result = `#{resolve_binary_path} node #{requirement}`
-    result.split(' ')[0]
+    result = run!("#{resolve_binary_path} node #{requirement}")
+    result.split(' ').first
   end
 end
 
 def resolve_all_supported_node_versions(options = {})
-  result = `#{resolve_binary_path} list node`
-  list = result.lines().map { |line| line.split(' ')[0] }
+  result = run!("#{resolve_binary_path} list node")
+  list = result.lines().map { |line| line.split(' ').first }
   list.select do |n|
     SemVersion.new(n).satisfies?('>= 6.0.0')
   end
