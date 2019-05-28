@@ -220,10 +220,16 @@ fail_bin_install() {
   local error
   local bin="$1"
   local version="$2"
-  local platform="$3"
 
-  # re-curl the result, saving off the reason for the failure this time
-  error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")
+  # Allow the subcommand to fail without trapping the error so we can
+  # get the failing message output
+  set +e
+
+  # re-request the result, saving off the reason for the failure this time
+  error=$($RESOLVE "$bin" "$version")
+
+  # re-enable trapping
+  set -e
 
   if [[ $error = "No result" ]]; then
     case $bin in
@@ -234,11 +240,13 @@ fail_bin_install() {
       yarn)
         echo "Could not find Yarn version corresponding to version requirement: $version";;
     esac
-  else
+  elif [[ $error == "Could not parse"* ]] || [[ $error == "Could not get"* ]]; then
     echo "Error: Invalid semantic version \"$version\""
+  else
+    echo "Error: Unknown error installing \"$version\" of $bin"
   fi
 
-  false
+  return 1
 }
 
 fail_node_install() {
@@ -298,13 +306,13 @@ fail_yarn_install() {
        you’re developing and testing with. To find your version locally:
 
        $ yarn --version
-       0.27.5
+       1.12.3
 
        Use the engines section of your package.json to specify the version of
        Yarn to use on Heroku.
 
        \"engines\": {
-         \"yarn\": \"0.27.5\"
+         \"yarn\": \"1.x\"
        }
     " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions
     fail

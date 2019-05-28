@@ -1082,10 +1082,6 @@ testBuildMetaData() {
   assertFileContains "install-yarn-binary-memory=" $log_file
   assertFileContains "install-yarn-binary-time=" $log_file
   assertFileContains "node-build-success=true" $log_file
-
-  # log resolve logic dark-launch
-  assertFileContains "resolve-matches-nodebin-yarn=true" $log_file
-  assertFileContains "resolve-matches-nodebin-node=true" $log_file
 }
 
 testFailingBuildMetaData() {

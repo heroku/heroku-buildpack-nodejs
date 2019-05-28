@@ -12,12 +12,17 @@ resolve() {
   until [ $n -ge 5 ]
   do
     if output=$($RESOLVE "$binary" "$versionRequirement"); then
-        echo "$output"
-        return 0
+      echo "$output"
+      return 0
+    # don't retry if we get a negative result
+    elif [[ $output = "No result" ]]; then
+      return 1
+    elif [[ $output == "Could not parse"* ]] || [[ $output == "Could not get"* ]]; then
+      return 1
     else
-        n=$((n+1))
-        # break for a second with a linear backoff
-        sleep $((n+1))
+      n=$((n+1))
+      # break for a second with a linear backoff
+      sleep $((n+1))
     fi
   done
 
@@ -27,30 +32,16 @@ resolve() {
 install_yarn() {
   local dir="$1"
   local version=${2:-1.x}
-  local platform="$3"
-  local number url code nodebin_result resolve_result
+  local number url code resolve_result
 
   echo "Resolving yarn version $version..."
-  nodebin_result=$(curl --fail --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/yarn/$platform/latest.txt" || echo "failed")
   resolve_result=$(resolve yarn "$version" || echo "failed")
 
-  if [[ "$nodebin_result" == "failed" ]]; then
-    fail_bin_install yarn "$version" "$platform"
-  fi
-
-  read -r number url < <(echo "$nodebin_result")
-
-  # log out whether the new logic matches the old logic
-  if [[ "$nodebin_result" != "$resolve_result" ]]; then
-    meta_set "resolve-matches-nodebin-yarn" "false"
-  else
-    meta_set "resolve-matches-nodebin-yarn" "true"
-  fi
-
-  # log out when the new logic fails
   if [[ "$resolve_result" == "failed" ]]; then
-    meta_set "resolve-failed-yarn" "true"
+    fail_bin_install yarn "$version"
   fi
+
+  read -r number url < <(echo "$resolve_result")
 
   echo "Downloading and installing yarn ($number)..."
   code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
@@ -72,32 +63,18 @@ install_yarn() {
 install_nodejs() {
   local version=${1:-10.x}
   local dir="${2:?}"
-  local platform="$3"
-  local code os cpu nodebin_result resolve_result
+  local code os cpu resolve_result
 
   os=$(get_os)
   cpu=$(get_cpu)
 
   echo "Resolving node version $version..."
-  nodebin_result=$(curl --silent --fail --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/node/$platform/latest.txt" || echo "failed")
   resolve_result=$(resolve node "$version" || echo "failed")
 
-  read -r number url < <(echo "$nodebin_result")
+  read -r number url < <(echo "$resolve_result")
 
-  if [[ "$nodebin_result" == "failed" ]]; then
-    fail_bin_install node "$version" "$platform"
-  fi
-
-  # log out whether the new logic matches the old logic
-  if [[ "$nodebin_result" != "$resolve_result" ]]; then
-    meta_set "resolve-matches-nodebin-node" "false"
-  else
-    meta_set "resolve-matches-nodebin-node" "true"
-  fi
-
-  # log out when the new logic fails
   if [[ "$resolve_result" == "failed" ]]; then
-    meta_set "resolve-failed-node" "true"
+    fail_bin_install node "$version"
   fi
 
   echo "Downloading and installing node $number..."
