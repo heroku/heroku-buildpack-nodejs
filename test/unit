@@ -317,9 +317,10 @@ testHasScript() {
 }
 
 testExperiments() {
-  local schema build_dir build_dir_blank build_dir_override cache_dir val val2 val3 val4
+  local schema schema2 empty_schema build_dir build_dir_blank build_dir_override cache_dir val val2 val3 val4
   schema="$(pwd)/test/unit-fixtures/experiments/experiments"
   schema2="$(pwd)/test/unit-fixtures/experiments/experiments-v2"
+  empty_schema="$(mktemp)"
   build_dir="$(mktemp -d)"
   build_dir_blank="$(pwd)/test/unit-fixtures/experiments/build-dir-blank"
   build_dir_override="$(pwd)/test/unit-fixtures/experiments/build-dir-override"
@@ -377,6 +378,9 @@ testExperiments() {
   assertEquals "blank: all-on should be off" "false" "$(experiments_get "all-on")"
   assertEquals "blank: all-off should be off" "false" "$(experiments_get "all-off")"
   assertEquals "blank: ab-test should be off" "false" "$(experiments_get "ab-test")"
+
+  #initializing with an empty schema doesn't error
+  experiments_init "nodejs" "$(mktemp -d)" "$(mktemp -d)" "$empty_schema"
 }
 
 testExperimentsNoInit() {

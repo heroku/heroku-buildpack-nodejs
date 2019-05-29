@@ -110,17 +110,19 @@ experiments_init() {
   # iterate through the schema and decide if each new experiment
   # should be turned on or not
   kv_keys "$schema" | tr ' ' '\n' | while read -r key; do
-    if [[ -n "$(kv_get "$EXPERIMENTS_DATA_FILE" "$key")" ]]; then
-      continue
-    else
-      # generate a random number between 0 and 100
-      random=$((RANDOM % 100))
-      # the value in the schema should be a number between 0 and 100 inclusive
-      odds=$(kv_get "$schema" "$key")
-      if [[ "$random" -lt "$odds" ]]; then
-        kv_set "$EXPERIMENTS_DATA_FILE" "$key" "true"
+    if [[ -n "$key" ]]; then
+      if [[ -n "$(kv_get "$EXPERIMENTS_DATA_FILE" "$key")" ]]; then
+        continue
       else
-        kv_set "$EXPERIMENTS_DATA_FILE" "$key" "false"
+        # generate a random number between 0 and 100
+        random=$((RANDOM % 100))
+        # the value in the schema should be a number between 0 and 100 inclusive
+        odds=$(kv_get "$schema" "$key")
+        if [[ "$random" -lt "$odds" ]]; then
+          kv_set "$EXPERIMENTS_DATA_FILE" "$key" "true"
+        else
+          kv_set "$EXPERIMENTS_DATA_FILE" "$key" "false"
+        fi
       fi
     fi
   done
@@ -146,7 +148,11 @@ experiments_get() {
 
 # Outputs a list of experiment names, one-per-line
 experiments_list() {
-  kv_keys "$EXPERIMENTS_DATA_FILE"
+  if [[ -f "$OVERRIDE_FILE" ]]; then
+    kv_keys "$OVERRIDE_FILE"
+  else
+    kv_keys "$EXPERIMENTS_DATA_FILE"
+  fi
 }
 
 # Force an experiment to be turned on or off
