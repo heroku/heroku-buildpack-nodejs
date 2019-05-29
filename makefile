@@ -40,6 +40,7 @@ hatchet:
 	@echo "Running hatchet integration tests..."
 	@bash etc/ci-setup.sh
 	@bash etc/hatchet.sh spec/ci/
+	@bash etc/ci-cleanup.sh
 	@echo ""
 
 nodebin-test:
