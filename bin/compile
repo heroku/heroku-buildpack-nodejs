@@ -41,6 +41,9 @@ source $BP_DIR/lib/dependencies.sh
 # Load meteor framework related functions
 source $BP_DIR/bin/meteor.sh
 if test -n "$meteor_version" ; then
+  # Most Meteor projects are using React or equivalent and all these
+  # dependencies are in dev usually. We had way too much support because of
+  # this.
   export NPM_CONFIG_PRODUCTION=false
 fi
 
