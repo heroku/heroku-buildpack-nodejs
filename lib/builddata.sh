@@ -11,6 +11,14 @@ log_initial_state() {
   fi
 
   meta_set "stack" "$STACK"
+
+  # add any active experiments to the metadata set
+  # prefix the key with "experiment-"
+  experiments_list | tr ' ' '\n' | while read -r key; do
+    if [[ -n $key ]]; then
+      meta_set "experiment-$key" "$(experiments_get "$key")"
+    fi
+  done
 }
 
 generate_uuids() {
