@@ -2,6 +2,9 @@
 
 ## master
 
+## v153 (2019-05-30)
+- Test new A/B testing module (#671, #672)
+
 ## v152 (2019-05-28)
 - Replace nodebin usage in hatchet tests (#669)
 - Add ability to list all node or yarn releases (#668)
