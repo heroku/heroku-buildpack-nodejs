@@ -317,44 +317,76 @@ testHasScript() {
 }
 
 testExperiments() {
-  local schema="$(pwd)/test/unit-fixtures/experiments/experiments-v1"
-  local schema_next="$(pwd)/test/unit-fixtures/experiments/experiments-v1-next"
-  local schema_v2="$(pwd)/test/unit-fixtures/experiments/experiments-v2"
-  local cache_dir=$(mktemp -d)
-  local val
+  local schema schema2 empty_schema build_dir build_dir_blank build_dir_override cache_dir val val2 val3 val4
+  schema="$(pwd)/test/unit-fixtures/experiments/experiments"
+  schema2="$(pwd)/test/unit-fixtures/experiments/experiments-v2"
+  empty_schema="$(mktemp)"
+  build_dir="$(mktemp -d)"
+  build_dir_blank="$(pwd)/test/unit-fixtures/experiments/build-dir-blank"
+  build_dir_override="$(pwd)/test/unit-fixtures/experiments/build-dir-override"
+  cache_dir=$(mktemp -d)
 
-  experiments_init "nodejs" "$cache_dir" "$schema"
+  experiments_init "nodejs" "$build_dir" "$cache_dir" "$schema"
 
   # these should always be the same
   assertEquals "true" "$(experiments_get "all-on")"
   assertEquals "false" "$(experiments_get "all-off")"
-  # this will change, but stay the same between runs
+  # these will stay the same between runs
   val="$(experiments_get "ab-test")"
+  val2="$(experiments_get "ab-test-2")"
+  val3="$(experiments_get "ab-test-3")"
+  val4="$(experiments_get "ab-test-4")"
 
   # pretend this is the next time this build is run
-  experiments_init "nodejs" "$cache_dir" "$schema"
+  experiments_init "nodejs" "$build_dir" "$cache_dir" "$schema"
 
   # these should always be the same
-  assertEquals "true" "$(experiments_get "all-on")"
-  assertEquals "false" "$(experiments_get "all-off")"
-  # val should be the same as it was before
-  assertEquals "$val" "$(experiments_get "ab-test")"
+  assertEquals "all-on should still be on" "true" "$(experiments_get "all-on")"
+  assertEquals "all-of should still be off" "false" "$(experiments_get "all-off")"
+  # ab-test-x should be the same as it was before
+  assertEquals "ab-test should be the same" "$val" "$(experiments_get "ab-test")"
+  assertEquals "ab-test-2 should be the same" "$val2" "$(experiments_get "ab-test-2")"
+  assertEquals "ab-test-3 should be the same" "$val3" "$(experiments_get "ab-test-3")"
+  assertEquals "ab-test-4 should be the same" "$val4" "$(experiments_get "ab-test-4")"
 
-  # now we add a new feature to the schema
-  experiments_init "nodejs" "$cache_dir" "$schema_next"
+  # Now we've changed the schema, so the cache should invalidate
+  experiments_init "nodejs" "$build_dir" "$cache_dir" "$schema2"
+  # the keys are the same, but the new values should be respected
+  assertEquals "invalidate: all-on should be changed" "false" "$(experiments_get "all-on")"
+  assertEquals "invalidate: all-off should be changed" "true" "$(experiments_get "all-off")"
+  assertEquals "invalidate: ab-test should be changed" "false" "$(experiments_get "ab-test")"
 
-  assertEquals "true" "$(experiments_get "all-on")"
-  assertEquals "false" "$(experiments_get "all-off")"
-  assertEquals "$val" "$(experiments_get "ab-test")"
-  assertEquals "true" "$(experiments_get "new-always-on")"
+  experiments_override "ab-test" "true"
+  assertEquals "override: ab-test should be true" "true" "$(experiments_get "ab-test")"
+  experiments_override "ab-test" "false"
+  assertEquals "override: ab-test should be false" "false" "$(experiments_get "ab-test")"
 
-  # reset the schema
-  experiments_init "nodejs" "$cache_dir" "$schema_v2"
-  assertNotNull "$(experiments_get "new-feature")"
-  assertNull "$(experiments_get "all-on")"
-  assertNull "$(experiments_get "all-off")"
-  assertNull "$(experiments_get "ab-test")"
-  assertNull "$(experiments_get "new-always-on")"
+  # now use file-based overrides
+  experiments_init "nodejs" "$build_dir_override" "$cache_dir" "$schema"
+  # all of these values should be true now
+  assertEquals "override: all-on should be overridden" "true" "$(experiments_get "all-on")"
+  assertEquals "override: all-off should be overridden" "true" "$(experiments_get "all-off")"
+  assertEquals "override: ab-test should be overridden" "true" "$(experiments_get "ab-test")"
+
+  # file based overrides take precedent over explicit overrides
+  experiments_override "ab-test" "false"
+  assertEquals "file based overrides take precedent over explicit overrides" "true" "$(experiments_get "ab-test")"
+
+  # now use a blank file-based override
+  experiments_init "nodejs" "$build_dir_blank" "$cache_dir" "$schema"
+  # all of these values should be false now
+  assertEquals "blank: all-on should be off" "false" "$(experiments_get "all-on")"
+  assertEquals "blank: all-off should be off" "false" "$(experiments_get "all-off")"
+  assertEquals "blank: ab-test should be off" "false" "$(experiments_get "ab-test")"
+
+  #initializing with an empty schema doesn't error
+  experiments_init "nodejs" "$(mktemp -d)" "$(mktemp -d)" "$empty_schema"
+}
+
+testExperimentsNoInit() {
+  assertEquals "running experiments-get without init should return false" "false" "$(experiments_get "test-name")"
+  assertEquals "running experiments-get without init should return false" "false" "$(experiments_get "test-name-2")"
+  assertEquals "running experiments-get without init should return false" "false" "$(experiments_get "test-name-3")"
 }
 
 BP_DIR="$(pwd)"
