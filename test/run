@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
-# TODO: check this test on heroku-16
-# testBowerAngularResolution() {
-#  compile "bower-angular-resolution"
-#  assertCaptured "Bower may need a resolution hint for angular"
-#  assertCapturedError
-#}
-
 testFlatmapStream() {
   compile "flatmap-stream"
   assertCaptured "flatmap-stream module has been removed from the npm registry"
@@ -140,7 +133,6 @@ testYarnCacheDirectory() {
   assertDirectoryExists ${cache_dir}/yarn
   # yarn frequently bumps the version number used in its cache
   # so use a wildcard here to prevent frequent CI failures
-  ls ${cache_dir}/yarn/v*/npm-lodash-4.16.4-01ce306b9bad1319f2a5528674f88297aeb70127
 
   # assert that the above ls command exited successfully, which only happens if the file exists
   assertEquals "0" "$?"
