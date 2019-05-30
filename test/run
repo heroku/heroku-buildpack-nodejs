@@ -1084,6 +1084,16 @@ testBuildMetaData() {
   assertFileContains "node-build-success=true" $log_file
 }
 
+testExperimentLogging() {
+  local log_file=$(mktemp)
+
+  BUILDPACK_LOG_FILE="$log_file" compile "dummy-experiment"
+
+  # the defined experiments should be logged
+  assertFileContains "experiment-dummy=true" $log_file
+  assertFileContains "experiment-dummy-2=false" $log_file
+}
+
 testFailingBuildMetaData() {
   local log_file=$(mktemp)
 
@@ -1178,6 +1188,14 @@ compile() {
   compile_dir=$(mktmpdir)
   cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+
+  # if there isn't an experiments override, add an empty one to ensure
+  # that any experiments will not influence tests unless they are
+  # explicitly defined
+  if [[ ! -f "${compile_dir}/heroku-buildpack-experiments" ]]; then
+    touch "${compile_dir}/heroku-buildpack-experiments"
+  fi
+
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
 }
 
