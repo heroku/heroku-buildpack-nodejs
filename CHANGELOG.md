@@ -2,6 +2,10 @@
 
 ## master
 
+## v154 (2019-06-05)
+- Roll out A/B test of npm ci command to 5% of apps (#676)
+- Internal fixes (#674, #673)
+
 ## v153 (2019-05-30)
 - Test new A/B testing module (#671, #672)
 
