@@ -113,6 +113,25 @@ yarn_prune_devdependencies() {
   fi
 }
 
+should_use_npm_ci() {
+  local build_dir=${1:-}
+  local npm_version
+
+  npm_version=$(npm --version)
+  # major_string will be ex: "4." "5." "10"
+  local major_string=${npm_version:0:2}
+  # strip any "."s from major_string
+  local major=${major_string//.}
+
+  # We should only run `npm ci` if all of the manifest files are there, and we are running at least npm 6.x
+  # `npm ci` was introduced in the 5.x line in 5.7.0, but this sees very little usage, < 5% of builds
+  if [[ -f "$build_dir/package.json" ]] && [[ -f "$build_dir/package-lock.json" ]] && (( major >= 6 )); then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
 npm_node_modules() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
@@ -120,14 +139,21 @@ npm_node_modules() {
   if [ -e "$build_dir/package.json" ]; then
     cd "$build_dir" || return
 
-    if [ -e "$build_dir/package-lock.json" ]; then
-      echo "Installing node modules (package.json + package-lock)"
-    elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then
-      echo "Installing node modules (package.json + shrinkwrap)"
+    if [[ "$(experiments_get "use-npm-ci")" == "true" ]] && [[ "$(should_use_npm_ci "$build_dir")" == "true" ]]; then
+      meta_set "supports-npm-ci" "true"
+      echo "Installing node modules"
+      monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
-      echo "Installing node modules (package.json)"
+      meta_set "supports-npm-ci" "false"
+      if [ -e "$build_dir/package-lock.json" ]; then
+        echo "Installing node modules (package.json + package-lock)"
+      elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then
+        echo "Installing node modules (package.json + shrinkwrap)"
+      else
+        echo "Installing node modules (package.json)"
+      fi
+      monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     fi
-    monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
   else
     echo "Skipping (no package.json)"
   fi

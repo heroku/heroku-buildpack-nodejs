@@ -1,6 +1,49 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
+testNpmCi() {
+  local log_file cache
+  log_file=$(mktemp)
+  cache=$(mktmpdir)
+
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" "$cache"
+
+   # make sure that build scripts are being called
+  assertCaptured "heroku-prebuild script"
+  assertCaptured "build script"
+  assertCaptured "postinstall script"
+  assertCapturedSuccess
+
+   # test logging
+  assertFileContains "experiment-use-npm-ci=true" "$log_file"
+  assertFileContains "supports-npm-ci=true" "$log_file"
+  assertFileContains "npm-install-time=" "$log_file"
+  assertFileContains "npm-install-memory=" "$log_file"
+
+   # test re-using the cache
+  echo "" > "$log_file"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" "$cache"
+  assertCapturedSuccess
+}
+
+testNpmCiFallback() {
+  local log_file cache
+  log_file=$(mktemp)
+
+  # without a lockfile we should use "npm install" instead of "npm ci"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-no-lockfile"
+
+  assertCapturedSuccess
+
+   # make sure we're in the experiment
+  assertFileContains "experiment-use-npm-ci=true" "$log_file"
+  # and detecting that we shouldn't use npm ci
+  assertFileContains "supports-npm-ci=false" "$log_file"
+  # and ran "npm install"
+  assertFileContains "npm-install-time=" "$log_file"
+  assertFileContains "npm-install-memory=" "$log_file"
+}
+
 testFlatmapStream() {
   compile "flatmap-stream"
   assertCaptured "flatmap-stream module has been removed from the npm registry"
