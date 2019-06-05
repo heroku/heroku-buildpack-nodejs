@@ -117,7 +117,7 @@ should_use_npm_ci() {
   local build_dir=${1:-}
   local npm_version
 
-   npm_version=$(npm --version)
+  npm_version=$(npm --version)
   # major_string will be ex: "4." "5." "10"
   local major_string=${npm_version:0:2}
   # strip any "."s from major_string
@@ -143,7 +143,7 @@ npm_node_modules() {
       meta_set "supports-npm-ci" "true"
       cd "$build_dir" || return
       echo "Installing node modules"
-      monitor "npm-ci" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+      monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
       meta_set "supports-npm-ci" "false"
       if [ -e "$build_dir/package-lock.json" ]; then

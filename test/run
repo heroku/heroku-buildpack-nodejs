@@ -17,8 +17,8 @@ testNpmCi() {
    # test logging
   assertFileContains "experiment-use-npm-ci=true" "$log_file"
   assertFileContains "supports-npm-ci=true" "$log_file"
-  assertFileContains "npm-ci-time=" "$log_file"
-  assertFileContains "npm-ci-memory=" "$log_file"
+  assertFileContains "npm-install-time=" "$log_file"
+  assertFileContains "npm-install-memory=" "$log_file"
 
    # test re-using the cache
   echo "" > "$log_file"
