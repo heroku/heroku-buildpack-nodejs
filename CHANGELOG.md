@@ -2,6 +2,26 @@
 
 ## master
 
+## v154 (2019-06-05)
+- Roll out A/B test of npm ci command to 5% of apps (#676)
+- Internal fixes (#674, #673)
+
+## v153 (2019-05-30)
+- Test new A/B testing module (#671, #672)
+
+## v152 (2019-05-28)
+- Replace nodebin usage in hatchet tests (#669)
+- Add ability to list all node or yarn releases (#668)
+
+## v151 (2019-05-28)
+- Deprecate nodebin in favor of go binary (#667)
+
+## v150 (2019-05-22)
+- Resolve more inconsistencies with version selection (#666)
+
+## v149 (2019-05-10)
+- Resolve the known behavior mismatches between nodebin and the go logic (#664)
+
 ## v148 (2019-05-02)
 - Dark-launch new semver matching logic for node binaries (#663)
 
