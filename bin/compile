@@ -84,6 +84,7 @@ trap 'handle_failure' ERR
 
 ### Initalize metadata store
 meta_create "$CACHE_DIR"
+meta_set "build-step" "init"
 
 ### Check initial state
 
@@ -175,6 +176,7 @@ install_bins() {
   warn_old_npm
 }
 
+meta_set "build-step" "install-binaries"
 header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
 
@@ -223,6 +225,7 @@ restore_cache() {
   meta_set "cache-status" "$cache_status"
 }
 
+meta_set "build-step" "restore-cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
@@ -242,10 +245,12 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
+  meta_set "build-step" "build-script"
   header "Build"
   run_build_script "$BUILD_DIR"
 }
 
+meta_set "build-step" "install-dependencies"
 log_build_scripts "$BUILD_DIR"
 run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
 header "Installing dependencies" | output "$LOG_FILE"
@@ -270,6 +275,7 @@ cache_build() {
   save_signature "$CACHE_DIR"
 }
 
+meta_set "build-step" "save-cache"
 cache_build | output "$LOG_FILE"
 
 prune_devdependencies() {
@@ -280,6 +286,7 @@ prune_devdependencies() {
   fi
 }
 
+meta_set "build-step" "prune-dependencies"
 header "Pruning devDependencies" | output "$LOG_FILE"
 prune_devdependencies | output "$LOG_FILE"
 
@@ -292,8 +299,10 @@ summarize_build() {
   meta_set "node-modules-size" "$(measure_size)"
 }
 
+meta_set "build-step" "install-metrics-plugin"
 install_plugin "$BP_DIR" "$BUILD_DIR"
 
+meta_set "build-step" "summarize"
 header "Build succeeded!" | output "$LOG_FILE"
 mcount "compile"
 summarize_build | output "$LOG_FILE"
@@ -304,4 +313,5 @@ warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
 
+meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
