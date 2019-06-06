@@ -2,6 +2,9 @@
 
 ## master
 
+## v155 (2019-06-06)
+- Add metadata for build steps (#677)
+
 ## v154 (2019-06-05)
 - Roll out A/B test of npm ci command to 5% of apps (#676)
 - Internal fixes (#674, #673)
