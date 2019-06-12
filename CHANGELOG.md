@@ -2,6 +2,9 @@
 
 ## master
 
+## v156 (2019-06-12)
+- Turn off npm ci experiment
+
 ## v155 (2019-06-06)
 - Add metadata for build steps (#677)
 
