@@ -23,7 +23,7 @@ STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
 ### Load dependencies
 
-curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
+curl --silent --show-error --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
 # shellcheck source=/dev/null
 source "$STDLIB_FILE"
 # shellcheck source=lib/output.sh
