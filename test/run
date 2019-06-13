@@ -973,6 +973,14 @@ testNpmPrune56Issue() {
   assertCapturedSuccess
 }
 
+testAvoidHttpProxyVersionResolutionIssue() {
+  env_dir=$(mktmpdir)
+  # Set a non-sense http proxy address. This will cause version resolution to fail
+  echo "http://localhost:5001" > $env_dir/HTTP_PROXY
+  compile "node-10" "$(mktmpdir)" $env_dir
+  assertCapturedSuccess
+}
+
 testPluginInstallationBuildTime() {
   # The plugin should be installed for Node 8, 9, 10
   compile "node-8"
