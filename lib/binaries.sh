@@ -11,7 +11,10 @@ resolve() {
   # retry this up to 5 times in case of spurious failed API requests
   until [ $n -ge 5 ]
   do
-    if output=$($RESOLVE "$binary" "$versionRequirement"); then
+    # if a user sets the HTTP_PROXY ENV var, it could prevent this from making the S3 requests
+    # it needs here. We can ignore this proxy for aws urls with NO_PROXY
+    # see testAvoidHttpProxyVersionResolutionIssue test
+    if output=$(NO_PROXY="amazonaws.com" $RESOLVE "$binary" "$versionRequirement"); then
       echo "$output"
       return 0
     # don't retry if we get a negative result
