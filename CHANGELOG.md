@@ -2,6 +2,9 @@
 
 ## master
 
+## v157 (2019-06-17)
+- Prevent `HTTP_PROXY` env var from blocking version-resolution binary
+
 ## v156 (2019-06-12)
 - Turn off npm ci experiment
 
