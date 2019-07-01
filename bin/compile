@@ -247,7 +247,7 @@ build_dependencies() {
 
   meta_set "build-step" "build-script"
   header "Build"
-  run_build_script "$BUILD_DIR"
+  run_build_script "$BUILD_DIR" "$CUSTOM_BUILD_SCRIPT"
 }
 
 meta_set "build-step" "install-dependencies"

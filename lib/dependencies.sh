@@ -55,12 +55,17 @@ run_prebuild_script() {
 
 run_build_script() {
   local build_dir=${1:-}
+  local custom_build_script=${2:-}
   local has_build_script has_heroku_build_script
 
   has_build_script=$(has_script "$build_dir/package.json" "build")
   has_heroku_build_script=$(has_script "$build_dir/package.json" "heroku-postbuild")
 
-  if [[ "$has_heroku_build_script" == "true" ]] && [[ "$has_build_script" == "true" ]]; then
+  if [ -n "$custom_build_script" ]; then
+    echo "Detected custom build script \"$custom_build_script\""
+    mcount "scripts.heroku-custom-build"
+    run_if_present "$build_dir" "$custom_build_script"
+  elif [[ "$has_heroku_build_script" == "true" ]] && [[ "$has_build_script" == "true" ]]; then
     echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
     mcount "scripts.heroku-postbuild-and-build"
     run_if_present "$build_dir" 'heroku-postbuild'
