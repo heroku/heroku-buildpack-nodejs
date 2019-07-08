@@ -107,6 +107,11 @@ fail_iojs_unsupported "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
+### Gather more project information
+
+# we know that package.json is valid json, and can pull more data out
+log_project_info "$BUILD_DIR"
+
 ### Compile
 
 create_env() {
