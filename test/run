@@ -1093,6 +1093,7 @@ testBuildMetaData() {
   assertFileContains "build-step=finished" $log_file
   assertFileContains "uses-workspaces=false" $log_file
   assertFileContains "workspaces=" $log_file
+  assertFileContains "num-project-files=0" $log_file
 
   # binary versions
   assertFileContains "node-version-request=10.x" $log_file

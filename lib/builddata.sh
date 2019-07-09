@@ -30,6 +30,9 @@ log_project_info() {
   meta_set "uses-workspaces" "$(json_has_key "$build_dir/package.json" "workspaces")"
   # What workspaces are defined? Logs as: `["packages/*","a","b"]`
   meta_set "workspaces" "$(read_json "$build_dir/package.json" ".workspaces")"
+
+  # Count # of js, jsx, ts files to approximate project size, exclude any files in node_modules
+  meta_set "num_project_files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' | grep -v node_modules | wc -l | tr -d '[:space:]')"
 }
 
 generate_uuids() {
