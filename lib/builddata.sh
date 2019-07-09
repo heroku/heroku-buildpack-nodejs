@@ -32,7 +32,7 @@ log_project_info() {
   meta_set "workspaces" "$(read_json "$build_dir/package.json" ".workspaces")"
 
   # Count # of js, jsx, ts files to approximate project size, exclude any files in node_modules
-  meta_set "num_project_files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' | grep -v node_modules | wc -l | tr -d '[:space:]')"
+  meta_set "num-project-files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' | grep -cv node_modules | tr -d '[:space:]')"
 }
 
 generate_uuids() {
