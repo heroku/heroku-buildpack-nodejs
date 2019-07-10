@@ -24,12 +24,20 @@ log_initial_state() {
 
 # Log out information about the build that we can read from package.json
 log_project_info() {
+  local time
   local build_dir="$1"
 
   # Does this project use "workspaces"?
   meta_set "uses-workspaces" "$(json_has_key "$build_dir/package.json" "workspaces")"
   # What workspaces are defined? Logs as: `["packages/*","a","b"]`
   meta_set "workspaces" "$(read_json "$build_dir/package.json" ".workspaces")"
+
+  # just to be sure this isn't disruptive, let's time it. This can be removed later once we've
+  # established that this is quick for all projects.
+  time=$(nowms)
+  # Count # of js, jsx, ts files to approximate project size, exclude any files in node_modules
+  meta_set "num-project-files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' | grep -cv node_modules | tr -d '[:space:]')"
+  meta_time "count-file-time" "$time"
 }
 
 generate_uuids() {
