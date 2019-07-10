@@ -1,0 +1,13 @@
+{
+  "name": "yarn-workspaces-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "yarn": "1.x"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

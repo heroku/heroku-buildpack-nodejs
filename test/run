@@ -1091,6 +1091,8 @@ testBuildMetaData() {
   assertFileContains "app-uuid=" $log_file
   assertFileContains "build-uuid=" $log_file
   assertFileContains "build-step=finished" $log_file
+  assertFileContains "uses-workspaces=false" $log_file
+  assertFileContains "workspaces=" $log_file
 
   # binary versions
   assertFileContains "node-version-request=10.x" $log_file
@@ -1126,6 +1128,18 @@ testBuildMetaData() {
   assertFileContains "install-yarn-binary-memory=" $log_file
   assertFileContains "install-yarn-binary-time=" $log_file
   assertFileContains "node-build-success=true" $log_file
+}
+
+testWorkspaceMetaData() {
+  local log_file=$(mktemp)
+
+  BUILDPACK_LOG_FILE="$log_file" compile "yarn-workspaces"
+
+  # We're using yarn 1.x, workspaces could change in future yarn versions
+  assertFileContains "yarn-version-request=1.x" $log_file
+  assertFileContains "yarn-version=1." $log_file
+  assertFileContains "uses-workspaces=true" $log_file
+  assertFileContains "workspaces=[\"packages/*\"]" $log_file
 }
 
 testExperimentLogging() {
