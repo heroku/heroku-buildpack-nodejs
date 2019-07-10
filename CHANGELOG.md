@@ -2,6 +2,14 @@
 
 ## master
 
+## v158 (2019-07-10)
+- Don't suppress curl errors (#680)
+- Add logging to track yarn workspace usage (#685)
+- Log out number of js, jsx, and ts files (#686)
+
+## v157 (2019-06-17)
+- Prevent `HTTP_PROXY` env var from blocking version-resolution binary
+
 ## v156 (2019-06-12)
 - Turn off npm ci experiment
 
