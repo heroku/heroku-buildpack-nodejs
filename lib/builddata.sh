@@ -13,11 +13,11 @@ log_initial_state() {
 
   meta_set "stack" "$STACK"
 
-  # add any active experiments to the metadata set
-  # prefix the key with "experiment-"
-  experiments_list | tr ' ' '\n' | while read -r key; do
+  # add any active features to the metadata set
+  # prefix the key with "feature-"
+  features_list | tr ' ' '\n' | while read -r key; do
     if [[ -n $key ]]; then
-      meta_set "experiment-$key" "$(experiments_get "$key")"
+      meta_set "feature-$key" "$(features_get "$key")"
     fi
   done
 }

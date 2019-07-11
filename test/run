@@ -15,7 +15,7 @@ testNpmCi() {
   assertCapturedSuccess
 
    # test logging
-  assertFileContains "experiment-use-npm-ci=true" "$log_file"
+  assertFileContains "feature-use-npm-ci=true" "$log_file"
   assertFileContains "supports-npm-ci=true" "$log_file"
   assertFileContains "npm-install-time=" "$log_file"
   assertFileContains "npm-install-memory=" "$log_file"
@@ -35,8 +35,8 @@ testNpmCiFallback() {
 
   assertCapturedSuccess
 
-   # make sure we're in the experiment
-  assertFileContains "experiment-use-npm-ci=true" "$log_file"
+  # make sure the feature is turned on
+  assertFileContains "feature-use-npm-ci=true" "$log_file"
   # and detecting that we shouldn't use npm ci
   assertFileContains "supports-npm-ci=false" "$log_file"
   # and ran "npm install"
@@ -1143,14 +1143,14 @@ testWorkspaceMetaData() {
   assertFileContains "workspaces=[\"packages/*\"]" $log_file
 }
 
-testExperimentLogging() {
+testFeatureLogging() {
   local log_file=$(mktemp)
 
-  BUILDPACK_LOG_FILE="$log_file" compile "dummy-experiment"
+  BUILDPACK_LOG_FILE="$log_file" compile "dummy-feature"
 
-  # the defined experiments should be logged
-  assertFileContains "experiment-dummy=true" $log_file
-  assertFileContains "experiment-dummy-2=false" $log_file
+  # the defined features should be logged
+  assertFileContains "feature-dummy=true" $log_file
+  assertFileContains "feature-dummy-2=false" $log_file
 }
 
 testFailingBuildMetaData() {
@@ -1248,11 +1248,11 @@ compile() {
   cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
 
-  # if there isn't an experiments override, add an empty one to ensure
-  # that any experiments will not influence tests unless they are
+  # if there isn't a features override, add an empty one to ensure
+  # that any features will not influence tests unless they are
   # explicitly defined
-  if [[ ! -f "${compile_dir}/heroku-buildpack-experiments" ]]; then
-    touch "${compile_dir}/heroku-buildpack-experiments"
+  if [[ ! -f "${compile_dir}/heroku-buildpack-features" ]]; then
+    touch "${compile_dir}/heroku-buildpack-features"
   fi
 
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3

@@ -50,8 +50,8 @@ source "$BP_DIR/lib/uuid.sh"
 source "$BP_DIR/lib/kvstore.sh"
 # shellcheck source=lib/metadata.sh
 source "$BP_DIR/lib/metadata.sh"
-# shellcheck source=lib/experiments.sh
-source "$BP_DIR/lib/experiments.sh"
+# shellcheck source=lib/features.sh
+source "$BP_DIR/lib/features.sh"
 # shellcheck source=lib/builddata.sh
 source "$BP_DIR/lib/builddata.sh"
 
@@ -93,7 +93,7 @@ meta_set "build-step" "init"
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Save build info
-experiments_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/experiments"
+features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
 generate_uuids
  
