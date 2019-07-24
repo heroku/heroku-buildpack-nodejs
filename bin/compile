@@ -186,7 +186,8 @@ header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
 
 restore_cache() {
-  local cache_status cache_directories
+  local cache_status cache_directories restore_cache_start_time
+  restore_cache_start_time=$(nowms)
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
   cache_directories="$(get_cache_directories "$BUILD_DIR")"
@@ -204,7 +205,7 @@ restore_cache() {
   elif [[ "$cache_status" == "valid" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR"
+      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER"
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
@@ -228,6 +229,7 @@ restore_cache() {
 
   mcount "cache.$cache_status"
   meta_set "cache-status" "$cache_status"
+  meta_time "restore-cache-time" "$restore_cache_start_time"
 }
 
 meta_set "build-step" "restore-cache"
@@ -262,7 +264,8 @@ header "Installing dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
-  local cache_directories
+  local cache_directories cache_build_start_time
+  cache_build_start_time=$(nowms)
   cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
   clear_cache "$CACHE_DIR"
@@ -272,16 +275,20 @@ cache_build() {
     :
   elif [[ "$cache_directories" == "" ]]; then
     header "Caching build"
-    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR"
+    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER"
   else
     header "Caching build"
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
   fi
   save_signature "$CACHE_DIR"
+  meta_time "save-cache-time" "$cache_build_start_time"
 }
 
-meta_set "build-step" "save-cache"
-cache_build | output "$LOG_FILE"
+# If we are in the "cache-native-yarn-cache" branch, we want to cache the build after we prune, not before
+if [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]] && [[ $(features_get "cache-native-yarn-cache") != "true" ]]; then
+  meta_set "build-step" "save-cache"
+  cache_build | output "$LOG_FILE"
+fi
 
 prune_devdependencies() {
   if $YARN; then
@@ -294,6 +301,12 @@ prune_devdependencies() {
 meta_set "build-step" "prune-dependencies"
 header "Pruning devDependencies" | output "$LOG_FILE"
 prune_devdependencies | output "$LOG_FILE"
+
+# If we are in the "cache-native-yarn-cache" branch, we want to cache the build after we prune, not before
+if [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]]; then
+  meta_set "build-step" "save-cache"
+  cache_build | output "$LOG_FILE"
+fi
 
 summarize_build() {
   if $NODE_VERBOSE; then

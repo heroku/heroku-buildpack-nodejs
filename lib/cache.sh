@@ -47,16 +47,25 @@ get_cache_directories() {
 restore_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
+  local yarn_cache_dir=${3:-}
 
-  # node_modules
-  if [[ -e "$build_dir/node_modules" ]]; then
-    echo "- node_modules is checked into source control and cannot be cached"
-  elif [[ -e "$cache_dir/node/cache/node_modules" ]]; then
-    echo "- node_modules"
-    mkdir -p "$(dirname "$build_dir/node_modules")"
-    mv "$cache_dir/node/cache/node_modules" "$build_dir/node_modules"
+  if [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$YARN" == "true" ]]; then
+    if [[ -d "$cache_dir/node/cache/yarn" ]]; then
+      rm -rf "$yarn_cache_dir"
+      mv "$cache_dir/node/cache/yarn" "$yarn_cache_dir"
+      echo "- yarn cache"
+    fi
   else
-    echo "- node_modules (not cached - skipping)"
+    # node_modules
+    if [[ -e "$build_dir/node_modules" ]]; then
+      echo "- node_modules is checked into source control and cannot be cached"
+    elif [[ -e "$cache_dir/node/cache/node_modules" ]]; then
+      echo "- node_modules"
+      mkdir -p "$(dirname "$build_dir/node_modules")"
+      mv "$cache_dir/node/cache/node_modules" "$build_dir/node_modules"
+    else
+      echo "- node_modules (not cached - skipping)"
+    fi
   fi
 
   # bower_components, should be silent if it is not in the cache
@@ -99,16 +108,24 @@ clear_cache() {
 save_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
+  local yarn_cache_dir=${3:-}
 
-  # node_modules
-  if [[ -e "$build_dir/node_modules" ]]; then
-    echo "- node_modules"
-    mkdir -p "$cache_dir/node/cache/node_modules"
-    cp -a "$build_dir/node_modules" "$(dirname "$cache_dir/node/cache/node_modules")"
+  if [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$YARN" == "true" ]]; then
+    if [[ -d "$yarn_cache_dir" ]]; then
+      mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+      echo "- yarn cache"
+    fi
   else
-    # this can happen if there are no dependencies
-    mcount "cache.no-node-modules"
-    echo "- node_modules (nothing to cache)"
+    # node_modules
+    if [[ -e "$build_dir/node_modules" ]]; then
+      echo "- node_modules"
+      mkdir -p "$cache_dir/node/cache/node_modules"
+      cp -a "$build_dir/node_modules" "$(dirname "$cache_dir/node/cache/node_modules")"
+    else
+      # this can happen if there are no dependencies
+      mcount "cache.no-node-modules"
+      echo "- node_modules (nothing to cache)"
+    fi
   fi
 
   # bower_components
