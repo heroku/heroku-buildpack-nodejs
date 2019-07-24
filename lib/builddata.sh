@@ -35,8 +35,8 @@ log_project_info() {
   # just to be sure this isn't disruptive, let's time it. This can be removed later once we've
   # established that this is quick for all projects.
   time=$(nowms)
-  # Count # of js, jsx, ts files to approximate project size, exclude any files in node_modules
-  meta_set "num-project-files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' | grep -cv node_modules | tr -d '[:space:]')"
+  # Count # of js, jsx, ts, coffee, vue, and html files to approximate project size, exclude any files in node_modules
+  meta_set "num-project-files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
   meta_time "count-file-time" "$time"
 }
 
