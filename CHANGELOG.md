@@ -2,6 +2,10 @@
 
 ## master
 
+## v159 (2019-08-01)
+- Updates to metadata saved (#689, #690)
+- Add native yarn cache caching behind a flag (#691)
+
 ## v158 (2019-07-10)
 - Don't suppress curl errors (#680)
 - Add logging to track yarn workspace usage (#685)
