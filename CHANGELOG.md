@@ -2,8 +2,8 @@
 
 ## master
 
-## v160 (2019-08-06)
-- Roll out A/B test of native yarn caching to a small set of apps
+## v160 (2019-08-07)
+- Roll out A/B test of native yarn caching to a small set of apps (#693)
 
 ## v159 (2019-08-01)
 - Updates to metadata saved (#689, #690)
