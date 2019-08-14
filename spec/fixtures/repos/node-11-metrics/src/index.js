@@ -45,11 +45,11 @@ const server = http.createServer((req, res) => {
     .then(getNextMetricsEvent())
     .then(data => {
       res.setHeader('Content-Type', 'application/json');
-      res.end(data); 
+      res.end(data);
     })
     .catch(() => {
       res.statusCode = 500;
-      res.end("Something went wrong"); 
+      res.end("Something went wrong");
     });
 });
 
@@ -61,9 +61,11 @@ const metricsListener = http.createServer((req, res) => {
   if (req.method == 'POST') {
     let body = '';
     req.on('data', (data) => body += data);
-    req.on('end', () => Events.emit('metrics', body));
-    res.statusCode = 200;
-    res.end();
+    req.on('end', () => {
+      res.statusCode = 200;
+      res.end();
+      Events.emit('metrics', body)
+    });
   }
 });
 
