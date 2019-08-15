@@ -23,7 +23,7 @@ RSpec.configure do |config|
 end
 
 def successful_body(app, options = {})
-  retry_limit = options[:retry_limit] || 100 
+  retry_limit = options[:retry_limit] || 100
   path = options[:path] ? "/#{options[:path]}" : ''
   Excon.get("http://#{app.name}.herokuapp.com#{path}", :idempotent => true, :expects => 200, :retry_limit => retry_limit).body
 end
@@ -68,7 +68,7 @@ def resolve_all_supported_node_versions(options = {})
 end
 
 def version_supports_metrics(version)
-  SemVersion.new(version).satisfies?('>= 8.0.0') && SemVersion.new(version).satisfies?('< 12.0.0')
+  SemVersion.new(version).satisfies?('>= 8.0.0') && SemVersion.new(version).satisfies?('< 13.0.0')
 end
 
 def get_test_versions
