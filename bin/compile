@@ -340,3 +340,12 @@ warn_old_npm_lockfile $NPM_LOCK
 
 meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
+
+if json_has_key "$BUILD_DIR/package.json" ".pipeline"; then
+  target_src=$(read_json "$BUILD_DIR/package.json" ".pipeline.src")
+  target_dest=$(read_json "$BUILD_DIR/package.json" ".pipeline.dest")
+  if [[ -d "$target_src" ]] && [[ -d "$target_dest" ]]; then
+    header "Publishing build for future stages: From $target_src to $target_dest" | output "$LOG_FILE"
+    cp -Rf  "$target_src" "$target_dest"
+  fi
+fi
