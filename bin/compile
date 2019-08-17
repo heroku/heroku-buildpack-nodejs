@@ -340,16 +340,10 @@ warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
 
-header "PWD $(pwd)!" | output "$LOG_FILE"
-target_src=$(read_json "$BUILD_DIR/package.json" ".pipeline.src")
-target_dest=$(read_json "$BUILD_DIR/package.json" ".pipeline.dest")
-cp -Rf  "$target_src" "$target_dest"
-cp "$BUILDPACK_LOG_FILE" "$target_dest"
-
 meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
 
-
+header "PWD $(pwd)!" | output "$LOG_FILE"
 if json_has_key "$BUILD_DIR/package.json" ".pipeline"; then
   target_src=$(read_json "$BUILD_DIR/package.json" ".pipeline.src")
   target_dest=$(read_json "$BUILD_DIR/package.json" ".pipeline.dest")
