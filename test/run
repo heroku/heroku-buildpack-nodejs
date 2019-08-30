@@ -1219,6 +1219,21 @@ testBinDetectWarnings() {
   assertCapturedError "src/"
 }
 
+
+testBinReportEmptyDirectory() {
+  local empty_dir=$(mktmpdir)
+  # running bin/report on an empty directory should not fail
+  report "$empty_dir"
+  assertCapturedSuccess
+}
+
+testBinReportSuccess() {
+  compile_and_report "node-10"
+  assertCapturedSuccess
+  assertCaptured "package-manager: npm"
+  assertCaptured "node-version: v10"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
@@ -1271,6 +1286,48 @@ compile() {
   fi
 
   capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+# run compile on a fixture and then capture the output of bin/report
+# ran after bin/compile completes, reusing the cache and env dirs. Note
+# that the output of bin/compile will not be captured
+compile_and_report() {
+  default_process_types_cleanup
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  bp_dir=$(mktmpdir)
+  cp -a "$(pwd)"/* ${bp_dir}
+
+  compile_dir=$(mktmpdir)
+  cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
+
+  # if there isn't a features override, add an empty one to ensure
+  # that any features will not influence tests unless they are
+  # explicitly defined
+  if [[ ! -f "${compile_dir}/heroku-buildpack-features" ]]; then
+    touch "${compile_dir}/heroku-buildpack-features"
+  fi
+
+  ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3 > /dev/null 2>/dev/null
+  capture ${bp_dir}/bin/report ${compile_dir} ${2:-$(mktmpdir)} $3
+}
+
+# Run bin/report on a set of given directories without first invoking bin/compile
+# This is useful because in the case of a buildpack bug, you cannot trust that
+# any binaries will be installed or any part of the cache available, and bin/report
+# should be resilient in that case.
+report() {
+  default_process_types_cleanup
+
+  compile_dir=${1:-$(mktmpdir)}
+  cache_dir=${2:-$(mktmpdir)}
+  env_dir=${3:-$(mktmpdir)}
+
+  bp_dir=$(mktmpdir)
+  cp -a "$(pwd)"/* ${bp_dir}
+
+  capture ${bp_dir}/bin/report ${compile_dir} ${cache_dir} ${env_dir}
 }
 
 testCompile() {
