@@ -47,7 +47,6 @@ testNpmCiFallback() {
 testFlatmapStream() {
   compile "flatmap-stream"
   assertCaptured "flatmap-stream module has been removed from the npm registry"
-  assertCaptured "why-am-i-seeing-npm-404-errors"
   assertCapturedError
 }
 
@@ -270,7 +269,7 @@ testYarnInvalid() {
   assertCaptured "Resolving yarn version 0.171"
   assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
   assertCaptured "No matching version found for Yarn: 0.171"
-  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions"
+  assertCaptured "https://help.heroku.com/8MEL050H"
   assertCapturedError
 }
 
@@ -279,7 +278,7 @@ testYarnSemverInvalid() {
   assertCaptured "Resolving yarn version 0.17q"
   assertCaptured "Error: Invalid semantic version \"0.17q\""
   assertCaptured "Invalid semver requirement"
-  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement"
+  assertCaptured "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
 
@@ -303,7 +302,7 @@ testErrorYarnAndNpmLockfiles() {
   assertNotCaptured "Creating runtime environment"
   assertCaptured "Two different lockfiles found: package-lock.json and yarn.lock"
   assertCaptured "Both npm and yarn have created lockfiles"
-  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files"
+  assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
 
@@ -312,7 +311,7 @@ testErrorYarnAndNpmShrinkwrap() {
   assertNotCaptured "Creating runtime environment"
   assertCaptured "Two different lockfiles found"
   assertCaptured "Please make sure there is only one of the following files"
-  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files"
+  assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
 
@@ -320,7 +319,7 @@ testYarnLockfileOutOfDate() {
   compile "yarn-lockfile-out-of-date"
   assertCaptured "Your lockfile needs to be updated"
   assertCaptured "Outdated Yarn lockfile"
-  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile"
+  assertCaptured "https://help.heroku.com/TXYS53YJ"
   assertCapturedError
 }
 
@@ -527,7 +526,7 @@ testInvalidNode() {
   assertCaptured "Resolving node version 0.11.333"
   assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
   assertCaptured "No matching version found for Node: 0.11.333"
-  assertCaptured "https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions"
+  assertCaptured "https://help.heroku.com/6235QYN4"
   assertCapturedError
 }
 
