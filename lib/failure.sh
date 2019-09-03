@@ -139,7 +139,7 @@ fail_multiple_lockfiles() {
          the package-lock.json file.
 
          $ git rm package-lock.json
-    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
+    " https://help.heroku.com/0KU2EM53
     fail
   fi
 
@@ -163,7 +163,7 @@ fail_multiple_lockfiles() {
        - yarn.lock
        - package-lock.json
        - npm-shrinkwrap.json
-    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-conflicting-lock-files
+    " https://help.heroku.com/0KU2EM53
     fail
   fi
 }
@@ -211,7 +211,7 @@ fail_yarn_lockfile_outdated() {
        $ git add yarn.lock
        $ git commit -m \"Updated Yarn lockfile\"
        $ git push heroku master
-    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-outdated-yarn-lockfile
+    " https://help.heroku.com/TXYS53YJ
     fail
   fi
 }
@@ -278,7 +278,7 @@ fail_node_install() {
        \"engines\": {
          \"node\": \"6.11.1\"
        }
-    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-node-versions
+    " https://help.heroku.com/6235QYN4/
     fail
   fi
 }
@@ -314,7 +314,7 @@ fail_yarn_install() {
        \"engines\": {
          \"yarn\": \"1.x\"
        }
-    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-no-matching-yarn-versions
+    " https://help.heroku.com/8MEL050H
     fail
   fi
 }
@@ -334,7 +334,7 @@ fail_invalid_semver() {
 
        However you have specified a version requirement that is not a valid
        semantic version.
-    " https://kb.heroku.com/why-is-my-node-js-build-failing-because-of-an-invalid-semver-requirement
+    " https://help.heroku.com/0ZIOF3ST
     fail
   fi
 }
@@ -466,7 +466,7 @@ log_other_failures() {
        way into event-stream, a popular npm package. After triaging the malware,
        npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
        and taking ownership of the event-stream package to prevent further abuse.
-      " https://kb.heroku.com/4OM7X18J/why-am-i-seeing-npm-404-errors-for-event-stream-flatmap-stream-in-my-build-logs
+      " https://help.heroku.com/4OM7X18J
       fail
     fi
 
