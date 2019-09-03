@@ -2,6 +2,9 @@
 
 ## master
 
+## v162 (2019-09-03)
+- Replace broken kb.heroku.com links with help.heroku.com shortlinks (#698)
+
 ## v161 (2019-08-15)
 - Expand A/B test of native yarn caching to 50% of apps (#695)
 
