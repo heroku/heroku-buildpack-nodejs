@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# bin/report <build-dir> <cache-dir> <env-dir>
+
+### Configure environment
+
+set -o errexit    # always exit on error
+set -o pipefail   # don't ignore exit codes when piping output
+
+BUILD_DIR=${1:-}
+
+export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
+
+has_binary_installed() {
+  [[ -x "$(command -v "$1")" ]]
+}
+
+if has_binary_installed "node"; then
+  node_version=$(node --version || echo "")
+else
+  node_version=""
+fi
+
+[ -f "$BUILD_DIR/yarn.lock" ] && package_manager="yarn" || package_manager="npm"
+
+cat << EOF
+node-version: $node_version
+package-manager: $package_manager
+EOF
