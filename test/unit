@@ -1,0 +1,414 @@
+#!/usr/bin/env bash
+
+# testing monitor_memory_usage
+
+# allocate ~14 mb of memory and wait a bit
+use_memory() {
+  for index in $(seq 10); do
+    value=$(seq -w -s '' $index $(($index + 100000)))
+    eval array$index=$value
+  done
+  sleep 0.5
+}
+
+# print each argument to a separate line on stdout
+print_args() {
+  while (( "$#" )); do 
+    echo $1 
+    shift 
+  done
+}
+
+print_number_args() {
+  echo "$#"
+}
+
+testMonitorMemory() {
+  local mem_output=$(mktemp)
+  local stdout_capture=$(mktemp)
+
+  monitor_memory_usage $mem_output echo "this is a test" > /dev/null
+  assertTrue "should use less than 2mb" "[[ $(cat $mem_output) -lt 2 ]]"
+
+  monitor_memory_usage $mem_output use_memory
+  assertTrue "should use more than 10mb" "[[ $(cat $mem_output) -gt 10 ]]"
+
+  monitor_memory_usage $mem_output print_args --foo --bar="baz lol hi" > $stdout_capture
+  assertTrue "should use less than 2mb" "[[ $(cat $mem_output) -lt 2 ]]"
+  assertTrue "should output 2 lines" "[[ $(wc -l < $stdout_capture) -eq 2 ]]"
+  assertEquals "first line" "--foo" "$(head -n 1 $stdout_capture)"
+  assertEquals "second line" "--bar=baz lol hi" "$(tail -n 1 $stdout_capture)"
+}
+
+testMonitor() {
+  local out
+
+  # test that we're forwarding empty arguments correctly
+  out=$(monitor "command-name" print_number_args "" "" "" "")
+  assertEquals "4" "$out"
+
+  # Don't expand *
+  out=$(monitor "command-name" echo "*")
+  assertEquals "*" "$out"
+
+  out=$(monitor "command-name" print_number_args "*")
+  assertEquals "1" "$out"
+
+  # # Don't split arguments with a space
+  out=$(monitor "command-name" echo "1  3")
+  assertEquals "1  3" "$out"
+
+  # # Test everything with an empty arg
+  out=$(monitor "command-name" echo 1 "" 2 "3   4" "*")
+  assertEquals "1  2 3   4 *" "$out"
+}
+
+testOutput() {
+  local stdout
+
+  stdout=$(echo '    Indented line' | output /dev/null)
+  assertEquals 'should preserve leading whitespace' '           Indented line' "${stdout}"
+
+  stdout=$(echo 'Foo \ bar' | output /dev/null)
+  assertEquals 'should preserve unescaped backslashes' '       Foo \ bar' "${stdout}"
+}
+
+testKeyValue() {
+  local store=$(mktemp)
+
+  kv_create $store
+
+  kv_set $store key value
+  kv_set $store foo bar
+  kv_set $store key other_value
+  kv_set $store bar baz
+
+  assertEquals "other_value" "$(kv_get $store key)"
+  assertEquals "bar" "$(kv_get $store foo)"
+  assertEquals "baz" "$(kv_get $store bar)"
+
+  # if the key isn't there it should return an empty string
+  assertEquals "" "$(kv_get $store not_there)"
+
+  # kv_keys returns each key on a new line
+  assertEquals "$(printf "%s\n" bar foo key)" "$(kv_keys $store)"
+
+  # kv_list returns key=value on individual lines
+  assertEquals "$(printf "%s\n" bar=baz foo=bar key=other_value)" "$(kv_list $store)"
+
+  # calling create on an existing store doesn't erase it
+  kv_create $store
+  assertEquals "$(printf "%s\n" bar=baz foo=bar key=other_value)" "$(kv_list $store)"
+
+  # now clear the store
+  kv_clear $store
+
+  assertEquals "" "$(kv_get $store key)"
+  assertEquals "" "$(kv_keys $store)"
+  assertEquals "" "$(kv_list $store)"
+}
+
+testKeyValueNoNewLine() {
+  local store
+
+  # use a fixture that does not have an empty line after the final entry
+  store="$(pwd)/test/unit-fixtures/kvstore/no-new-line"
+
+  assertEquals "$(printf "%s\n" a=b b=c)" "$(kv_list $store)"
+  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)" 
+}
+
+testKeyValueEmptyLine() {
+  local store
+
+  # use a fixture that has an extra empty line
+  store="$(pwd)/test/unit-fixtures/kvstore/empty-line"
+
+  assertEquals "$(printf "%s\n" a=b b=c)" "$(kv_list $store)"
+  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)" 
+}
+
+testKeyValueEscaping() {
+  local store=$(mktemp)
+
+  kv_create $store
+
+  kv_set $store "key" "value with a space"
+  assertEquals "key=\"value with a space\"" "$(kv_list $store)"
+  assertEquals "value with a space" "$(kv_get $store "key")"
+}
+
+# if the file doesn't exist, everything should be a no-op
+testKeyValueNoFile() {
+  # empty file argument
+  local empty=""
+
+  kv_set $empty key value
+
+  assertEquals "$(kv_get $empty key)" ""
+  assertEquals "$(kv_keys $empty)" ""
+  assertEquals "$(kv_list $empty)" ""
+
+  local store="/tmp/does-not-exist"
+
+  kv_set $store key value
+
+  assertEquals "" "$(kv_get $store key)"
+  assertEquals "" "$(kv_keys $store)"
+  assertEquals "" "$(kv_list $store)"
+
+  # running these commands has not created this file
+  assertTrue "[[ ! -e $store ]]"
+
+  local space=" "
+  kv_set $space key value
+
+  assertEquals "$(kv_get $space key)" ""
+  assertEquals "$(kv_keys $space)" ""
+  assertEquals "$(kv_list $space)" ""
+}
+
+testBuildData() {
+  local cache_dir=$(mktemp -d)
+
+  meta_create $cache_dir
+
+  meta_set "test" "foo"
+  assertEquals "test=foo" "$(log_meta_data)"
+
+  meta_set "test" "different-foo"
+  assertEquals "test=different-foo" "$(log_meta_data)"
+
+  meta_set "foo" "value with spaces"
+  assertEquals "foo=\"value with spaces\" test=different-foo" "$(log_meta_data)"
+
+  # values are printed with the keys sorted alphabetically
+  # this isn't required, and this test serves as documentation
+  meta_set "a" "this should come first"
+  assertEquals "a=\"this should come first\" foo=\"value with spaces\" test=different-foo" "$(log_meta_data)"
+
+  # dates generated by running `nowms; sleep 10; nowms`
+  meta_time "time" "1545178120033" "1545178130043"
+  assertEquals "10.010" "$(meta_get time)"
+
+  # dates generated by running `nowms; sleep 1; nowms`
+  meta_time "time" "1545178503025" "1545178504027"
+  assertEquals "1.002" "$(meta_get time)"
+
+  # dates generated by running `nowms; sleep 30; nowms`
+  meta_time "time" "1545178521204" "1545178551206"
+  assertEquals "30.002" "$(meta_get time)"
+}
+
+testBuildDataPreviousBuild() {
+  local cache_dir=$(mktemp -d)
+
+  # the first time, there will be no previous build file
+  meta_create "$cache_dir"
+  assertContains "nodejs" "$BUILD_DATA_FILE"
+  assertContains "nodejs-prev" "$PREVIOUS_BUILD_DATA_FILE"
+  assertFileExists "$BUILD_DATA_FILE"
+
+  # set a value in the build data file
+  meta_set "test" "foo"
+  assertFileContains "test=foo" "$BUILD_DATA_FILE"
+  assertFileDoesNotExist "$PREVIOUS_BUILD_DATA_FILE"
+
+  assertEquals "$(meta_get test)" "foo"
+  assertEquals "$(meta_prev_get test)" ""
+
+  # the second time this is called (cache restored)
+  # there will be a previous build file
+  meta_create "$cache_dir"
+  assertFileExists "$BUILD_DATA_FILE"
+  assertFileExists "$PREVIOUS_BUILD_DATA_FILE"
+
+  # the data stored in the previous build should now be in the second file
+  assertFileNotContains "test=foo" "$BUILD_DATA_FILE"
+  assertFileContains "test=foo" "$PREVIOUS_BUILD_DATA_FILE"
+  assertEquals "$(meta_get test)" ""
+  assertEquals "$(meta_prev_get test)" "foo"
+  meta_set "test" "bar"
+
+  # doing it once more does not result in an error
+  meta_create "$cache_dir"
+  assertFileExists "$BUILD_DATA_FILE"
+  assertFileExists "$PREVIOUS_BUILD_DATA_FILE" 
+  assertEquals "$(meta_prev_get test)" "bar"
+  assertEquals "$(meta_get test)" ""
+}
+
+testWebConcurrencyProfileScript() {
+  # this was set when we sourced the WEB_CONCURRENCY.sh file
+  unset WEB_MEMORY
+  unset MEMORY_AVAILABLE
+  unset WEB_CONCURRENCY
+
+  # memory in MB of a 2X dyno
+  assertEquals "512" "$(bound_memory 512)"
+
+  # memory in MB of a 2X dyno
+  assertEquals "1024" "$(bound_memory 1024)"
+
+  # memory in MB of a Peformance-M dyno
+  assertEquals "2560" "$(bound_memory 2560)"
+
+  # memory in MB of a Peformance-L dyno
+  assertEquals "14336" "$(bound_memory 14336)"
+
+  # one more MB
+  assertEquals "14336" "$(bound_memory 14337)"
+
+  # On non-Heroku systems `detect_memory` can return non-sensically large values
+  # In this case, we should bound
+  assertEquals "14336" "$(bound_memory 1000000)"
+
+  # test calculate_concurrency
+
+  # 1x
+  assertEquals "1" "$(calculate_concurrency 512 512)"
+  # 2x
+  assertEquals "2" "$(calculate_concurrency 1024 512)"
+  # Performance-M
+  assertEquals "5" "$(calculate_concurrency 2560 512)"
+  # Performance-L
+  assertEquals "28" "$(calculate_concurrency 14336 512)"
+
+  # In case some very large memory available value gets passed in
+  assertEquals "1" "$(calculate_concurrency 103401 512)"
+  # of if web memory is set really low
+  assertEquals "1" "$(calculate_concurrency 512 1)"
+}
+
+isUUID() {
+  if [[ ${1//-/} =~ ^[[:xdigit:]]{32}$ ]]; then
+    echo true
+  else
+    echo false
+  fi
+}
+
+testUUID() {
+  local first second
+  first=$(uuid)
+  second=$(uuid)
+
+  assertNotEquals "$first" "$second"
+  assertEquals "true" "$(isUUID "$first")"
+  assertEquals "true" "$(isUUID "$second")"
+}
+
+testUUIDFallback() {
+  local first second
+  first=$(uuid_fallback)
+  second=$(uuid_fallback)
+
+  assertNotEquals "$first" "$second"
+  assertEquals "true" "$(isUUID "$first")"
+  assertEquals "true" "$(isUUID "$second")"
+}
+
+testHasScript() {
+  local file="$(pwd)/test/fixtures/has-script-fixtures/package.json"
+  assertEquals "true" "$(has_script "$file" "build")"
+  assertEquals "true" "$(has_script "$file" "heroku-postbuild")"
+  assertEquals "false" "$(has_script "$file" "postinstall")"
+  assertEquals "true" "$(has_script "$file" "random-script-name")"
+}
+
+testFeatures() {
+  local schema schema2 empty_schema build_dir build_dir_blank build_dir_override cache_dir val val2 val3 val4
+  schema="$(pwd)/test/unit-fixtures/features/features"
+  schema2="$(pwd)/test/unit-fixtures/features/features-v2"
+  empty_schema="$(mktemp)"
+  build_dir="$(mktemp -d)"
+  build_dir_blank="$(pwd)/test/unit-fixtures/features/build-dir-blank"
+  build_dir_override="$(pwd)/test/unit-fixtures/features/build-dir-override"
+  cache_dir=$(mktemp -d)
+
+  features_init "nodejs" "$build_dir" "$cache_dir" "$schema"
+
+  # these should always be the same
+  assertEquals "true" "$(features_get "all-on")"
+  assertEquals "false" "$(features_get "all-off")"
+  # these will stay the same between runs
+  val="$(features_get "ab-test")"
+  val2="$(features_get "ab-test-2")"
+  val3="$(features_get "ab-test-3")"
+  val4="$(features_get "ab-test-4")"
+
+  # pretend this is the next time this build is run
+  features_init "nodejs" "$build_dir" "$cache_dir" "$schema"
+
+  # these should always be the same
+  assertEquals "all-on should still be on" "true" "$(features_get "all-on")"
+  assertEquals "all-of should still be off" "false" "$(features_get "all-off")"
+  # ab-test-x should be the same as it was before
+  assertEquals "ab-test should be the same" "$val" "$(features_get "ab-test")"
+  assertEquals "ab-test-2 should be the same" "$val2" "$(features_get "ab-test-2")"
+  assertEquals "ab-test-3 should be the same" "$val3" "$(features_get "ab-test-3")"
+  assertEquals "ab-test-4 should be the same" "$val4" "$(features_get "ab-test-4")"
+
+  # Now we've changed the schema, so the cache should invalidate
+  features_init "nodejs" "$build_dir" "$cache_dir" "$schema2"
+  # the keys are the same, but the new values should be respected
+  assertEquals "invalidate: all-on should be changed" "false" "$(features_get "all-on")"
+  assertEquals "invalidate: all-off should be changed" "true" "$(features_get "all-off")"
+  assertEquals "invalidate: ab-test should be changed" "false" "$(features_get "ab-test")"
+
+  features_override "ab-test" "true"
+  assertEquals "override: ab-test should be true" "true" "$(features_get "ab-test")"
+  features_override "ab-test" "false"
+  assertEquals "override: ab-test should be false" "false" "$(features_get "ab-test")"
+
+  # now use file-based overrides
+  features_init "nodejs" "$build_dir_override" "$cache_dir" "$schema"
+  # all of these values should be true now
+  assertEquals "override: all-on should be overridden" "true" "$(features_get "all-on")"
+  assertEquals "override: all-off should be overridden" "true" "$(features_get "all-off")"
+  assertEquals "override: ab-test should be overridden" "true" "$(features_get "ab-test")"
+
+  # file based overrides take precedent over explicit overrides
+  features_override "ab-test" "false"
+  assertEquals "file based overrides take precedent over explicit overrides" "true" "$(features_get "ab-test")"
+
+  # now use a blank file-based override
+  features_init "nodejs" "$build_dir_blank" "$cache_dir" "$schema"
+  # all of these values should be false now
+  assertEquals "blank: all-on should be off" "false" "$(features_get "all-on")"
+  assertEquals "blank: all-off should be off" "false" "$(features_get "all-off")"
+  assertEquals "blank: ab-test should be off" "false" "$(features_get "ab-test")"
+
+  #initializing with an empty schema doesn't error
+  features_init "nodejs" "$(mktemp -d)" "$(mktemp -d)" "$empty_schema"
+}
+
+testFeaturesNoInit() {
+  assertEquals "running features_get without init should return false" "false" "$(features_get "test-name")"
+  assertEquals "running features_get without init should return false" "false" "$(features_get "test-name-2")"
+  assertEquals "running features_get without init should return false" "false" "$(features_get "test-name-3")"
+}
+
+BP_DIR="$(pwd)"
+
+# mocks
+source "$(pwd)"/test/mocks/stdlib.sh
+
+# the modules to be tested
+
+source "$(pwd)"/lib/uuid.sh
+source "$(pwd)"/lib/environment.sh
+source "$(pwd)"/lib/json.sh
+source "$(pwd)"/lib/json.sh
+source "$(pwd)"/lib/monitor.sh
+source "$(pwd)"/lib/output.sh
+source "$(pwd)"/lib/kvstore.sh
+source "$(pwd)"/lib/features.sh
+source "$(pwd)"/lib/metadata.sh
+source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+# testing utils
+source "$(pwd)"/test/utils
+
+# import the testing framework
+source "$(pwd)"/test/shunit2

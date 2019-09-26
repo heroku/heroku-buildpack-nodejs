@@ -10,9 +10,9 @@
     "hashish": "*"
   },
   "engines": {
-    "node": "0.10.38"
+    "node": "8.x"
   },
   "scripts": {
-    "postinstall": "exit 1"
+    "heroku-postbuild": "exit 1"
   }
 }

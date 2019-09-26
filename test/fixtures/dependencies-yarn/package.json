@@ -11,7 +11,7 @@
   },
   "license": "MIT",
   "engines": {
-    "yarn": "1.4.0"
+    "yarn": "1.x"
   },
   "devDependencies": {
     "lodash": "^2.4.1"

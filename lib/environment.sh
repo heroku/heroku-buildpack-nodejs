@@ -1,5 +1,7 @@
+#!/usr/bin/env bash
+
 get_os() {
-  uname | tr A-Z a-z
+  uname | tr '[:upper:]' '[:lower:]'
 }
 
 get_cpu() {
@@ -10,16 +12,25 @@ get_cpu() {
   fi
 }
 
-os=$(get_os)
-cpu=$(get_cpu)
-platform="$os-$cpu"
-export JQ="$BP_DIR/vendor/jq-$os"
+get_platform() {
+  os=$(get_os)
+  cpu=$(get_cpu)
+  echo "$os-$cpu"
+}
 
 create_default_env() {
   export NPM_CONFIG_LOGLEVEL=${NPM_CONFIG_LOGLEVEL:-error}
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
+}
+
+create_build_env() {
+  # if the user hasn't set NODE_OPTIONS, increase the default amount of space
+  # that a node process can address to match that of the build dynos (2.5GB)
+  if [[ -z $NODE_OPTIONS ]]; then
+    export NODE_OPTIONS="--max_old_space_size=2560"
+  fi
 }
 
 list_node_config() {
@@ -46,33 +57,42 @@ export_env_dir() {
   if [ -d "$env_dir" ]; then
     local whitelist_regex=${2:-''}
     local blacklist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH|LANG|BUILD_DIR)$'}
-    if [ -d "$env_dir" ]; then
-      for e in $(ls $env_dir); do
-        echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
-        export "$e=$(cat $env_dir/$e)"
-        :
-      done
-    fi
+    # shellcheck disable=SC2164
+    pushd "$env_dir" >/dev/null
+    for e in *; do
+      [ -e "$e" ] || continue
+      echo "$e" | grep -E "$whitelist_regex" | grep -qvE "$blacklist_regex" &&
+      export "$e=$(cat "$e")"
+      :
+    done
+    # shellcheck disable=SC2164
+    popd >/dev/null
   fi
 }
 
 write_profile() {
   local bp_dir="$1"
   local build_dir="$2"
-  mkdir -p $build_dir/.profile.d
-  cp $bp_dir/profile/* $build_dir/.profile.d/
+  mkdir -p "$build_dir/.profile.d"
+  cp "$bp_dir"/profile/* "$build_dir/.profile.d/"
 }
 
 write_ci_profile() {
   local bp_dir="$1"
   local build_dir="$2"
   write_profile "$1" "$2"
-  cp $bp_dir/ci-profile/* $build_dir/.profile.d/
+  cp "$bp_dir"/ci-profile/* "$build_dir/.profile.d/"
 }
 
 write_export() {
   local bp_dir="$1"
   local build_dir="$2"
-  echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/.heroku/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > $bp_dir/export
-  echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> $bp_dir/export
+
+  # only write the export script if the buildpack directory is writable.
+  # this may occur in situations outside of Heroku, such as running the
+  # buildpacks locally.
+  if [ -w "$bp_dir" ]; then
+    echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/.heroku/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > "$bp_dir/export"
+    echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> "$bp_dir/export"
+  fi
 }

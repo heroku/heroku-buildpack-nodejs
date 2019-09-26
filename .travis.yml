@@ -1,12 +1,17 @@
-language: bash
+language: go
+go:
+  - "1.12"
 sudo: required
 services:
   - docker
 env:
+  - TEST=shellcheck
   - TEST=heroku-18 STACK=heroku-18
   - TEST=heroku-16 STACK=heroku-16
   - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet
+  - TEST=unit
+  - TEST=test-binary GO111MODULE=on
 install:
   - if [[ -n $STACK ]]; then
       docker pull "heroku/${STACK/-/:}";

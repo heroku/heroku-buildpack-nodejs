@@ -7,7 +7,7 @@ BP_NAME=${1:-"heroku/nodejs"}
 curVersion=$(heroku buildpacks:versions "$BP_NAME" | awk 'FNR == 3 { print $1 }')
 newVersion="v$((curVersion + 1))"
 
-read -p "Deploy as version: $newVersion [y/n]? " choice
+read -r -p "Deploy as version: $newVersion [y/n]? " choice
 case "$choice" in
   y|Y ) echo "";;
   n|N ) exit 0;;

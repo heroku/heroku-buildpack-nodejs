@@ -8,7 +8,7 @@ TAG_NAME=${1:-}
 PLUGIN_DIR=$(dirname $0)
 
 handle_failure() {
-    echo "Failure running script."
+    echo "Failure running script on line $1."
 
     
     echo "This may be rate-limiting from Github if you've run this script a few times. Here is the rate limit response:"
@@ -34,6 +34,10 @@ download() {
 
 delete_old_plugin() {
     local dir=${1}
+    rm -f "$dir/heroku-nodejs-plugin-node-12.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-12.tar.gz"
+    rm -f "$dir/heroku-nodejs-plugin-node-11.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-11.tar.gz"
     rm -f "$dir/heroku-nodejs-plugin-node-10.sha512"
     rm -f "$dir/heroku-nodejs-plugin-node-10.tar.gz"
     rm -f "$dir/heroku-nodejs-plugin-node-8.sha512"
@@ -58,6 +62,14 @@ download_assets_for_release() {
     # Node 10 
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-10-$tag.sha512" "$dir/heroku-nodejs-plugin-node-10.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-10-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-10.tar.gz"
+
+    # Node 11
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-11-$tag.sha512" "$dir/heroku-nodejs-plugin-node-11.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-11-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-11.tar.gz"
+
+    # Node 12
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.sha512" "$dir/heroku-nodejs-plugin-node-12.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-12.tar.gz"
 }
 
 test_hash() {
@@ -75,7 +87,7 @@ test_hash() {
     fi
 }
 
-trap 'handle_failure' ERR
+trap 'handle_failure ${LINENO}' ERR
 
 if [[ -z $TAG_NAME ]]; then
     TAG_NAME=$(get_latest_release)
@@ -93,5 +105,7 @@ echo "Plugins downloaded"
 test_hash 8 $PLUGIN_DIR
 test_hash 9 $PLUGIN_DIR
 test_hash 10 $PLUGIN_DIR
+test_hash 11 $PLUGIN_DIR
+test_hash 12 $PLUGIN_DIR
 
 echo "Done"

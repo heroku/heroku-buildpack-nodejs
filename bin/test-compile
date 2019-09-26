@@ -1,11 +1,25 @@
 #!/usr/bin/env bash
+# bin/test-compile <build-dir> <cache-dir> <env-dir>
 
-BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
+### Configure environment
 
-source $BP_DIR/lib/environment.sh
+set -o errexit    # always exit on error
+set -o pipefail   # don't ignore exit codes when piping output
+
+### Configure directories
+
+BP_DIR=$(cd "$(dirname "${0:-}")" || exit; cd ..; pwd)
+
+### Load dependencies
+# shellcheck source=lib/environment.sh
+source "$BP_DIR/lib/environment.sh"
+
+### Set up test Node environment
 
 export NPM_CONFIG_PRODUCTION=${NPM_CONFIG_PRODUCTION:-false}
 export NODE_ENV=${NODE_ENV:-test}
-"$BP_DIR/bin/compile" "$1" "$2" "$3"
 
+### Compile the app
+
+"$BP_DIR/bin/compile" "$1" "$2" "$3"
 write_ci_profile "$BP_DIR" "$1"

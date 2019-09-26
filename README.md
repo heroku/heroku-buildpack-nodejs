@@ -86,3 +86,8 @@ make test-heroku-16
 The tests are run via the vendored
 [shunit2](https://github.com/kward/shunit2)
 test framework.
+
+## Updating go binaries
+
+If you would like to develop and update the go binaries you will need to install 
+[go 1.12](https://golang.org/doc/install#install) and [upx](https://upx.github.io/)

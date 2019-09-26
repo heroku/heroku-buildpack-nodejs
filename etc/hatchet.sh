@@ -26,13 +26,15 @@ if [ -z "$HEROKU_API_KEY" ]; then
 fi
 
 if [ -n "$CIRCLE_BRANCH" ]; then
-  export HATCHET_BUILDPACK_BRANCH="$CIRCLE_BRANCH"
+  HATCHET_BUILDPACK_BRANCH="$CIRCLE_BRANCH"
 elif [ -n "$TRAVIS_PULL_REQUEST_BRANCH" ]; then
   export IS_RUNNING_ON_TRAVIS=true
-  export HATCHET_BUILDPACK_BRANCH="$TRAVIS_PULL_REQUEST_BRANCH"
+  HATCHET_BUILDPACK_BRANCH="$TRAVIS_PULL_REQUEST_BRANCH"
 else
-  export HATCHET_BUILDPACK_BRANCH=$(git name-rev HEAD 2> /dev/null | sed 's#HEAD\ \(.*\)#\1#')
+  HATCHET_BUILDPACK_BRANCH=$(git name-rev HEAD 2> /dev/null | sed 's#HEAD\ \(.*\)#\1#' | sed 's#tags\/##')
 fi
+
+export HATCHET_BUILDPACK_BRANCH
 
 gem install bundler
 bundle install

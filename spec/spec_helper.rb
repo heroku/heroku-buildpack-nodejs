@@ -23,7 +23,7 @@ RSpec.configure do |config|
 end
 
 def successful_body(app, options = {})
-  retry_limit = options[:retry_limit] || 100 
+  retry_limit = options[:retry_limit] || 100
   path = options[:path] ? "/#{options[:path]}" : ''
   Excon.get("http://#{app.name}.herokuapp.com#{path}", :idempotent => true, :expects => 200, :retry_limit => retry_limit).body
 end
@@ -42,27 +42,33 @@ def set_node_version(version)
   end
 end
 
+def run!(cmd)
+  out = `#{cmd}`
+  raise "Error running command #{cmd.inspect}: #{out}" unless $?.success?
+  out
+end
+
+def resolve_binary_path
+  RUBY_PLATFORM.match(/darwin/) ? './vendor/resolve-version-darwin' : './vendor/resolve-version-linux'
+end
+
 def resolve_node_version(requirements, options = {})
-  # use nodebin to get latest node versions
   requirements.map do |requirement|
-    retry_limit = options[:retry_limit] || 50
-    body = Excon.get("https://nodebin.herokai.com/v1/node/linux-x64/latest?range=#{requirement}", :idempotent => true, :expects => 200, :retry_limit => retry_limit).body
-    JSON.parse(body)['number']
+    result = run!("#{resolve_binary_path} node #{requirement}")
+    result.split(' ').first
   end
 end
 
 def resolve_all_supported_node_versions(options = {})
-  retry_limit = options[:retry_limit] || 50 
-  body = Excon.get("https://nodebin.herokai.com/v1/node/linux-x64/", :idempotent => true, :expects => 200, :retry_limit => retry_limit).body
-  list = JSON.parse(body).map { |n| n['number'] }
-
+  result = run!("#{resolve_binary_path} list node")
+  list = result.lines().map { |line| line.split(' ').first }
   list.select do |n|
     SemVersion.new(n).satisfies?('>= 6.0.0')
   end
 end
 
 def version_supports_metrics(version)
-  SemVersion.new(version).satisfies?('>= 8.0.0')
+  SemVersion.new(version).satisfies?('>= 8.0.0') && SemVersion.new(version).satisfies?('< 13.0.0')
 end
 
 def get_test_versions
@@ -71,7 +77,7 @@ def get_test_versions
   elsif ENV['TEST_ALL_NODE_VERSIONS'] == 'true'
     versions = resolve_all_supported_node_versions()
   else
-    versions = resolve_node_version(['6.x', '8.x', '9.x', '10.x'])
+    versions = resolve_node_version(['6.x', '8.x', '9.x', '10.x', '11.x'])
   end
   puts("Running tests for Node versions: #{versions.join(', ')}")
   versions
