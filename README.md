@@ -91,3 +91,32 @@ test framework.
 
 If you would like to develop and update the go binaries you will need to install 
 [go 1.12](https://golang.org/doc/install#install) and [upx](https://upx.github.io/)
+
+## Proxy Issues
+
+If your builds are not completing and have errors you may need to examine your build environment for `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables. A few examples of build output that may indicate issues with these values are below.
+
+```
+// ... 
+-----> Installing binaries
+       engines.node (package.json):  10
+       engines.npm (package.json):   unspecified (use default)
+
+       Resolving node version 10...
+       Error: Unknown error installing "10" of node
+
+-----> Build failed
+// ... 
+```
+
+```
+// ... 
+-----> Node.js app detected
+curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to lang-common.s3.amazonaws.com:443
+// ... 
+```
+
+If the environment where you are running the buildpack does not require a proxy to be used for HTTP connections you should try setting
+the `NO_PROXY` environment variable to `amazonaws.com`, i.e. running the command `export NO_PROXY=amazonaws.com` immediatly before executing
+the buildpack or by setting that environment value inside the buildpack. If you find `HTTP_PROXY` and `HTTPS_PROXY` environment variables and do not need a proxy in your build environment then the environment
+variables should be removed.
