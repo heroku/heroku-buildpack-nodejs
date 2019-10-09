@@ -2,6 +2,9 @@
 
 ## master
 
+## v163 (2019-09-12)
+- Add a minimal version of bin/report. Not user-facing (#700)
+
 ## v162 (2019-09-03)
 - Replace broken kb.heroku.com links with help.heroku.com shortlinks (#698)
 
