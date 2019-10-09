@@ -434,11 +434,9 @@ testFeaturesNoInit() {
 
 BP_DIR="$(pwd)"
 
-# mocks
-source "$(pwd)"/test/mocks/stdlib.sh
-
 # the modules to be tested
 
+source "$(pwd)"/vendor/stdlib_v7.sh
 source "$(pwd)"/lib/uuid.sh
 source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh

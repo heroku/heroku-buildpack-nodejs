@@ -19,13 +19,11 @@ BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
-STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
 
 ### Load dependencies
 
-curl --silent --show-error --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
-# shellcheck source=/dev/null
-source "$STDLIB_FILE"
+# shellcheck source=vendor/stdlib_v7.sh
+source "$BP_DIR/vendor/stdlib_v7.sh"
 # shellcheck source=lib/output.sh
 source "$BP_DIR/lib/output.sh"
 # shellcheck source=lib/monitor.sh
