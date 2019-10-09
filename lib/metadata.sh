@@ -19,6 +19,20 @@ meta_create() {
   kv_clear "$BUILD_DATA_FILE"
 }
 
+# initialize the metadata store, but do not modify it
+meta_init() {
+  local cache_dir="$1"
+  BUILD_DATA_FILE="$cache_dir/build-data/nodejs"
+  PREVIOUS_BUILD_DATA_FILE="$cache_dir/build-data/nodejs-prev"
+}
+
+# Force removal of exiting data file state. This is mostly useful during testing and not
+# expected to be used during buildpack execution.
+meta_force_clear() {
+  [[ -f "$BUILD_DATA_FILE" ]] && rm "$BUILD_DATA_FILE"
+  [[ -f "$PREVIOUS_BUILD_DATA_FILE" ]] && rm "$PREVIOUS_BUILD_DATA_FILE"
+}
+
 meta_get() {
   kv_get "$BUILD_DATA_FILE" "$1"
 }

@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## master
+- Extend metadata module in preparation for bin/report work
 
 ## v163 (2019-09-12)
 - Add a minimal version of bin/report. Not user-facing (#700)
