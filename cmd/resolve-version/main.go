@@ -320,7 +320,7 @@ func fetchS3Result(bucketName string, region string, options map[string]string) 
 		return result, err
 	}
 
-	if resp.StatusCode > 400 {
+	if resp.StatusCode >= 300 {
 		return result, fmt.Errorf("Unexpected status code: %d for listing S3 bucket: %s", resp.StatusCode, bucketName)
 	}
 
