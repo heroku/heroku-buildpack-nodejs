@@ -176,7 +176,8 @@ testBuildData() {
 
   cache_dir=$(mktemp -d)
 
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
 
   meta_set "test" "foo"
   assertEquals "test=foo" "$(log_meta_data)"
@@ -208,7 +209,8 @@ testBuildData() {
 setupMetadata() {
   local cache_dir="$1"
   # create the data store
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   # store some data
   meta_set "foo" "bar"
 }
@@ -242,7 +244,8 @@ testBuildDataPreviousBuild() {
   local cache_dir=$(mktemp -d)
 
   # the first time, there will be no previous build file
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   assertContains "nodejs" "$BUILD_DATA_FILE"
   assertContains "nodejs-prev" "$PREVIOUS_BUILD_DATA_FILE"
   assertFileExists "$BUILD_DATA_FILE"
@@ -257,7 +260,8 @@ testBuildDataPreviousBuild() {
 
   # the second time this is called (cache restored)
   # there will be a previous build file
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   assertFileExists "$BUILD_DATA_FILE"
   assertFileExists "$PREVIOUS_BUILD_DATA_FILE"
 
@@ -269,7 +273,8 @@ testBuildDataPreviousBuild() {
   meta_set "test" "bar"
 
   # doing it once more does not result in an error
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   assertFileExists "$BUILD_DATA_FILE"
   assertFileExists "$PREVIOUS_BUILD_DATA_FILE" 
   assertEquals "$(meta_prev_get test)" "bar"
