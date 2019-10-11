@@ -169,9 +169,15 @@ testKeyValueNoFile() {
 }
 
 testBuildData() {
-  local cache_dir=$(mktemp -d)
+  local cache_dir
 
-  meta_create $cache_dir
+  # prevent state from previous tests from polluting this one
+  meta_force_clear
+
+  cache_dir=$(mktemp -d)
+
+  meta_init "$cache_dir"
+  meta_setup
 
   meta_set "test" "foo"
   assertEquals "test=foo" "$(log_meta_data)"
@@ -200,11 +206,46 @@ testBuildData() {
   assertEquals "30.002" "$(meta_get time)"
 }
 
+setupMetadata() {
+  local cache_dir="$1"
+  # create the data store
+  meta_init "$cache_dir"
+  meta_setup
+  # store some data
+  meta_set "foo" "bar"
+}
+
+testBuildDataInitIdempotent() {
+  local cache_dir temp
+
+  cache_dir="$(mktemp -d)"
+
+  # prevent state from previous tests from polluting this one
+  meta_force_clear
+
+  # Set up the cache directory. This is run in a subshell so that the generated state
+  # doesn't pollute this test. We only want the state on the disk.
+  temp=$(setupMetadata "$cache_dir")
+
+  # To test this, let's make sure that get-ing "foo" returns nothing
+  assertEquals "" "$(meta_get "foo")"
+
+  # init the data store
+  meta_init "$cache_dir"
+
+  # The datastore created in the subshell should now work
+  assertEquals "bar" "$(meta_get "foo")"
+
+  # There should be no previous data
+  assertEquals "" "$(meta_prev_get "foo")"
+}
+
 testBuildDataPreviousBuild() {
   local cache_dir=$(mktemp -d)
 
   # the first time, there will be no previous build file
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   assertContains "nodejs" "$BUILD_DATA_FILE"
   assertContains "nodejs-prev" "$PREVIOUS_BUILD_DATA_FILE"
   assertFileExists "$BUILD_DATA_FILE"
@@ -219,7 +260,8 @@ testBuildDataPreviousBuild() {
 
   # the second time this is called (cache restored)
   # there will be a previous build file
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   assertFileExists "$BUILD_DATA_FILE"
   assertFileExists "$PREVIOUS_BUILD_DATA_FILE"
 
@@ -231,7 +273,8 @@ testBuildDataPreviousBuild() {
   meta_set "test" "bar"
 
   # doing it once more does not result in an error
-  meta_create "$cache_dir"
+  meta_init "$cache_dir"
+  meta_setup
   assertFileExists "$BUILD_DATA_FILE"
   assertFileExists "$PREVIOUS_BUILD_DATA_FILE" 
   assertEquals "$(meta_prev_get test)" "bar"

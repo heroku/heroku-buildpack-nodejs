@@ -83,7 +83,12 @@ handle_failure() {
 trap 'handle_failure' ERR
 
 ### Initalize metadata store
-meta_create "$CACHE_DIR"
+# Create the metadata store
+meta_init "$CACHE_DIR"
+# Make sure that it's empty and save any previous build's data
+meta_setup
+# the "build-step" key keeps track of where we are in the execution 
+# so that we can see where failed builds errored
 meta_set "build-step" "init"
 
 ### Check initial state

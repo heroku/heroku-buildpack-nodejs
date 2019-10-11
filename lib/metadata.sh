@@ -4,19 +4,30 @@
 BUILD_DATA_FILE=""
 PREVIOUS_BUILD_DATA_FILE=""
 
-meta_create() {
+# Must be called before you can use any other methods
+meta_init() {
   local cache_dir="$1"
   BUILD_DATA_FILE="$cache_dir/build-data/nodejs"
   PREVIOUS_BUILD_DATA_FILE="$cache_dir/build-data/nodejs-prev"
+}
 
+# Moves the data from the last build into the correct place, and clears the store
+# This should be called after meta_init in bin/compile
+meta_setup() {
   # if the file already exists because it's from the last build, save it
   if [[ -f "$BUILD_DATA_FILE" ]]; then
     cp "$BUILD_DATA_FILE" "$PREVIOUS_BUILD_DATA_FILE"
   fi
 
   kv_create "$BUILD_DATA_FILE"
-  # make sure this doesnt grow over time
   kv_clear "$BUILD_DATA_FILE"
+}
+
+# Force removal of exiting data file state. This is mostly useful during testing and not
+# expected to be used during buildpack execution.
+meta_force_clear() {
+  [[ -f "$BUILD_DATA_FILE" ]] && rm "$BUILD_DATA_FILE"
+  [[ -f "$PREVIOUS_BUILD_DATA_FILE" ]] && rm "$PREVIOUS_BUILD_DATA_FILE"
 }
 
 meta_get() {
