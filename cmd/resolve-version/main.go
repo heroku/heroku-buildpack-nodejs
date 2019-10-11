@@ -72,7 +72,7 @@ func resolve(binary string, versionRequirement string) {
 	}
 
 	if binary == "node" {
-		objects, err := listS3Objects("heroku-nodebin", "node")
+		objects, err := listS3Objects("heroku-nodebin", "us-east-1", "node")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -89,7 +89,7 @@ func resolve(binary string, versionRequirement string) {
 			os.Exit(1)
 		}
 	} else if binary == "yarn" {
-		objects, err := listS3Objects("heroku-nodebin", "yarn")
+		objects, err := listS3Objects("heroku-nodebin", "us-east-1", "yarn")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -110,7 +110,7 @@ func resolve(binary string, versionRequirement string) {
 
 func list(binary string) {
 	platform := getPlatform()
-	objects, err := listS3Objects("heroku-nodebin", binary)
+	objects, err := listS3Objects("heroku-nodebin", "us-east-1", binary)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -307,17 +307,21 @@ func parseObject(key string) (release, error) {
 // Wrapper around the S3 API for listing objects
 // This maps directly to the API and parses the XML response but will not handle
 // paging and offsets automaticaly
-func fetchS3Result(bucketName string, options map[string]string) (result, error) {
+func fetchS3Result(bucketName string, region string, options map[string]string) (result, error) {
 	var result result
 	v := url.Values{}
 	v.Set("list-type", "2")
 	for key, val := range options {
 		v.Set(key, val)
 	}
-	url := fmt.Sprintf("https://%s.s3.amazonaws.com?%s", bucketName, v.Encode())
+	url := fmt.Sprintf("https://%s.s3.%s.amazonaws.com?%s", bucketName, region, v.Encode())
 	resp, err := http.Get(url)
 	if err != nil {
 		return result, err
+	}
+
+	if resp.StatusCode >= 300 {
+		return result, fmt.Errorf("Unexpected status code: %d for listing S3 bucket: %s", resp.StatusCode, bucketName)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -331,12 +335,12 @@ func fetchS3Result(bucketName string, options map[string]string) (result, error)
 // Query the S3 API for a list of all the objects in an S3 bucket with a
 // given prefix. This will handle the inherent 1000 item limit and paging
 // for you
-func listS3Objects(bucketName string, prefix string) ([]s3Object, error) {
+func listS3Objects(bucketName string, region string, prefix string) ([]s3Object, error) {
 	var out = []s3Object{}
 	var options = map[string]string{"prefix": prefix}
 
 	for {
-		result, err := fetchS3Result(bucketName, options)
+		result, err := fetchS3Result(bucketName, region, options)
 		if err != nil {
 			return nil, err
 		}
