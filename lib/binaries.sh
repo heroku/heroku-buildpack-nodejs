@@ -12,9 +12,11 @@ resolve() {
   until [ $n -ge 5 ]
   do
     # if a user sets the HTTP_PROXY ENV var, it could prevent this from making the S3 requests
-    # it needs here. We can ignore this proxy for aws urls with NO_PROXY
-    # see testAvoidHttpProxyVersionResolutionIssue test
-    if output=$(NO_PROXY="amazonaws.com" $RESOLVE "$binary" "$versionRequirement"); then
+    # it needs here. We can ignore this proxy for aws urls with NO_PROXY. Some environments
+    # require a proxy for all HTTP requests, so the NO_PROXY ENV var should be set outside the
+    # script by the user
+    # see testAvoidHttpProxyVersionResolutionIssue test and README
+    if output=$($RESOLVE "$binary" "$versionRequirement"); then
       echo "$output"
       return 0
     # don't retry if we get a negative result
