@@ -1222,7 +1222,6 @@ testBinDetectWarnings() {
   assertCapturedError "src/"
 }
 
-
 testBinReportEmptyDirectory() {
   local empty_dir=$(mktmpdir)
   # running bin/report on an empty directory should not fail
