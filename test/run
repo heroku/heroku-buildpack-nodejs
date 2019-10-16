@@ -1226,14 +1226,19 @@ testBinReportEmptyDirectory() {
   local empty_dir=$(mktmpdir)
   # running bin/report on an empty directory should not fail
   report "$empty_dir"
+  echo $STD_OUT
+  wc -l $STD_OUT
+  echo '---'
+  echo $(cat $STD_OUT)
+  echo '---'
   assertCapturedSuccess
 }
 
 testBinReportSuccess() {
   compile_and_report "node-10"
   assertCapturedSuccess
-  assertCaptured "package-manager: npm"
-  assertCaptured "node-version: v10"
+  assertCaptured "package_manager: npm"
+  assertCaptured "node_version: v10"
 }
 
 # Utils

@@ -8,6 +8,7 @@ set -o pipefail   # don't ignore exit codes when piping output
 
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
+BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 ### Load dependencies
 
@@ -55,7 +56,8 @@ kv_pair() {
   key="$1"
   value="$2"
   if [[ -n "$2" ]]; then
-    output="$output$1: $2\n"
+    output="$output
+$1: $2"
   fi
 }
 
@@ -94,11 +96,11 @@ kv_pair "heroku_postbuild_script_memory" "$(meta_get "heroku-postbuild-script-me
 
 # which package manager was used
 if [[ "$YARN" == "true" ]]; then
-  meta_set "node_package_manager" "yarn"
-  meta_set "has_lock_file" "true"
+  kv_pair "package_manager" "yarn"
+  kv_pair "has_lock_file" "true"
 else
-  meta_set "node_package_manager" "npm"
-  meta_set "has_lock_file" "$NPM_LOCK"
+  kv_pair "package_manager" "npm"
+  kv_pair "has_lock_file" "$NPM_LOCK"
 fi
 
 # does this project use "workspaces"?
