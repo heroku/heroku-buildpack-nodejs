@@ -46,18 +46,29 @@ source "$BP_DIR/lib/builddata.sh"
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
 meta_init "$CACHE_DIR"
+features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 
 # a place to build up the output YAML structure
-output=""
+output=$(mktemp -t bin-reportXXXXXX)
 
 # append the key / value pair to $output, but skip if the value is empty
 kv_pair() {
   local key value
   key="$1"
   value="$2"
-  if [[ -n "$2" ]]; then
-    output="$output
-$1: $2"
+  if [[ -n "$value" ]]; then
+    echo "$key: $value" >> $output
+  fi
+}
+
+# use to safely quote strings
+kv_pair_string() {
+  local key value
+  key="$1"
+  value="$2"
+  if [[ -n "$value" ]]; then
+    value=$(echo $value | sed 's/"/\\"/g')
+    echo "$1: \"$value\"" >> $output
   fi
 }
 
@@ -65,61 +76,60 @@ has_binary_installed() {
   [[ -x "$(command -v "$1")" ]]
 }
 
-[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
-[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
-
-kv_pair "stack" "$STACK"
+kv_pair_string "stack" "$STACK"
 
 # the version of installed binaries
-has_binary_installed "node" && kv_pair "node_version" "$(node --version)"
-has_binary_installed "npm" && kv_pair "npm_version" "$(npm --version)"
-has_binary_installed "yarn" && kv_pair "yarn_version" "$(yarn --version)"
+has_binary_installed "node" && kv_pair_string "node_version" "$(node --version)"
+has_binary_installed "npm" && kv_pair_string "npm_version" "$(npm --version)"
+has_binary_installed "yarn" && kv_pair_string "yarn_version" "$(yarn --version)"
 
 # what versions were requested
-kv_pair "node_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.node")"
-kv_pair "npm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.npm")"
-kv_pair "yarn_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.yarn")"
+kv_pair_string "node_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.node")"
+kv_pair_string "npm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.npm")"
+kv_pair_string "yarn_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.yarn")"
 
 # build scripts
-kv_pair "build_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")"
+kv_pair_string "start_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"start\"]")"
+kv_pair_string "build_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")"
+kv_pair_string "postinstall_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"postinstall\"]")"
+kv_pair_string "heroku_prebuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")"
+kv_pair_string "heroku_postbuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")"
 kv_pair "build_script_time" "$(meta_get "build-script-time")"
 kv_pair "build_script_memory" "$(meta_get "build-script-memory")"
-kv_pair "postinstall_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"postinstall\"]")"
 kv_pair "postinstall_script_time" "$(meta_get "postinstall-script-time")"
 kv_pair "postinstall_script_memory" "$(meta_get "postinstall-script-memory")"
-kv_pair "heroku_prebuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")"
 kv_pair "heroku_prebuild_script_time" "$(meta_get "heroku-prebuild-script-time")"
 kv_pair "heroku_prebuild_script_memory" "$(meta_get "heroku-prebuild-script-memory")"
-kv_pair "heroku_postbuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")"
 kv_pair "heroku_postbuild_script_time" "$(meta_get "heroku-postbuild-script-time")"
 kv_pair "heroku_postbuild_script_memory" "$(meta_get "heroku-postbuild-script-memory")"
 
 # which package manager was used
 if [[ "$YARN" == "true" ]]; then
-  kv_pair "package_manager" "yarn"
-  kv_pair "has_lock_file" "true"
+  kv_pair_string "package_manager" "yarn"
 else
-  kv_pair "package_manager" "npm"
-  kv_pair "has_lock_file" "$NPM_LOCK"
+  kv_pair_string "package_manager" "npm"
 fi
+
+# We have to get this info from bin/compile since a lockfile will be generated if there wasn't one
+kv_pair "lock_file" "$(meta_get "has-node-lock-file")"
 
 # does this project use "workspaces"?
 kv_pair "uses_workspaces" "$(json_has_key "$BUILD_DIR/package.json" "workspaces")"
 # what workspaces are defined? Logs as: `["packages/*","a","b"]`
-kv_pair "workspaces" "$(read_json "$BUILD_DIR/package.json" ".workspaces")"
+kv_pair_string "workspaces" "$(read_json "$BUILD_DIR/package.json" ".workspaces")"
 # count # of js, jsx, ts, coffee, vue, and html files to approximate project size, exclude any files in node_modules
 kv_pair "num_project_files" "$(find "$BUILD_DIR" -name '*.js' -o -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
 # measure how large node_modules is on disk
 kv_pair "node_modules_size" "$(measure_size)"
 
 # pull metadata from the build
-kv_pair "build_step" "$(meta_get "build-step")"
+kv_pair_string "build_step" "$(meta_get "build-step")"
+kv_pair_string "failure" "$(meta_get "failure")"
+kv_pair_string "cache_status" "$(meta_get "cache-status")"
 kv_pair "build_time" "$(meta_get "build-time")"
-kv_pair "failure" "$(meta_get "failure")"
-kv_pair "cache_status" "$(meta_get "cache-status")"
 kv_pair "skipped_prune" "$(meta_get "skipped-prune")"
 kv_pair "cached_bower_components" "$(meta_get "cached-bower-components")"
-kv_pair "node_custom_cache_dirs" "$(meta_get "node-custom-cache-dirs")"
+kv_pair "custom_cache_dirs" "$(meta_get "node-custom-cache-dirs")"
 
 # pull execution data from the build
 kv_pair "install_node_binary_time" "$(meta_get "install-node-binary-time")"
@@ -147,4 +157,4 @@ features_list | tr ' ' '\n' | while read -r key; do
 done
 
 # emit the metadata on stdout
-echo "$output"
+cat $output
