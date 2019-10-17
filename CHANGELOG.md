@@ -1,10 +1,14 @@
 # Node.js Buildpack Changelog
 
 ## master
+
+## v164 (2019-10-17)
 - Avoid issues in environments requiring proxies for all connections (#708)
 - Extend metadata module in preparation for bin/report work (#709)
 - Vendor the buildpack stdlib (#710)
 - Check the status code when listing S3 buckets (#711)
+- Rename script monitoring metadata (#719)
+- Extend bin/report (#718)
 
 ## v163 (2019-09-12)
 - Add a minimal version of bin/report. Not user-facing (#700)
