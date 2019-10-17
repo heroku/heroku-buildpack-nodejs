@@ -12,7 +12,7 @@ if ! heroku plugins | grep -q "buildpack-registry"; then
   echo "heroku plugins:install buildpack-registry"
   echo ""
   echo "Current CLI plugins:"
-  echo "$(heroku plugins)"
+  heroku plugins
   exit 1
 fi
 
