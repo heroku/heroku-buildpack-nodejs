@@ -148,10 +148,6 @@ install_bins() {
   meta_set "npm-version-request" "$npm_engine"
   meta_set "yarn-version-request" "$yarn_engine"
 
-  meta_set "node-version-request" "$node_engine"
-  meta_set "npm-version-request" "$npm_engine"
-  meta_set "yarn-version-request" "$yarn_engine"
-
   echo "engines.node (package.json):  ${node_engine:-unspecified}"
   echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
   if $YARN; then

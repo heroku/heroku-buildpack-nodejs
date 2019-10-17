@@ -1222,7 +1222,6 @@ testBinDetectWarnings() {
   assertCapturedError "src/"
 }
 
-
 testBinReportEmptyDirectory() {
   local empty_dir=$(mktmpdir)
   # running bin/report on an empty directory should not fail
@@ -1233,8 +1232,33 @@ testBinReportEmptyDirectory() {
 testBinReportSuccess() {
   compile_and_report "node-10"
   assertCapturedSuccess
-  assertCaptured "package-manager: npm"
-  assertCaptured "node-version: v10"
+
+  assertCaptured "package_manager: \"npm\""
+  assertCaptured "node_version: \"v10"
+  assertCaptured "node_version_request: \"10.x\""
+  assertCaptured "lock_file: false"
+  assertCaptured "start_script: \"node foo.js\""
+  assertCaptured "num_project_files: 1"
+  assertCaptured "cache_status: \"not-found\""
+  assertCaptured "build_step: \"finished\""
+  assertCaptured "build_time:"
+  assertCaptured "install_node_binary_time:"
+
+  # there are no scripts in the fixture
+  assertNotCaptured "build_script:"
+  assertNotCaptured "heroku_postbuild_script:"
+  assertNotCaptured "heroku_prebuild_script:"
+}
+
+testBinReportScriptsWithQuotes() {
+  compile_and_report "complex-scripts"
+  assertCapturedSuccess
+
+  # quotes and escaped quotes are tricky, but should be escaped correctly
+  assertCaptured "start_script: \"\\\"no closing quote\""
+  assertCaptured "build_script: \"concurrently \\\"npm run build-server\\\" npm run build-client\""
+  assertCaptured "heroku_postbuild_script: \"if [ -z \\\"\${CI}\\\" ]; then yarn build-assets; fi\""
+  assertCaptured "postinstall_script: \"if [ \\\"\${NODE_ENV}\\\" = \\\"staging\\\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \\\"Skipped heroku-postbuild\\\"; fi\""
 }
 
 # Utils
@@ -1296,8 +1320,8 @@ compile() {
 # that the output of bin/compile will not be captured
 compile_and_report() {
   default_process_types_cleanup
-  cache_dir=$(mktmpdir)
-  env_dir=$(mktmpdir)
+  cache_dir=${2:-$(mktmpdir)}
+  env_dir=${3:-$(mktmpdir)}
 
   bp_dir=$(mktmpdir)
   cp -a "$(pwd)"/* ${bp_dir}
@@ -1312,8 +1336,8 @@ compile_and_report() {
     touch "${compile_dir}/heroku-buildpack-features"
   fi
 
-  ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3 > /dev/null 2>/dev/null
-  capture ${bp_dir}/bin/report ${compile_dir} ${2:-$(mktmpdir)} $3
+  ${bp_dir}/bin/compile ${compile_dir} $cache_dir $env_dir > /dev/null 2>/dev/null
+  capture ${bp_dir}/bin/report ${compile_dir} $cache_dir $env_dir
 }
 
 # Run bin/report on a set of given directories without first invoking bin/compile

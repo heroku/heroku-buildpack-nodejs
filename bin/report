@@ -7,22 +7,154 @@ set -o errexit    # always exit on error
 set -o pipefail   # don't ignore exit codes when piping output
 
 BUILD_DIR=${1:-}
+CACHE_DIR=${2:-}
+BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+
+### Load dependencies
+
+# shellcheck source=vendor/stdlib_v7.sh
+source "$BP_DIR/vendor/stdlib_v7.sh"
+# shellcheck source=lib/output.sh
+source "$BP_DIR/lib/output.sh"
+# shellcheck source=lib/monitor.sh
+source "$BP_DIR/lib/monitor.sh"
+# shellcheck source=lib/environment.sh
+source "$BP_DIR/lib/environment.sh"
+# shellcheck source=lib/failure.sh
+source "$BP_DIR/lib/failure.sh"
+# shellcheck source=lib/binaries.sh
+source "$BP_DIR/lib/binaries.sh"
+# shellcheck source=lib/json.sh
+source "$BP_DIR/lib/json.sh"
+# shellcheck source=lib/cache.sh
+source "$BP_DIR/lib/cache.sh"
+# shellcheck source=lib/dependencies.sh
+source "$BP_DIR/lib/dependencies.sh"
+# shellcheck source=lib/plugin.sh
+source "$BP_DIR/lib/plugin.sh"
+# shellcheck source=lib/uuid.sh
+source "$BP_DIR/lib/uuid.sh"
+# shellcheck source=lib/kvstore.sh
+source "$BP_DIR/lib/kvstore.sh"
+# shellcheck source=lib/metadata.sh
+source "$BP_DIR/lib/metadata.sh"
+# shellcheck source=lib/features.sh
+source "$BP_DIR/lib/features.sh"
+# shellcheck source=lib/builddata.sh
+source "$BP_DIR/lib/builddata.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
+
+meta_init "$CACHE_DIR"
+features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
+
+# a place to build up the output YAML structure
+output=$(mktemp -t bin-reportXXXXXX)
+
+# append the key / value pair to $output, but skip if the value is empty
+kv_pair() {
+  local key value
+  key="$1"
+  value="$2"
+  if [[ -n "$value" ]]; then
+    echo "$key: $value" >> $output
+  fi
+}
+
+# use to safely quote strings
+kv_pair_string() {
+  local key value
+  key="$1"
+  value="$2"
+  if [[ -n "$value" ]]; then
+    value=$(echo $value | sed 's/"/\\"/g')
+    echo "$1: \"$value\"" >> $output
+  fi
+}
 
 has_binary_installed() {
   [[ -x "$(command -v "$1")" ]]
 }
 
-if has_binary_installed "node"; then
-  node_version=$(node --version || echo "")
+kv_pair_string "stack" "$STACK"
+
+# the version of installed binaries
+has_binary_installed "node" && kv_pair_string "node_version" "$(node --version)"
+has_binary_installed "npm" && kv_pair_string "npm_version" "$(npm --version)"
+has_binary_installed "yarn" && kv_pair_string "yarn_version" "$(yarn --version)"
+
+# what versions were requested
+kv_pair_string "node_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.node")"
+kv_pair_string "npm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.npm")"
+kv_pair_string "yarn_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.yarn")"
+
+# build scripts
+kv_pair_string "start_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"start\"]")"
+kv_pair_string "build_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")"
+kv_pair_string "postinstall_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"postinstall\"]")"
+kv_pair_string "heroku_prebuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")"
+kv_pair_string "heroku_postbuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")"
+kv_pair "build_script_time" "$(meta_get "build-script-time")"
+kv_pair "build_script_memory" "$(meta_get "build-script-memory")"
+kv_pair "postinstall_script_time" "$(meta_get "postinstall-script-time")"
+kv_pair "postinstall_script_memory" "$(meta_get "postinstall-script-memory")"
+kv_pair "heroku_prebuild_script_time" "$(meta_get "heroku-prebuild-script-time")"
+kv_pair "heroku_prebuild_script_memory" "$(meta_get "heroku-prebuild-script-memory")"
+kv_pair "heroku_postbuild_script_time" "$(meta_get "heroku-postbuild-script-time")"
+kv_pair "heroku_postbuild_script_memory" "$(meta_get "heroku-postbuild-script-memory")"
+
+# which package manager was used
+if [[ "$YARN" == "true" ]]; then
+  kv_pair_string "package_manager" "yarn"
 else
-  node_version=""
+  kv_pair_string "package_manager" "npm"
 fi
 
-[ -f "$BUILD_DIR/yarn.lock" ] && package_manager="yarn" || package_manager="npm"
+# We have to get this info from bin/compile since a lockfile will be generated if there wasn't one
+kv_pair "lock_file" "$(meta_get "has-node-lock-file")"
 
-cat << EOF
-node-version: $node_version
-package-manager: $package_manager
-EOF
+# does this project use "workspaces"?
+kv_pair "uses_workspaces" "$(json_has_key "$BUILD_DIR/package.json" "workspaces")"
+# what workspaces are defined? Logs as: `["packages/*","a","b"]`
+kv_pair_string "workspaces" "$(read_json "$BUILD_DIR/package.json" ".workspaces")"
+# count # of js, jsx, ts, coffee, vue, and html files to approximate project size, exclude any files in node_modules
+kv_pair "num_project_files" "$(find "$BUILD_DIR" -name '*.js' -o -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
+# measure how large node_modules is on disk
+kv_pair "node_modules_size" "$(measure_size)"
+
+# pull metadata from the build
+kv_pair_string "build_step" "$(meta_get "build-step")"
+kv_pair_string "failure" "$(meta_get "failure")"
+kv_pair_string "cache_status" "$(meta_get "cache-status")"
+kv_pair "build_time" "$(meta_get "build-time")"
+kv_pair "skipped_prune" "$(meta_get "skipped-prune")"
+kv_pair "cached_bower_components" "$(meta_get "cached-bower-components")"
+kv_pair "custom_cache_dirs" "$(meta_get "node-custom-cache-dirs")"
+
+# pull execution data from the build
+kv_pair "install_node_binary_time" "$(meta_get "install-node-binary-time")"
+kv_pair "install_node_binary_memory" "$(meta_get "install-node-binary-memory")"
+kv_pair "install_npm_binary_time" "$(meta_get "install-npm-binary-time")"
+kv_pair "install_npm_binary_memory" "$(meta_get "install-npm-binary-memory")"
+kv_pair "install_yarn_binary_time" "$(meta_get "install-yarn-binary-time")"
+kv_pair "install_yarn_binary_memory" "$(meta_get "install-yarn-binary-memory")"
+kv_pair "restore_cache_time" "$(meta_get "restore-cache-time")"
+kv_pair "save_cache_time" "$(meta_get "save-cache-time")"
+kv_pair "npm_install_time" "$(meta_get "npm-install-time")"
+kv_pair "npm_install_memory" "$(meta_get "npm-install-memory")"
+kv_pair "yarn_install_time" "$(meta_get "yarn-install-time")"
+kv_pair "yarn_install_memory" "$(meta_get "yarn-install-memory")"
+kv_pair "npm_prune_time" "$(meta_get "yarn-prune-time")"
+kv_pair "npm_prune_memory" "$(meta_get "yarn-prune-memory")"
+kv_pair "yarn_prune_time" "$(meta_get "yarn-prune-time")"
+kv_pair "yarn_prune_memory" "$(meta_get "yarn-prune-memory")"
+
+# save which features were turned on or off
+features_list | tr ' ' '\n' | while read -r key; do
+  if [[ -n $key ]]; then
+    kv_pair "feature-$key" "$(features_get "$key")"
+  fi
+done
+
+# emit the metadata on stdout
+cat $output
