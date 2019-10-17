@@ -31,11 +31,11 @@ run_if_present() {
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
-        monitor "$script_name" yarn run "$script_name"
+        monitor "${script_name}-script" yarn run "$script_name"
       fi
     else
       echo "Running $script_name"
-      monitor "$script_name" npm run "$script_name" --if-present
+      monitor "${script_name}-script" npm run "$script_name" --if-present
     fi
   fi
 }

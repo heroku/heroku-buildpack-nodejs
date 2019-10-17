@@ -1071,12 +1071,12 @@ testMemoryMetrics() {
   compile "pre-post-build-scripts" "$(mktmpdir)" $env_dir
   assertFileContains "measure#buildpack.nodejs.exec.install-node-binary.time=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.install-npm-binary.time=" $metrics_log
-  assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild.time=" $metrics_log
-  assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild.memory=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild-script.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-prebuild-script.memory=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.npm-install.time=" $metrics_log
   assertFileContains "measure#buildpack.nodejs.exec.npm-install.memory=" $metrics_log
-  assertFileContains "measure#buildpack.nodejs.exec.heroku-postbuild.time=" $metrics_log
-  assertFileContains "measure#buildpack.nodejs.exec.heroku-postbuild.memory=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-postbuild-script.time=" $metrics_log
+  assertFileContains "measure#buildpack.nodejs.exec.heroku-postbuild-script.memory=" $metrics_log
 
   # erase the metrics log
   echo "" > $metrics_log
@@ -1086,10 +1086,10 @@ testMemoryMetrics() {
   assertFileContains "measure#buildpack.nodejs.exec.yarn-install.memory=" "$metrics_log"
   assertFileContains "measure#buildpack.nodejs.exec.yarn-install.time=" "$metrics_log"
   # this fixture does not have pre or post-build scripts
-  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-prebuild.time=" $metrics_log
-  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-prebuild.memory=" $metrics_log
-  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild.time=" $metrics_log
-  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild.memory=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-prebuild-script.time=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-prebuild-script.memory=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild-script.time=" $metrics_log
+  assertFileNotContains "measure#buildpack.nodejs.exec.heroku-postbuild-script.memory=" $metrics_log
 }
 
 testBuildMetaData() {
@@ -1125,12 +1125,12 @@ testBuildMetaData() {
   assertFileContains "install-node-binary-time=" $log_file
   assertFileContains "install-npm-binary-time=" $log_file
   assertFileContains "install-npm-binary-memory=" $log_file
-  assertFileContains "heroku-prebuild-time=" $log_file
-  assertFileContains "heroku-prebuild-memory=" $log_file
+  assertFileContains "heroku-prebuild-script-time=" $log_file
+  assertFileContains "heroku-prebuild-script-memory=" $log_file
   assertFileContains "npm-install-time=" $log_file
   assertFileContains "npm-install-memory=" $log_file
-  assertFileContains "heroku-postbuild-time=" $log_file
-  assertFileContains "heroku-postbuild-memory=" $log_file
+  assertFileContains "heroku-postbuild-script-time=" $log_file
+  assertFileContains "heroku-postbuild-script-memory=" $log_file
   assertFileContains "npm-prune-memory=" $log_file
   assertFileContains "npm-prune-time=" $log_file
   assertFileContains "restore-cache-time=" $log_file
