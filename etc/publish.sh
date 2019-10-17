@@ -5,7 +5,7 @@ set -e
 BP_NAME=${1:-"heroku/nodejs"}
 
 # if buildpack-registry CLI plugin is not installed, show a help message and exit
-if heroku plugins | grep -qv "buildpack-registry"; then
+if heroku plugins | grep -q --invert-match "buildpack-registry"; then
   echo "Releasing the buildpack requires the buildpack-registry CLI plugin."
   echo "https://github.com/heroku/languages-team/blob/master/languages/nodejs/buildpack.md"
   echo ""
