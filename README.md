@@ -45,7 +45,7 @@ into the `$PATH` for easy use in subsequent buildpacks.
 Having trouble? Dig it? Feature request?
 
 - [help.heroku.com](https://help.heroku.com/)
-- [@jeremymorrell](http://twitter.com/jeremymorrell)
+- [@adamzdanielle](http://twitter.com/adamzdanielle)
 - [GitHub issues](https://github.com/heroku/heroku-buildpack-nodejs/issues)
 
 ## Hacking
@@ -106,14 +106,14 @@ If your builds are not completing and have errors you may need to examine your b
        Error: Unknown error installing "10" of node
 
 -----> Build failed
-// ... 
+// ...
 ```
 
 ```
-// ... 
+// ...
 -----> Node.js app detected
 curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to lang-common.s3.amazonaws.com:443
-// ... 
+// ...
 ```
 
 If the environment where you are running the buildpack does not require a proxy to be used for HTTP connections you should try setting
