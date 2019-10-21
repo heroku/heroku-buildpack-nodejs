@@ -66,7 +66,7 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version=${1:-10.x}
+  local version=${1:-12.x}
   local dir="${2:?}"
   local code os cpu resolve_result
 
