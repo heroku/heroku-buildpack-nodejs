@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## master
+- Update default Node version to 12.x
 
 ## v164 (2019-10-17)
 - Avoid issues in environments requiring proxies for all connections (#708)
