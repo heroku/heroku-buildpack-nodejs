@@ -1,7 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## master
-- Update default Node version to 12.x
+- Update README ([#725](https://github.com/heroku/heroku-buildpack-nodejs/pull/725))
+- Update default Node version to 12.x ([#724](https://github.com/heroku/heroku-buildpack-nodejs/pull/724))
 
 ## v164 (2019-10-17)
 - Avoid issues in environments requiring proxies for all connections (#708)
