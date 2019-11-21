@@ -300,7 +300,7 @@ prune_devdependencies() {
 # and in the new feature
 # and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] || [[ $(features_get "cache-native-yarn-cache") == "true" ]] || [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
