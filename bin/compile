@@ -138,7 +138,7 @@ create_build_env
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine iojs_engine npm_engine yarn_engine npm_version node_version
+  local node_engine npm_engine yarn_engine npm_version node_version
 
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
