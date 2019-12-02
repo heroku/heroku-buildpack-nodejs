@@ -91,11 +91,19 @@ EOF
 
 create_meteor_startup_file() {
   local build_dir=$1
+  local minor=$(get_meteor_minor_version)
 
-  cat << EOF > "${build_dir}/.start-meteor-app"
+  if [ "$minor" -lt 8 ] ; then
+    cat << EOF > "${build_dir}/.start-meteor-app"
 cd .app-build/bundle/programs/server
 exec node \$NODE_BOOT_FLAGS boot.js program.json
 EOF
+  else
+    cat << EOF > "${build_dir}/.start-meteor-app"
+cd .app-build/bundle
+exec node \$NODE_BOOT_FLAGS main.js
+EOF
+  fi
 
   chmod +x "${build_dir}/.start-meteor-app"
 }
