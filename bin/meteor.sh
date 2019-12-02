@@ -17,7 +17,9 @@ get_meteor_minor_version() {
 # Format of .meteor/release file is METEOR@1.4.x-patchsomething
 meteor_node_version() {
   minor=$(get_meteor_minor_version)
-  if [ "$minor" -ge 6 ] ; then
+  if [ "$minor" -ge 8 ] ; then
+    echo "8.16.x"
+  elif [ "$minor" -ge 6 ] ; then
     echo "8.11.x"
   elif [ "$minor" -ge 4 ] ; then
     echo "4.9.x"
@@ -28,7 +30,9 @@ meteor_node_version() {
 
 meteor_npm_version() {
   minor=$(get_meteor_minor_version)
-  if [ "$minor" -ge 6 ] ; then
+  if [ "$minor" -ge 8 ] ; then
+    echo "6.x"
+  elif [ "$minor" -ge 6 ] ; then
     echo "5.x"
   elif [ "$minor" -ge 4 ] ; then
     echo "4.6.x"
