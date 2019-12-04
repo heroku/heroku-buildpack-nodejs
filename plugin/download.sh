@@ -70,6 +70,10 @@ download_assets_for_release() {
     # Node 12
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.sha512" "$dir/heroku-nodejs-plugin-node-12.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-12.tar.gz"
+
+    # Node 13
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-13-$tag.sha512" "$dir/heroku-nodejs-plugin-node-13.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-13-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-13.tar.gz"
 }
 
 test_hash() {
@@ -107,5 +111,6 @@ test_hash 9 $PLUGIN_DIR
 test_hash 10 $PLUGIN_DIR
 test_hash 11 $PLUGIN_DIR
 test_hash 12 $PLUGIN_DIR
+test_hash 13 $PLUGIN_DIR
 
 echo "Done"
