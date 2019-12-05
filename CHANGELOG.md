@@ -1,8 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## master
+- Add Node 13 metrics plugin ([#731](https://github.com/heroku/heroku-buildpack-nodejs/pull/731), [#732](https://github.com/heroku/heroku-buildpack-nodejs/pull/732))
 - Fix yarn cache feature flag ([#729](https://github.com/heroku/heroku-buildpack-nodejs/pull/729))
-- Add Node 13 metrics plugin ([#731](https://github.com/heroku/heroku-buildpack-nodejs/pull/731))
 
 ## V165 (2019-10-24)
 - Update README ([#725](https://github.com/heroku/heroku-buildpack-nodejs/pull/725))
