@@ -314,7 +314,7 @@ warn_node_engine() {
   elif [ "$node_engine" == "*" ]; then
     warning "Dangerous semver range (*) in engines.node" "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
     mcount 'warnings.node.star'
-  elif [ ${node_engine:0:1} == ">" ]; then
+  elif [ ${node_engine:0:1} == ">" -a "$(echo $node_engine | grep -c '<')" -eq 0 ]; then
     warning "Dangerous semver range (>) in engines.node" "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
     mcount 'warnings.node.greater'
   fi
