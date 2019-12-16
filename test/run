@@ -160,7 +160,7 @@ testYarn() {
   compile "yarn"
   assertCaptured "installing yarn"
   assertCaptured "Installing node modules (yarn.lock)"
-  assertNotCaptured "Installing node modules (package.json"
+  assertNotCaptured "Installing node modules (package.json)"
   assertCapturedSuccess
 }
 
@@ -178,6 +178,10 @@ testYarnCacheDirectory() {
 
   # assert that the above ls command exited successfully, which only happens if the file exists
   assertEquals "0" "$?"
+
+  # assert that devDependencies are cached
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+
   assertCapturedSuccess
 }
 
@@ -191,6 +195,9 @@ testYarnNativeCache() {
 
   # Run this again with a cache
   compile "yarn-native-cache" $cache
+
+  # assert that devDependencies are not cached
+  assertEquals "0" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
 
   assertCapturedSuccess
 }

@@ -138,7 +138,7 @@ create_build_env
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine iojs_engine npm_engine yarn_engine npm_version node_version
+  local node_engine npm_engine yarn_engine npm_version node_version
 
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
@@ -297,10 +297,10 @@ prune_devdependencies() {
 }
 
 # if we are using yarn
-# and in the new feature
-# and we're using the default cache directories
+#   and in the new feature
+#   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] || [[ $(features_get "cache-native-yarn-cache") == "true" ]] || [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
