@@ -323,7 +323,7 @@ fail_invalid_semver() {
   local log_file="$1"
   if grep -qi 'Error: Invalid semantic version' "$log_file"; then
     mcount "failures.invalid-semver-requirement"
-    meta_set "invalid-semver-requirement"
+    meta_set "failure" "invalid-semver-requirement"
     echo ""
     warn "Invalid semver requirement
 
