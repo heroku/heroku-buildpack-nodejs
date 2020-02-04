@@ -21,6 +21,7 @@ create_default_env() {
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
+  export NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-/usr/share/ca-certificates/Scalingo/scalingo-database.pem}
 }
 
 list_node_config() {
@@ -68,7 +69,7 @@ write_ci_profile() {
   local bp_dir="$1"
   local build_dir="$2"
   write_profile "$1" "$2"
-  cp $bp_dir/ci-profile/* $build_dir/.profile.d/ 
+  cp $bp_dir/ci-profile/* $build_dir/.profile.d/
 }
 
 write_export() {
