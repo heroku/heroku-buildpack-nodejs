@@ -1,14 +1,16 @@
 # Node.js Buildpack Changelog
 
 ## master
+
+## v167 (2020-02-06)
 - Make minor upgrades to gems ([#735](https://github.com/heroku/heroku-buildpack-nodejs/pull/735))
 - Fix typo in failure metadata call ([#737](https://github.com/heroku/heroku-buildpack-nodejs/pull/737))
 
-## V166 (2019-12-16)
+## v166 (2019-12-16)
 - Add Node 13 metrics plugin ([#731](https://github.com/heroku/heroku-buildpack-nodejs/pull/731), [#732](https://github.com/heroku/heroku-buildpack-nodejs/pull/732))
 - Fix yarn cache feature flag ([#729](https://github.com/heroku/heroku-buildpack-nodejs/pull/729))
 
-## V165 (2019-10-24)
+## v165 (2019-10-24)
 - Update README ([#725](https://github.com/heroku/heroku-buildpack-nodejs/pull/725))
 - Update default Node version to 12.x ([#724](https://github.com/heroku/heroku-buildpack-nodejs/pull/724))
 
