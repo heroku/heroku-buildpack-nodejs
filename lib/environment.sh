@@ -77,4 +77,5 @@ write_export() {
   local build_dir="$2"
   echo "export PATH=\"$build_dir/.scalingo/node/bin:$build_dir/.scalingo/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > $bp_dir/export
   echo "export NODE_HOME=\"$build_dir/.scalingo/node\"" >> $bp_dir/export
+  echo "export NODE_EXTRA_CA_CERTS=\"\${NODE_EXTRA_CA_CERTS:-/usr/share/ca-certificates/Scalingo/scalingo-database.pem}\"" >> $bp_dir/export
 }
