@@ -88,11 +88,13 @@ yarn_node_modules() {
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir" || return
-  monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
+  yarn config set cacheFolder .yarn/cache
+  yarn config get cacheFolder
+  monitor "yarn-install" yarn install
 }
 
 yarn_prune_devdependencies() {
-  local build_dir=${1:-} 
+  local build_dir=${1:-}
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
@@ -106,7 +108,7 @@ yarn_prune_devdependencies() {
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     meta_set "skipped-prune" "true"
     return 0
-  else 
+  else
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
     meta_set "skipped-prune" "false"
@@ -180,7 +182,7 @@ npm_rebuild() {
 
 npm_prune_devdependencies() {
   local npm_version
-  local build_dir=${1:-} 
+  local build_dir=${1:-}
 
   npm_version=$(npm --version)
 
