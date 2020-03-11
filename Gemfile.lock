@@ -36,7 +36,7 @@ GEM
     platform-api (2.2.0)
       heroics (~> 0.0.25)
       moneta (~> 1.0.0)
-    rake (12.3.1)
+    rake (12.3.3)
     repl_runner (0.0.3)
       activesupport
     rrrretry (1.0.0)
