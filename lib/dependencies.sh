@@ -88,8 +88,6 @@ yarn_node_modules() {
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir" || return
-  yarn config set cacheFolder .yarn/cache
-  yarn config get cacheFolder
   monitor "yarn-install" yarn install
 }
 
