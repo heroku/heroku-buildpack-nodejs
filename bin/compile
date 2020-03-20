@@ -133,6 +133,8 @@ list_node_config | output "$LOG_FILE"
 create_build_env
 
 ### Configure package manager cache directories
+echo "************* foobar"
+yarn config get cacheFolder
 if $YARN && [[ `yarn --version` =~ '^1' ]]; then
   [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
   export YARN_CACHE_FOLDER
