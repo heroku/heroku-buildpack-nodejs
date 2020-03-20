@@ -93,6 +93,7 @@ meta_set "build-step" "init"
 
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+$YARN && grep -q "__metadata" "$BUILD_DIR/yarn.lock" && YARN2=true || YARN2=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Save build info
@@ -134,8 +135,8 @@ create_build_env
 
 ### Configure package manager cache directories
 echo "************* foobar"
-yarn config get cacheFolder
-if $YARN && [[ `yarn --version` =~ '^1' ]]; then
+echo $YARN2
+if $YARN && !$YARN2; then
   [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
   export YARN_CACHE_FOLDER
 fi
@@ -184,6 +185,8 @@ install_bins() {
   if $YARN; then
     mcount "version.yarn.$(yarn --version)"
     meta_set "yarn-version" "$(yarn --version)"
+    echo "************ bar"
+    yarn config get cacheFolder
   else
     mcount "version.npm.$(npm --version)"
     meta_set "npm-version" "$(npm --version)"
