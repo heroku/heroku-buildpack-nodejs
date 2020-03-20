@@ -1,5 +1,8 @@
 # Node.js Buildpack Changelog
 
+## unreleased
+- Yarn 2 compatibility [#739](https://github.com/heroku/heroku-buildpack-nodejs/issues/739)
+
 ## master
 
 ## v167 (2020-02-06)
