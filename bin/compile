@@ -10,7 +10,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 ### Constants
 
 # This is used by the buildpack stdlib for metrics
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034 
 BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
@@ -85,7 +85,7 @@ trap 'handle_failure' ERR
 meta_init "$CACHE_DIR"
 # Make sure that it's empty and save any previous build's data
 meta_setup
-# the "build-step" key keeps track of where we are in the execution
+# the "build-step" key keeps track of where we are in the execution 
 # so that we can see where failed builds errored
 meta_set "build-step" "init"
 
@@ -99,7 +99,7 @@ meta_set "build-step" "init"
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
 generate_uuids
-
+ 
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
