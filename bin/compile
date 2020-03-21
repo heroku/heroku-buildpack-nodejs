@@ -134,7 +134,7 @@ list_node_config | output "$LOG_FILE"
 create_build_env
 
 ### Configure package manager cache directories
-if $YARN && [ $YARN2 = false ]; then
+if $YARN && [ "$YARN2" == false ]; then
   [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
   export YARN_CACHE_FOLDER
 fi
@@ -183,8 +183,6 @@ install_bins() {
   if $YARN; then
     mcount "version.yarn.$(yarn --version)"
     meta_set "yarn-version" "$(yarn --version)"
-    echo "************ bar"
-    yarn config get cacheFolder
   else
     mcount "version.npm.$(npm --version)"
     meta_set "npm-version" "$(npm --version)"

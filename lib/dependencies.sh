@@ -89,7 +89,7 @@ yarn_node_modules() {
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir" || return
 
-  if [[ `yarn --version` =~ '^1' ]]; then
+  if [ "$YARN2" == false ]; then
     monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
   else
     monitor "yarn-install" yarn install 2>&1
