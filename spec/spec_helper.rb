@@ -49,7 +49,7 @@ def run!(cmd)
 end
 
 def resolve_binary_path
-  RUBY_PLATFORM.match(/darwin/) ? './vendor/resolve-version-darwin' : './vendor/resolve-version-linux'
+  RUBY_PLATFORM.match(/darwin/) ? './etc/vendor/resolve-version-darwin' : './etc/vendor/resolve-version-linux'
 end
 
 def resolve_node_version(requirements, options = {})

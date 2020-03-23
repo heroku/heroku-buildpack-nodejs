@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-JQ="$BP_DIR/vendor/jq-$(get_os)"
+JQ="$BP_DIR/etc/vendor/jq-$(get_os)"
 
 read_json() {
   local file="$1"

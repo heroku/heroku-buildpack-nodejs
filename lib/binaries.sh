@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RESOLVE="$BP_DIR/vendor/resolve-version-$(get_os)"
+RESOLVE="$BP_DIR/etc/vendor/resolve-version-$(get_os)"
 
 resolve() {
   local binary="$1"

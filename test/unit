@@ -436,7 +436,7 @@ BP_DIR="$(pwd)"
 
 # the modules to be tested
 
-source "$(pwd)"/vendor/stdlib_v7.sh
+source "$(pwd)"/etc/vendor/stdlib_v7.sh
 source "$(pwd)"/lib/uuid.sh
 source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh
