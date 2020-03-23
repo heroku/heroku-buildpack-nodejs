@@ -762,7 +762,7 @@ testNonFileEnvVars() {
 }
 
 # In the following tests "lodash" is defined as a devDependency
-# testing for lodash is equivalent to testing if devDependencies 
+# testing for lodash is equivalent to testing if devDependencies
 # were installed
 
 # Default behavior: install devDependencies then prunes them away
@@ -855,7 +855,7 @@ testOnlyDependenciesInstalledYarn() {
 }
 
 testModulesCheckedInWithDevDependencies() {
-  compile "dependencies-modules-checked-in-with-devdependencies" 
+  compile "dependencies-modules-checked-in-with-devdependencies"
   assertCaptured "Rebuilding any native modules"
   assertCaptured "lodash"
   assertCaptured "removed 1 package"
@@ -863,7 +863,7 @@ testModulesCheckedInWithDevDependencies() {
 }
 
 testModulesCheckedInWithoutDevDependencies() {
-  compile "dependencies-modules-checked-in-without-devdependencies" 
+  compile "dependencies-modules-checked-in-without-devdependencies"
   assertCaptured "Rebuilding any native modules"
   assertCaptured "added 1 package"
   assertCaptured "lodash"

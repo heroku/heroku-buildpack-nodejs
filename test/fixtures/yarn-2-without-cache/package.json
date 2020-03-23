@@ -1,5 +1,5 @@
 {
-  "name": "yarn",
+  "name": "yarn-2-without-cache",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",

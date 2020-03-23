@@ -19,14 +19,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
     ],
     "dependencyTreeRoots": [
       {
-        "name": "yarn",
+        "name": "yarn-2",
         "reference": "workspace:."
       }
     ],
     "enableTopLevelFallback": true,
     "ignorePatternData": "(^(?:\\.vscode\\/pnpify(?:\\/(?!\\.)(?:(?:(?!(?:^|\\/)\\.).)*?)|$))$)",
     "fallbackExclusionList": [
-      ["yarn", ["workspace:."]]
+      ["yarn-2", ["workspace:."]]
     ],
     "locationBlacklistData": [
     ],
@@ -77,11 +77,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"
         }]
       ]],
-      ["yarn", [
+      ["yarn-2", [
         ["workspace:.", {
           "packageLocation": "./",
           "packageDependencies": [
-            ["yarn", "workspace:."],
+            ["yarn-2", "workspace:."],
             ["debug", "npm:4.1.1"],
             ["lodash", "npm:4.17.15"]
           ],
