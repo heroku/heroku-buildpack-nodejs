@@ -164,16 +164,6 @@ testYarn() {
   assertCapturedSuccess
 }
 
-testYarn2() {
-  compile "yarn-2"
-  assertCapturedError
-}
-
-testYarn2WithoutCache() {
-  compile "yarn-2-without-cache"
-  assertCapturedError
-}
-
 testYarnCacheDirectory() {
   local cache=$(mktmpdir)
   local env_dir=$(mktmpdir)
@@ -597,6 +587,18 @@ testDetectWithoutPackageJson() {
 testIoJs() {
   compile "iojs"
   assertCaptured "io.js no longer supported"
+  assertCapturedError
+}
+
+testYarn2() {
+  compile "yarn-2"
+  assertCaptured "We are busy working to support Yarn 2, but it's not quite there yet."
+  assertCapturedError
+}
+
+testYarn2WithoutCache() {
+  compile "yarn-2-without-cache"
+  assertCaptured "We are busy working to support Yarn 2, but it's not quite there yet."
   assertCapturedError
 }
 
