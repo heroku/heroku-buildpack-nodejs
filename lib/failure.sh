@@ -102,13 +102,39 @@ fail_iojs_unsupported() {
        }
 
        io.js merged back into Nodejs.org in 2015 and has been unsupported
-       for many years. It is likely to contain several large security 
+       for many years. It is likely to contain several large security
        vulnerabilities that have been patched in Node.
 
-       You can update your app to use the official Node.js release by 
+       You can update your app to use the official Node.js release by
        removing the version specfication under \"engines\" in your
        package.json.
        "
+    fail
+  fi
+}
+
+fail_yarn2_unsupported() {
+  local uses_yarn="$1"
+  local build_dir="$2"
+
+  if [[ $(detect_yarn2 $uses_yarn $build_dir) == "true" ]]; then
+    mcount "failures.yarn2-unsupported"
+    meta_set "failure" "yarn2-unsupported"
+    warn "
+      Thanks for trying Heroku with Yarn 2!
+
+      We are busy working to support this, but it's not quite there yet.
+      Thanks for your patience while we work to give full support to
+      all of our Yarn users.
+
+      To use Yarn 1, set your local environment to Yarn 1 with:
+
+      $ yarn set version 1
+
+      and regenerate the `yarn.lock` file for this project:
+
+      $ yarn
+      "
     fail
   fi
 }

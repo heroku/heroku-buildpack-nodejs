@@ -52,6 +52,8 @@ source "$BP_DIR/lib/metadata.sh"
 source "$BP_DIR/lib/features.sh"
 # shellcheck source=lib/builddata.sh
 source "$BP_DIR/lib/builddata.sh"
+# shellcheck source=lib/yarn2.sh
+source "$BP_DIR/lib/yarn2.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -85,7 +87,7 @@ trap 'handle_failure' ERR
 meta_init "$CACHE_DIR"
 # Make sure that it's empty and save any previous build's data
 meta_setup
-# the "build-step" key keeps track of where we are in the execution 
+# the "build-step" key keeps track of where we are in the execution
 # so that we can see where failed builds errored
 meta_set "build-step" "init"
 
@@ -99,7 +101,7 @@ meta_set "build-step" "init"
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
 generate_uuids
- 
+
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
@@ -107,6 +109,7 @@ fail_dot_heroku_node "$BUILD_DIR"
 fail_invalid_package_json "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
 fail_iojs_unsupported "$BUILD_DIR"
+fail_yarn2_unsupported "$YARN" "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
