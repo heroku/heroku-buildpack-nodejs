@@ -164,6 +164,16 @@ testYarn() {
   assertCapturedSuccess
 }
 
+testYarn2() {
+  compile "yarn-2"
+  assertCapturedError
+}
+
+testYarn2WithoutCache() {
+  compile "yarn-2-without-cache"
+  assertCapturedError
+}
+
 testYarnCacheDirectory() {
   local cache=$(mktmpdir)
   local env_dir=$(mktmpdir)
