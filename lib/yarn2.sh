@@ -5,11 +5,15 @@ YQ="$BP_DIR/vendor/yq-$(get_os)"
 detect_yarn2() {
   local uses_yarn="$1"
   local build_dir="$2"
-  local is_yml
+  local yml_metadata
+  local version
 
-  is_yml=$($YQ v "$build_dir/yarn.lock" 2>&1)
+  yml_metadata=$($YQ r "$build_dir/yarn.lock" __metadata 2>&1)
 
-  if [[ "$uses_yarn" == "true" && "$is_yml" == "" ]]; then
+  # grep for version in case the output is a parsing error
+  version=$(echo "$yml_metadata" | grep version)
+
+  if [[ "$uses_yarn" == "true" && "$has_version" -ne "" ]]; then
     echo "true"
   else
     echo "false"
