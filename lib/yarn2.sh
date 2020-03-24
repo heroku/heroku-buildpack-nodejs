@@ -13,7 +13,7 @@ detect_yarn2() {
   # grep for version in case the output is a parsing error
   version=$(echo "$yml_metadata" | grep version)
 
-  if [[ "$uses_yarn" == "true" && "$has_version" -ne "" ]]; then
+  if [[ "$uses_yarn" == "true" && "$version" != "" ]]; then
     echo "true"
   else
     echo "false"
