@@ -116,14 +116,17 @@ fail_iojs_unsupported() {
 fail_yarn2_unsupported() {
   local uses_yarn="$1"
   local build_dir="$2"
+  local uses_yarn2
 
-  if [[ $(detect_yarn2 "$uses_yarn" "$build_dir") == "true" ]]; then
+  uses_yarn2=$(detect_yarn2 "$uses_yarn" "$build_dir")
+
+  if [[ "$uses_yarn2" == "true" ]]; then
     mcount "failures.yarn2-unsupported"
     meta_set "failure" "yarn2-unsupported"
     warn "
       Thanks for trying Heroku with Yarn 2!
 
-      We are busy working to support this, but it's not quite there yet.
+      We are busy working to support Yarn 2, but it's not quite there yet.
       Thanks for your patience while we work to give full support to
       all of our Yarn users.
 
