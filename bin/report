@@ -12,8 +12,8 @@ BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 ### Load dependencies
 
-# shellcheck source=vendor/stdlib_v7.sh
-source "$BP_DIR/vendor/stdlib_v7.sh"
+# shellcheck source=etc/vendor/stdlib_v7.sh
+source "$BP_DIR/etc/vendor/stdlib_v7.sh"
 # shellcheck source=lib/output.sh
 source "$BP_DIR/lib/output.sh"
 # shellcheck source=lib/monitor.sh

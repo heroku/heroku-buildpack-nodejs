@@ -48,7 +48,17 @@ Having trouble? Dig it? Feature request?
 - [@adamzdanielle](http://twitter.com/adamzdanielle)
 - [GitHub issues](https://github.com/heroku/heroku-buildpack-nodejs/issues)
 
-## Hacking
+## Development
+
+### Prerequisites
+
+For local development, you may need the following tools:
+
+- [Docker](https://hub.docker.com/search?type=edition&offering=community)
+- [Go 1.14]((https://golang.org/doc/install#install))
+- [upx](https://upx.github.io/)
+
+### Deploying an app with a fork or branch
 
 To make changes to this buildpack, fork it on GitHub.
 Push up changes to your fork, then create a new Heroku app to test it,
@@ -68,7 +78,7 @@ heroku buildpacks:set <your-github-url>#your-branch
 ## Tests
 
 The buildpack tests use [Docker](https://www.docker.com/) to simulate
-Heroku's Cedar-14 and Heroku-16 containers.
+Heroku's Heroku-16 and Heroku-18 containers.
 
 To run the test suite:
 
@@ -76,28 +86,25 @@ To run the test suite:
 make test
 ```
 
-Or to just test in cedar or cedar-14:
+Or to just test a specific stack:
 
 ```
-make test-cedar-14
 make test-heroku-16
+make test-heroku-18
 ```
 
 The tests are run via the vendored
 [shunit2](https://github.com/kward/shunit2)
 test framework.
 
-## Updating go binaries
+## Common Issues
 
-If you would like to develop and update the go binaries you will need to install 
-[go 1.12](https://golang.org/doc/install#install) and [upx](https://upx.github.io/)
-
-## Proxy Issues
+### Proxy Issues
 
 If your builds are not completing and have errors you may need to examine your build environment for `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables. A few examples of build output that may indicate issues with these values are below.
 
 ```
-// ... 
+// ...
 -----> Installing binaries
        engines.node (package.json):  10
        engines.npm (package.json):   unspecified (use default)

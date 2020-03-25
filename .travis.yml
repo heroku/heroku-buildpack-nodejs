@@ -1,6 +1,6 @@
 language: go
 go:
-  - "1.12"
+  - "1.14"
 sudo: required
 services:
   - docker
@@ -11,7 +11,7 @@ env:
   - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet
   - TEST=unit
-  - TEST=test-binary GO111MODULE=on
+  - TEST=test-binary GO114MODULE=on
 install:
   - if [[ -n $STACK ]]; then
       docker pull "heroku/${STACK/-/:}";

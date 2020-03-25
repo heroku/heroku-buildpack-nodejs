@@ -10,7 +10,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 ### Constants
 
 # This is used by the buildpack stdlib for metrics
-# shellcheck disable=SC2034 
+# shellcheck disable=SC2034
 BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
@@ -22,8 +22,8 @@ BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 ### Load dependencies
 
-# shellcheck source=vendor/stdlib_v7.sh
-source "$BP_DIR/vendor/stdlib_v7.sh"
+# shellcheck source=etc/vendor/stdlib_v7.sh
+source "$BP_DIR/etc/vendor/stdlib_v7.sh"
 # shellcheck source=lib/output.sh
 source "$BP_DIR/lib/output.sh"
 # shellcheck source=lib/monitor.sh
