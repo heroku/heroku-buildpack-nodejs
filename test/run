@@ -590,6 +590,18 @@ testIoJs() {
   assertCapturedError
 }
 
+testYarn2() {
+  compile "yarn-2"
+  assertCaptured "We are busy working to support Yarn 2, but it's not quite there yet."
+  assertCapturedError
+}
+
+testYarn2WithoutCache() {
+  compile "yarn-2-without-cache"
+  assertCaptured "We are busy working to support Yarn 2, but it's not quite there yet."
+  assertCapturedError
+}
+
 testSpecificVersion() {
   compile "specific-version"
   assertCaptured "Resolving node version"
@@ -752,7 +764,7 @@ testNonFileEnvVars() {
 }
 
 # In the following tests "lodash" is defined as a devDependency
-# testing for lodash is equivalent to testing if devDependencies 
+# testing for lodash is equivalent to testing if devDependencies
 # were installed
 
 # Default behavior: install devDependencies then prunes them away
@@ -845,7 +857,7 @@ testOnlyDependenciesInstalledYarn() {
 }
 
 testModulesCheckedInWithDevDependencies() {
-  compile "dependencies-modules-checked-in-with-devdependencies" 
+  compile "dependencies-modules-checked-in-with-devdependencies"
   assertCaptured "Rebuilding any native modules"
   assertCaptured "lodash"
   assertCaptured "removed 1 package"
@@ -853,7 +865,7 @@ testModulesCheckedInWithDevDependencies() {
 }
 
 testModulesCheckedInWithoutDevDependencies() {
-  compile "dependencies-modules-checked-in-without-devdependencies" 
+  compile "dependencies-modules-checked-in-without-devdependencies"
   assertCaptured "Rebuilding any native modules"
   assertCaptured "added 1 package"
   assertCaptured "lodash"

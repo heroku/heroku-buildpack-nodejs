@@ -55,7 +55,7 @@ Having trouble? Dig it? Feature request?
 For local development, you may need the following tools:
 
 - [Docker](https://hub.docker.com/search?type=edition&offering=community)
-- [Go 1.14]((https://golang.org/doc/install#install))
+- [Go 1.14](https://golang.org/doc/install#install)
 - [upx](https://upx.github.io/)
 
 ### Deploying an app with a fork or branch
