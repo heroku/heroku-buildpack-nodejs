@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-YQ="$BP_DIR/vendor/yq-$(get_os)"
+YQ="$BP_DIR/etc/vendor/yq-$(get_os)"
 
 detect_yarn2() {
   local uses_yarn="$1"
