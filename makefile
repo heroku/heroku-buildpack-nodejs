@@ -1,16 +1,16 @@
 test: heroku-18 heroku-16 cedar-14
 
 build:
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./etc/vendor/resolve-version-darwin ./cmd/resolve-version
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./etc/vendor/resolve-version-linux ./cmd/resolve-version
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-linux ./cmd/resolve-version
 
 build-production:
 	# build go binaries and then compress them
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./etc/vendor/resolve-version-darwin ./cmd/resolve-version
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./etc/vendor/resolve-version-linux ./cmd/resolve-version
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-linux ./cmd/resolve-version
 	# https://blog.filippo.io/shrink-your-go-binaries-with-this-one-weird-trick/
-	upx --brute etc/vendor/resolve-version-linux
-	upx --brute etc/vendor/resolve-version-darwin
+	upx --brute lib/vendor/resolve-version-linux
+	upx --brute lib/vendor/resolve-version-darwin
 
 test-binary:
 	go test -v ./cmd/... -tags=integration
