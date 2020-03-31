@@ -7,7 +7,8 @@
 - Upgrade Go to 1.14 ([#744](https://github.com/heroku/heroku-buildpack-nodejs/pull/744))
 - Bump `npm ci` usage for installing dependencies to 20% ([#745](https://github.com/heroku/heroku-buildpack-nodejs/pull/745))
 - Detect Yarn 2 usage, produce error message, and fail build (until supported) ([#746](https://github.com/heroku/heroku-buildpack-nodejs/pull/746))
-- Compress yq binaries ([#747](https://github.com/heroku/heroku-buildpack-nodejs/pull/748))
+- Compress yq binaries ([#748](https://github.com/heroku/heroku-buildpack-nodejs/pull/748))
+- Move etc/vendor to lib/vendor ([#750](https://github.com/heroku/heroku-buildpack-nodejs/pull/750))
 
 ## v167 (2020-02-06)
 - Make minor upgrades to gems ([#735](https://github.com/heroku/heroku-buildpack-nodejs/pull/735))
