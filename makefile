@@ -17,9 +17,9 @@ test-binary:
 
 shellcheck:
 	@shellcheck -x bin/compile bin/detect bin/release bin/test bin/test-compile
-	@shellcheck -x lib/**
+	@shellcheck -x lib/*.sh
 	@shellcheck -x ci-profile/**
-	@shellcheck -x etc/*.sh
+	@shellcheck -x etc/**
 
 heroku-18:
 	@echo "Running tests in docker (heroku-18)..."
