@@ -1,11 +1,13 @@
+#!/usr/bin/env bash
+
 measure_size() {
-  echo "$((du -s node_modules 2>/dev/null || echo 0) | awk '{print $1}')"
+  (du -s node_modules 2>/dev/null || echo 0) | awk '{print $1}'
 }
 
 list_dependencies() {
   local build_dir="$1"
 
-  cd "$build_dir"
+  cd "$build_dir" || return
   if $YARN; then
     echo ""
     (yarn list --depth=0 || true) 2>/dev/null
@@ -16,113 +18,147 @@ list_dependencies() {
 }
 
 run_if_present() {
-  local script_name=${1:-}
-  local has_script=$(read_json "$BUILD_DIR/package.json" ".scripts[\"$script_name\"]")
-  if [ -n "$has_script" ]; then
+  local build_dir=${1:-}
+  local script_name=${2:-}
+  local has_script_name
+  local script
+
+  has_script_name=$(has_script "$build_dir/package.json" "$script_name")
+  script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
+
+  if [[ "$has_script_name" == "true" ]]; then
     if $YARN; then
       echo "Running $script_name (yarn)"
-      yarn run "$script_name"
+      # yarn will throw an error if the script is an empty string, so check for this case
+      if [[ -n "$script" ]]; then
+        monitor "${script_name}-script" yarn run "$script_name"
+      fi
     else
       echo "Running $script_name"
-      npm run "$script_name" --if-present
+      monitor "${script_name}-script" npm run "$script_name" --if-present
     fi
+  fi
+}
+
+run_prebuild_script() {
+  local build_dir=${1:-}
+  local has_scalingo_prebuild_script
+
+  has_scalingo_prebuild_script=$(has_script "$build_dir/package.json" "scalingo-prebuild")
+
+  if [[ "$has_scalingo_prebuild_script" == "true" ]]; then
+    mcount "script.scalingo-prebuild"
+    header "Prebuild"
+    run_if_present "$build_dir" 'scalingo-prebuild'
+  fi
+}
+
+run_build_script() {
+  local build_dir=${1:-}
+  local has_build_script has_scalingo_build_script
+
+  if [ "$NPM_NO_BUILD" = "true" ] ; then
+    return
+  fi
+
+  has_build_script=$(has_script "$build_dir/package.json" "build")
+  has_scalingo_build_script=$(has_script "$build_dir/package.json" "scalingo-postbuild")
+
+  if [[ "$has_scalingo_build_script" == "true" ]] && [[ "$has_build_script" == "true" ]]; then
+    echo "Detected both \"build\" and \"scalingo-postbuild\" scripts"
+    mcount "scripts.scalingo-postbuild-and-build"
+    run_if_present "$build_dir" 'scalingo-postbuild'
+  elif [[ "$has_scalingo_build_script" == "true" ]]; then
+    mcount "scripts.scalingo-postbuild"
+    run_if_present "$build_dir" 'scalingo-postbuild'
+  elif [[ "$has_build_script" == "true" ]]; then
+    mcount "scripts.build"
+    run_if_present "$build_dir" 'build'
   fi
 }
 
 log_build_scripts() {
-  local build=$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")
-  local scalingo_prebuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"scalingo-prebuild\"]")
-  local scalingo_postbuild=$(read_json "$BUILD_DIR/package.json" ".scripts[\"scalingo-postbuild\"]")
-  local postinstall=$(read_json "$BUILD_DIR/package.json" ".scripts[\"scalingo-postbuild\"]")
+  local build_dir=${1:-}
 
-  if [ -n "$build" ]; then
-    mcount "scripts.build"
-
-    if [ -z "$scalingo_postbuild" ]; then
-      mcount "scripts.build-without-scalingo-postbuild"
-    fi
-
-    if [ -z "$postinstall" ]; then
-      mcount "scripts.build-without-postinstall"
-    fi
-
-    if [ -z "$postinstall" ] && [ -z "$scalingo_postbuild" ]; then
-      mcount "scripts.build-without-other-hooks"
-    fi
-  fi
-
-  if [ -n "$postinstall" ]; then
-    mcount "scripts.postinstall"
-
-    if [ "$postinstall" == "npm run build" ] ||
-       [ "$postinstall" == "yarn run build" ] ||
-       [ "$postinstall" == "yarn build" ]; then
-      mcount "scripts.postinstall-is-npm-build"
-    fi
-
-  fi
-
-  if [ -n "$scalingo_prebuild" ]; then
-    mcount "scripts.scalingo-prebuild"
-  fi
-
-  if [ -n "$scalingo_postbuild" ]; then
-    mcount "scripts.scalingo-postbuild"
-
-    if [ "$scalingo_postbuild" == "npm run build" ] ||
-       [ "$scalingo_postbuild" == "yarn run build" ] ||
-       [ "$scalingo_postbuild" == "yarn build" ]; then
-      mcount "scripts.scalingo-postbuild-is-npm-build"
-    fi
-  fi
-
-  if [ -n "$scalingo_postbuild" ] && [ -n "$build" ]; then
-    mcount "scripts.build-and-scalingo-postbuild"
-
-    if [ "$scalingo_postbuild" != "$build" ]; then
-      mcount "scripts.different-build-and-scalingo-postbuild"
-    fi
-  fi
-}
-
-yarn_supports_frozen_lockfile() {
-  local yarn_version="$(yarn --version)"
-  # Yarn versions lower than 0.19 will crash if passed --frozen-lockfile
-  if [[ "$yarn_version" =~ ^0\.(16|17|18).*$ ]]; then
-    mcount "yarn.doesnt-support-frozen-lockfile"
-    false
-  else
-    true
-  fi
+  meta_set "build-script" "$(read_json "$build_dir/package.json" ".scripts[\"build\"]")"
+  meta_set "postinstall-script" "$(read_json "$build_dir/package.json" ".scripts[\"postinstall\"]")"
+  meta_set "scalingo-prebuild-script" "$(read_json "$build_dir/package.json" ".scripts[\"scalingo-prebuild\"]")"
+  meta_set "scalingo-postbuild-script" "$(read_json "$build_dir/package.json" ".scripts[\"scalingo-postbuild\"]")"
 }
 
 yarn_node_modules() {
   local build_dir=${1:-}
+  local production=${YARN_PRODUCTION:-false}
 
   echo "Installing node modules (yarn.lock)"
-  cd "$build_dir"
-  if yarn_supports_frozen_lockfile; then
-    yarn install --frozen-lockfile --ignore-engines 2>&1
+  cd "$build_dir" || return
+  monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
+}
+
+yarn_prune_devdependencies() {
+  local build_dir=${1:-}
+
+  if [ "$NODE_ENV" == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ "$NODE_ENV" != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ -n "$YARN_PRODUCTION" ]; then
+    echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
+    meta_set "skipped-prune" "true"
+    return 0
   else
-    yarn install --pure-lockfile --ignore-engines 2>&1
+    cd "$build_dir" || return
+    monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+    meta_set "skipped-prune" "false"
+  fi
+}
+
+should_use_npm_ci() {
+  local build_dir=${1:-}
+  local npm_version
+
+  npm_version=$(npm --version)
+  # major_string will be ex: "4." "5." "10"
+  local major_string=${npm_version:0:2}
+  # strip any "."s from major_string
+  local major=${major_string//.}
+
+  # We should only run `npm ci` if all of the manifest files are there, and we are running at least npm 6.x
+  # `npm ci` was introduced in the 5.x line in 5.7.0, but this sees very little usage, < 5% of builds
+  if [[ -f "$build_dir/package.json" ]] && [[ -f "$build_dir/package-lock.json" ]] && (( major >= 6 )); then
+    echo "true"
+  else
+    echo "false"
   fi
 }
 
 npm_node_modules() {
   local build_dir=${1:-}
+  local production=${NPM_CONFIG_PRODUCTION:-false}
 
-  if [ -e $build_dir/package.json ]; then
-    cd $build_dir
+  if [ -e "$build_dir/package.json" ]; then
+    cd "$build_dir" || return
 
-    if [ -e $build_dir/package-lock.json ]; then
-      echo "Installing node modules (package.json + package-lock)"
-    elif [ -e $build_dir/npm-shrinkwrap.json ]; then
-      echo "Installing node modules (package.json + shrinkwrap)"
+    if [[ "$(features_get "use-npm-ci")" == "true" ]] && [[ "$(should_use_npm_ci "$build_dir")" == "true" ]]; then
+      meta_set "supports-npm-ci" "true"
+      echo "Installing node modules"
+      monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
-      echo "Installing node modules (package.json)"
+      meta_set "supports-npm-ci" "false"
+      if [ -e "$build_dir/package-lock.json" ]; then
+        echo "Installing node modules (package.json + package-lock)"
+      elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then
+        echo "Installing node modules (package.json + shrinkwrap)"
+      else
+        echo "Installing node modules (package.json)"
+      fi
+      _install_preselected_modules
+      monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     fi
-    _install_preselected_modules
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -141,18 +177,68 @@ _install_preselected_modules() {
 
 npm_rebuild() {
   local build_dir=${1:-}
+  local production=${NPM_CONFIG_PRODUCTION:-false}
 
-  if [ -e $build_dir/package.json ]; then
-    cd $build_dir
+  if [ -e "$build_dir/package.json" ]; then
+    cd "$build_dir" || return
     echo "Rebuilding any native modules"
     npm rebuild 2>&1
-    if [ -e $build_dir/npm-shrinkwrap.json ]; then
+    if [ -e "$build_dir/npm-shrinkwrap.json" ]; then
       echo "Installing any new modules (package.json + shrinkwrap)"
     else
       echo "Installing any new modules (package.json)"
     fi
-    npm install --unsafe-perm --userconfig $build_dir/.npmrc 2>&1
+    monitor "npm-rebuild" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
   else
     echo "Skipping (no package.json)"
+  fi
+}
+
+npm_prune_devdependencies() {
+  local npm_version
+  local build_dir=${1:-}
+
+  npm_version=$(npm --version)
+
+  if [ "$NODE_ENV" == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ "$NODE_ENV" != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ -n "$NPM_CONFIG_PRODUCTION" ]; then
+    echo "Skipping because NPM_CONFIG_PRODUCTION is '$NPM_CONFIG_PRODUCTION'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ "$npm_version" == "5.3.0" ]; then
+    mcount "skip-prune-issue-npm-5.3.0"
+    echo "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
+    echo "https://github.com/npm/npm/issues/17781"
+    echo ""
+    echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
+    echo "https://doc.scalingo.com/languages/nodejs/start#specifying-a-nodejs-version"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ "$npm_version" == "5.6.0" ] ||
+       [ "$npm_version" == "5.5.1" ] ||
+       [ "$npm_version" == "5.5.0" ] ||
+       [ "$npm_version" == "5.4.2" ] ||
+       [ "$npm_version" == "5.4.1" ] ||
+       [ "$npm_version" == "5.2.0" ] ||
+       [ "$npm_version" == "5.1.0" ]; then
+    mcount "skip-prune-issue-npm-5.6.0"
+    echo "Skipping because npm $npm_version sometimes fails when running 'npm prune' due to a known issue"
+    echo "https://github.com/npm/npm/issues/19356"
+    echo ""
+    echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
+    echo "https://doc.scalingo.com/languages/nodejs/start#specifying-a-nodejs-version"
+    meta_set "skipped-prune" "true"
+    return 0
+  else
+    cd "$build_dir" || return
+    monitor "npm-prune" npm prune --userconfig "$build_dir/.npmrc" 2>&1
+    meta_set "skipped-prune" "false"
   fi
 }

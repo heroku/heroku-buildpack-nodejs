@@ -1,0 +1,21 @@
+{
+  "name": "yarn",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "npm": "6.x"
+  },
+  "scripts": {
+    "heroku-prebuild": "echo 'heroku-prebuild:' $NODE_ENV",
+    "preinstall": "echo 'preinstall:' $NODE_ENV",
+    "postinstall": "echo 'postinstall:' $NODE_ENV",
+    "heroku-postbuild": "echo 'heroku-postbuild:' $NODE_ENV"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "dependencies": {
+    "lodash": "^4.16.4"
+  }
+}

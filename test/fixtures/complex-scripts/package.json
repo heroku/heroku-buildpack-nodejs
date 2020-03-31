@@ -1,0 +1,21 @@
+{
+  "name": "node-buildpack-test-app",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "dependencies": {
+    "hashish": "*"
+  },
+  "engines": {
+    "node": "10.x"
+  },
+  "scripts": {
+    "start": "\"no closing quote",
+    "build": "concurrently \"npm run build-server\" npm run build-client",
+    "heroku-postbuild": "if [ -z \"${CI}\" ]; then yarn build-assets; fi",
+    "postinstall": "if [ \"${NODE_ENV}\" = \"staging\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \"Skipped heroku-postbuild\"; fi"
+  }
+}

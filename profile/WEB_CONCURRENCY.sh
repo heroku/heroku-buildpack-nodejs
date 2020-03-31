@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
 calculate_concurrency() {
-  WEB_CONCURRENCY=${WEB_CONCURRENCY-$((MEMORY_AVAILABLE/WEB_MEMORY))}
-  if (( WEB_CONCURRENCY < 1 )); then
-    WEB_CONCURRENCY=1
-  elif (( WEB_CONCURRENCY > 200 )); then
+  local available=$1
+  local web_memory=$2
+  local concurrency
+
+  concurrency=${WEB_CONCURRENCY-$(($available/$web_memory))}
+  if (( concurrency < 1 )); then
+    concurrency=1
+  elif (( concurrency > 200 )); then
     # Ex: This will happen on Dokku on DO
-    WEB_CONCURRENCY=1
+    concurrency=1
   fi
-  echo $WEB_CONCURRENCY
+  echo "$concurrency"
 }
 
 log_concurrency() {
@@ -20,9 +24,21 @@ detect_memory() {
   local default=$1
 
   if [ -e /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
-    expr "$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)" / 1048576
+    echo $(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) / 1048576))
   else
     echo "$default"
+  fi
+}
+
+bound_memory() {
+  local detected=$1
+  local detected max_detected_memory=14336
+
+  # The hardcoded value is 16GB of memory
+  if (( detected > max_detected_memory )); then
+    echo "$max_detected_memory"
+  else
+    echo "$detected"
   fi
 }
 
@@ -39,9 +55,10 @@ appropriate for your application."
   fi
 }
 
-export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(detect_memory 512)}
+DETECTED=$(detect_memory 512)
+export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(bound_memory $DETECTED)}
 export WEB_MEMORY=${WEB_MEMORY-512}
-export WEB_CONCURRENCY=$(calculate_concurrency)
+export WEB_CONCURRENCY=$(calculate_concurrency $MEMORY_AVAILABLE $WEB_MEMORY)
 
 warn_bad_web_concurrency
 

@@ -36,7 +36,7 @@ capture()
 
   LAST_COMMAND="$@"
 
-  $@ >${STD_OUT} 2>${STD_ERR}
+  "$@" >${STD_OUT} 2>${STD_ERR}
   RETURN=$?
   rtrn=${RETURN} # deprecated
 }
@@ -186,5 +186,26 @@ assertFileMD5()
     fail "no suitable MD5 hashing command found on this system"
   fi
 
-  assertEquals "${expected_md5_cmd_output}" "`${md5_cmd}`"
+  assertEquals "${expected_md5_cmd_output}" "$(${md5_cmd})"
+}
+
+assertDirectoryExists() {
+  if [[ ! -e "$1" ]]; then
+    fail "$1 does not exist"
+  fi
+  if [[ ! -d $1 ]]; then
+    fail "$1 is not a directory"
+  fi
+}
+
+assertFileExists()
+{
+  filename=$1
+  assertTrue "$filename doesn't exist" "[[ -e $filename ]]"
+}
+
+assertFileDoesNotExist()
+{
+  filename=$1
+  assertTrue "$filename exists" "[[ ! -e $filename ]]"
 }
