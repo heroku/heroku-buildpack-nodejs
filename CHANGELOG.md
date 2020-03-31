@@ -2,7 +2,7 @@
 
 ## master
 
-## v168 (2020-03-25)
+## v170 (2020-03-31)
 - Bump rake from 12.3.1 to 12.3.3 ([#742](https://github.com/heroku/heroku-buildpack-nodejs/pull/742))
 - Upgrade Go to 1.14 ([#744](https://github.com/heroku/heroku-buildpack-nodejs/pull/744))
 - Bump `npm ci` usage for installing dependencies to 20% ([#745](https://github.com/heroku/heroku-buildpack-nodejs/pull/745))
