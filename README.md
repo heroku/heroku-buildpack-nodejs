@@ -4,7 +4,7 @@
 
 This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
 
-[![Build Status](https://travis-ci.org/heroku/heroku-buildpack-nodejs.svg)](https://travis-ci.org/heroku/heroku-buildpack-nodejs)
+[![Build Status](https://travis-ci.org/heroku/heroku-buildpack-nodejs.svg?branch=master)](https://travis-ci.org/heroku/heroku-buildpack-nodejs)
 
 ## Documentation
 
@@ -20,16 +20,15 @@ For more general information about buildpacks on Heroku:
 
 ## Locking to a buildpack version
 
-In production, you frequently want to lock all of your dependencies - including
-buildpacks - to a specific version. That way, you can regularly update and
-test them, upgrading with confidence.
+In production, you may want to lock dependencies - including
+buildpacks - to a specific version.
 
 First, find the version you want from
 [the list of buildpack versions](https://github.com/heroku/heroku-buildpack-nodejs/releases).
 Then, specify that version with `buildpacks:set`:
 
 ```
-heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#v83 -a my-app
+heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#v170 -a my-app
 ```
 
 If you have trouble upgrading to the latest version of the buildpack, please

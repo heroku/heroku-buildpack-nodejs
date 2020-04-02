@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## master
+- Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
 
 ## v170 (2020-03-31)
 - Bump rake from 12.3.1 to 12.3.3 ([#742](https://github.com/heroku/heroku-buildpack-nodejs/pull/742))
