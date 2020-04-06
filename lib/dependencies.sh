@@ -57,10 +57,6 @@ run_build_script() {
   local build_dir=${1:-}
   local has_build_script has_scalingo_build_script
 
-  if [ "$NPM_NO_BUILD" = "true" ] ; then
-    return
-  fi
-
   has_build_script=$(has_script "$build_dir/package.json" "build")
   has_scalingo_build_script=$(has_script "$build_dir/package.json" "scalingo-postbuild")
 
@@ -71,7 +67,7 @@ run_build_script() {
   elif [[ "$has_scalingo_build_script" == "true" ]]; then
     mcount "scripts.scalingo-postbuild"
     run_if_present "$build_dir" 'scalingo-postbuild'
-  elif [[ "$has_build_script" == "true" ]]; then
+  elif [[ "$has_build_script" == "true" && "$NPM_NO_BUILD" != "true" ]]; then
     mcount "scripts.build"
     run_if_present "$build_dir" 'build'
   fi
