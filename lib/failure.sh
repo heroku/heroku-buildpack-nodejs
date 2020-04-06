@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 warnings=$(mktemp -t scalingo-buildpack-nodejs-XXXX)
 
 detect_package_manager() {
@@ -7,8 +9,16 @@ detect_package_manager() {
   esac
 }
 
+fail() {
+  log_meta_data >> "$BUILDPACK_LOG_FILE"
+  exit 1
+}
+
 failure_message() {
-  local warn="$(cat $warnings)"
+  local warn
+
+  warn="$(cat "$warnings")"
+
   echo ""
   echo "We're sorry this build is failing!"
   echo ""
@@ -27,16 +37,24 @@ failure_message() {
 }
 
 fail_invalid_package_json() {
-  if ! cat ${1:-}/package.json | $JQ "." 1>/dev/null; then
+  local is_invalid
+
+  is_invalid=$(is_invalid_json_file "${1:-}/package.json")
+
+  if "$is_invalid"; then
     error "Unable to parse package.json"
     mcount 'failures.parse.package-json'
-    return 1
+    meta_set "failure" "invalid-package-json"
+    header "Build failed"
+    failure_message
+    fail
   fi
 }
 
 fail_dot_scalingo() {
   if [ -f "${1:-}/.scalingo" ]; then
     mcount "failures.dot-scalingo"
+    meta_set "failure" "dot-scalingo"
     header "Build failed"
     warn "The directory .scalingo could not be created
 
@@ -45,13 +63,14 @@ fail_dot_scalingo() {
        binaries like the node runtime and npm. You should remove the
        .scalingo file or ignore it by adding it to .slugignore
        "
-    exit 1
+    fail
   fi
 }
 
 fail_dot_scalingo_node() {
   if [ -f "${1:-}/.scalingo/node" ]; then
     mcount "failures.dot-scalingo-node"
+    meta_set "failure" "dot-scalingo-node"
     header "Build failed"
     warn "The directory .scalingo/node could not be created
 
@@ -60,7 +79,36 @@ fail_dot_scalingo_node() {
        binaries like the node runtime and npm. You should remove the
        .scalingo file or ignore it by adding it to .slugignore
        "
-    exit 1
+    fail
+  fi
+}
+
+fail_iojs_unsupported() {
+  local build_dir="$1"
+  local iojs_engine
+  iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
+
+  if [ -n "$iojs_engine" ]; then
+    mcount "failures.iojs-unsupported"
+    meta_set "failure" "iojs-unsupported"
+    warn "io.js no longer supported
+
+       You are specifying an io.js version in your package.json:
+
+       \"engines\": {
+         ...
+         \"iojs\": \"${iojs_engine}\"
+       }
+
+       io.js merged back into Nodejs.org in 2015 and has been unsupported
+       for many years. It is likely to contain several large security
+       vulnerabilities that have been patched in Node.
+
+       You can update your app to use the official Node.js release by
+       removing the version specfication under \"engines\" in your
+       package.json.
+       "
+    fail
   fi
 }
 
@@ -72,6 +120,7 @@ fail_multiple_lockfiles() {
 
   if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
     mcount "failures.two-lock-files"
+    meta_set "failure" "two-lock-files"
     header "Build failed"
     warn "Two different lockfiles found: package-lock.json and yarn.lock
 
@@ -90,11 +139,12 @@ fail_multiple_lockfiles() {
 
          $ git rm package-lock.json
     " "https://doc.scalingo.com/languages/javascript/nodejs/#dependencies-installation"
-    exit 1
+    fail
   fi
 
   if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
     mcount "failures.shrinkwrap-lock-file-conflict"
+    meta_set "failure" "shrinkwrap-lock-file-conflict"
     header "Build failed"
     warn "Two different lockfiles found
 
@@ -113,7 +163,31 @@ fail_multiple_lockfiles() {
        - package-lock.json
        - npm-shrinkwrap.json
     " "https://doc.scalingo.com/languages/javascript/nodejs/#dependencies-installation"
-    exit 1
+    fail
+  fi
+}
+
+fail_yarn_outdated() {
+  local yarn_engine
+  local log_file="$1"
+
+  if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
+    yarn_engine=$(yarn --version)
+    mcount "failures.outdated-yarn"
+    meta_set "failure" "outdated-yarn"
+    echo ""
+    warn "Outdated Yarn version: $yarn_engine
+
+       Your application is specifying a requirement on an old version of Yarn ($yarn_engine)
+       which does not support the --frozen-lockfile option. Please upgrade to a
+       newer version, at least 0.19, by updating your requirement in the 'engines'
+       field in your package.json.
+
+       \"engines\": {
+         \"yarn\": \"1.3.2\"
+       }
+    " "https://doc.scalingo.com/languages/nodejs/start#specifying-a-nodejs-version"
+    fail
   fi
 }
 
@@ -121,6 +195,7 @@ fail_yarn_lockfile_outdated() {
   local log_file="$1"
   if grep -qi 'Your lockfile needs to be updated' "$log_file"; then
     mcount "failures.outdated-yarn-lockfile"
+    meta_set "failure" "outdated-yarn-lockfile"
     echo ""
     warn "Outdated Yarn lockfile
 
@@ -136,16 +211,24 @@ fail_yarn_lockfile_outdated() {
        $ git commit -m \"Updated Yarn lockfile\"
        $ git push scalingo master
     " "https://doc.scalingo.com/languages/javascript/nodejs/#dependencies-installation"
-    exit 1
+    fail
   fi
 }
 
 fail_bin_install() {
+  local error
   local bin="$1"
   local version="$2"
 
-  # re-curl the result, saving off the reason for the failure this time
-  local error=$(curl --silent --get --retry 5 --retry-max-time 15 --data-urlencode "range=$version" "https://nodebin.herokai.com/v1/$bin/$platform/latest.txt")
+  # Allow the subcommand to fail without trapping the error so we can
+  # get the failing message output
+  set +e
+
+  # re-request the result, saving off the reason for the failure this time
+  error=$($RESOLVE "$bin" "$version")
+
+  # re-enable trapping
+  set -e
 
   if [[ $error = "No result" ]]; then
     case $bin in
@@ -156,19 +239,24 @@ fail_bin_install() {
       yarn)
         echo "Could not find Yarn version corresponding to version requirement: $version";;
     esac
-  else
+  elif [[ $error == "Could not parse"* ]] || [[ $error == "Could not get"* ]]; then
     echo "Error: Invalid semantic version \"$version\""
+  else
+    echo "Error: Unknown error installing \"$version\" of $bin"
   fi
 
-  false
+  return 1
 }
 
 fail_node_install() {
+  local node_engine
   local log_file="$1"
-  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  local build_dir="$2"
 
   if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
+    node_engine=$(read_json "$build_dir/package.json" ".engines.node")
     mcount "failures.invalid-node-version"
+    meta_set "failure" "invalid-node-version"
     echo ""
     warn "No matching version found for Node: $node_engine
 
@@ -190,16 +278,20 @@ fail_node_install() {
          \"node\": \"6.11.1\"
        }
     " "https://doc.scalingo.com/languages/javascript/nodejs/#specifying-a-nodejs-version"
+    fail
     exit 1
   fi
 }
 
 fail_yarn_install() {
+  local yarn_engine
   local log_file="$1"
-  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  local build_dir="$2"
 
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
+    yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
     mcount "failures.invalid-yarn-version"
+    meta_set "failure" "invalid-yarn-version"
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
 
@@ -214,15 +306,16 @@ fail_yarn_install() {
        you’re developing and testing with. To find your version locally:
 
        $ yarn --version
-       0.27.5
+       1.12.3
 
        Use the engines section of your package.json to specify the version of
        Yarn to use on Scalingo.
 
        \"engines\": {
-         \"yarn\": \"0.27.5\"
+         \"yarn\": \"1.x\"
        }
     " "https://doc.scalingo.com/languages/javascript/nodejs/#specifying-a-nodejs-version"
+    fail
     exit 1
   fi
 }
@@ -231,6 +324,7 @@ fail_invalid_semver() {
   local log_file="$1"
   if grep -qi 'Error: Invalid semantic version' "$log_file"; then
     mcount "failures.invalid-semver-requirement"
+    meta_set "failure" "invalid-semver-requirement"
     echo ""
     warn "Invalid semver requirement
 
@@ -242,6 +336,7 @@ fail_invalid_semver() {
        However you have specified a version requirement that is not a valid
        semantic version.
     " "https://doc.scalingo.com/languages/javascript/nodejs/#specifying-a-nodejs-version"
+    fail
     exit 1
   fi
 }
@@ -250,53 +345,234 @@ log_other_failures() {
   local log_file="$1"
   if grep -qi "sh: 1: .*: not found" "$log_file"; then
     mcount "failures.dev-dependency-tool-not-installed"
+    meta_set "failure" "dev-dependency-tool-not-installed"
+    return 0
   fi
 
   if grep -qi "Failed at the bcrypt@\d.\d.\d install script" "$log_file"; then
     mcount "failures.bcrypt-permissions-issue"
+    meta_set "failure" "bcrypt-permissions-issue"
+    return 0
   fi
 
   if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
     mcount "failures.ng-cli-version-issue"
+    meta_set "failure" "ng-cli-version-issue"
+    return 0
   fi
 
   if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
     mcount "failures.npm-property-zero-issue"
+    meta_set "failure" "npm-property-zero-issue"
+    return 0
   fi
 
   if grep -qi "npm is known not to run on Node.js v\d.\d.\d" "$log_file"; then
     mcount "failures.npm-known-bad-version"
+    meta_set "failure" "npm-known-bad-version"
+    return 0
   fi
 
   # "notarget No matching version found for" = npm
   # "error Couldn't find any versions for" = yarn
   if grep -q -e "notarget No matching version found for" -e "error Couldn't find any versions for" "$log_file"; then
     mcount "failures.bad-version-for-dependency"
-  fi
-
-  if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
-    mcount "failures.webpack-module-not-found"
+    meta_set "failure" "bad-version-for-dependency"
+    return 0
   fi
 
   if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
     mcount "failures.node-9-npm-issue"
+    meta_set "failure" "node-9-npm-issue"
+    return 0
   fi
 
   if grep -qi "console.error(\`a bug known to break npm" "$log_file"; then
     mcount "failures.old-node-new-npm"
+    meta_set "failure" "old-node-new-npm"
+    return 0
+  fi
+
+  if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
+    mcount "failures.build-out-of-memory-error"
+    meta_set "failure" "build-out-of-memory-error"
+    return 0
+  fi
+
+  if grep -qi "enoent ENOENT: no such file or directory" "$log_file"; then
+    mcount "failures.npm-enoent"
+    meta_set "failure" "npm-enoent"
+    return 0
+  fi
+
+  if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
+    mcount "failures.uglifyjs"
+    meta_set "failure" "uglifyjs"
+    return 0
+  fi
+
+  # https://github.com/angular/angular-cli/issues/4551
+  if grep -qi "Module not found: Error: Can't resolve '\.\/\$\$_gendir\/app\/app\.module\.ngfactory'" "$log_file"; then
+    mcount "failures.ng-cli-issue-4551"
+    meta_set "failure" "ng-cli-issue-4551"
+    return 0
+  fi
+
+  if grep -qi "Host key verification failed" "$log_file"; then
+    mcount "failures.private-git-dependency-without-auth"
+    meta_set "failure" "private-git-dependency-without-auth"
+    return 0
+  fi
+
+  # same as the next test, but isolate bcyrpt specifically
+  if grep -qi "Failed at the bcrypt@\d\.\d\.\d install" "$log_file"; then
+    mcount "failures.bcrypt-failed-to-build"
+    meta_set "failure" "bcrypt-failed-to-build"
+    return 0
+  fi
+
+  if grep -qi "Failed at the [^ ]* install script" "$log_file"; then
+    mcount "failures.dependency-failed-to-build"
+    meta_set "failure" "dependency-failed-to-build"
+    return 0
+  fi
+
+  if grep -qi "Line \d*:  '.*' is not defined" "$log_file"; then
+    mcount "failures.undefined-variable-lint"
+    meta_set "failure" "undefined-variable-lint"
+    return 0
+  fi
+
+  if grep -qi "npm ERR! code EBADPLATFORM" "$log_file"; then
+    mcount "failures.npm-ebadplatform"
+    meta_set "failure" "npm-ebadplatform"
+    return 0
+  fi
+
+  if grep -qi "npm ERR! code EINVALIDPACKAGENAME" "$log_file"; then
+    mcount "failures.npm-package-name-typo"
+    meta_set "failure" "npm-package-name-typo"
+    return 0
+  fi
+
+  if grep -qi -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+    mcount "failures.module-404"
+    meta_set "failure" "module-404"
+
+    if grep -qi "flatmap-stream" "$log_file"; then
+      mcount "flatmap-stream-404"
+      meta_set "failure" "flatmap-stream-404"
+      warn "The flatmap-stream module has been removed from the npm registry
+
+       On November 26th, npm was notified of a malicious package that had made its
+       way into event-stream, a popular npm package. After triaging the malware,
+       npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
+       and taking ownership of the event-stream package to prevent further abuse.
+      " "https://blog.npmjs.org/post/180565383195/details-about-the-event-stream-incident"
+      fail
+    fi
+
+    return 0
+  fi
+
+  if grep -qi "sh: 1: cd: can't cd to" "$log_file"; then
+    mcount "failures.cd-command-fail"
+    meta_set "failure" "cd-command-fail"
+    return 0
+  fi
+
+  # Webpack Errors
+
+  if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
+    mcount "failures.webpack.module-not-found"
+    meta_set "failure" "webpack-module-not-found"
+    return 0
   fi
 
   if grep -qi "sass-loader/lib/loader.js:3:14" "$log_file"; then
-    mcount "failures.webpack-sass-loader-error"
+    mcount "failures.webpack.sass-loader-error"
+    meta_set "failure" "webpack-sass-loader-error"
+    return 0
   fi
+
+  # Typescript errors
+
+  if grep -qi "Property '.*' does not exist on type '.*'" "$log_file"; then
+    mcount "failures.typescript.missing-property"
+    meta_set "failure" "typescript-missing-property"
+    return 0
+  fi
+
+  if grep -qi "Property '.*' is private and only accessible within class '.*'" "$log_file"; then
+    mcount "failures.typescript.private-property"
+    meta_set "failure" "typescript-private-property"
+    return 0
+  fi
+
+  if grep -qi "error TS2307: Cannot find module '.*'" "$log_file"; then
+    mcount "failures.typescript.missing-module"
+    meta_set "failure" "typescript-missing-module"
+    return 0
+  fi
+
+  if grep -qi "error TS2688: Cannot find type definition file for '.*'" "$log_file"; then
+    mcount "failures.typescript.missing-type-definition"
+    meta_set "failure" "typescript-missing-type-definition"
+    return 0
+  fi
+
+  # [^/C] means that the error is not for a file expected to be within the project
+  # Ex: Error: Cannot find module 'chalk'
+  if grep -q "Error: Cannot find module '[^/C\.]" "$log_file"; then
+    mcount "failures.missing-module.npm"
+    meta_set "failure" "missing-module-npm"
+    return 0
+  fi
+
+  # / means that the error is for a file expected within the local project
+  # Ex: Error: Cannot find module '/tmp/build_{hash}/...'
+  if grep -q "Error: Cannot find module '/" "$log_file"; then
+    mcount "failures.missing-module.local-absolute"
+    meta_set "failure" "missing-module-local-absolute"
+    return 0
+  fi
+
+  # /. means that the error is for a file that's a relative require
+  # Ex: Error: Cannot find module './lib/utils'
+  if grep -q "Error: Cannot find module '\." "$log_file"; then
+    mcount "failures.missing-module.local-relative"
+    meta_set "failure" "missing-module-local-relative"
+    return 0
+  fi
+
+  # [^/C] means that the error is not for a file expected to be found on a C: drive
+  # Ex: Error: Cannot find module 'C:\Users...'
+  if grep -q "Error: Cannot find module 'C:" "$log_file"; then
+    mcount "failures.missing-module.local-windows"
+    meta_set "failure" "missing-module-local-windows"
+    return 0
+  fi
+
+  # matches the subsequent lines of a stacktrace
+  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
+    mcount "failures.unknown-stacktrace"
+    meta_set "failure" "unknown-stacktrace"
+    return 0
+  fi
+
+  # If we've made it this far it's not an error we've added detection for yet
+  meta_set "failure" "unknown"
+  mcount "failures.unknown"
 }
 
 warning() {
   local tip=${1:-}
   local url=${2:-http://doc.scalingo.com/languages/javascript/nodejs}
-  echo "- $tip" >> $warnings
-  echo "  $url" >> $warnings
-  echo "" >> $warnings
+  {
+  echo "- $tip"
+  echo "  $url"
+  echo ""
+  } >> "$warnings"
 }
 
 warn() {
@@ -314,8 +590,8 @@ warn_node_engine() {
   elif [ "$node_engine" == "*" ]; then
     warning "Dangerous semver range (*) in engines.node" "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
     mcount 'warnings.node.star'
-  elif [ ${node_engine:0:1} == ">" -a "$(echo $node_engine | grep -c '<')" -eq 0 ]; then
-    warning "Dangerous semver range (>) in engines.node" "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
+  elif [ "${node_engine:0:1}" == ">" ]; then
+    warning "Dangerous semver range (>) in engines.node" "https://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
     mcount 'warnings.node.greater'
   fi
 }
@@ -325,6 +601,9 @@ warn_prebuilt_modules() {
   if [ -e "$build_dir/node_modules" ]; then
     warning "node_modules checked into source control" "http://doc.scalingo.com/languages/javascript/nodejs#do-not-track-modules-with-git"
     mcount 'warnings.modules.prebuilt'
+    meta_set "checked-in-node-modules" "true"
+  else
+    meta_set "checked-in-node-modules" "false"
   fi
 }
 
@@ -337,10 +616,13 @@ warn_missing_package_json() {
 }
 
 warn_old_npm() {
-  local npm_version="$(npm --version)"
+  local npm_version latest_npm
+
+  npm_version="$(npm --version)"
+
   if [ "${npm_version:0:1}" -lt "2" ]; then
-    local latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 https://semver.scalingo.io/npm/stable)"
-    warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
+    latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 https://semver.herokuapp.com/npm/stable)"
+    warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "https://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
     mcount 'warnings.npm.old'
   fi
 }
@@ -364,8 +646,11 @@ warn_meteor_npm_package() {
 }
 
 warn_old_npm_lockfile() {
+  local npm_version
   local npm_lock=$1
-  local npm_version="$(npm --version)"
+
+  npm_version="$(npm --version)"
+
   if $npm_lock && [ "${npm_version:0:1}" -lt "5" ]; then
     warn "This version of npm ($npm_version) does not support package-lock.json. Please
        update your npm version in package.json." "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
@@ -398,14 +683,17 @@ warn_angular_resolution() {
 }
 
 warn_missing_devdeps() {
+  local dev_deps
   local log_file="$1"
+  local build_dir="$2"
+
   if grep -qi 'cannot find module' "$log_file"; then
     warning "A module may be missing from 'dependencies' in package.json" "http://doc.scalingo.com/languages/javascript/nodejs#ensure-youre-tracking-all-your-dependencies"
     mcount 'warnings.modules.missing'
     if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
-      local devDeps=$(read_json "$BUILD_DIR/package.json" ".devDependencies")
-      if [ "$devDeps" != "" ]; then
-        warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "http://doc.scalingo.com/languages/javascript/nodejs#install-devdependencies"
+      dev_deps=$(read_json "$build_dir/package.json" ".devDependencies")
+      if [ "$dev_deps" != "" ]; then
+        warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "https://doc.scalingo.com/languages/javascript/nodejs#install-devdependencies"
         mcount 'warnings.modules.devdeps'
       fi
     fi
@@ -413,12 +701,14 @@ warn_missing_devdeps() {
 }
 
 warn_no_start() {
-  local log_file="$1"
-  if ! [ -e "$BUILD_DIR/Procfile" ]; then
-    local startScript=$(read_json "$BUILD_DIR/package.json" ".scripts.start")
-    if [ "$startScript" == "" ]; then
-      if ! [ -e "$BUILD_DIR/server.js" ]; then
-        warn "This app may not specify any way to start a node process" "http://doc.scalingo.com/languages/javascript/nodejs#nodejs-app-startup"
+  local start_script
+  local build_dir="$1"
+
+  if ! [ -e "$build_dir/Procfile" ]; then
+    start_script=$(read_json "$build_dir/package.json" ".scripts.start")
+    if [ "$start_script" == "" ]; then
+      if ! [ -e "$build_dir/server.js" ]; then
+        warn "This app may not specify any way to start a node process" "https://doc.scalingo.com/languages/javascript/nodejs#nodejs-app-startup"
         mcount 'warnings.unstartable'
       fi
     fi
@@ -434,8 +724,11 @@ warn_econnreset() {
 }
 
 warn_unmet_dep() {
+  local package_manager
   local log_file="$1"
-  local package_manager=$(detect_package_manager)
+
+  package_manager=$(detect_package_manager)
+
   if grep -qi 'unmet dependency' "$log_file" || grep -qi 'unmet peer dependency' "$log_file"; then
     warn "Unmet dependencies don't fail $package_manager install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
     mcount 'warnings.modules.unmet'

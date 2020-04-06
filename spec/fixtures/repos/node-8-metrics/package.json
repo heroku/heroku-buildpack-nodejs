@@ -1,0 +1,11 @@
+{
+  "name": "node-metrics-test-app",
+  "version": "1.0.0",
+  "engines": {
+    "node": "8.x"
+  },
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}

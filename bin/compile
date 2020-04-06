@@ -2,6 +2,7 @@
 # bin/compile <build-dir> <cache-dir> <env-dir>
 
 ### Configure environment
+
 set -o errexit    # always exit on error
 set -o pipefail   # don t ignore exit codes when piping output
 
@@ -9,35 +10,47 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
-DEFAULT_CACHE="node_modules bower_components"
+# This is used by the buildpack stdlib for metrics
+# shellcheck disable=SC2034
 BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
+
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
-BP_DIR=$(cd $(dirname ${0:-}); cd ..; pwd)
-STDLIB_FILE=$(mktemp -t stdlib.XXXXX)
-
-mkdir -p "$BUILD_DIR/.scalingo/node/"
-cd $BUILD_DIR
-export PATH="$BUILD_DIR/.scalingo/node/bin:$BUILD_DIR/.scalingo/yarn/bin:$BUILD_DIR/node_modules/.bin":$PATH
-
-LOG_FILE=$(mktemp -t node-build-log.XXXXX)
-echo "" > "$LOG_FILE"
+BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 ### Load dependencies
 
-curl --silent --retry 5 --retry-max-time 15 'https://lang-common.s3.amazonaws.com/buildpack-stdlib/v7/stdlib.sh' > "$STDLIB_FILE"
-source "$STDLIB_FILE"
-source $BP_DIR/lib/output.sh
-source $BP_DIR/lib/json.sh
-source $BP_DIR/lib/failure.sh
-source $BP_DIR/lib/environment.sh
-source $BP_DIR/lib/binaries.sh
-source $BP_DIR/lib/cache.sh
-source $BP_DIR/lib/dependencies.sh
-
+# shellcheck source=vendor/stdlib_v7.sh
+source "$BP_DIR/vendor/stdlib_v7.sh"
+# shellcheck source=lib/output.sh
+source "$BP_DIR/lib/output.sh"
+# shellcheck source=lib/monitor.sh
+source "$BP_DIR/lib/monitor.sh"
+# shellcheck source=lib/environment.sh
+source "$BP_DIR/lib/environment.sh"
+# shellcheck source=lib/failure.sh
+source "$BP_DIR/lib/failure.sh"
+# shellcheck source=lib/binaries.sh
+source "$BP_DIR/lib/binaries.sh"
+# shellcheck source=lib/json.sh
+source "$BP_DIR/lib/json.sh"
+# shellcheck source=lib/cache.sh
+source "$BP_DIR/lib/cache.sh"
+# shellcheck source=lib/dependencies.sh
+source "$BP_DIR/lib/dependencies.sh"
+# shellcheck source=lib/uuid.sh
+source "$BP_DIR/lib/uuid.sh"
+# shellcheck source=lib/kvstore.sh
+source "$BP_DIR/lib/kvstore.sh"
+# shellcheck source=lib/metadata.sh
+source "$BP_DIR/lib/metadata.sh"
+# shellcheck source=lib/features.sh
+source "$BP_DIR/lib/features.sh"
+# shellcheck source=lib/builddata.sh
+source "$BP_DIR/lib/builddata.sh"
 # Load meteor framework related functions
 source $BP_DIR/bin/meteor.sh
 if test -n "$meteor_version" ; then
@@ -48,42 +61,70 @@ if test -n "$meteor_version" ; then
   export NPM_CONFIG_PRODUCTION=$npm_config_production
 fi
 
+export PATH="$BUILD_DIR/.scalingo/node/bin:$BUILD_DIR/.scalingo/yarn/bin":$PATH
+
+LOG_FILE=$(mktemp -t node-build-log.XXXXX)
+echo "" > "$LOG_FILE"
+
+build_start_time=$(nowms)
+
 ### Handle errors
+
 handle_failure() {
+  meta_set "node-build-success" "false"
   header "Build failed"
+  fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
-  fail_node_install "$LOG_FILE"
-  fail_yarn_install "$LOG_FILE"
+  fail_node_install "$LOG_FILE" "$BUILD_DIR"
+  fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
   fail_invalid_semver "$LOG_FILE"
   log_other_failures "$LOG_FILE"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
-  warn_missing_devdeps "$LOG_FILE"
+  warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
   warn_econnreset "$LOG_FILE"
+  log_meta_data >> "$BUILDPACK_LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
 
+### Initalize metadata store
+# Create the metadata store
+meta_init "$CACHE_DIR"
+# Make sure that it's empty and save any previous build's data
+meta_setup
+# the "build-step" key keeps track of where we are in the execution
+# so that we can see where failed builds errored
+meta_set "build-step" "init"
+
 ### Check initial state
+
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
+### Save build info
+features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
+log_initial_state
+generate_uuids
+
 ### Failures that should be caught immediately
-if test -z "$meteor_version"; then
-  fail_invalid_package_json "$BUILD_DIR"
-  warn_prebuilt_modules "$BUILD_DIR"
-  warn_missing_package_json "$BUILD_DIR"
-fi
 
 fail_dot_scalingo "$BUILD_DIR"
 fail_dot_scalingo_node "$BUILD_DIR"
 fail_invalid_package_json "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
+fail_iojs_unsupported "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
+### Gather more project information
+
+# we know that package.json is valid json, and can pull more data out
+log_project_info "$BUILD_DIR"
+
 ### Compile
+
 create_env() {
   write_profile "$BP_DIR" "$BUILD_DIR"
   write_export "$BP_DIR" "$BUILD_DIR"
@@ -91,70 +132,82 @@ create_env() {
   create_default_env
 }
 
-header "Creating runtime environment"
+header "Creating runtime environment" | output "$LOG_FILE"
 
+mkdir -p "$BUILD_DIR/.scalingo/node/"
+cd $BUILD_DIR
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 list_node_config | output "$LOG_FILE"
+create_build_env
 
 ### Configure package manager cache directories
-[ ! "$YARN_CACHE_FOLDER" ] && export YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
-[ ! "$NPM_CONFIG_CACHE" ] && export NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
-  local iojs_engine=$(read_json "$BUILD_DIR/package.json" ".engines.iojs")
-  local npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
-  local yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  local node_engine npm_engine yarn_engine npm_version node_version
+
+  node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
+  npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+  yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [ -n "${meteor_version}" ] ; then
     [ -z "$node_engine" ] && node_engine=$(meteor_node_version "${meteor_version}")
     [ -z "$npm_engine" ]  && npm_engine=$(meteor_npm_version "${meteor_version}")
   fi
 
-  if [ -n "$iojs_engine" ]; then
-    echo "engines.iojs (package.json):  $iojs_engine (iojs)"
-  else
-    echo "engines.node (package.json):  ${node_engine:-unspecified}"
-  fi
+  meta_set "node-version-request" "$node_engine"
+  meta_set "npm-version-request" "$npm_engine"
+  meta_set "yarn-version-request" "$yarn_engine"
+
+  echo "engines.node (package.json):  ${node_engine:-unspecified}"
   echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
   if $YARN; then
     echo "engines.yarn (package.json):  ${yarn_engine:-unspecified (use default)}"
   fi
   echo ""
 
-  if [ -n "$iojs_engine" ]; then
-    warn_node_engine "$iojs_engine"
-    install_iojs "$iojs_engine" "$BUILD_DIR/.scalingo/node"
-    echo "Using bundled npm version for iojs compatibility: `npm --version`"
-    mcount "version.iojs.$(node --version)"
-  else
-    warn_node_engine "$node_engine"
-    install_nodejs "$node_engine" "$BUILD_DIR/.scalingo/node"
-    install_npm "$npm_engine" "$BUILD_DIR/.scalingo/node" $NPM_LOCK
-    mcount "version.node.$(node --version)"
-  fi
+  warn_node_engine "$node_engine"
+
+  meta_set "build-step" "install-nodejs"
+  monitor "install-node-binary" install_nodejs "$node_engine" "$BUILD_DIR/.scalingo/node"
+
+  meta_set "build-step" "install-npm"
+  monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.scalingo/node" $NPM_LOCK
+
+  node_version="$(node --version)"
+  mcount "version.node.$node_version"
+  meta_set "node-version" "$node_version"
 
   # Download yarn if there is a yarn.lock file or if the user
   # has specified a version of yarn under "engines". We'll still
   # only install using yarn if there is a yarn.lock file
   if $YARN || [ -n "$yarn_engine" ]; then
-    install_yarn "$BUILD_DIR/.scalingo/yarn" "$yarn_engine"
+    meta_set "build-step" "install-yarn"
+    monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.scalingo/yarn" "$yarn_engine"
   fi
 
   if $YARN; then
     mcount "version.yarn.$(yarn --version)"
+    meta_set "yarn-version" "$(yarn --version)"
   else
     mcount "version.npm.$(npm --version)"
+    meta_set "npm-version" "$(npm --version)"
   fi
 
   warn_old_npm
 }
 
-header "Installing binaries"
+header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
 
 restore_cache() {
-  local cache_status="$(get_cache_status)"
+  local cache_status cache_directories restore_cache_start_time
+  restore_cache_start_time=$(nowms)
+
+  cache_status="$(get_cache_status "$CACHE_DIR")"
+  cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
   if $YARN; then
     if [ -e "$BUILD_DIR/node_modules" ]; then
@@ -162,35 +215,48 @@ restore_cache() {
       rm -rf "$BUILD_DIR/node_modules"
     fi
   fi
-  if [ "$cache_status" == "valid" ]; then
-    local cache_directories=$(get_cache_directories)
-    if [ "$cache_directories" == "" ]; then
-      echo "Loading 2 from cacheDirectories (default):"
-      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
+
+  if [[ "$cache_status" == "disabled" ]]; then
+    header "Restoring cache"
+    echo "Caching has been disabled because NODE_MODULES_CACHE=${NODE_MODULES_CACHE}"
+  elif [[ "$cache_status" == "valid" ]]; then
+    header "Restoring cache"
+    if [[ "$cache_directories" == "" ]]; then
+      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER"
     else
-      echo "Loading $(echo $cache_directories | wc -w | xargs) from cacheDirectories (package.json):"
-      restore_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
+    fi
+  elif [[ "$cache_status" == "new-signature" ]]; then
+    header "Restoring cache"
+    if [[ "$cache_directories" == "" ]]; then
+      echo "Cached directories were not restored due to a change in version of node, npm, yarn or stack"
+      echo "Module installation may take longer for this build"
+    else
+      # If the user has specified custom cache directories, be more explicit
+      echo "Invalidating cache due to a change in version of node, npm, yarn or stack"
+      echo "Will not restore the following directories for this build:"
+      for directory in $cache_directories; do
+        echo "  $directory"
+      done
     fi
   else
-    echo "Skipping cache restore ($cache_status)"
+    # No cache exists, be silent
+    :
   fi
 
   mcount "cache.$cache_status"
+  meta_set "cache-status" "$cache_status"
+  meta_time "restore-cache-time" "$restore_cache_start_time"
 }
 
-header "Restoring cache"
+meta_set "build-step" "restore-cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
-  # Prebuild hook let you execute commands before npm/yarn
-  # has installed dependencies, so it should not use any
-  # of them
-  run_if_present 'prebuild'
-  run_if_present 'heroku-prebuild'
-  run_if_present 'scalingo-prebuild'
+  local cache_status start
 
-  local cache_status="$(get_cache_status)"
-  local start=$(nowms)
+  cache_status="$(get_cache_status "$CACHE_DIR")"
+  start=$(nowms)
 
   if $YARN; then
     yarn_node_modules "$BUILD_DIR"
@@ -203,44 +269,63 @@ build_dependencies() {
 
   mtime "modules.time.cache.$cache_status" "${start}"
 
-  if [ ! "$NPM_NO_BUILD" = "true" ] ; then
-    # Run build by default as it is the standard task to
-    # bundle applications in most javascript apps.
-    run_if_present 'build'
-  fi
-
-  # Run postbuild script to trigger tasks unrelated to
-  # the build, like notifying some external services or
-  # applying migrations
-  run_if_present 'postbuild'
-  run_if_present 'heroku-postbuild'
-  run_if_present 'scalingo-postbuild'
-
-  log_build_scripts
+  meta_set "build-step" "build-script"
+  header "Build"
+  run_build_script "$BUILD_DIR"
 }
 
-header "Building dependencies"
+meta_set "build-step" "install-dependencies"
+log_build_scripts "$BUILD_DIR"
+run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
+header "Installing dependencies" | output "$LOG_FILE"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
-  local cache_directories=$(get_cache_directories)
+  local cache_directories cache_build_start_time
+  cache_build_start_time=$(nowms)
+  cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
-  echo "Clearing previous node cache"
-  clear_cache
+  clear_cache "$CACHE_DIR"
   if ! ${NODE_MODULES_CACHE:-true}; then
-    echo "Skipping cache save (disabled by config)"
-  elif [ "$cache_directories" == "" ]; then
-    echo "Saving 2 cacheDirectories (default):"
-    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$DEFAULT_CACHE"
+    # we've already warned that caching is disabled in the restore step
+    # so be silent here
+    :
+  elif [[ "$cache_directories" == "" ]]; then
+    header "Caching build"
+    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER"
   else
-    echo "Saving $(echo $cache_directories | wc -w | xargs) cacheDirectories (package.json):"
-    save_cache_directories "$BUILD_DIR" "$CACHE_DIR" $cache_directories
+    header "Caching build"
+    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
   fi
-  save_signature
+  save_signature "$CACHE_DIR"
+  meta_time "save-cache-time" "$cache_build_start_time"
 }
 
-header "Caching build"
-cache_build | output "$LOG_FILE"
+prune_devdependencies() {
+  if $YARN; then
+    yarn_prune_devdependencies "$BUILD_DIR"
+  else
+    npm_prune_devdependencies "$BUILD_DIR"
+  fi
+}
+
+# if we are using yarn
+#   and in the new feature
+#   and we're using the default cache directories
+# then save off the cache after we prune out devDepenencies
+if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+  meta_set "build-step" "prune-dependencies"
+  header "Pruning devDependencies" | output "$LOG_FILE"
+  prune_devdependencies | output "$LOG_FILE"
+  meta_set "build-step" "save-cache"
+  cache_build | output "$LOG_FILE"
+else
+  meta_set "build-step" "save-cache"
+  cache_build | output "$LOG_FILE"
+  meta_set "build-step" "prune-dependencies"
+  header "Pruning devDependencies" | output "$LOG_FILE"
+  prune_devdependencies | output "$LOG_FILE"
+fi
 
 # Build meteor app if required
 if test -n "$meteor_version"; then
@@ -255,16 +340,23 @@ summarize_build() {
   fi
 
   mmeasure 'modules.size' "$(measure_size)"
+  meta_set "node-modules-size" "$(measure_size)"
 }
 
-header "Build succeeded!"
+meta_set "build-step" "summarize"
+header "Build succeeded!" | output "$LOG_FILE"
 mcount "compile"
 summarize_build | output "$LOG_FILE"
+meta_set "node-build-success" "true"
+meta_time "build-time" "$build_start_time"
 
 if test -n "$meteor_version" ; then
   rm -r "$BUILD_DIR/node_modules"
 else
-  warn_no_start "$LOG_FILE"
+  warn_no_start "$BUILD_DIR"
   warn_unmet_dep "$LOG_FILE"
 fi
 warn_old_npm_lockfile $NPM_LOCK
+
+meta_set "build-step" "finished"
+log_meta_data >> "$BUILDPACK_LOG_FILE"
