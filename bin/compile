@@ -96,6 +96,7 @@ meta_set "build-step" "init"
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
+YARN2=$(detect_yarn2 "$YARN" "$BUILD_DIR")
 
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
@@ -109,7 +110,7 @@ fail_dot_heroku_node "$BUILD_DIR"
 fail_invalid_package_json "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
 fail_iojs_unsupported "$BUILD_DIR"
-# fail_yarn2_unsupported "$YARN" "$BUILD_DIR"
+# fail_yarn2_unsupported "$YARN2"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
@@ -140,10 +141,9 @@ create_build_env
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
-uses_yarn2=$(detect_yarn2 "$YARN" "$BUILD_DIR")
-if [[ "$uses_yarn2" == "true" ]] && [[ "$NODE_MODULES_CACHE" == "true" ]]; then
+if [[ "$YARN2" == "true" && "$NODE_MODULES_CACHE" == "true" ]]; then
   warn "
-    WARNING- You are using Yarn2. The buildpack won't cache, because yarn2 does not provide node modules.
+    WARNING- You are using Yarn 2. The buildpack won't cache, because Yarn 2 does not provide node modules.
     "
 fi
 

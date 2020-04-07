@@ -3,6 +3,10 @@
 ## master
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
 
+## v171 (2020-04-07)
+- Add warning for detection of Yarn 2 usage with caching ([#755](https://github.com/heroku/heroku-buildpack-nodejs/pull/755))
+- Add test for checking warning
+
 ## v170 (2020-03-31)
 - Bump rake from 12.3.1 to 12.3.3 ([#742](https://github.com/heroku/heroku-buildpack-nodejs/pull/742))
 - Upgrade Go to 1.14 ([#744](https://github.com/heroku/heroku-buildpack-nodejs/pull/744))
