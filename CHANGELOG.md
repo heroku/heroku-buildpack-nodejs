@@ -1,5 +1,7 @@
 # Node.js Buildpack Changelog
 
+## feature: Yarn 2 support
+
 ## master
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
 
