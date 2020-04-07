@@ -590,18 +590,6 @@ testIoJs() {
   assertCapturedError
 }
 
-testYarn2() {
-  compile "yarn-2"
-  assertCaptured "We are busy working to support Yarn 2, but it's not quite there yet."
-  assertCapturedError
-}
-
-testYarn2WithoutCache() {
-  compile "yarn-2-without-cache"
-  assertCaptured "We are busy working to support Yarn 2, but it's not quite there yet."
-  assertCapturedError
-}
-
 testSpecificVersion() {
   compile "specific-version"
   assertCaptured "Resolving node version"
