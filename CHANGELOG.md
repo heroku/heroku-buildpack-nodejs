@@ -1,5 +1,7 @@
 # Node.js Buildpack Changelog
 
+## feature: Yarn 2 support
+
 ## master
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
 

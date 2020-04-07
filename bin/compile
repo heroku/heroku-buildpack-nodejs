@@ -109,7 +109,6 @@ fail_dot_heroku_node "$BUILD_DIR"
 fail_invalid_package_json "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
 fail_iojs_unsupported "$BUILD_DIR"
-fail_yarn2_unsupported "$YARN" "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
