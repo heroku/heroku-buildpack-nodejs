@@ -2,6 +2,9 @@
 
 ## feature: Yarn 2 support
 
+##2020-04-08
+- Add warning for detection of Yarn 2 usage with caching ([#755](https://github.com/heroku/heroku-buildpack-nodejs/pull/755))
+
 ## master
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
 
