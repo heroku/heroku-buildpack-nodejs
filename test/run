@@ -590,6 +590,13 @@ testIoJs() {
   assertCapturedError
 }
 
+testYarn2WithCache() {
+  compile "yarn-2"
+  assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
+  #expected failure with yarn incompatibility
+  assertCapturedError
+}
+
 testSpecificVersion() {
   compile "specific-version"
   assertCaptured "Resolving node version"
