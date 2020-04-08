@@ -142,7 +142,7 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 if [[ "$YARN2" == "true" && "$NODE_MODULES_CACHE" == "true" ]]; then
   warn "
-    WARNING- You are using Yarn2. The buildpack won't cache, because yarn2 does not provide node modules.
+    WARNING- You are using Yarn2. The buildpack won't cache, because Yarn 2 does not provide node modules.
     "
 fi
 

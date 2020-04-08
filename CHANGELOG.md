@@ -1,8 +1,6 @@
 # Node.js Buildpack Changelog
 
 ## feature: Yarn 2 support
-
-##2020-04-08
 - Add warning for detection of Yarn 2 usage with caching ([#755](https://github.com/heroku/heroku-buildpack-nodejs/pull/755))
 
 ## master
