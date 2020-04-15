@@ -114,11 +114,7 @@ fail_iojs_unsupported() {
 }
 
 fail_yarn2_unsupported() {
-  local uses_yarn="$1"
-  local build_dir="$2"
-  local uses_yarn2
-
-  uses_yarn2=$(detect_yarn2 "$uses_yarn" "$build_dir")
+  local uses_yarn2="$1"
 
   if [[ "$uses_yarn2" == "true" ]]; then
     mcount "failures.yarn2-unsupported"
