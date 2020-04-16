@@ -140,6 +140,9 @@ create_build_env
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
+### Configure vendored package manager
+export YARN2_PATH
+
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
@@ -154,6 +157,21 @@ if [[ "$YARN2" == "true" ]]; then
   if [[ -f "$BUILD_DIR/.yarnrc" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file."
   fi
+fi
+
+if [[ "$YARN2" == "true" ]]; then
+  ### Configure Yarn 2
+  # fail for no yarnrc.yml
+  fail_missing_yarnrc_yml "$BUILD_DIR"
+
+  # get yarn_path
+  YARN2_PATH=$(get_yarn_path "$BUILD_DIR")
+
+  # fail for no yarnPath in rc
+  fail_missing_yarn_path "$BUILD_DIR" "$YARN2_PATH"
+
+  # fail for missing yarn
+  fail_missing_yarn_vendor "$BUILD_DIR" "$YARN2_PATH"
 fi
 
 install_bins() {

@@ -596,7 +596,7 @@ testIoJs() {
   assertCapturedError
 }
 
-testYarn2WithCache() {
+testYarn2WithNodeModulesCache() {
   compile "yarn-2"
   assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
   #expected failure with yarn incompatibility
@@ -607,6 +607,23 @@ testYarn2WithEngine() {
   compile "yarn-2-with-engine"
   assertCaptured "Heroku will ignore the engine from the package.json."
   #expected failure with yarn incompatibility
+  assertCapturedError
+}
+testYarn2WithoutYarnrcYml() {
+  compile "yarn-2-without-yarnrc-yml"
+  assertCaptured "The yarnrc.yml file could not found"
+  assertCapturedError
+}
+
+testYarn2WithoutYarnPath() {
+  compile "yarn-2-without-yarn-path"
+  assertCaptured "The 'yarnPath' could not be read from the yarnrc.yml file"
+  assertCapturedError
+}
+
+testYarn2WithoutYarnRelease() {
+  compile "yarn-2-without-cache"
+  assertCaptured "Yarn was not found"
   assertCapturedError
 }
 
