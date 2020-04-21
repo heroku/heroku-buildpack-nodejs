@@ -140,13 +140,10 @@ create_build_env
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
-if [[ "$YARN2" == "true" ]]; then
-  if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
-    warn "
-      WARNING- You are using Yarn2. The buildpack won't cache, because Yarn 2 does not provide node modules.
-      "
-  fi
-  warn " You should be using a vendored version of Yarn. Heroku will ignore the engine from the package.json. "
+if [[ "$YARN2" == "true" && "$NODE_MODULES_CACHE" == "true" ]]; then
+  warn "
+    WARNING- You are using Yarn2. The buildpack won't cache, because Yarn 2 does not provide node modules.
+    "
 fi
 
 install_bins() {
@@ -155,6 +152,10 @@ install_bins() {
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
+  if [[ "$YARN2" == "true" && -n "$yarn_engine" ]]; then
+    warn " You should be using a vendored version of Yarn. Heroku will ignore the engine from the package.json. "
+  fi
 
   meta_set "node-version-request" "$node_engine"
   meta_set "npm-version-request" "$npm_engine"
