@@ -77,7 +77,7 @@ heroku buildpacks:set <your-github-url>#your-branch
 ## Tests
 
 The buildpack tests use [Docker](https://www.docker.com/) to simulate
-Heroku's Heroku-16 and Heroku-18 containers.
+Heroku's stacks.
 
 To run the test suite:
 
@@ -88,8 +88,9 @@ make test
 Or to just test a specific stack:
 
 ```
-make test-heroku-16
-make test-heroku-18
+make heroku-16
+make heroku-18
+make heroku-20
 ```
 
 The tests are run via the vendored
