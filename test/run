@@ -597,6 +597,13 @@ testYarn2WithCache() {
   assertCapturedError
 }
 
+testYarn2WithEngine() {
+  compile "yarn-2-with-engine"
+  assertCaptured "Heroku will ignore the engine from the package.json."
+  #expected failure with yarn incompatibility
+  assertCapturedError
+}
+
 testSpecificVersion() {
   compile "specific-version"
   assertCaptured "Resolving node version"

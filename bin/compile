@@ -153,6 +153,10 @@ install_bins() {
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
+  if [[ "$YARN2" == "true" && -n "$yarn_engine" ]]; then
+    warn " You should be using a vendored version of Yarn. Heroku will ignore the engine from the package.json. "
+  fi
+
   meta_set "node-version-request" "$node_engine"
   meta_set "npm-version-request" "$npm_engine"
   meta_set "yarn-version-request" "$yarn_engine"
