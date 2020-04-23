@@ -616,6 +616,12 @@ testYarn2WithNpmrc() {
   #expected failure with yarn incompatibility
   assertCapturedError
 }
+testYarn2WithYarnrc() {
+  compile "yarn-2-with-yarnrc"
+  assertCaptured "There is an existing .yarnrc file that will not be used."
+  #expected failure with yarn incompatibility
+  assertCapturedError
+}
 
 testSpecificVersion() {
   compile "specific-version"
