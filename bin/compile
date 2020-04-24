@@ -146,6 +146,9 @@ if [[ "$YARN2" == "true" ]]; then
       WARNING- You are using Yarn2. The buildpack won't cache, because Yarn 2 does not provide node modules.
       "
   fi
+  if [[ -f "$BUILD_DIR/.npmrc" ]]; then
+    warn "There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file."
+  fi
   if [[ -f "$BUILD_DIR/.yarnrc" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file."
   fi
