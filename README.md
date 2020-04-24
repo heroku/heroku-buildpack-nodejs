@@ -74,6 +74,16 @@ heroku buildpacks:set <your-github-url>
 heroku buildpacks:set <your-github-url>#your-branch
 ```
 
+### Downloading Plugins
+
+In order to download the latest plugins that have been released, run the following:
+
+```
+plugin/download.sh v$VERSION
+```
+
+Make sure the version is in the format `v#`, ie. `v7`.
+
 ## Tests
 
 The buildpack tests use [Docker](https://www.docker.com/) to simulate
