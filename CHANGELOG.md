@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## master
+
+## v171 (2020-04-27)
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
 - Up feature flag test groups ([#758](https://github.com/heroku/heroku-buildpack-nodejs/pull/758))
 - Add Heroku-20 to the Travis test matrix ([#763](https://github.com/heroku/heroku-buildpack-nodejs/pull/763))
