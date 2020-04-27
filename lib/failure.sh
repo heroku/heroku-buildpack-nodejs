@@ -370,13 +370,13 @@ fail_missing_yarnrc_yml() {
     mcount "failures.missing-yarnrc-yml"
     meta_set "failure" "missing-yarnrc-yml"
     header "Build failed"
-    warn "The yarnrc.yml file could not found
+    warn "The 'yarnrc.yml' file is not found
 
-      It looks like the yarnrc.yml file is missing from this project. Please
+      It looks like the 'yarnrc.yml' file is missing from this project. Please
       make sure this file is checked into version control and made available to
       Heroku.
 
-      To generate yarnrc.yml, make sure Yarn 2 is installed on your local
+      To generate 'yarnrc.yml', make sure Yarn 2 is installed on your local
       machine and set the version in your project directory with:
 
        $ yarn set version berry
@@ -393,13 +393,14 @@ fail_missing_yarn_path() {
     mcount "failures.missing-yarn-path"
     meta_set "failure" "missing-yarn-path"
     header "Build failed"
-    warn "The 'yarnPath' could not be read from the yarnrc.yml file
+    warn "The 'yarnPath' could not be read from the 'yarnrc.yml' file
 
-      It looks like yarnrc.yml is missing the 'yarnPath' value, which is needed
+      It looks like 'yarnrc.yml' is missing the 'yarnPath' value, which is needed
       to identify the location of yarn for this build.
 
-      To generate properly set 'yarnPath', make sure Yarn 2 is installed on your
-      local machine and set the version in your project directory with:
+      To regenerate 'yarnrc.yml' with the 'yarnPath' value set, make sure Yarn 2
+      is installed on your local machine and set the version in your project
+      directory with:
 
        $ yarn set version berry
       "
@@ -418,12 +419,12 @@ fail_missing_yarn_vendor() {
     warn "Yarn was not found
 
       It looks like yarn is missing from $yarn_path, which is needed to continue
-      this build on Heroku. Yarn 2 recommends vendoring Yarn under the '.yarn'
+      this build on Heroku. Yarn 2 recommends vendoring Yarn under the '.yarn/releases'
       directory, so remember to check the '.yarn' directory into version control
       to use during builds.
 
-      To generate the vendor correctly, make sure Yarn 2 is installed on your
-      local machine and run the following in your project directory:
+      To generate the '.yarn' directory correctly, make sure Yarn 2 is installed
+      on your local machine and run the following in your project directory:
 
        $ yarn install
        $ yarn set version berry
