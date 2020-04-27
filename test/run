@@ -605,13 +605,13 @@ testYarn2WithEngine() {
 }
 testYarn2WithoutYarnrcYml() {
   compile "yarn-2-without-yarnrc-yml"
-  assertCaptured "The yarnrc.yml file could not found"
+  assertCaptured "The 'yarnrc.yml' file is not found"
   assertCapturedError
 }
 
 testYarn2WithoutYarnPath() {
   compile "yarn-2-without-yarn-path"
-  assertCaptured "The 'yarnPath' could not be read from the yarnrc.yml file"
+  assertCaptured "The 'yarnPath' could not be read from the 'yarnrc.yml' file"
   assertCapturedError
 }
 
