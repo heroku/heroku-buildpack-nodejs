@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## master
+- display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
 
 ## v171 (2020-04-27)
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
