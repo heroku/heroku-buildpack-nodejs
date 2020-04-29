@@ -5,6 +5,7 @@
 - Add warning for Yarn 2 usage, warn user of ignoring engine from package.json ([#761](https://github.com/heroku/heroku-buildpack-nodejs/pull/761))
 - Add warning for if .yarnrc file exists when using Yarn 2 ([#768](https://github.com/heroku/heroku-buildpack-nodejs/pull/768))
 - Add warning for if .npmrc file exists when using Yarn 2 ([#764](https://github.com/heroku/heroku-buildpack-nodejs/pull/764))
+- Add checks for Yarn 2 ([#759](https://github.com/heroku/heroku-buildpack-nodejs/pull/759))
 
 ## master
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
