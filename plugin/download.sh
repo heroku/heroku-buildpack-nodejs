@@ -34,16 +34,14 @@ download() {
 
 delete_old_plugin() {
     local dir=${1}
-    rm -f "$dir/heroku-nodejs-plugin-node-12.sha512"
-    rm -f "$dir/heroku-nodejs-plugin-node-12.tar.gz"
-    rm -f "$dir/heroku-nodejs-plugin-node-11.sha512"
-    rm -f "$dir/heroku-nodejs-plugin-node-11.tar.gz"
     rm -f "$dir/heroku-nodejs-plugin-node-10.sha512"
     rm -f "$dir/heroku-nodejs-plugin-node-10.tar.gz"
-    rm -f "$dir/heroku-nodejs-plugin-node-8.sha512"
-    rm -f "$dir/heroku-nodejs-plugin-node-8.tar.gz"
-    rm -f "$dir/heroku-nodejs-plugin-node-9.sha512"
-    rm -f "$dir/heroku-nodejs-plugin-node-9.tar.gz"
+    rm -f "$dir/heroku-nodejs-plugin-node-12.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-12.tar.gz"
+    rm -f "$dir/heroku-nodejs-plugin-node-13.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-13.tar.gz"
+    rm -f "$dir/heroku-nodejs-plugin-node-14.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-14.tar.gz"
     rm -f "$dir/version"
 }
 
@@ -51,21 +49,9 @@ download_assets_for_release() {
     local tag=${1}
     local dir=${2}
 
-    # Node 8
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-8-$tag.sha512" "$dir/heroku-nodejs-plugin-node-8.sha512"
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-8-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-8.tar.gz"
-
-    # Node 9
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-9-$tag.sha512" "$dir/heroku-nodejs-plugin-node-9.sha512"
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-9-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-9.tar.gz"
-
-    # Node 10 
+    # Node 10
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-10-$tag.sha512" "$dir/heroku-nodejs-plugin-node-10.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-10-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-10.tar.gz"
-
-    # Node 11
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-11-$tag.sha512" "$dir/heroku-nodejs-plugin-node-11.sha512"
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-11-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-11.tar.gz"
 
     # Node 12
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.sha512" "$dir/heroku-nodejs-plugin-node-12.sha512"
@@ -74,6 +60,10 @@ download_assets_for_release() {
     # Node 13
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-13-$tag.sha512" "$dir/heroku-nodejs-plugin-node-13.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-13-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-13.tar.gz"
+
+    # Node 14
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-14-$tag.sha512" "$dir/heroku-nodejs-plugin-node-14.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-14-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-14.tar.gz"
 }
 
 test_hash() {
@@ -106,11 +96,9 @@ echo $TAG_NAME > "$PLUGIN_DIR/version"
 
 echo "Plugins downloaded"
 
-test_hash 8 $PLUGIN_DIR
-test_hash 9 $PLUGIN_DIR
 test_hash 10 $PLUGIN_DIR
-test_hash 11 $PLUGIN_DIR
 test_hash 12 $PLUGIN_DIR
 test_hash 13 $PLUGIN_DIR
+test_hash 14 $PLUGIN_DIR
 
 echo "Done"

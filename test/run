@@ -295,6 +295,12 @@ testYarnEngine() {
   assertCapturedSuccess
 }
 
+testYarnEngineWithMonorepo() {
+  compile "yarn-engine-with-monorepo"
+  assertCaptured "installing yarn (1.4.0)"
+  assertCapturedSuccess
+}
+
 # If they specify a version of yarn inside package.json but
 # don't have a yarn.lock file download and make yarn available
 # though we will only install using yarn if a yarn.lock exists
@@ -621,14 +627,12 @@ testYarn2WithoutYarnRelease() {
   assertCapturedError
 }
 
-
 testYarn2WithNpmrc() {
   compile "yarn-2-with-npmrc"
   assertCaptured "There is an existing .npmrc file that will not be used."
   #expected failure with yarn incompatibility
   assertCapturedError
 }
-
 testYarn2WithYarnrc() {
   compile "yarn-2-with-yarnrc"
   assertCaptured "There is an existing .yarnrc file that will not be used."

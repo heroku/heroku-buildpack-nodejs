@@ -189,7 +189,7 @@ install_bins() {
 
   echo "engines.node (package.json):  ${node_engine:-unspecified}"
   echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
-  if $YARN; then
+  if $YARN || [ -n "$yarn_engine" ]; then
     echo "engines.yarn (package.json):  ${yarn_engine:-unspecified (use default)}"
   fi
   echo ""
