@@ -6,23 +6,10 @@
 - Add warning for if .yarnrc file exists when using Yarn 2 ([#768](https://github.com/heroku/heroku-buildpack-nodejs/pull/768))
 - Add warning for if .npmrc file exists when using Yarn 2 ([#764](https://github.com/heroku/heroku-buildpack-nodejs/pull/764))
 - Add checks for Yarn 2 ([#759](https://github.com/heroku/heroku-buildpack-nodejs/pull/759))
+- Add vendored yarn for global use ([#773](https://github.com/heroku/heroku-buildpack-nodejs/pull/773))
 
 ## master
-- display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
-
-## v171 (2020-04-27)
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))
-- Up feature flag test groups ([#758](https://github.com/heroku/heroku-buildpack-nodejs/pull/758))
-- Add Heroku-20 to the Travis test matrix ([#763](https://github.com/heroku/heroku-buildpack-nodejs/pull/763))
-<<<<<<< HEAD
-- Add Node 14 plugin and rebuild 10, 12, and 13; Remove rebuilding of 8, 9, and 11 ([#767](https://github.com/heroku/heroku-buildpack-nodejs/pull/767))
-- Add spec support for Node 13 and 14 ([#766](https://github.com/heroku/heroku-buildpack-nodejs/pull/766))
-<<<<<<< HEAD
-=======
-- display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
->>>>>>> update changelog
-=======
->>>>>>> add test and update changelog
 
 ## v170 (2020-03-31)
 - Bump rake from 12.3.1 to 12.3.3 ([#742](https://github.com/heroku/heroku-buildpack-nodejs/pull/742))
