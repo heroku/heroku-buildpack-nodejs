@@ -165,6 +165,8 @@ if [[ "$YARN2" == "true" ]]; then
   # get yarn_path
   YARN2_PATH=$(get_yarn_path "$BUILD_DIR")
 
+  alias yarn=$YARN2_PATH
+
   # fail for no yarnPath in rc
   fail_missing_yarn_path "$BUILD_DIR" "$YARN2_PATH"
 

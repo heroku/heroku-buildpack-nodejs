@@ -107,6 +107,13 @@ testYarnRun() {
   assertCapturedSuccess
 }
 
+testYarn2Run() {
+  compile "yarn-2-run"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertCaptured "foobar"
+  assertCapturedSuccess
+}
+
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
