@@ -98,6 +98,10 @@ meta_set "build-step" "init"
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 YARN2=$(detect_yarn2 "$YARN" "$BUILD_DIR")
 
+if [[ $YARN2 == true ]]; then
+  YARN=false
+fi
+
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
