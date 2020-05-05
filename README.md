@@ -107,6 +107,14 @@ The tests are run via the vendored
 [shunit2](https://github.com/kward/shunit2)
 test framework.
 
+### Debugging
+
+To show the logged build outputs:
+
+```
+cat $STD_OUT
+```
+
 ## Common Issues
 
 ### Proxy Issues
