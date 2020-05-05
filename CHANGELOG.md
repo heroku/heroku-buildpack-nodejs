@@ -6,6 +6,7 @@
 - Add warning for if .npmrc file exists when using Yarn 2 ([#764](https://github.com/heroku/heroku-buildpack-nodejs/pull/764))
 - Add warning for if .yarnrc file exists when using Yarn 2 ([#768](https://github.com/heroku/heroku-buildpack-nodejs/pull/768))
 - Add checks for Yarn 2 ([#759](https://github.com/heroku/heroku-buildpack-nodejs/pull/759))
+- Turn off production and ignore-script flags for Yarn 2 and add global vendored yarn alias ([775] (https://github.com/heroku/heroku-buildpack-nodejs/pull/775))
 
 ## master
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
