@@ -1,611 +1,614 @@
 #!/usr/bin/env bash
 # See README.md for info on running these tests.
 
-# testNpmCi() {
-#   local log_file cache
-#   log_file=$(mktemp)
-#   cache=$(mktmpdir)
-
-#   BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" "$cache"
-
-#    # make sure that build scripts are being called
-#   assertCaptured "heroku-prebuild script"
-#   assertCaptured "build script"
-#   assertCaptured "postinstall script"
-#   assertCapturedSuccess
-
-#    # test logging
-#   assertFileContains "feature-use-npm-ci=true" "$log_file"
-#   assertFileContains "supports-npm-ci=true" "$log_file"
-#   assertFileContains "npm-install-time=" "$log_file"
-#   assertFileContains "npm-install-memory=" "$log_file"
-
-#    # test re-using the cache
-#   echo "" > "$log_file"
-#   BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" "$cache"
-#   assertCapturedSuccess
-# }
-
-# testNpmCiFallback() {
-#   local log_file cache
-#   log_file=$(mktemp)
-
-#   # without a lockfile we should use "npm install" instead of "npm ci"
-#   BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-no-lockfile"
-
-#   assertCapturedSuccess
-
-#   # make sure the feature is turned on
-#   assertFileContains "feature-use-npm-ci=true" "$log_file"
-#   # and detecting that we shouldn't use npm ci
-#   assertFileContains "supports-npm-ci=false" "$log_file"
-#   # and ran "npm install"
-#   assertFileContains "npm-install-time=" "$log_file"
-#   assertFileContains "npm-install-memory=" "$log_file"
-# }
-
-# testFlatmapStream() {
-#   compile "flatmap-stream"
-#   assertCaptured "flatmap-stream module has been removed from the npm registry"
-#   assertCapturedError
-# }
-
-# testBuildScriptBehavior() {
-#   # The 'build' script is run by default
-#   compile "build-script"
-#   assertCaptured "Running build"
-#   assertCapturedSuccess
-
-#   # the 'heroku-postbuild' script takes precedence over the 'build' script
-#   compile "build-script-override"
-#   assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
-#   assertCaptured "Running heroku-postbuild"
-#   assertCapturedSuccess
-# }
-
-# testBuildScriptYarn() {
-#   compile "build-script-yarn"
-#   assertCaptured "Running build (yarn)"
-#   assertCaptured "build hook message"
-#   assertCapturedSuccess
-# }
-
-# testPreferEmptyHerokuPostbuildOverBuild() {
-#   compile "empty-heroku-postbuild"
-#   assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
-#   assertCaptured "Running heroku-postbuild"
-#   assertNotCaptured "build hook message"
-#   assertCapturedSuccess
-# }
-
-# testEmptyHerokuPostbuildWithYarn() {
-#   compile "empty-heroku-postbuild-yarn"
-#   assertCaptured "Running heroku-postbuild (yarn)"
-#   assertNotCaptured "build hook message"
-#   assertNotCaptured "Script must exist"
-#   assertCapturedSuccess
-# }
-
-# testPrePostBuildScripts() {
-#   compile "pre-post-build-scripts"
-#   assertCaptured "Running heroku-prebuild"
-#   assertCaptured "echo heroku-prebuild hook message"
-#   assertCaptured "Running heroku-postbuild"
-#   assertCaptured "echo heroku-postbuild hook message"
-#   assertCapturedSuccess
-
-#   compile "stable-node"
-#   assertNotCaptured "Running heroku-prebuild"
-#   assertNotCaptured "Running heroku-postbuild"
-#   assertCapturedSuccess
-# }
-
-# testYarnRun() {
-#   compile "yarn-run"
-#   assertCaptured "Running heroku-postbuild (yarn)"
-#   assertCaptured "foobar"
-#   assertCapturedSuccess
-# }
-
-# testNoVersion() {
-#   compile "no-version"
-#   assertCaptured "engines.node (package.json):  unspecified"
-#   assertCaptured "Resolving node version 12.x"
-#   assertCaptured "Downloading and installing node 12."
-#   assertCapturedSuccess
-# }
-
-# testDisableCache() {
-#   cache=$(mktmpdir)
-#   env_dir=$(mktmpdir)
-
-#   echo "true" > $env_dir/NODE_VERBOSE
-#   compile "node-modules-cache-1" $cache $env_dir
-#   assertCaptured "lodash@1.0.0"
-#   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c lodash | tr -d ' ')"
-#   assertCapturedSuccess
-
-#   compile "node-modules-cache-2" $cache $env_dir
-#   assertCaptured "lodash@1.0.0"
-#   assertCapturedSuccess
-
-#   echo "false" > $env_dir/NODE_MODULES_CACHE
-#   compile "node-modules-cache-2" $cache $env_dir
-#   assertCaptured "lodash@1.3.1"
-#   assertCapturedSuccess
-# }
-
-# testNodeModulesCached() {
-#   cache=$(mktmpdir)
-
-#   compile "caching" $cache
-#   assertCaptured "- node_modules"
-#   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c express | tr -d ' ')"
-#   assertCapturedSuccess
-# }
-
-# testSetBuildEnv() {
-#   cache=$(mktmpdir)
-#   env_dir=$(mktmpdir)
-
-#   compile "print-node-options"
-#   assertCaptured "NODE_OPTIONS=--max_old_space_size=2560"
-
-#   echo "--max_old_space_size=1234" > $env_dir/NODE_OPTIONS
-#   compile "print-node-options" $cache $env_dir
-#   assertCaptured "NODE_OPTIONS=--max_old_space_size=1234"
-# }
-
-# testYarn() {
-#   compile "yarn"
-#   assertCaptured "installing yarn"
-#   assertCaptured "Installing node modules (yarn.lock)"
-#   assertNotCaptured "Installing node modules (package.json)"
-#   assertCapturedSuccess
-# }
-
-# testYarnCacheDirectory() {
-#   local cache=$(mktmpdir)
-#   local env_dir=$(mktmpdir)
-#   local cache_dir=$(mktmpdir)
-#   echo "${cache_dir}/yarn"> "$env_dir/YARN_CACHE_FOLDER"
-#   compile "yarn" $cache $env_dir
-#   # These will be created if yarn is using the directory for its cache
-
-#   assertDirectoryExists ${cache_dir}/yarn
-#   # yarn frequently bumps the version number used in its cache
-#   # so use a wildcard here to prevent frequent CI failures
-
-#   # assert that the above ls command exited successfully, which only happens if the file exists
-#   assertEquals "0" "$?"
-
-#   # assert that devDependencies are cached
-#   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
-
-#   assertCapturedSuccess
-# }
-
-# testYarnNativeCache() {
-#   local cache=$(mktmpdir)
-
-#   compile "yarn-native-cache" $cache
-#   # These will be created if yarn is using the directory for its cache
-
-#   ls "$cache"
-
-#   # Run this again with a cache
-#   compile "yarn-native-cache" $cache
-
-#   # assert that devDependencies are not cached
-#   assertEquals "0" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
-
-#   assertCapturedSuccess
-# }
-
-# testNpm5CacheDirectory() {
-#   local cache=$(mktmpdir)
-#   local env_dir=$(mktmpdir)
-#   local cache_dir=$(mktmpdir)
-#   echo "${cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
-#   compile "npm5" $cache $env_dir
-#   # These will be created if npm is using the directory for its cache
-#   assertDirectoryExists ${cache_dir}/npm
-#   assertDirectoryExists ${cache_dir}/npm/_cacache
-#   assertCapturedSuccess
-# }
-
-# testBuildWithCache() {
-#   cache=$(mktmpdir)
-
-#   compile "stable-node" $cache
-#   assertNotCaptured "Restoring cache"
-#   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c hashish | tr -d ' ')"
-#   assertCapturedSuccess
-
-#   compile "stable-node" $cache
-#   assertCaptured "- node_modules"
-#   assertFileContains "${STACK}" "${cache}/node/signature"
-#   assertCapturedSuccess
-
-#   rm -rf "$cache/node/cache/node_modules"
-#   compile "stable-node" $cache
-#   assertCaptured "- node_modules (not cached - skipping)"
-#   assertCapturedSuccess
-# }
-
-# testCacheWithPrebuild() {
-#   local cache=$(mktmpdir)
-#   local env_dir=$(mktmpdir)
-#   echo 'true' > "$env_dir"/PREBUILD
-
-#   compile "cache-prebuild" $cache
-#   assertCapturedSuccess
-
-#   compile "cache-prebuild" $cache $env_dir
-#   assertCaptured "Cached directories were not restored due to a change in version of node"
-#   assertCapturedSuccess
-# }
-
-# testYarnSemver() {
-#   compile "yarn-semver"
-#   assertCaptured "Resolving yarn version ~0.28"
-#   assertCaptured "installing yarn (0.28."
-#   assertCapturedSuccess
-# }
-
-# testOldYarn() {
-#   compile "yarn-old-deprecated-version"
-#   assertCaptured "Resolving yarn version ~0.16"
-#   assertCaptured "installing yarn (0.16."
-#   assertCaptured "error \`install\` has been replaced with \`add\`"
-#   assertCaptured "Outdated Yarn version"
-#   assertCaptured "Your application is specifying a requirement on an old version of Yarn"
-#   assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version"
-#   assertCapturedError
-# }
-
-# testYarnV1Semver() {
-#   compile "yarn-v1-semver"
-#   assertCaptured "Downloading and installing yarn (1."
-#   assertCaptured "Installed yarn 1."
-#   assertCapturedSuccess
-# }
-
-# testYarnInvalid() {
-#   compile "yarn-invalid"
-#   assertCaptured "Resolving yarn version 0.171"
-#   assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
-#   assertCaptured "No matching version found for Yarn: 0.171"
-#   assertCaptured "https://help.heroku.com/8MEL050H"
-#   assertCapturedError
-# }
-
-# testYarnSemverInvalid() {
-#   compile "yarn-invalid-semver"
-#   assertCaptured "Resolving yarn version 0.17q"
-#   assertCaptured "Error: Invalid semantic version \"0.17q\""
-#   assertCaptured "Invalid semver requirement"
-#   assertCaptured "https://help.heroku.com/0ZIOF3ST"
-#   assertCapturedError
-# }
-
-# testYarnEngine() {
-#   compile "yarn-engine"
-#   assertCaptured "installing yarn (1.4.0)"
-#   assertCapturedSuccess
-# }
-
-# testYarnEngineWithMonorepo() {
-#   compile "yarn-engine-with-monorepo"
-#   assertCaptured "installing yarn (1.4.0)"
-#   assertCapturedSuccess
-# }
-
-# # If they specify a version of yarn inside package.json but
-# # don't have a yarn.lock file download and make yarn available
-# # though we will only install using yarn if a yarn.lock exists
-# testYarnOnlyEngine() {
-#   compile "yarn-only-engine"
-#   assertCaptured "installing yarn (1.4.0)"
-#   assertCapturedSuccess
-# }
-
-# testErrorYarnAndNpmLockfiles() {
-#   compile "yarn-and-npm-lockfiles"
-#   assertNotCaptured "Creating runtime environment"
-#   assertCaptured "Two different lockfiles found: package-lock.json and yarn.lock"
-#   assertCaptured "Both npm and yarn have created lockfiles"
-#   assertCaptured "https://help.heroku.com/0KU2EM53"
-#   assertCapturedError
-# }
-
-# testErrorYarnAndNpmShrinkwrap() {
-#   compile "yarn-and-shrinkwrap-lockfiles"
-#   assertNotCaptured "Creating runtime environment"
-#   assertCaptured "Two different lockfiles found"
-#   assertCaptured "Please make sure there is only one of the following files"
-#   assertCaptured "https://help.heroku.com/0KU2EM53"
-#   assertCapturedError
-# }
-
-# testYarnLockfileOutOfDate() {
-#   compile "yarn-lockfile-out-of-date"
-#   assertCaptured "Your lockfile needs to be updated"
-#   assertCaptured "Outdated Yarn lockfile"
-#   assertCaptured "https://help.heroku.com/TXYS53YJ"
-#   assertCapturedError
-# }
-
-# testDefaultToNpm5() {
-#   compile "npm-lockfile-no-version"
-#   assertCaptured "Using default npm version"
-#   assertCaptured "Installing node modules (package.json + package-lock)"
-#   assertCapturedSuccess
-# }
-
-# testDefaultToNpm5WithNode6() {
-#   compile "npm-lockfile-node-6-no-version"
-#   assertCaptured "Detected package-lock.json"
-#   assertCaptured "Bootstrapping npm 5"
-#   assertCaptured "Installing node modules (package.json + package-lock)"
-#   assertCapturedSuccess
-# }
-
-# testOldNpmWithLockfile() {
-#   compile "npm-lockfile-old-version"
-#   assertCaptured "This version of npm"
-#   assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-#   assertCapturedSuccess
-# }
-
-# testWarnUnmetDepNpm() {
-#   compile "unmet-dep"
-#   assertCaptured "fail npm install"
-#   assertCaptured "may cause runtime issues"
-#   assertCapturedSuccess
-#   compile "no-version"
-#   assertNotCaptured "may cause runtime issues"
-#   assertCapturedSuccess
-# }
-
-# testWarnUnmetDepYarn() {
-#   compile "unmet-dep-yarn"
-#   assertCaptured "fail yarn install"
-#   assertCaptured "may cause runtime issues"
-#   assertCapturedSuccess
-#   compile "no-version"
-#   assertNotCaptured "may cause runtime issues"
-#   assertCapturedSuccess
-# }
-
-# testWarnEconnreset() {
-#   compile "econnreset-mock"
-#   assertCaptured "may be related to npm versions"
-#   assertCapturedError
-#   compile "no-version"
-#   assertNotCaptured "may be related to npm versions"
-#   assertCapturedSuccess
-# }
-
-# testWarnNoStart() {
-#   compile "no-start"
-#   assertCaptured "may not specify any way to start"
-#   assertCapturedSuccess
-#   compile "no-version"
-#   assertNotCaptured "may not specify any way to start"
-#   assertCapturedSuccess
-# }
-
-# testWarnDevDeps() {
-#   compile "missing-devdeps-1"
-#   assertCaptured "A module may be missing"
-#   assertNotCaptured "This module may be specified"
-#   assertCapturedError
-#   compile "failing-build"
-#   assertNotCaptured "A module may be missing"
-#   assertNotCaptured "This module may be specified"
-#   assertCapturedError
-# }
-
-# testEnvBlacklist() {
-#   local cache=$(mktmpdir)
-#   local env_dir=$(mktmpdir)
-#   echo 'tr_TR.UTF-8' > "$env_dir"/LANG
-#   echo 'safeVar' > "$env_dir"/SAFE
-#   compile "echo-lang" $cache $env_dir
-#   assertCaptured "safeVar"
-#   assertNotCaptured "tr_TR.UTF-8"
-#   assertCapturedSuccess
-# }
-
-# testWarningsOnFailure() {
-#   compile "many-warnings"
-#   assertCaptured "troubleshooting-node-deploys"
-#   assertCaptured "node_modules checked into source"
-#   assertCaptured "has several known issues"
-#   assertNotCaptured "please submit a ticket"
-#   assertCapturedError
-# }
-
-# testDotHerokuCollision() {
-#   compile "dot-heroku-collision"
-#   assertCaptured "The directory .heroku could not be created"
-#   assertCaptured ".heroku file is checked into this project"
-#   assertNotCaptured "please submit a ticket"
-#   assertCapturedError
-
-#   compile "dot-heroku-collision-2"
-#   assertCaptured "Build succeeded!"
-#   assertNotCaptured ".heroku file is checked into this project"
-#   assertCapturedSuccess
-# }
-
-# testDotHerokuNodeCollision() {
-#   compile "dot-heroku-node-collision"
-#   assertCaptured "The directory .heroku/node could not be created"
-#   assertCaptured ".heroku file is checked into this project"
-#   assertNotCaptured "please submit a ticket"
-#   assertCapturedError
-# }
-
-# testMultipleRuns() {
-#   local compileDir=$(mktmpdir)
-#   local cacheDir=$(mktmpdir)
-
-#   cp -a test/fixtures/stable-node/. ${compileDir}
-#   compileDir "$compileDir" "$cacheDir"
-#   assertCapturedSuccess
-#   compileDir "$compileDir" "$cacheDir"
-#   assertCapturedSuccess
-# }
-
-# testUntrackedDependencies() {
-#   compile "missing-grunt"
-#   assertCaptured "Grunt may not be tracked in package.json"
-#   assertCapturedError
-# }
-
-# testBadJson() {
-#   compile "bad-json"
-#   assertCaptured "Build failed"
-#   assertCaptured "We're sorry this build is failing"
-#   assertNotCaptured "Installing binaries"
-#   assertCapturedError 1 "Unable to parse"
-# }
-
-# testBuildWithUserCacheDirectoriesCamel() {
-#   cache=$(mktmpdir)
-
-#   compile "cache-directories-camel" $cache
-#   assertCaptured "- non/existent (nothing to cache)"
-#   assertEquals "1" "$(ls -1 $cache/node/cache/server | grep -c node_modules | tr -d ' ')"
-#   assertEquals "1" "$(ls -1 $cache/node/cache/client | grep -c node_modules | tr -d ' ')"
-#   assertCapturedSuccess
-
-#   compile "cache-directories-camel" $cache
-#   assertCaptured "Loading 3 from cacheDirectories"
-#   assertCaptured "- server/node_modules"
-#   assertCaptured "- client/node_modules"
-#   assertCaptured "- non/existent (not cached - skipping)"
-#   assertCapturedSuccess
-# }
-
-# testConcurrency1X() {
-#   LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-#   assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-#   assertCaptured "Recommending WEB_CONCURRENCY=1"
-#   assertCapturedSuccess
-# }
-
-# testConcurrency2X() {
-#   LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-#   assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-#   assertCaptured "Recommending WEB_CONCURRENCY=2"
-#   assertCapturedSuccess
-# }
-
-# testConcurrencyPerformanceM() {
-#   LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-#   assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-#   assertCaptured "Recommending WEB_CONCURRENCY=5"
-#   assertCapturedSuccess
-# }
-
-# testConcurrencyPerformanceL() {
-#    LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-#    assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-#    assertCaptured "Recommending WEB_CONCURRENCY=28"
-#    assertCapturedSuccess
-# }
-
-# testConcurrencyCustomLimit() {
-#   LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-#   assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
-#   assertCaptured "Recommending WEB_CONCURRENCY=4"
-#   assertCapturedSuccess
-# }
-
-# # When /sys/fs/cgroup/memory/memory.limit_in_bytes lies and gives a ridiculous value
-# # This happens on Dokku for example
-# testConcurrencyTooHigh() {
-#   LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-#   assertCaptured "Could not determine a reasonable value for WEB_CONCURRENCY"
-#   assertCaptured "Recommending WEB_CONCURRENCY=1"
-#   assertCapturedSuccess
-# }
-
-# testInvalidNode() {
-#   compile "invalid-node"
-#   assertCaptured "Resolving node version 0.11.333"
-#   assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
-#   assertCaptured "No matching version found for Node: 0.11.333"
-#   assertCaptured "https://help.heroku.com/6235QYN4"
-#   assertCapturedError
-# }
-
-# testInvalidNodeSemver() {
-#   compile "invalid-node-semver"
-#   assertCaptured "Resolving node version stable"
-#   assertCaptured "Error: Invalid semantic version \"stable\""
-#   assertCaptured "Invalid semver requirement"
-#   assertCapturedError
-# }
-
-# testSignatureInvalidation() {
-#   cache=$(mktmpdir)
-#   env_dir=$(mktmpdir)
-
-#   compile "node-0.12.6" $cache
-#   assertCaptured "Downloading and installing node 0.12.6"
-#   assertCapturedSuccess
-
-#   compile "node-0.12.7" $cache
-#   assertCaptured "Downloading and installing node 0.12.7"
-#   assertCaptured "Cached directories were not restored due to a change in version of node"
-#   assertCapturedSuccess
-# }
-
-# testModulesCheckedIn() {
-#   cache=$(mktmpdir)
-#   compile "modules-checked-in" $cache
-#   assertCapturedSuccess
-
-#   compile "modules-checked-in" $cache
-#   assertCaptured "Prebuild detected"
-#   assertCaptured "Rebuilding any native modules"
-#   assertCaptured "(preinstall script)"
-#   assertCaptured "Installing any new modules"
-#   assertCaptured "(postinstall script)"
-#   assertCapturedSuccess
-# }
-
-# testDetectWithPackageJson() {
-#   detect "stable-node"
-#   assertCaptured "Node.js"
-#   assertCapturedSuccess
-# }
-
-# testDetectWithoutPackageJson() {
-#   detect "no-package-json"
-#   assertCapturedError 1 ""
-# }
-
-# testIoJs() {
-#   compile "iojs"
-#   assertCaptured "io.js no longer supported"
-#   assertCapturedError
-# }
+testNpmCi() {
+  local log_file cache
+  log_file=$(mktemp)
+  cache=$(mktmpdir)
+
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" "$cache"
+
+   # make sure that build scripts are being called
+  assertCaptured "heroku-prebuild script"
+  assertCaptured "build script"
+  assertCaptured "postinstall script"
+  assertCapturedSuccess
+
+   # test logging
+  assertFileContains "feature-use-npm-ci=true" "$log_file"
+  assertFileContains "supports-npm-ci=true" "$log_file"
+  assertFileContains "npm-install-time=" "$log_file"
+  assertFileContains "npm-install-memory=" "$log_file"
+
+   # test re-using the cache
+  echo "" > "$log_file"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" "$cache"
+  assertCapturedSuccess
+}
+
+testNpmCiFallback() {
+  local log_file cache
+  log_file=$(mktemp)
+
+  # without a lockfile we should use "npm install" instead of "npm ci"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-no-lockfile"
+
+  assertCapturedSuccess
+
+  # make sure the feature is turned on
+  assertFileContains "feature-use-npm-ci=true" "$log_file"
+  # and detecting that we shouldn't use npm ci
+  assertFileContains "supports-npm-ci=false" "$log_file"
+  # and ran "npm install"
+  assertFileContains "npm-install-time=" "$log_file"
+  assertFileContains "npm-install-memory=" "$log_file"
+}
+
+testFlatmapStream() {
+  compile "flatmap-stream"
+  assertCaptured "flatmap-stream module has been removed from the npm registry"
+  assertCapturedError
+}
+
+testBuildScriptBehavior() {
+  # The 'build' script is run by default
+  compile "build-script"
+  assertCaptured "Running build"
+  assertCapturedSuccess
+
+  # the 'heroku-postbuild' script takes precedence over the 'build' script
+  compile "build-script-override"
+  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
+  assertCaptured "Running heroku-postbuild"
+  assertCapturedSuccess
+}
+
+testBuildScriptYarn() {
+  compile "build-script-yarn"
+  assertCaptured "Running build (yarn)"
+  assertCaptured "build hook message"
+  assertCapturedSuccess
+}
+
+testPreferEmptyHerokuPostbuildOverBuild() {
+  compile "empty-heroku-postbuild"
+  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
+  assertCaptured "Running heroku-postbuild"
+  assertNotCaptured "build hook message"
+  assertCapturedSuccess
+}
+
+testEmptyHerokuPostbuildWithYarn() {
+  compile "empty-heroku-postbuild-yarn"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertNotCaptured "build hook message"
+  assertNotCaptured "Script must exist"
+  assertCapturedSuccess
+}
+
+testPrePostBuildScripts() {
+  compile "pre-post-build-scripts"
+  assertCaptured "Running heroku-prebuild"
+  assertCaptured "echo heroku-prebuild hook message"
+  assertCaptured "Running heroku-postbuild"
+  assertCaptured "echo heroku-postbuild hook message"
+  assertCapturedSuccess
+
+  compile "stable-node"
+  assertNotCaptured "Running heroku-prebuild"
+  assertNotCaptured "Running heroku-postbuild"
+  assertCapturedSuccess
+}
+
+testYarnRun() {
+  compile "yarn-run"
+  assertCaptured "Running heroku-postbuild (yarn)"
+  assertCaptured "foobar"
+  assertCapturedSuccess
+}
+
+testNoVersion() {
+  compile "no-version"
+  assertCaptured "engines.node (package.json):  unspecified"
+  assertCaptured "Resolving node version 12.x"
+  assertCaptured "Downloading and installing node 12."
+  assertCapturedSuccess
+}
+
+testDisableCache() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "true" > $env_dir/NODE_VERBOSE
+  compile "node-modules-cache-1" $cache $env_dir
+  assertCaptured "lodash@1.0.0"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c lodash | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "node-modules-cache-2" $cache $env_dir
+  assertCaptured "lodash@1.0.0"
+  assertCapturedSuccess
+
+  echo "false" > $env_dir/NODE_MODULES_CACHE
+  compile "node-modules-cache-2" $cache $env_dir
+  assertCaptured "lodash@1.3.1"
+  assertCapturedSuccess
+}
+
+testNodeModulesCached() {
+  cache=$(mktmpdir)
+
+  compile "caching" $cache
+  assertCaptured "- node_modules"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c express | tr -d ' ')"
+  assertCapturedSuccess
+}
+
+testSetBuildEnv() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "print-node-options"
+  assertCaptured "NODE_OPTIONS=--max_old_space_size=2560"
+
+  echo "--max_old_space_size=1234" > $env_dir/NODE_OPTIONS
+  compile "print-node-options" $cache $env_dir
+  assertCaptured "NODE_OPTIONS=--max_old_space_size=1234"
+}
+
+testYarn() {
+  compile "yarn"
+  assertCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertNotCaptured "Installing node modules (package.json)"
+  assertCapturedSuccess
+}
+
+testYarnCacheDirectory() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  echo "${cache_dir}/yarn"> "$env_dir/YARN_CACHE_FOLDER"
+  compile "yarn" $cache $env_dir
+  # These will be created if yarn is using the directory for its cache
+
+  assertDirectoryExists ${cache_dir}/yarn
+  # yarn frequently bumps the version number used in its cache
+  # so use a wildcard here to prevent frequent CI failures
+
+  # assert that the above ls command exited successfully, which only happens if the file exists
+  assertEquals "0" "$?"
+
+  # assert that devDependencies are cached
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+
+  assertCapturedSuccess
+}
+
+testYarnNativeCache() {
+  local cache=$(mktmpdir)
+
+  compile "yarn-native-cache" $cache
+  # These will be created if yarn is using the directory for its cache
+
+  ls "$cache"
+
+  # Run this again with a cache
+  compile "yarn-native-cache" $cache
+
+  # assert that devDependencies are not cached
+  assertEquals "0" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+
+  assertCapturedSuccess
+}
+
+testNpm5CacheDirectory() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  echo "${cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
+  compile "npm5" $cache $env_dir
+  # These will be created if npm is using the directory for its cache
+  assertDirectoryExists ${cache_dir}/npm
+  assertDirectoryExists ${cache_dir}/npm/_cacache
+  assertCapturedSuccess
+}
+
+testBuildWithCache() {
+  cache=$(mktmpdir)
+
+  compile "stable-node" $cache
+  assertNotCaptured "Restoring cache"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c hashish | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "stable-node" $cache
+  assertCaptured "- node_modules"
+  assertFileContains "${STACK}" "${cache}/node/signature"
+  assertCapturedSuccess
+
+  rm -rf "$cache/node/cache/node_modules"
+  compile "stable-node" $cache
+  assertCaptured "- node_modules (not cached - skipping)"
+  assertCapturedSuccess
+}
+
+testCacheWithPrebuild() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo 'true' > "$env_dir"/PREBUILD
+
+  compile "cache-prebuild" $cache
+  assertCapturedSuccess
+
+  compile "cache-prebuild" $cache $env_dir
+  assertCaptured "Cached directories were not restored due to a change in version of node"
+  assertCapturedSuccess
+}
+
+testYarnSemver() {
+  compile "yarn-semver"
+  assertCaptured "Resolving yarn version ~0.28"
+  assertCaptured "installing yarn (0.28."
+  assertCapturedSuccess
+}
+
+testOldYarn() {
+  compile "yarn-old-deprecated-version"
+  assertCaptured "Resolving yarn version ~0.16"
+  assertCaptured "installing yarn (0.16."
+  assertCaptured "error \`install\` has been replaced with \`add\`"
+  assertCaptured "Outdated Yarn version"
+  assertCaptured "Your application is specifying a requirement on an old version of Yarn"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version"
+  assertCapturedError
+}
+
+testYarnV1Semver() {
+  compile "yarn-v1-semver"
+  assertCaptured "Downloading and installing yarn (1."
+  assertCaptured "Installed yarn 1."
+  assertCapturedSuccess
+}
+
+testYarnInvalid() {
+  compile "yarn-invalid"
+  assertCaptured "Resolving yarn version 0.171"
+  assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
+  assertCaptured "No matching version found for Yarn: 0.171"
+  assertCaptured "https://help.heroku.com/8MEL050H"
+  assertCapturedError
+}
+
+testYarnSemverInvalid() {
+  compile "yarn-invalid-semver"
+  assertCaptured "Resolving yarn version 0.17q"
+  assertCaptured "Error: Invalid semantic version \"0.17q\""
+  assertCaptured "Invalid semver requirement"
+  assertCaptured "https://help.heroku.com/0ZIOF3ST"
+  assertCapturedError
+}
+
+testYarnEngine() {
+  compile "yarn-engine"
+  assertCaptured "installing yarn (1.4.0)"
+  assertCapturedSuccess
+}
+
+testYarnEngineWithMonorepo() {
+  compile "yarn-engine-with-monorepo"
+  assertCaptured "installing yarn (1.4.0)"
+  assertCapturedSuccess
+}
+
+# If they specify a version of yarn inside package.json but
+# don't have a yarn.lock file download and make yarn available
+# though we will only install using yarn if a yarn.lock exists
+testYarnOnlyEngine() {
+  compile "yarn-only-engine"
+  assertCaptured "installing yarn (1.4.0)"
+  assertCapturedSuccess
+}
+
+testErrorYarnAndNpmLockfiles() {
+  compile "yarn-and-npm-lockfiles"
+  assertNotCaptured "Creating runtime environment"
+  assertCaptured "Two different lockfiles found: package-lock.json and yarn.lock"
+  assertCaptured "Both npm and yarn have created lockfiles"
+  assertCaptured "https://help.heroku.com/0KU2EM53"
+  assertCapturedError
+}
+
+testErrorYarnAndNpmShrinkwrap() {
+  compile "yarn-and-shrinkwrap-lockfiles"
+  assertNotCaptured "Creating runtime environment"
+  assertCaptured "Two different lockfiles found"
+  assertCaptured "Please make sure there is only one of the following files"
+  assertCaptured "https://help.heroku.com/0KU2EM53"
+  assertCapturedError
+}
+
+testYarnLockfileOutOfDate() {
+  compile "yarn-lockfile-out-of-date"
+  assertCaptured "Your lockfile needs to be updated"
+  assertCaptured "Outdated Yarn lockfile"
+  assertCaptured "https://help.heroku.com/TXYS53YJ"
+  assertCapturedError
+}
+
+testDefaultToNpm5() {
+  compile "npm-lockfile-no-version"
+  assertCaptured "Using default npm version"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+testDefaultToNpm5WithNode6() {
+  compile "npm-lockfile-node-6-no-version"
+  assertCaptured "Detected package-lock.json"
+  assertCaptured "Bootstrapping npm 5"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+testOldNpmWithLockfile() {
+  compile "npm-lockfile-old-version"
+  assertCaptured "This version of npm"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+  assertCapturedSuccess
+}
+
+testWarnUnmetDepNpm() {
+  compile "unmet-dep"
+  assertCaptured "fail npm install"
+  assertCaptured "may cause runtime issues"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may cause runtime issues"
+  assertCapturedSuccess
+}
+
+testWarnUnmetDepYarn() {
+  compile "unmet-dep-yarn"
+  assertCaptured "fail yarn install"
+  assertCaptured "may cause runtime issues"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may cause runtime issues"
+  assertCapturedSuccess
+}
+
+testWarnEconnreset() {
+  compile "econnreset-mock"
+  assertCaptured "may be related to npm versions"
+  assertCapturedError
+  compile "no-version"
+  assertNotCaptured "may be related to npm versions"
+  assertCapturedSuccess
+}
+
+testWarnNoStart() {
+  compile "no-start"
+  assertCaptured "may not specify any way to start"
+  assertCapturedSuccess
+  compile "no-version"
+  assertNotCaptured "may not specify any way to start"
+  assertCapturedSuccess
+}
+
+testWarnDevDeps() {
+  compile "missing-devdeps-1"
+  assertCaptured "A module may be missing"
+  assertNotCaptured "This module may be specified"
+  assertCapturedError
+  compile "failing-build"
+  assertNotCaptured "A module may be missing"
+  assertNotCaptured "This module may be specified"
+  assertCapturedError
+}
+
+testEnvBlacklist() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  echo 'tr_TR.UTF-8' > "$env_dir"/LANG
+  echo 'safeVar' > "$env_dir"/SAFE
+  compile "echo-lang" $cache $env_dir
+  assertCaptured "safeVar"
+  assertNotCaptured "tr_TR.UTF-8"
+  assertCapturedSuccess
+}
+
+testWarningsOnFailure() {
+  compile "many-warnings"
+  assertCaptured "troubleshooting-node-deploys"
+  assertCaptured "node_modules checked into source"
+  assertCaptured "has several known issues"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
+testDotHerokuCollision() {
+  compile "dot-heroku-collision"
+  assertCaptured "The directory .heroku could not be created"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+
+  compile "dot-heroku-collision-2"
+  assertCaptured "Build succeeded!"
+  assertNotCaptured ".heroku file is checked into this project"
+  assertCapturedSuccess
+}
+
+testDotHerokuNodeCollision() {
+  compile "dot-heroku-node-collision"
+  assertCaptured "The directory .heroku/node could not be created"
+  assertCaptured ".heroku file is checked into this project"
+  assertNotCaptured "please submit a ticket"
+  assertCapturedError
+}
+
+testMultipleRuns() {
+  local compileDir=$(mktmpdir)
+  local cacheDir=$(mktmpdir)
+
+  cp -a test/fixtures/stable-node/. ${compileDir}
+  compileDir "$compileDir" "$cacheDir"
+  assertCapturedSuccess
+  compileDir "$compileDir" "$cacheDir"
+  assertCapturedSuccess
+}
+
+testUntrackedDependencies() {
+  compile "missing-grunt"
+  assertCaptured "Grunt may not be tracked in package.json"
+  assertCapturedError
+}
+
+testBadJson() {
+  compile "bad-json"
+  assertCaptured "Build failed"
+  assertCaptured "We're sorry this build is failing"
+  assertNotCaptured "Installing binaries"
+  assertCapturedError 1 "Unable to parse"
+}
+
+testBuildWithUserCacheDirectoriesCamel() {
+  cache=$(mktmpdir)
+
+  compile "cache-directories-camel" $cache
+  assertCaptured "- non/existent (nothing to cache)"
+  assertEquals "1" "$(ls -1 $cache/node/cache/server | grep -c node_modules | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/client | grep -c node_modules | tr -d ' ')"
+  assertCapturedSuccess
+
+  compile "cache-directories-camel" $cache
+  assertCaptured "Loading 3 from cacheDirectories"
+  assertCaptured "- server/node_modules"
+  assertCaptured "- client/node_modules"
+  assertCaptured "- non/existent (not cached - skipping)"
+  assertCapturedSuccess
+}
+
+testConcurrency1X() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
+testConcurrency2X() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=2"
+  assertCapturedSuccess
+}
+
+testConcurrencyPerformanceM() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=5"
+  assertCapturedSuccess
+}
+
+testConcurrencyPerformanceL() {
+   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+   assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+   assertCaptured "Recommending WEB_CONCURRENCY=28"
+   assertCapturedSuccess
+}
+
+testConcurrencyCustomLimit() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
+  assertCaptured "Recommending WEB_CONCURRENCY=4"
+  assertCapturedSuccess
+}
+
+# When /sys/fs/cgroup/memory/memory.limit_in_bytes lies and gives a ridiculous value
+# This happens on Dokku for example
+testConcurrencyTooHigh() {
+  LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+  assertCaptured "Could not determine a reasonable value for WEB_CONCURRENCY"
+  assertCaptured "Recommending WEB_CONCURRENCY=1"
+  assertCapturedSuccess
+}
+
+testInvalidNode() {
+  compile "invalid-node"
+  assertCaptured "Resolving node version 0.11.333"
+  assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
+  assertCaptured "No matching version found for Node: 0.11.333"
+  assertCaptured "https://help.heroku.com/6235QYN4"
+  assertCapturedError
+}
+
+testInvalidNodeSemver() {
+  compile "invalid-node-semver"
+  assertCaptured "Resolving node version stable"
+  assertCaptured "Error: Invalid semantic version \"stable\""
+  assertCaptured "Invalid semver requirement"
+  assertCapturedError
+}
+
+testSignatureInvalidation() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "node-0.12.6" $cache
+  assertCaptured "Downloading and installing node 0.12.6"
+  assertCapturedSuccess
+
+  compile "node-0.12.7" $cache
+  assertCaptured "Downloading and installing node 0.12.7"
+  assertCaptured "Cached directories were not restored due to a change in version of node"
+  assertCapturedSuccess
+}
+
+testModulesCheckedIn() {
+  cache=$(mktmpdir)
+  compile "modules-checked-in" $cache
+  assertCapturedSuccess
+
+  compile "modules-checked-in" $cache
+  assertCaptured "Prebuild detected"
+  assertCaptured "Rebuilding any native modules"
+  assertCaptured "(preinstall script)"
+  assertCaptured "Installing any new modules"
+  assertCaptured "(postinstall script)"
+  assertCapturedSuccess
+}
+
+testDetectWithPackageJson() {
+  detect "stable-node"
+  assertCaptured "Node.js"
+  assertCapturedSuccess
+}
+
+testDetectWithoutPackageJson() {
+  detect "no-package-json"
+  assertCapturedError 1 ""
+}
+
+testIoJs() {
+  compile "iojs"
+  assertCaptured "io.js no longer supported"
+  assertCapturedError
+}
 
 ###
-# Yarn 2 warnings
-testYarn2WithNodeModulesCache() {
+# Yarn 2
+testYarn2() {
   compile "yarn-2"
   assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
   assertCaptured "skipping installations"
   assertCaptured "skipping pruning"
   assertCapturedSuccess
 }
+###
 
+###
+# Yarn 2 warnings
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
   assertCaptured "Heroku will ignore the engine from the package.json."
