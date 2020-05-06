@@ -135,6 +135,7 @@ testtest
 this is the log file
 test log file
 ```
+The test output writes to STD_OUT. Use `cat $STD_OUT` to read.
 
 ## Common Issues
 
