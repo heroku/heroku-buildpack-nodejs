@@ -107,6 +107,36 @@ The tests are run via the vendored
 [shunit2](https://github.com/kward/shunit2)
 test framework.
 
+### Debugging
+
+To display the logged build outputs to assist with debugging, use the "echo" and "cat" commands. For example:
+
+```
+test() {
+  local log_file var
+
+  var="testtest"
+  log_file=$(mktemp)
+  echo "this is the log file" > "$log_file"
+  echo "test log file" >> "$log_file"
+
+  # use `echo` and `cat` for printing variables and reading files respectively
+  echo $var
+  cat $log_file
+
+  # some cases when debugging is necessary
+  assertEquals "$var" "testtest"
+  assertFileContains "test log file" "$log_file"
+}
+```
+Running the test above would produce:
+```
+testtest
+this is the log file
+test log file
+```
+The test output writes to STD_OUT. Use `cat $STD_OUT` to read.
+
 ## Common Issues
 
 ### Proxy Issues
