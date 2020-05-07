@@ -107,13 +107,6 @@ testYarnRun() {
   assertCapturedSuccess
 }
 
-testYarn2Run() {
-  compile "yarn-2-run"
-  assertCaptured "Running heroku-postbuild (yarn)"
-  assertCaptured "foobar"
-  assertCapturedSuccess
-}
-
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
@@ -603,19 +596,40 @@ testIoJs() {
   assertCapturedError
 }
 
-testYarn2WithNodeModulesCache() {
+###
+# Yarn 2
+testYarn2() {
   compile "yarn-2"
   assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
   assertCaptured "skipping installations"
   assertCaptured "skipping pruning"
   assertCapturedSuccess
 }
+###
 
+###
+# Yarn 2 warnings
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
   assertCaptured "Heroku will ignore the engine from the package.json."
   assertCapturedSuccess
 }
+
+testYarn2WithNpmrc() {
+  compile "yarn-2-with-npmrc"
+  assertCaptured "There is an existing .npmrc file that will not be used."
+  assertCapturedSuccess
+}
+
+testYarn2WithYarnrc() {
+  compile "yarn-2-with-yarnrc"
+  assertCaptured "There is an existing .yarnrc file that will not be used."
+  assertCapturedSuccess
+}
+###
+
+###
+# Yarn 2 failures
 testYarn2WithoutYarnrcYml() {
   compile "yarn-2-without-yarnrc-yml"
   assertCaptured "The 'yarnrc.yml' file is not found"
@@ -633,18 +647,7 @@ testYarn2WithoutYarnRelease() {
   assertCaptured "Yarn was not found"
   assertCapturedError
 }
-
-testYarn2WithNpmrc() {
-  compile "yarn-2-with-npmrc"
-  assertCaptured "There is an existing .npmrc file that will not be used."
-  assertCapturedError
-}
-
-testYarn2WithYarnrc() {
-  compile "yarn-2-with-yarnrc"
-  assertCaptured "There is an existing .yarnrc file that will not be used."
-  assertCapturedError
-}
+###
 
 testSpecificVersion() {
   compile "specific-version"
