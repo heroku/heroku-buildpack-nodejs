@@ -12,6 +12,7 @@ For more information about using this Node.js buildpack on Heroku, see these Dev
 
 - [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
 - [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
+- [Troubleshooting Node.js Deploys](https://devcenter.heroku.com/articles/troubleshooting-node-deploys)
 
 For more general information about buildpacks on Heroku:
 
