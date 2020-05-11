@@ -609,7 +609,11 @@ warn() {
 
 warn_aws_proxy() {
   local build_dir=${1:-}
-  if ([[ ! -z "$build_dir/HTTP_PROXY" ]] || [[ ! -z "$build_dir/HTTPS_PROXY" ]]) && [[ "$build_dir/NO_PROXY" != "amazonaws.com" ]]; then
+  local HTTP_PROXY HTTPS_PROXY NO_PROXY
+  HTTP_PROXY="$build_dir/HTTP_PROXY"
+  HTTPS_PROXY="$build_dir/HTTPS_PROXY"
+  NO_PROXY="$build_dir/NO_PROXY"
+  if { [[ -n "$HTTP_PROXY" ]] || [[ -n "$HTTPS_PROXY" ]]; } && [[ "$NO_PROXY" != "amazonaws.com" ]]; then
     warn "Your build may fail if NO_PROXY is not set to amazonaws.com" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#aws-proxy-error"
   fi
 }
