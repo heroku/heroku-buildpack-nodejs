@@ -937,6 +937,14 @@ testMultiExport() {
   assertCapturedSuccess
 }
 
+testSupportedExports() {
+  # Tests exports that have been added, ie. PGSSLMODE
+  echo "banana" > $env_dir/PGSSLMODE
+  compile "stable-node"
+  assertFileContains "export PGSSLMODE=banana" "${bp_dir}/export"
+  assertCapturedSuccess
+}
+
 testCIEnvVars() {
   compileTest "ci-env-test"
   assertCaptured "NODE_ENV: test"
