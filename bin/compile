@@ -335,9 +335,7 @@ cache_build() {
 }
 
 prune_devdependencies() {
-  if [[ "$YARN2" == "true" ]]; then
-    echo "Using Yarn2, skipping pruning."
-  elif $YARN; then
+  if $YARN; then
     yarn_prune_devdependencies "$BUILD_DIR"
   else
     npm_prune_devdependencies "$BUILD_DIR"
@@ -349,17 +347,29 @@ prune_devdependencies() {
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
 if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
-  meta_set "build-step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
-  meta_set "build-step" "save-cache"
-  cache_build | output "$LOG_FILE"
+  if [[ "$YARN2" == "true" ]]; then
+    echo "Using Yarn2, writing to the cache and pruning of the node modules will be skipped."
+    meta_set "build-step" "prune-dependencies"
+    meta_set "build-step" "save-cache"
+  else
+    meta_set "build-step" "prune-dependencies"
+    header "Pruning devDependencies" | output "$LOG_FILE"
+    prune_devdependencies | output "$LOG_FILE"
+    meta_set "build-step" "save-cache"
+    cache_build | output "$LOG_FILE"
+  fi
 else
-  meta_set "build-step" "save-cache"
-  cache_build | output "$LOG_FILE"
-  meta_set "build-step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
+  if [[ "$YARN2" == "true" ]]; then
+    echo "Using Yarn2, writing to the cache and pruning of the node modules will be skipped."
+    meta_set "build-step" "save-cache"
+    meta_set "build-step" "prune-dependencies"
+  else
+    meta_set "build-step" "save-cache"
+    cache_build | output "$LOG_FILE"
+    meta_set "build-step" "prune-dependencies"
+    header "Pruning devDependencies" | output "$LOG_FILE"
+    prune_devdependencies | output "$LOG_FILE"
+  fi
 fi
 
 summarize_build() {

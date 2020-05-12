@@ -602,7 +602,7 @@ testYarn2() {
   compile "yarn-2"
   assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
   assertCaptured "skipping installations"
-  assertCaptured "skipping pruning"
+  assertCaptured "writing to the cache and pruning of the node modules will be skipped"
   assertCapturedSuccess
 }
 ###
