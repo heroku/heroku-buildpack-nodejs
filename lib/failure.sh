@@ -607,6 +607,12 @@ warn() {
   echo ""
 }
 
+warn_aws_proxy() {
+  if { [[ -n "$HTTP_PROXY" ]] || [[ -n "$HTTPS_PROXY" ]]; } && [[ "$NO_PROXY" != "amazonaws.com" ]]; then
+    warn "Your build may fail if NO_PROXY is not set to amazonaws.com" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#aws-proxy-error"
+  fi
+}
+
 warn_node_engine() {
   local node_engine=${1:-}
   if [ "$node_engine" == "" ]; then

@@ -358,6 +358,22 @@ testOldNpmWithLockfile() {
   assertCapturedSuccess
 }
 
+testWarnAwsProxyHttp() {
+  env_dir=$(mktmpdir)
+  echo "http://localhost:5001" > $env_dir/HTTP_PROXY
+  compile "node-10" "$(mktmpdir)" $env_dir
+  assertCaptured "Your build may fail if NO_PROXY is not set to amazonaws.com"
+  assertCapturedError
+}
+
+testWarnAwsProxyHttps() {
+  env_dir=$(mktmpdir)
+  echo "http://localhost:5001" > $env_dir/HTTPS_PROXY
+  compile "node-10" "$(mktmpdir)" $env_dir
+  assertCaptured "Your build may fail if NO_PROXY is not set to amazonaws.com"
+  assertCapturedError
+}
+
 testWarnUnmetDepNpm() {
   compile "unmet-dep"
   assertCaptured "fail npm install"
