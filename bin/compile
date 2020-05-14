@@ -150,7 +150,7 @@ export YARN2_PATH
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn2. The buildpack won't cache, because Yarn 2 does not provide node modules.
+      WARNING- You are using Yarn 2. The buildpack won't cache, because Yarn 2 does not provide node modules.
       "
   fi
 
@@ -290,7 +290,7 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
   if [[ "$YARN2" == "true" ]]; then
-    echo "Using Yarn2, skipping installations."
+    echo "Using Yarn 2, skipping installations."
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
@@ -335,9 +335,7 @@ cache_build() {
 }
 
 prune_devdependencies() {
-  if [[ "$YARN2" == "true" ]]; then
-    echo "Using Yarn2, skipping pruning."
-  elif $YARN; then
+  if $YARN; then
     yarn_prune_devdependencies "$BUILD_DIR"
   else
     npm_prune_devdependencies "$BUILD_DIR"
@@ -348,7 +346,11 @@ prune_devdependencies() {
 #   and in the new feature
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+if [[ "$YARN2" == "true" ]]; then
+  echo "Using Yarn 2, writing to the cache and pruning of the node modules will be skipped."
+  meta_set "build-step" "prune-dependencies"
+  meta_set "build-step" "save-cache"
+elif [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
