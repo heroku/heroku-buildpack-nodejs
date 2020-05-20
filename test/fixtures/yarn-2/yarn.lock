@@ -9,21 +9,41 @@ __metadata:
   resolution: "debug@npm:4.1.1"
   dependencies:
     ms: ^2.1.1
-  checksum: e3bfa1544ced80ac5764aa313530150af442e5ce53f91090f00e3aff33a8b535ce60a7502d1451b3cbc2b9cd6994b3a08a38fbd3ff7a2ec801ad79d8b457b8e8
+  checksum: 3/3601a6ce96e4698ed3edf0ee6e67ef0317adfcdae2f66a43b23d1b14e8888b422337429b16dbbcba6801e7bfa6cbb8de3128fbacfb8ae1cd9bd7615ea6baf970
   languageName: node
   linkType: hard
 
 "lodash@npm:^4.16.4":
   version: 4.17.15
   resolution: "lodash@npm:4.17.15"
-  checksum: b018ec8d4c95f14a4b57005a247eca1bc25639322939471a1958d3bc721b4f18e90edb6ea564854593a8bc1f94956a0352cf0cd372991b98c42d61c0cd11e5a3
+  checksum: 3/aec3fbb7570aa67bda500b8299b1b1821d60646bede87f76a74dfcc7666ab3445267d734ec71424d70809d52ad67a1356fab5ab694a3faa1908d68e9d48f00f5
   languageName: node
   linkType: hard
 
 "ms@npm:^2.1.1":
   version: 2.1.2
   resolution: "ms@npm:2.1.2"
-  checksum: 2a3d955e5199024d4b18630ff47c21b52703a5e892615ae233486b8108f26b5493736009754263eebae765ab79d6e20327dad6e52d7843b689d404245e286549
+  checksum: 3/9b65fb709bc30c0c07289dcbdb61ca032acbb9ea5698b55fa62e2cebb04c5953f1876a1f3f7f4bc2e91d4bf4d86003f3e207c3bc6ee2f716f99827e62389cd0e
+  languageName: node
+  linkType: hard
+
+typescript@^3.9.3:
+  version: 3.9.3
+  resolution: "typescript@npm:3.9.3"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 3/f05e6f1c50c635bd7afc95fbc9eb704042b5bec9a77b9c86ddc0c56650c928617d608b9ec9aa468d7b4cf14ac1ea5f540c540c725005a179b54a86665abd9a55
+  languageName: node
+  linkType: hard
+
+"typescript@patch:typescript@^3.9.3#builtin<compat/typescript>":
+  version: 3.9.3
+  resolution: "typescript@patch:typescript@npm%3A3.9.3#builtin<compat/typescript>::version=3.9.3&hash=8cac75"
+  bin:
+    tsc: bin/tsc
+    tsserver: bin/tsserver
+  checksum: 3/a3780f6fdf0502bb152a3ad56cd004db46f70496f1b8317657d9e89dd93c911483625fd25867d6aec1cd2854ccf036ecc614989c9f1b36bec2d5daffa9bfc230
   languageName: node
   linkType: hard
 
@@ -33,5 +53,6 @@ __metadata:
   dependencies:
     debug: ^4.1.1
     lodash: ^4.16.4
+    typescript: ^3.9.3
   languageName: unknown
   linkType: soft
