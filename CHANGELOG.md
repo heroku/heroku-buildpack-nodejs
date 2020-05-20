@@ -9,6 +9,7 @@
 - Turn off production and ignore-script flags for Yarn 2 and add global vendored yarn alias ([775] (https://github.com/heroku/heroku-buildpack-nodejs/pull/775))
 - Set `$YARN` to false when `$YARN2` is true ([#776](https://github.com/heroku/heroku-buildpack-nodejs/pull/776))
 - Skip writing to the cache and pruning of the node modules when Yarn 2 is used ([#785](https://github.com/heroku/heroku-buildpack-nodejs/pull/785))
+- Test use of packages in `.yarn/release` directory ([#786](https://github.com/heroku/heroku-buildpack-nodejs/pull/786))
 
 ## master
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
