@@ -318,6 +318,8 @@ else
   prune_devdependencies | output "$LOG_FILE"
 fi
 
+run_cleanup_script "$BUILD_DIR"
+
 summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"
