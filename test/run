@@ -100,6 +100,13 @@ testPrePostBuildScripts() {
   assertCapturedSuccess
 }
 
+testCleanupScript() {
+  compile "cleanup-scripts"
+  assertCaptured "Running heroku-cleanup"
+  assertCaptured "echo heroku-cleanup hook message"
+  assertCapturedSuccess
+}
+
 testYarnRun() {
   compile "yarn-run"
   assertCaptured "Running heroku-postbuild (yarn)"
