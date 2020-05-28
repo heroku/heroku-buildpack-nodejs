@@ -318,7 +318,8 @@ else
   prune_devdependencies | output "$LOG_FILE"
 fi
 
-run_cleanup_script "$BUILD_DIR"
+meta_set "build-step" "cleanup-script"
+run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
 
 summarize_build() {
   if $NODE_VERBOSE; then
