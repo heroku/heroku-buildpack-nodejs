@@ -27,7 +27,7 @@ run_if_present() {
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
   if [[ "$has_script_name" == "true" ]]; then
-    if $YARN; then
+    if $YARN || $YARN2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
@@ -92,7 +92,7 @@ yarn_node_modules() {
 }
 
 yarn_prune_devdependencies() {
-  local build_dir=${1:-} 
+  local build_dir=${1:-}
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
@@ -106,7 +106,7 @@ yarn_prune_devdependencies() {
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     meta_set "skipped-prune" "true"
     return 0
-  else 
+  else
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
     meta_set "skipped-prune" "false"
@@ -180,7 +180,7 @@ npm_rebuild() {
 
 npm_prune_devdependencies() {
   local npm_version
-  local build_dir=${1:-} 
+  local build_dir=${1:-}
 
   npm_version=$(npm --version)
 

@@ -11,6 +11,6 @@
     "debug": "^4.1.1"
   },
   "scripts": {
-    "build": "tsc -v"
+    "build": "tsc --version"
   }
 }
