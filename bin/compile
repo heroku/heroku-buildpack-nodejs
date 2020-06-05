@@ -98,10 +98,6 @@ meta_set "build-step" "init"
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 YARN2=$(detect_yarn2 "$YARN" "$BUILD_DIR")
 
-if [[ $YARN2 == true ]]; then
-  YARN=false
-fi
-
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
@@ -169,8 +165,6 @@ if [[ "$YARN2" == "true" ]]; then
   # get yarn_path
   YARN2_PATH=$(get_yarn_path "$BUILD_DIR")
 
-  alias yarn='$YARN2_PATH'
-
   # fail for no yarnPath in rc
   fail_missing_yarn_path "$BUILD_DIR" "$YARN2_PATH"
 
@@ -229,6 +223,10 @@ install_bins() {
   fi
 
   warn_old_npm
+
+  if [[ $YARN2 == true ]]; then
+    YARN=false
+  fi
 }
 
 header "Installing binaries" | output "$LOG_FILE"
@@ -347,7 +345,7 @@ prune_devdependencies() {
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
 if [[ "$YARN2" == "true" ]]; then
-  echo "Using Yarn 2, writing to the cache and pruning of the node modules will be skipped."
+  echo "Using Yarn 2, writing to the cache and pruning of the node modules will be skipped." | output "$LOG_FILE"
   meta_set "build-step" "prune-dependencies"
   meta_set "build-step" "save-cache"
 elif [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then

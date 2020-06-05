@@ -600,8 +600,9 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
-  assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
   assertCaptured "skipping installations"
+  # tsc output
+  assertCaptured "Version 3.9.3"
   assertCaptured "writing to the cache and pruning of the node modules will be skipped"
   assertCapturedSuccess
 }
@@ -609,6 +610,12 @@ testYarn2() {
 
 ###
 # Yarn 2 warnings
+testYarn2WithNodeModulesCache() {
+  compile "yarn-2"
+  assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
+  assertCapturedSuccess
+}
+
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
   assertCaptured "Heroku will ignore the engine from the package.json."
