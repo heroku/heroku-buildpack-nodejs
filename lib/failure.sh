@@ -675,6 +675,12 @@ warn() {
   echo ""
 }
 
+warn_aws_proxy() {
+  if { [[ -n "$HTTP_PROXY" ]] || [[ -n "$HTTPS_PROXY" ]]; } && [[ "$NO_PROXY" != "amazonaws.com" ]]; then
+    warn "Your build may fail if NO_PROXY is not set to amazonaws.com" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#aws-proxy-error"
+  fi
+}
+
 warn_node_engine() {
   local node_engine=${1:-}
   if [ "$node_engine" == "" ]; then
@@ -692,7 +698,7 @@ warn_node_engine() {
 warn_prebuilt_modules() {
   local build_dir=${1:-}
   if [ -e "$build_dir/node_modules" ]; then
-    warning "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
+    warning "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
     mcount 'warnings.modules.prebuilt'
     meta_set "checked-in-node-modules" "true"
   else

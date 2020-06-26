@@ -73,6 +73,19 @@ run_build_script() {
   fi
 }
 
+run_cleanup_script() {
+  local build_dir=${1:-}
+  local has_heroku_cleanup_script
+
+  has_heroku_cleanup_script=$(has_script "$build_dir/package.json" "heroku-cleanup")
+
+  if [[ "$has_heroku_cleanup_script" == "true" ]]; then
+    mcount "script.heroku-cleanup"
+    header "Cleanup"
+    run_if_present "$build_dir" 'heroku-cleanup'
+  fi
+}
+
 log_build_scripts() {
   local build_dir=${1:-}
 

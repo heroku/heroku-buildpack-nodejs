@@ -12,7 +12,14 @@
 - Test use of packages in `.yarn/release` directory ([#786](https://github.com/heroku/heroku-buildpack-nodejs/pull/786))
 
 ## master
+- update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))
+
+## v172 (2020-05-28)
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
+- move proxy issues section from readme to dev center ([#778](https://github.com/heroku/heroku-buildpack-nodejs/pull/778))
+- warn when NO_PROXY is not set to "amazonaws.com" and HTTP_PROXY or HTTPS_PROXY is set ([#782](https://github.com/heroku/heroku-buildpack-nodejs/pull/782))
+- add heroku cleanup script ([#788](https://github.com/heroku/heroku-buildpack-nodejs/pull/788))
+- add a build step for cleanup script and output to log file ([#790](https://github.com/heroku/heroku-buildpack-nodejs/pull/790))
 
 ## v171 (2020-04-27)
 - Update Travis badge to `master` and other changes in README ([#753](https://github.com/heroku/heroku-buildpack-nodejs/pull/753))

@@ -12,6 +12,7 @@ For more information about using this Node.js buildpack on Heroku, see these Dev
 
 - [Heroku Node.js Support](https://devcenter.heroku.com/articles/nodejs-support)
 - [Getting Started with Node.js on Heroku](https://devcenter.heroku.com/articles/nodejs)
+- [Troubleshooting Node.js Deploys](https://devcenter.heroku.com/articles/troubleshooting-node-deploys)
 
 For more general information about buildpacks on Heroku:
 
@@ -111,7 +112,7 @@ test framework.
 
 To display the logged build outputs to assist with debugging, use the "echo" and "cat" commands. For example:
 
-```
+```sh
 test() {
   local log_file var
 
@@ -129,41 +130,13 @@ test() {
   assertFileContains "test log file" "$log_file"
 }
 ```
+
 Running the test above would produce:
-```
+
+```log
 testtest
 this is the log file
 test log file
 ```
-The test output writes to STD_OUT. Use `cat $STD_OUT` to read.
 
-## Common Issues
-
-### Proxy Issues
-
-If your builds are not completing and have errors you may need to examine your build environment for `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables. A few examples of build output that may indicate issues with these values are below.
-
-```
-// ...
------> Installing binaries
-       engines.node (package.json):  10
-       engines.npm (package.json):   unspecified (use default)
-
-       Resolving node version 10...
-       Error: Unknown error installing "10" of node
-
------> Build failed
-// ...
-```
-
-```
-// ...
------> Node.js app detected
-curl: (35) OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to lang-common.s3.amazonaws.com:443
-// ...
-```
-
-If the environment where you are running the buildpack does not require a proxy to be used for HTTP connections you should try setting
-the `NO_PROXY` environment variable to `amazonaws.com`, i.e. running the command `export NO_PROXY=amazonaws.com` immediatly before executing
-the buildpack or by setting that environment value inside the buildpack. If you find `HTTP_PROXY` and `HTTPS_PROXY` environment variables and do not need a proxy in your build environment then the environment
-variables should be removed.
+The test output writes to `$STD_OUT`, so you can use `cat $STD_OUT` to read output.

@@ -73,6 +73,7 @@ handle_failure() {
   fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
   fail_invalid_semver "$LOG_FILE"
   log_other_failures "$LOG_FILE"
+  warn_aws_proxy "$BUILD_DIR"
   warn_untracked_dependencies "$LOG_FILE"
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
@@ -361,6 +362,9 @@ else
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
 fi
+
+meta_set "build-step" "cleanup-script"
+run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
 
 summarize_build() {
   if $NODE_VERBOSE; then
