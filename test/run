@@ -171,6 +171,13 @@ testYarn() {
   assertCapturedSuccess
 }
 
+testYarnIncluded() {
+  compile "yarn-included"
+  assertNotCaptured "installing yarn"
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertCapturedSuccess
+}
+
 testYarnCacheDirectory() {
   local cache=$(mktmpdir)
   local env_dir=$(mktmpdir)
