@@ -174,7 +174,7 @@ install_bins() {
   # Download yarn if there is a yarn.lock file or if the user
   # has specified a version of yarn under "engines". We'll still
   # only install using yarn if there is a yarn.lock file
-  if $YARN || [ -n "$yarn_engine" ]; then
+  if $YARN || [  "$yarn_engine" ]; then
     meta_set "build-step" "install-yarn"
     monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
   fi
@@ -299,6 +299,10 @@ prune_devdependencies() {
     npm_prune_devdependencies "$BUILD_DIR"
   fi
 }
+
+if [[ -f "$BUILD_DIR/heroku-buildpack-features" ]] || [[ "$YARN_CACHE" != "false" ]]; then
+  yarn_cache_exist=true
+fi
 
 # if we are using yarn
 #   and in the new feature
