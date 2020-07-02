@@ -172,9 +172,12 @@ install_bins() {
   meta_set "node-version" "$node_version"
 
   # Download yarn if there is a yarn.lock file or if the user
-  # has specified a version of yarn under "engines". We'll still
-  # only install using yarn if there is a yarn.lock file
-  if $YARN || [ -n "$yarn_engine" ]; then
+  # has specified a version of yarn under "engines" and yarn 
+  # binary hasn't been checked in to the repo. We'll still
+  # only install using yarn if there is a yarn.lock file.
+  if ls .yarn/releases/*.js 1> /dev/null 2>&1; then
+    echo "Skipping yarn install because binary found at .yarn/releases/"
+  elif $YARN || [ -n "$yarn_engine" ]; then
     meta_set "build-step" "install-yarn"
     monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
   fi
