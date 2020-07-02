@@ -2,6 +2,7 @@
 
 ## master
 - update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))
+- allow skipping node_modules removal with SKIP_NODE_MODULES_CHECK ([#798](https://github.com/heroku/heroku-buildpack-nodejs/pull/798))
 
 ## v172 (2020-05-28)
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))
