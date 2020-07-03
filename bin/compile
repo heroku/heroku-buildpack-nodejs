@@ -175,10 +175,10 @@ install_bins() {
   # has specified a version of yarn under "engines" and yarn 
   # binary hasn't been checked in to the repo. We'll still
   # only install using yarn if there is a yarn.lock file.
-  yarn_executable=$(find $BUILD_DIR/.yarn/releases -type f -name 'yarn*' -print -quit);
+  yarn_executable=$(find "$BUILD_DIR/.yarn/releases" -type f -name 'yarn*' -print -quit 2>/dev/null);
   if [ -n "$yarn_executable" ]; then
     echo "Skipping yarn install in favor of yarn executable at .yarn/releases/"
-    cp $yarn_executable $BUILD_DIR/.yarn/releases/yarn
+    cp "$yarn_executable" "$BUILD_DIR/.yarn/releases/yarn"
   elif $YARN || [ -n "$yarn_engine" ]; then
     meta_set "build-step" "install-yarn"
     monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
