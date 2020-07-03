@@ -173,7 +173,7 @@ testYarn() {
 
 testYarnIncluded() {
   compile "yarn-included"
-  assertCaptured "Skipping yarn install in favor of yarn executable at .yarn/releases/"
+  assertCaptured "Skipping yarn install in favor of yarn executable at .yarn/releases"
   assertNotCaptured "installing yarn"
   assertCapturedSuccess
 }

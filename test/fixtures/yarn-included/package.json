@@ -8,8 +8,5 @@
   },
   "dependencies": {
     "lodash": "^4.16.4"
-  },
-  "devDependencies": {
-    "debug": "^4.1.1"
   }
 }

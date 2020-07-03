@@ -12,6 +12,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 # This is used by the buildpack stdlib for metrics
 # shellcheck disable=SC2034
 BPLOG_PREFIX="buildpack.nodejs"
+YARN_RELEASE_DIR_SUFFIX=".yarn/releases"
 
 ### Configure directories
 
@@ -19,6 +20,7 @@ BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+YARN_RELEASE_DIR="$BUILD_DIR/$YARN_RELEASE_DIR_SUFFIX"
 
 ### Load dependencies
 
@@ -55,7 +57,7 @@ source "$BP_DIR/lib/builddata.sh"
 # shellcheck source=lib/yarn2.sh
 source "$BP_DIR/lib/yarn2.sh"
 
-export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin:$BUILD_DIR/.yarn/releases":$PATH
+export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin:$YARN_RELEASE_DIR":$PATH
 
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
@@ -96,6 +98,7 @@ meta_set "build-step" "init"
 
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
+[ -e "$YARN_RELEASE_DIR" ] && YARN_INCLUDED=true || YARN_INCLUDED=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 
 ### Save build info
@@ -175,10 +178,10 @@ install_bins() {
   # has specified a version of yarn under "engines" and yarn 
   # binary hasn't been checked in to the repo. We'll still
   # only install using yarn if there is a yarn.lock file.
-  yarn_executable=$(find "$BUILD_DIR/.yarn/releases" -type f -name 'yarn*' -print -quit 2>/dev/null);
-  if [ -n "$yarn_executable" ]; then
-    echo "Skipping yarn install in favor of yarn executable at .yarn/releases/"
-    cp "$yarn_executable" "$BUILD_DIR/.yarn/releases/yarn"
+  if $YARN_INCLUDED; then
+    echo "Skipping yarn install in favor of yarn executable at $YARN_RELEASE_DIR_SUFFIX"
+    yarn_executable=$(find "$YARN_RELEASE_DIR" -type f -name 'yarn*' -print -quit)
+    cp "$yarn_executable" "$YARN_RELEASE_DIR/yarn"
   elif $YARN || [ -n "$yarn_engine" ]; then
     meta_set "build-step" "install-yarn"
     monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
