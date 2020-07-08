@@ -19,10 +19,16 @@ get_platform() {
 }
 
 create_default_env() {
+  local YARN=$1
+
   export NPM_CONFIG_LOGLEVEL=${NPM_CONFIG_LOGLEVEL:-error}
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
+
+  if $YARN; then
+    export YARN_CACHE=${YARN_CACHE:-true}
+  fi
 }
 
 create_build_env() {
