@@ -125,7 +125,7 @@ create_env() {
   write_profile "$BP_DIR" "$BUILD_DIR"
   write_export "$BP_DIR" "$BUILD_DIR"
   export_env_dir "$ENV_DIR"
-  create_default_env
+  create_default_env "$YARN"
 }
 
 header "Creating runtime environment" | output "$LOG_FILE"
@@ -134,14 +134,14 @@ mkdir -p "$BUILD_DIR/.heroku/node/"
 cd "$BUILD_DIR"
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 list_node_config | output "$LOG_FILE"
-create_build_env "$YARN"
+create_build_env
 
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
-if [ $(features_get "cache-native-yarn-cache") == "false" ]; then
+if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
   warn "'cache-native-yarn-cache' flag no longer used. Set an environment variable named YARN_CACHE to false to opt out of yarn caching."
   YARN_CACHE=false
 fi
