@@ -125,7 +125,7 @@ create_env() {
   write_profile "$BP_DIR" "$BUILD_DIR"
   write_export "$BP_DIR" "$BUILD_DIR"
   export_env_dir "$ENV_DIR"
-  create_default_env
+  create_default_env "$YARN"
 }
 
 header "Creating runtime environment" | output "$LOG_FILE"
@@ -140,6 +140,11 @@ create_build_env
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
+
+if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
+  warn "You're currently using the heroku-buildpack-features file to configure. Use 'heroku config:set YARN_CACHE=false' to set the variable. Using Yarn Cache has moved behind an environment variable."
+  YARN_CACHE=false
+fi
 
 install_bins() {
   local node_engine npm_engine yarn_engine npm_version node_version
@@ -304,7 +309,7 @@ prune_devdependencies() {
 #   and in the new feature
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+if [[ "$YARN" == "true" ]] && [[ "$YARN_CACHE" == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
