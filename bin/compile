@@ -142,7 +142,7 @@ create_build_env
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
-  warn "'cache-native-yarn-cache' flag no longer used. Set an environment variable named YARN_CACHE to false to opt out of yarn caching."
+  warn "You're currently using the heroku-buildpack-features file to configure. Use 'heroku config:set YARN_CACHE=false' to set the variable. Using Yarn Cache has moved behind an environment variable."
   YARN_CACHE=false
 fi
 
