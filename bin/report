@@ -68,7 +68,7 @@ kv_pair_string() {
   value="$2"
   if [[ -n "$value" ]]; then
     value=$(echo $value | sed 's/"/\\"/g')
-    echo "$1: \"$value\"" >> $output
+    echo "$key: \"$value\"" >> $output
   fi
 }
 
@@ -104,11 +104,7 @@ kv_pair "heroku_postbuild_script_time" "$(meta_get "heroku-postbuild-script-time
 kv_pair "heroku_postbuild_script_memory" "$(meta_get "heroku-postbuild-script-memory")"
 
 # which package manager was used
-if [[ "$YARN" == "true" ]]; then
-  kv_pair_string "package_manager" "yarn"
-else
-  kv_pair_string "package_manager" "npm"
-fi
+kv_pair_string "package_manager" "$(meta_get "node-package-manager")"
 
 # We have to get this info from bin/compile since a lockfile will be generated if there wasn't one
 kv_pair "lock_file" "$(meta_get "has-node-lock-file")"

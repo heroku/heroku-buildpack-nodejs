@@ -1325,6 +1325,11 @@ testBinReportScriptsWithQuotes() {
   assertCaptured "postinstall_script: \"if [ \\\"\${NODE_ENV}\\\" = \\\"staging\\\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \\\"Skipped heroku-postbuild\\\"; fi\""
 }
 
+testBinReportYarn() {
+  compile_and_report "yarn"
+  assertCaptured "package_manager: \"yarn\""
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
