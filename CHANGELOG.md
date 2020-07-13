@@ -13,6 +13,9 @@
 
 ## master
 - update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))
+- move disabling yarn caching YARN_CACHE env var ([#796](https://github.com/heroku/heroku-buildpack-nodejs/pull/796))
+- use meta_get "node-package-manager" for reporting ([#802](https://github.com/heroku/heroku-buildpack-nodejs/pull/802))
+- change YARN_CACHE to USE_YARN_CACHE env var ([#803](https://github.com/heroku/heroku-buildpack-nodejs/pull/803))
 
 ## v172 (2020-05-28)
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))

@@ -125,7 +125,7 @@ create_env() {
   write_profile "$BP_DIR" "$BUILD_DIR"
   write_export "$BP_DIR" "$BUILD_DIR"
   export_env_dir "$ENV_DIR"
-  create_default_env
+  create_default_env "$YARN"
 }
 
 header "Creating runtime environment" | output "$LOG_FILE"
@@ -171,6 +171,11 @@ if [[ "$YARN2" == "true" ]]; then
 
   # fail for missing yarn in .yarn/releases
   fail_missing_yarn_vendor "$BUILD_DIR" "$YARN2_PATH"
+fi
+
+if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
+  warn "You're currently using the heroku-buildpack-features file to configure. Using Yarn Cache has moved behind an environment variable. Use 'heroku config:set USE_YARN_CACHE=false' to set the variable."
+  USE_YARN_CACHE=false
 fi
 
 install_bins() {
@@ -349,7 +354,7 @@ if [[ "$YARN2" == "true" ]]; then
   echo "Using Yarn 2, writing to the cache and pruning of the node modules will be skipped." | output "$LOG_FILE"
   meta_set "build-step" "prune-dependencies"
   meta_set "build-step" "save-cache"
-elif [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+elif [[ "$YARN" == "true" ]] && [[ "$USE_YARN_CACHE" == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"

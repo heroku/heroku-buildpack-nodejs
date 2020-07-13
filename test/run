@@ -205,7 +205,23 @@ testYarnNativeCache() {
 
   # assert that devDependencies are not cached
   assertEquals "0" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+  assertCapturedSuccess
+}
 
+testYarnNativeCacheFalse() {
+  local cache=$(mktmpdir)
+
+  compile "yarn-native-cache-false" $cache
+  # These will be created if yarn is using the directory for its cache
+
+  ls "$cache"
+
+  # Run this again with a cache
+  compile "yarn-native-cache-false" $cache
+
+  # assert that devDependencies are not cached
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+  assertCaptured "Using Yarn Cache has moved behind an environment variable."
   assertCapturedSuccess
 }
 
@@ -1355,6 +1371,11 @@ testBinReportScriptsWithQuotes() {
   assertCaptured "build_script: \"concurrently \\\"npm run build-server\\\" npm run build-client\""
   assertCaptured "heroku_postbuild_script: \"if [ -z \\\"\${CI}\\\" ]; then yarn build-assets; fi\""
   assertCaptured "postinstall_script: \"if [ \\\"\${NODE_ENV}\\\" = \\\"staging\\\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \\\"Skipped heroku-postbuild\\\"; fi\""
+}
+
+testBinReportYarn() {
+  compile_and_report "yarn"
+  assertCaptured "package_manager: \"yarn\""
 }
 
 # Utils
