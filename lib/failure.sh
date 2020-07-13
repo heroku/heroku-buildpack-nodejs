@@ -380,6 +380,8 @@ fail_missing_yarnrc_yml() {
       machine and set the version in your project directory with:
 
        $ yarn set version berry
+
+      Read more at the Yarn docs: https://yarnpkg.com/getting-started/install#per-project-install
       "
     fail
   fi
@@ -403,6 +405,8 @@ fail_missing_yarn_path() {
       directory with:
 
        $ yarn set version berry
+
+      Read more at the Yarn docs: https://yarnpkg.com/getting-started/install#per-project-install
       "
     fail
   fi
@@ -428,6 +432,8 @@ fail_missing_yarn_vendor() {
 
        $ yarn install
        $ yarn set version berry
+
+      Read more at the Yarn docs: https://yarnpkg.com/getting-started/install#per-project-install
       "
     fail
   fi
