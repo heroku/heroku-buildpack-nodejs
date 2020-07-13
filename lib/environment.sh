@@ -27,7 +27,7 @@ create_default_env() {
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
 
   if $YARN; then
-    export YARN_CACHE=${YARN_CACHE:-true}
+    export USE_YARN_CACHE=${USE_YARN_CACHE:-true}
   fi
 }
 
@@ -43,6 +43,7 @@ list_node_config() {
   echo ""
   printenv | grep ^NPM_CONFIG_ || true
   printenv | grep ^YARN_ || true
+  printenv | grep ^USE_YARN_ || true
   printenv | grep ^NODE_ || true
 
   if [ "$NPM_CONFIG_PRODUCTION" = "true" ] && [ "$NODE_ENV" != "production" ]; then

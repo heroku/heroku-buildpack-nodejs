@@ -142,8 +142,8 @@ create_build_env
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
-  warn "You're currently using the heroku-buildpack-features file to configure. Use 'heroku config:set YARN_CACHE=false' to set the variable. Using Yarn Cache has moved behind an environment variable."
-  YARN_CACHE=false
+  warn "You're currently using the heroku-buildpack-features file to configure. Using Yarn Cache has moved behind an environment variable. Use 'heroku config:set USE_YARN_CACHE=false' to set the variable."
+  USE_YARN_CACHE=false
 fi
 
 install_bins() {
@@ -309,7 +309,7 @@ prune_devdependencies() {
 #   and in the new feature
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] && [[ "$YARN_CACHE" == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+if [[ "$YARN" == "true" ]] && [[ "$USE_YARN_CACHE" == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
