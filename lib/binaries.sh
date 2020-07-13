@@ -48,7 +48,11 @@ install_yarn() {
 
   read -r number url < <(echo "$resolve_result")
 
-  echo "Downloading and installing yarn ($number)..."
+  if [[ -n "$YARN_BINARY_URL" ]]; then
+    url="$YARN_BINARY_URL"
+  fi
+
+  echo "Downloading and installing yarn ($number) from $url"
   code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
     echo "Unable to download yarn: $code" && false
@@ -87,7 +91,11 @@ install_nodejs() {
     fail_bin_install node "$version"
   fi
 
-  echo "Downloading and installing node $number..."
+  if [[ -n "$NODE_BINARY_URL" ]]; then
+    url="$NODE_BINARY_URL"
+  fi
+
+  echo "Downloading and installing node $number from $url"
   code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false

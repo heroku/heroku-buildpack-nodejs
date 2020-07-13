@@ -122,6 +122,24 @@ testNoVersion() {
   assertCapturedSuccess
 }
 
+testCustomYarnBinaryURL() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "testurl" > $env_dir/YARN_BINARY_URL
+  compile "yarn" $cache $env_dir
+  assertCaptured "from testurl"
+}
+
+testCustomNodeBinaryURL() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "testurl" > $env_dir/NODE_BINARY_URL
+  compile "node-10" $cache $env_dir
+  assertCaptured "from testurl"
+}
+
 testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
