@@ -19,3 +19,8 @@ detect_yarn2() {
     echo "false"
   fi
 }
+
+get_yarn_path() {
+  local build_dir="$1"
+  $YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1
+}
