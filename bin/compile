@@ -147,7 +147,7 @@ export YARN2_PATH
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn 2. The buildpack won't cache, because Yarn 2 does not provide node modules.
+      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory.
       "
   fi
 
