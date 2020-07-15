@@ -147,7 +147,7 @@ export YARN2_PATH
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory.
+      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build.
       "
   fi
 
@@ -186,7 +186,8 @@ install_bins() {
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [[ "$YARN2" == "true" && -n "$yarn_engine" ]]; then
-    warn "You should be using a vendored version of Yarn. Heroku will ignore the engine from the package.json."
+    warn "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x, so that per project version can be used. More information here: https://yarnpkg.com/getting-started/install#global-install"
+    unset yarn_engine
   fi
 
   meta_set "node-version-request" "$node_engine"
