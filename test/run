@@ -639,10 +639,10 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
-  assertCaptured "skipping installations"
+  assertCaptured "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
   # tsc output
   assertCaptured "Version 3.9.3"
-  assertCaptured "writing to the cache and pruning of the node modules will be skipped"
+  assertCaptured "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped."
   assertCapturedSuccess
 }
 ###
@@ -651,24 +651,19 @@ testYarn2() {
 # Yarn 2 warnings
 testYarn2WithNodeModulesCache() {
   compile "yarn-2"
-  assertCaptured "The buildpack won't cache, because Yarn 2 does not provide node modules."
+  assertCaptured "You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build."
   assertCapturedSuccess
 }
 
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
-  assertCaptured "Heroku will ignore the engine from the package.json."
+  assertCaptured "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x"
   assertCapturedSuccess
 }
 
 testYarn2WithNpmrc() {
-  compile "yarn-2-with-npmrc"
+  compile "yarn-2-with-invalid-rc-files"
   assertCaptured "There is an existing .npmrc file that will not be used."
-  assertCapturedSuccess
-}
-
-testYarn2WithYarnrc() {
-  compile "yarn-2-with-yarnrc"
   assertCaptured "There is an existing .yarnrc file that will not be used."
   assertCapturedSuccess
 }

@@ -6,6 +6,7 @@
 - use meta_get "node-package-manager" for reporting ([#802](https://github.com/heroku/heroku-buildpack-nodejs/pull/802))
 - change YARN_CACHE to USE_YARN_CACHE env var ([#803](https://github.com/heroku/heroku-buildpack-nodejs/pull/803))
 - create a pull request to merge Yarn 2 support ([#795](https://github.com/heroku/heroku-buildpack-nodejs/pull/795))
+- edits to Yarn 2 info and warning messaging ([#806](https://github.com/heroku/heroku-buildpack-nodejs/pull/806))
 
 ### feature: Yarn 2 support
 - Add warning for detection of Yarn 2 usage with caching ([#755](https://github.com/heroku/heroku-buildpack-nodejs/pull/755))

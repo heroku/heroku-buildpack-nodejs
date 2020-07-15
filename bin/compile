@@ -147,7 +147,7 @@ export YARN2_PATH
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn 2. The buildpack won't cache, because Yarn 2 does not provide node modules.
+      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset this and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
       "
   fi
 
@@ -186,7 +186,8 @@ install_bins() {
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
   if [[ "$YARN2" == "true" && -n "$yarn_engine" ]]; then
-    warn "You should be using a vendored version of Yarn. Heroku will ignore the engine from the package.json."
+    warn "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x, so that per project version can be used. More information here: https://yarnpkg.com/getting-started/install#global-install"
+    unset yarn_engine
   fi
 
   meta_set "node-version-request" "$node_engine"
@@ -247,7 +248,7 @@ restore_cache() {
 
   if $YARN; then
     if [ -e "$BUILD_DIR/node_modules" ]; then
-      warn "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
+      warn "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
       rm -rf "$BUILD_DIR/node_modules"
     fi
   fi
@@ -294,7 +295,7 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
   if [[ "$YARN2" == "true" ]]; then
-    echo "Using Yarn 2, skipping installations."
+    echo "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
@@ -351,7 +352,7 @@ prune_devdependencies() {
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
 if [[ "$YARN2" == "true" ]]; then
-  echo "Using Yarn 2, writing to the cache and pruning of the node modules will be skipped." | output "$LOG_FILE"
+  echo "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped." | output "$LOG_FILE"
   meta_set "build-step" "prune-dependencies"
   meta_set "build-step" "save-cache"
 elif [[ "$YARN" == "true" ]] && [[ "$USE_YARN_CACHE" == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
