@@ -662,13 +662,8 @@ testYarn2WithEngine() {
 }
 
 testYarn2WithNpmrc() {
-  compile "yarn-2-with-npmrc"
+  compile "yarn-2-with-invalid-rc-files"
   assertCaptured "There is an existing .npmrc file that will not be used."
-  assertCapturedSuccess
-}
-
-testYarn2WithYarnrc() {
-  compile "yarn-2-with-yarnrc"
   assertCaptured "There is an existing .yarnrc file that will not be used."
   assertCapturedSuccess
 }
