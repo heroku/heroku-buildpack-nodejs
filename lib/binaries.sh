@@ -42,7 +42,6 @@ install_yarn() {
   if [[ -n "$YARN_BINARY_URL" ]]; then
     url="$YARN_BINARY_URL"
     echo "Downloading and installing yarn from $url"
-    code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
   else
     echo "Resolving yarn version $version..."
     resolve_result=$(resolve yarn "$version" || echo "failed")
@@ -54,8 +53,9 @@ install_yarn() {
     read -r number url < <(echo "$resolve_result")
 
     echo "Downloading and installing yarn ($number)"
-    code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
   fi
+
+  code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
 
   if [ "$code" != "200" ]; then
     echo "Unable to download yarn: $code" && false
@@ -87,8 +87,7 @@ install_nodejs() {
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
     url="$NODE_BINARY_URL"
-    echo echo "Downloading and installing node from $url"
-    code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
+    echo "Downloading and installing node from $url"
   else
     echo "Resolving node version $version..."
     resolve_result=$(resolve node "$version" || echo "failed")
@@ -100,8 +99,9 @@ install_nodejs() {
     fi
 
     echo "Downloading and installing node $number"
-    code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
   fi
+
+  code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
 
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false
