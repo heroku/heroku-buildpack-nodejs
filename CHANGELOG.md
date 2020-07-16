@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## master
+
+## v173 (2020-07-16)
 - update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))
 - move disabling yarn caching YARN_CACHE env var ([#796](https://github.com/heroku/heroku-buildpack-nodejs/pull/796))
 - use meta_get "node-package-manager" for reporting ([#802](https://github.com/heroku/heroku-buildpack-nodejs/pull/802))
