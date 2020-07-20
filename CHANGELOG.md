@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## master
+- provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))
 
 ## v173 (2020-07-16)
 - update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))
