@@ -1,7 +1,26 @@
 # Node.js Buildpack Changelog
 
 ## master
+- provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))
+
+## v173 (2020-07-16)
 - update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))
+- move disabling yarn caching YARN_CACHE env var ([#796](https://github.com/heroku/heroku-buildpack-nodejs/pull/796))
+- use meta_get "node-package-manager" for reporting ([#802](https://github.com/heroku/heroku-buildpack-nodejs/pull/802))
+- change YARN_CACHE to USE_YARN_CACHE env var ([#803](https://github.com/heroku/heroku-buildpack-nodejs/pull/803))
+- create a pull request to merge Yarn 2 support ([#795](https://github.com/heroku/heroku-buildpack-nodejs/pull/795))
+- edits to Yarn 2 info and warning messaging ([#806](https://github.com/heroku/heroku-buildpack-nodejs/pull/806))
+
+### feature: Yarn 2 support
+- Add warning for detection of Yarn 2 usage with caching ([#755](https://github.com/heroku/heroku-buildpack-nodejs/pull/755))
+- Add warning for Yarn 2 usage, warn user of ignoring engine from package.json ([#761](https://github.com/heroku/heroku-buildpack-nodejs/pull/761))
+- Add warning for if .npmrc file exists when using Yarn 2 ([#764](https://github.com/heroku/heroku-buildpack-nodejs/pull/764))
+- Add warning for if .yarnrc file exists when using Yarn 2 ([#768](https://github.com/heroku/heroku-buildpack-nodejs/pull/768))
+- Add checks for Yarn 2 ([#759](https://github.com/heroku/heroku-buildpack-nodejs/pull/759))
+- Turn off production and ignore-script flags for Yarn 2 and add global vendored yarn alias ([775](https://github.com/heroku/heroku-buildpack-nodejs/pull/775))
+- Set `$YARN` to false when `$YARN2` is true ([#776](https://github.com/heroku/heroku-buildpack-nodejs/pull/776))
+- Skip writing to the cache and pruning of the node modules when Yarn 2 is used ([#785](https://github.com/heroku/heroku-buildpack-nodejs/pull/785))
+- Test use of packages in `.yarn/release` directory ([#786](https://github.com/heroku/heroku-buildpack-nodejs/pull/786))
 
 ## v172 (2020-05-28)
 - display yarn engine log to build output when engine is provided in monorepo ([#771](https://github.com/heroku/heroku-buildpack-nodejs/pull/771))

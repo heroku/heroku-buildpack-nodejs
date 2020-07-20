@@ -1,0 +1,15 @@
+{
+  "name": "yarn-2-with-engine",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "engines": {
+    "yarn": "1.x"
+  },
+  "dependencies": {
+    "lodash": "^4.16.4"
+  },
+  "devDependencies": {
+    "debug": "^4.1.1"
+  }
+}

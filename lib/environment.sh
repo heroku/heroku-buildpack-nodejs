@@ -19,10 +19,16 @@ get_platform() {
 }
 
 create_default_env() {
+  local YARN=$1
+
   export NPM_CONFIG_LOGLEVEL=${NPM_CONFIG_LOGLEVEL:-error}
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
+
+  if $YARN; then
+    export USE_YARN_CACHE=${USE_YARN_CACHE:-true}
+  fi
 }
 
 create_build_env() {
@@ -37,6 +43,7 @@ list_node_config() {
   echo ""
   printenv | grep ^NPM_CONFIG_ || true
   printenv | grep ^YARN_ || true
+  printenv | grep ^USE_YARN_ || true
   printenv | grep ^NODE_ || true
 
   if [ "$NPM_CONFIG_PRODUCTION" = "true" ] && [ "$NODE_ENV" != "production" ]; then
