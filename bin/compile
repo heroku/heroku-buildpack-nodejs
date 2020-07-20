@@ -97,6 +97,7 @@ meta_set "build-step" "init"
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
+YARN2=$(detect_yarn2 "$YARN" "$BUILD_DIR")
 
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
@@ -110,7 +111,6 @@ fail_dot_heroku_node "$BUILD_DIR"
 fail_invalid_package_json "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
 fail_iojs_unsupported "$BUILD_DIR"
-fail_yarn2_unsupported "$YARN" "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
 
@@ -125,7 +125,7 @@ create_env() {
   write_profile "$BP_DIR" "$BUILD_DIR"
   write_export "$BP_DIR" "$BUILD_DIR"
   export_env_dir "$ENV_DIR"
-  create_default_env
+  create_default_env "$YARN"
 }
 
 header "Creating runtime environment" | output "$LOG_FILE"
@@ -141,12 +141,54 @@ create_build_env
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
+### Configure vendored package manager
+export YARN2_PATH
+
+if [[ "$YARN2" == "true" ]]; then
+  if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
+    warn "
+      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset this and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
+      "
+  fi
+
+  if [[ -f "$BUILD_DIR/.npmrc" ]]; then
+    warn "There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file."
+  fi
+
+  if [[ -f "$BUILD_DIR/.yarnrc" ]]; then
+    warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file."
+  fi
+
+  ### Configure Yarn 2
+  # fail for no yarnrc.yml
+  fail_missing_yarnrc_yml "$BUILD_DIR"
+
+  # get yarn_path
+  YARN2_PATH=$(get_yarn_path "$BUILD_DIR")
+
+  # fail for no yarnPath in rc
+  fail_missing_yarn_path "$BUILD_DIR" "$YARN2_PATH"
+
+  # fail for missing yarn in .yarn/releases
+  fail_missing_yarn_vendor "$BUILD_DIR" "$YARN2_PATH"
+fi
+
+if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
+  warn "You're currently using the heroku-buildpack-features file to configure. Using Yarn Cache has moved behind an environment variable. Use 'heroku config:set USE_YARN_CACHE=false' to set the variable."
+  USE_YARN_CACHE=false
+fi
+
 install_bins() {
   local node_engine npm_engine yarn_engine npm_version node_version
 
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+
+  if [[ "$YARN2" == "true" && -n "$yarn_engine" ]]; then
+    warn "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x, so that per project version can be used. More information here: https://yarnpkg.com/getting-started/install#global-install"
+    unset yarn_engine
+  fi
 
   meta_set "node-version-request" "$node_engine"
   meta_set "npm-version-request" "$npm_engine"
@@ -188,6 +230,10 @@ install_bins() {
   fi
 
   warn_old_npm
+
+  if [[ $YARN2 == true ]]; then
+    YARN=false
+  fi
 }
 
 header "Installing binaries" | output "$LOG_FILE"
@@ -204,7 +250,7 @@ restore_cache() {
     if $PREBUILD && [[ "$SKIP_NODE_MODULES_CHECK" == "true" ]]; then
       echo "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
     elif $PREBUILD; then
-      warn "node_modules checked into source control" "https://blog.heroku.com/node-habits-2016#9-only-git-the-important-bits"
+      warn "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
       rm -rf "$BUILD_DIR/node_modules"
     fi
   fi
@@ -250,8 +296,9 @@ build_dependencies() {
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
-
-  if $YARN; then
+  if [[ "$YARN2" == "true" ]]; then
+    echo "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
+  elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
@@ -306,7 +353,11 @@ prune_devdependencies() {
 #   and in the new feature
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] && [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+if [[ "$YARN2" == "true" ]]; then
+  echo "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped." | output "$LOG_FILE"
+  meta_set "build-step" "prune-dependencies"
+  meta_set "build-step" "save-cache"
+elif [[ "$YARN" == "true" ]] && [[ "$USE_YARN_CACHE" == "true" ]] && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   meta_set "build-step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
