@@ -4,7 +4,7 @@
 
 This is the official [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for Node.js apps.
 
-[![Build Status](https://travis-ci.org/heroku/heroku-buildpack-nodejs.svg?branch=master)](https://travis-ci.org/heroku/heroku-buildpack-nodejs)
+[![Build Status](https://travis-ci.com/heroku/heroku-buildpack-nodejs.svg?branch=master)](https://travis-ci.com/heroku/heroku-buildpack-nodejs)
 
 ## Documentation
 
