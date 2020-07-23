@@ -24,3 +24,21 @@ get_yarn_path() {
   local build_dir="$1"
   $YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1
 }
+
+get_node_linker() {
+  local build_dir="$1"
+  $YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1
+}
+
+detect_using_node_modules() {
+  local build_dir="$1"
+  local node_linker
+
+  node_linker=$(get_node_linker "$build_dir")
+
+  if [[ "$node_linker" == "node-modules" ]]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}

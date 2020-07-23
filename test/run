@@ -674,6 +674,13 @@ testYarn2() {
   assertCaptured "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped."
   assertCapturedSuccess
 }
+
+testYarn2NodeModules() {
+  compile "yarn-2-node-modules"
+  assertCaptured "Heroku has detected you are using node-modules linker for Yarn 2."
+  assertCaptured "Installing node modules (yarn.lock)"
+  assertCapturedSuccess
+}
 ###
 
 ###

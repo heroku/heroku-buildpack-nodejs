@@ -2,6 +2,7 @@
 
 ## master
 - Install Yarn version at 1.22.x when not specified in package.json engines ([#817](https://github.com/heroku/heroku-buildpack-nodejs/pull/817))
+- Install node_modules in yarn2 if you are using nodeLinker node-modules ([#811](https://github.com/heroku/heroku-buildpack-nodejs/pull/811))
 
 ## v174 (2020-07-23)
 - provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))

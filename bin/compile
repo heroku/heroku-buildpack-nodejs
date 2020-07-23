@@ -145,7 +145,8 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 export YARN2_PATH
 
 if [[ "$YARN2" == "true" ]]; then
-  if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
+  YARN2_USE_NODE_MODULES=$(detect_using_node_modules "$BUILD_DIR")
+  if [[ "$NODE_MODULES_CACHE" == "true" && "$YARN2_USE_NODE_MODULES" == "false" ]]; then
     warn "
       WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset this and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
       "
@@ -296,8 +297,11 @@ build_dependencies() {
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
-  if [[ "$YARN2" == "true" ]]; then
+  if [[ "$YARN2" == "true" && "$YARN2_USE_NODE_MODULES" == "false" ]]; then
     echo "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
+  elif [[ "$YARN2" == "true" && "$YARN2_USE_NODE_MODULES" == "true" ]]; then
+    echo "Heroku has detected you are using node-modules linker for Yarn 2."
+    yarn_node_modules "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
