@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## master
+
+## v174 (2020-07-23)
 - provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))
 - allow skipping node_modules removal with SKIP_NODE_MODULES_CHECK ([#798](https://github.com/heroku/heroku-buildpack-nodejs/pull/798))
 - expand npm ci usage to 75% of builds ([#812](https://github.com/heroku/heroku-buildpack-nodejs/pull/812))
