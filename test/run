@@ -636,6 +636,17 @@ testModulesCheckedIn() {
   assertCapturedSuccess
 }
 
+testSkipModulesCheckedIn() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/SKIP_NODE_MODULES_CHECK
+
+  compile "skip-modules-checked-in" "$(mktmpdir)" $env_dir
+
+  assertCaptured "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=true"
+  assertNotCaptured "node_modules checked into source"
+  assertCapturedSuccess
+}
+
 testDetectWithPackageJson() {
   detect "stable-node"
   assertCaptured "Node.js"

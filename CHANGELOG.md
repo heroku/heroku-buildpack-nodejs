@@ -2,6 +2,7 @@
 
 ## master
 - provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))
+- allow skipping node_modules removal with SKIP_NODE_MODULES_CHECK ([#798](https://github.com/heroku/heroku-buildpack-nodejs/pull/798))
 
 ## v173 (2020-07-16)
 - update docs URL when node modules are checked into git ([#794](https://github.com/heroku/heroku-buildpack-nodejs/pull/794))

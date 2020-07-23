@@ -247,7 +247,9 @@ restore_cache() {
   cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
   if $YARN; then
-    if [ -e "$BUILD_DIR/node_modules" ]; then
+    if $PREBUILD && [[ "$SKIP_NODE_MODULES_CHECK" == "true" ]]; then
+      echo "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
+    elif $PREBUILD; then
       warn "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
       rm -rf "$BUILD_DIR/node_modules"
     fi
