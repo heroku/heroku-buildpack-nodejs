@@ -98,7 +98,7 @@ install_nodejs() {
       fail_bin_install node "$version"
     fi
 
-    echo "Downloading and installing node $number"
+    echo "Downloading and installing node $number..."
   fi
 
   code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
