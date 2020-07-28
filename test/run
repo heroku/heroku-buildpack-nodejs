@@ -668,10 +668,15 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
-  assertCaptured "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
   # tsc output
   assertCaptured "Version 3.9.3"
   assertCaptured "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped."
+  assertCapturedSuccess
+}
+
+testYarn2Postinstall() {
+  compile "yarn-2-postinstall"
+  assertCaptured "postinstall successful"
   assertCapturedSuccess
 }
 ###

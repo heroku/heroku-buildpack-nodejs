@@ -297,7 +297,7 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
   if [[ "$YARN2" == "true" ]]; then
-    echo "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
+    yarn2_node_modules "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
