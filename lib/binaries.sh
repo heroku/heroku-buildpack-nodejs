@@ -36,7 +36,7 @@ resolve() {
 
 install_yarn() {
   local dir="$1"
-  local version=${2:-1.x}
+  local version=${2:-1.22.x}
   local number url code resolve_result
 
   if [[ -n "$YARN_BINARY_URL" ]]; then

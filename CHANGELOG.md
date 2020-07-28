@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## master
+- Install Yarn version at 1.22.x when not specified in package.json engines ([#817](https://github.com/heroku/heroku-buildpack-nodejs/pull/817))
 
 ## v174 (2020-07-23)
 - provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))
