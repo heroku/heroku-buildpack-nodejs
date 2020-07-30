@@ -45,4 +45,4 @@ export HATCHET_APP_LIMIT=20
 export HATCHET_DEPLOY_STRATEGY=git
 export HATCHET_BUILDPACK_BASE="https://github.com/heroku/heroku-buildpack-nodejs"
 
-bundle exec rspec "$@"
+bundle exec parallel_split_test "$@"
