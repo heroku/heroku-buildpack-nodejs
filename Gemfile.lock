@@ -32,6 +32,9 @@ GEM
     moneta (1.0.0)
     multi_json (1.14.1)
     parallel (1.12.1)
+    parallel_split_test (0.7.0)
+      parallel (>= 0.5.13)
+      rspec (>= 3.1.0)
     parallel_tests (2.22.0)
       parallel
     platform-api (2.2.0)
@@ -41,9 +44,16 @@ GEM
     repl_runner (0.0.3)
       activesupport
     rrrretry (1.0.0)
+    rspec (3.8.0)
+      rspec-core (~> 3.8.0)
+      rspec-expectations (~> 3.8.0)
+      rspec-mocks (~> 3.8.0)
     rspec-core (3.8.0)
       rspec-support (~> 3.8.0)
     rspec-expectations (3.8.1)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.8.0)
+    rspec-mocks (3.8.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
     rspec-retry (0.6.1)
@@ -62,6 +72,7 @@ PLATFORMS
 
 DEPENDENCIES
   heroku_hatchet
+  parallel_split_test
   parallel_tests
   rake
   rspec-expectations
