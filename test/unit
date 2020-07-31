@@ -13,9 +13,9 @@ use_memory() {
 
 # print each argument to a separate line on stdout
 print_args() {
-  while (( "$#" )); do 
-    echo $1 
-    shift 
+  while (( "$#" )); do
+    echo $1
+    shift
   done
 }
 
@@ -115,7 +115,7 @@ testKeyValueNoNewLine() {
   store="$(pwd)/test/unit-fixtures/kvstore/no-new-line"
 
   assertEquals "$(printf "%s\n" a=b b=c)" "$(kv_list $store)"
-  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)" 
+  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)"
 }
 
 testKeyValueEmptyLine() {
@@ -125,7 +125,7 @@ testKeyValueEmptyLine() {
   store="$(pwd)/test/unit-fixtures/kvstore/empty-line"
 
   assertEquals "$(printf "%s\n" a=b b=c)" "$(kv_list $store)"
-  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)" 
+  assertEquals "$(printf "%s\n" a b)" "$(kv_keys $store)"
 }
 
 testKeyValueEscaping() {
@@ -276,7 +276,7 @@ testBuildDataPreviousBuild() {
   meta_init "$cache_dir"
   meta_setup
   assertFileExists "$BUILD_DATA_FILE"
-  assertFileExists "$PREVIOUS_BUILD_DATA_FILE" 
+  assertFileExists "$PREVIOUS_BUILD_DATA_FILE"
   assertEquals "$(meta_prev_get test)" "bar"
   assertEquals "$(meta_get test)" ""
 }
@@ -436,7 +436,7 @@ BP_DIR="$(pwd)"
 
 # the modules to be tested
 
-source "$(pwd)"/vendor/stdlib_v7.sh
+source "$(pwd)"/lib/vendor/stdlib_v7.sh
 source "$(pwd)"/lib/uuid.sh
 source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh

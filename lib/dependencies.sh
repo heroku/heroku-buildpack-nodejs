@@ -27,7 +27,7 @@ run_if_present() {
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
   if [[ "$has_script_name" == "true" ]]; then
-    if $YARN; then
+    if $YARN || $YARN2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
@@ -70,6 +70,19 @@ run_build_script() {
   elif [[ "$has_build_script" == "true" && "$NPM_NO_BUILD" != "true" ]]; then
     mcount "scripts.build"
     run_if_present "$build_dir" 'build'
+  fi
+}
+
+run_cleanup_script() {
+  local build_dir=${1:-}
+  local has_heroku_cleanup_script
+
+  has_heroku_cleanup_script=$(has_script "$build_dir/package.json" "heroku-cleanup")
+
+  if [[ "$has_heroku_cleanup_script" == "true" ]]; then
+    mcount "script.heroku-cleanup"
+    header "Cleanup"
+    run_if_present "$build_dir" 'heroku-cleanup'
   fi
 }
 

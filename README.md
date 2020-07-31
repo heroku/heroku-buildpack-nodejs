@@ -122,13 +122,7 @@ Set engines.node in package.json to the semver range (or specific version) of no
 
 ```json
 "engines": {
-  "node": "0.11.x"
-}
-```
-
-```json
-"engines": {
-  "node": "0.10.33"
+  "node": "12.x"
 }
 ```
 
@@ -146,12 +140,6 @@ Since 'npm 2' shipped several major bugfixes, you might try:
 ```json
 "engines": {
   "npm": "2.x"
-}
-```
-
-```json
-"engines": {
-  "npm": "^2.1.0"
 }
 ```
 
