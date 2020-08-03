@@ -695,7 +695,7 @@ testYarn2WithEngine() {
   assertCapturedSuccess
 }
 
-testYarn2WithNpmrc() {
+testYarn2WithNpmrcAndYarnrc() {
   compile "yarn-2-with-invalid-rc-files"
   assertCaptured "There is an existing .npmrc file that will not be used."
   assertCaptured "There is an existing .yarnrc file that will not be used."
