@@ -216,8 +216,6 @@ testYarnNativeCache() {
   compile "yarn-native-cache" $cache
   # These will be created if yarn is using the directory for its cache
 
-  ls "$cache"
-
   # Run this again with a cache
   compile "yarn-native-cache" $cache
 
