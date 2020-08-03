@@ -159,6 +159,11 @@ if [[ "$YARN2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file."
   fi
 
+  if [[ -d "$BUILD_DIR/.yarn/cache" ]]; then
+    echo "setting yarn cache folder"
+    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
+  fi
+
   ### Configure Yarn 2
   # fail for no yarnrc.yml
   fail_missing_yarnrc_yml "$BUILD_DIR"

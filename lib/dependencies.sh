@@ -107,7 +107,7 @@ yarn_node_modules() {
 yarn2_node_modules() {
   local build_dir=${1:-}
 
-  echo "Installing node modules (yarn.lock)"
+  echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
   monitor "yarn2-install" yarn install --immutable --immutable-cache 2>&1
 }
