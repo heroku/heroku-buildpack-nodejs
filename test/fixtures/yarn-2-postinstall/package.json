@@ -12,6 +12,6 @@
   },
   "scripts": {
     "build": "tsc --version",
-    "postinstall": "echo \"postinstall successful\""
+    "postinstall": "echo 'postinstall successful'"
   }
 }

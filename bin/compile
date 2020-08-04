@@ -160,7 +160,7 @@ if [[ "$YARN2" == "true" ]]; then
   fi
 
   if [[ -d "$BUILD_DIR/.yarn/cache" ]]; then
-    echo "setting yarn cache folder"
+    echo "Setting the YARN_CACHE_FOLDER to .yarn/cache"
     YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
   fi
 
