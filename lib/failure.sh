@@ -119,7 +119,7 @@ fail_yarn2_unsupported() {
     mcount "failures.yarn2-unsupported"
     meta_set "failure" "yarn2-unsupported"
     warn "
-      Thanks for trying Heroku with Yarn 2!
+      Thanks for trying Scalingo with Yarn 2!
 
       We are busy working to support Yarn 2, but it's not quite there yet.
       Thanks for your patience while we work to give full support to
@@ -376,7 +376,7 @@ fail_missing_yarnrc_yml() {
 
       It looks like the 'yarnrc.yml' file is missing from this project. Please
       make sure this file is checked into version control and made available to
-      Heroku.
+      Scalingo.
 
       To generate 'yarnrc.yml', make sure Yarn 2 is installed on your local
       machine and set the version in your project directory with:
@@ -425,7 +425,7 @@ fail_missing_yarn_vendor() {
     warn "Yarn was not found
 
       It looks like yarn is missing from $yarn_path, which is needed to continue
-      this build on Heroku. Yarn 2 recommends vendoring Yarn under the '.yarn/releases'
+      this build on Scalingo. Yarn 2 recommends vendoring Yarn under the '.yarn/releases'
       directory, so remember to check the '.yarn' directory into version control
       to use during builds.
 

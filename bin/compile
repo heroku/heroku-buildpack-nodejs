@@ -155,7 +155,7 @@ export YARN2_PATH
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset this and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
+      WARNING- You are using Yarn 2. The buildpack won't cache because Scalingo is expecting dependencies from the .yarn directory for each build. To unset this and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
       "
   fi
 
@@ -310,7 +310,7 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
   if [[ "$YARN2" == "true" ]]; then
-    echo "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
+    echo "Scalingo expects dependencies to be included in project with Yarn 2. Skipping installation."
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
