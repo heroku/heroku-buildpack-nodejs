@@ -144,10 +144,17 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 ### Configure vendored package manager
 export YARN2_PATH
 
+setup_yarn_2() {
+  if [[ -d "$BUILD_DIR/.yarn/cache" ]]; then
+    echo "Setting the YARN_CACHE_FOLDER to .yarn/cache"
+    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
+  fi
+}
+
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset this and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
+      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset NODE_MODULES_CACHE and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
       "
   fi
 
@@ -159,10 +166,7 @@ if [[ "$YARN2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file."
   fi
 
-  if [[ -d "$BUILD_DIR/.yarn/cache" ]]; then
-    echo "Setting the YARN_CACHE_FOLDER to .yarn/cache"
-    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
-  fi
+  setup_yarn_2 | output "$LOG_FILE"
 
   ### Configure Yarn 2
   # fail for no yarnrc.yml
