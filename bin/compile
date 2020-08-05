@@ -144,13 +144,6 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 ### Configure vendored package manager
 export YARN2_PATH
 
-setup_yarn_2() {
-  if [[ -d "$BUILD_DIR/.yarn/cache" ]]; then
-    echo "Setting the YARN_CACHE_FOLDER to .yarn/cache"
-    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
-  fi
-}
-
 if [[ "$YARN2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
@@ -166,7 +159,10 @@ if [[ "$YARN2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file."
   fi
 
-  setup_yarn_2 | output "$LOG_FILE"
+  if [[ -d "$BUILD_DIR/.yarn/cache" ]]; then
+    info "Setting the YARN_CACHE_FOLDER to .yarn/cache"
+    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
+  fi
 
   ### Configure Yarn 2
   # fail for no yarnrc.yml
