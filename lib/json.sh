@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-JQ="$BP_DIR/vendor/jq-$(get_os)"
+JQ="$BP_DIR/lib/vendor/jq-$(get_os)"
 
 read_json() {
   local file="$1"
@@ -9,7 +9,7 @@ read_json() {
   if test -f "$file"; then
     # -c = print on only one line
     # -M = strip any color
-    # --raw-output = if the filter’s result is a string then it will be written directly 
+    # --raw-output = if the filter’s result is a string then it will be written directly
     #                to stdout rather than being formatted as a JSON string with quotes
     # shellcheck disable=SC2002
     cat "$file" | $JQ -c -M --raw-output "$key // \"\"" || return 1

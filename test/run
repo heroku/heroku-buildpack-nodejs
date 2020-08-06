@@ -100,6 +100,13 @@ testPrePostBuildScripts() {
   assertCapturedSuccess
 }
 
+testCleanupScript() {
+  compile "cleanup-scripts"
+  assertCaptured "Running heroku-cleanup"
+  assertCaptured "echo heroku-cleanup hook message"
+  assertCapturedSuccess
+}
+
 testYarnRun() {
   compile "yarn-run"
   assertCaptured "Running heroku-postbuild (yarn)"
@@ -113,6 +120,24 @@ testNoVersion() {
   assertCaptured "Resolving node version 12.x"
   assertCaptured "Downloading and installing node 12."
   assertCapturedSuccess
+}
+
+testCustomYarnBinaryURL() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "testurl" > $env_dir/YARN_BINARY_URL
+  compile "yarn" $cache $env_dir
+  assertCaptured "from testurl"
+}
+
+testCustomNodeBinaryURL() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "testurl" > $env_dir/NODE_BINARY_URL
+  compile "node-10" $cache $env_dir
+  assertCaptured "from testurl"
 }
 
 testDisableCache() {
@@ -198,7 +223,23 @@ testYarnNativeCache() {
 
   # assert that devDependencies are not cached
   assertEquals "0" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+  assertCapturedSuccess
+}
 
+testYarnNativeCacheFalse() {
+  local cache=$(mktmpdir)
+
+  compile "yarn-native-cache-false" $cache
+  # These will be created if yarn is using the directory for its cache
+
+  ls "$cache"
+
+  # Run this again with a cache
+  compile "yarn-native-cache-false" $cache
+
+  # assert that devDependencies are not cached
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+  assertCaptured "Using Yarn Cache has moved behind an environment variable."
   assertCapturedSuccess
 }
 
@@ -295,6 +336,12 @@ testYarnEngine() {
   assertCapturedSuccess
 }
 
+testYarnEngineWithMonorepo() {
+  compile "yarn-engine-with-monorepo"
+  assertCaptured "installing yarn (1.4.0)"
+  assertCapturedSuccess
+}
+
 # If they specify a version of yarn inside package.json but
 # don't have a yarn.lock file download and make yarn available
 # though we will only install using yarn if a yarn.lock exists
@@ -350,6 +397,22 @@ testOldNpmWithLockfile() {
   assertCaptured "This version of npm"
   assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
   assertCapturedSuccess
+}
+
+testWarnAwsProxyHttp() {
+  env_dir=$(mktmpdir)
+  echo "http://localhost:5001" > $env_dir/HTTP_PROXY
+  compile "node-10" "$(mktmpdir)" $env_dir
+  assertCaptured "Your build may fail if NO_PROXY is not set to amazonaws.com"
+  assertCapturedError
+}
+
+testWarnAwsProxyHttps() {
+  env_dir=$(mktmpdir)
+  echo "http://localhost:5001" > $env_dir/HTTPS_PROXY
+  compile "node-10" "$(mktmpdir)" $env_dir
+  assertCaptured "Your build may fail if NO_PROXY is not set to amazonaws.com"
+  assertCapturedError
 }
 
 testWarnUnmetDepNpm() {
@@ -573,6 +636,17 @@ testModulesCheckedIn() {
   assertCapturedSuccess
 }
 
+testSkipModulesCheckedIn() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/SKIP_NODE_MODULES_CHECK
+
+  compile "skip-modules-checked-in" "$(mktmpdir)" $env_dir
+
+  assertCaptured "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=true"
+  assertNotCaptured "node_modules checked into source"
+  assertCapturedSuccess
+}
+
 testDetectWithPackageJson() {
   detect "stable-node"
   assertCaptured "Node.js"
@@ -614,6 +688,61 @@ testIoJs() {
   assertCaptured "io.js no longer supported"
   assertCapturedError
 }
+
+###
+# Yarn 2
+testYarn2() {
+  compile "yarn-2"
+  assertCaptured "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
+  # tsc output
+  assertCaptured "Version 3.9.3"
+  assertCaptured "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped."
+  assertCapturedSuccess
+}
+###
+
+###
+# Yarn 2 warnings
+testYarn2WithNodeModulesCache() {
+  compile "yarn-2"
+  assertCaptured "You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build."
+  assertCapturedSuccess
+}
+
+testYarn2WithEngine() {
+  compile "yarn-2-with-engine"
+  assertCaptured "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x"
+  assertCapturedSuccess
+}
+
+testYarn2WithNpmrc() {
+  compile "yarn-2-with-invalid-rc-files"
+  assertCaptured "There is an existing .npmrc file that will not be used."
+  assertCaptured "There is an existing .yarnrc file that will not be used."
+  assertCapturedSuccess
+}
+###
+
+###
+# Yarn 2 failures
+testYarn2WithoutYarnrcYml() {
+  compile "yarn-2-without-yarnrc-yml"
+  assertCaptured "The 'yarnrc.yml' file is not found"
+  assertCapturedError
+}
+
+testYarn2WithoutYarnPath() {
+  compile "yarn-2-without-yarn-path"
+  assertCaptured "The 'yarnPath' could not be read from the 'yarnrc.yml' file"
+  assertCapturedError
+}
+
+testYarn2WithoutYarnRelease() {
+  compile "yarn-2-without-cache"
+  assertCaptured "Yarn was not found"
+  assertCapturedError
+}
+###
 
 testSpecificVersion() {
   compile "specific-version"
@@ -1291,6 +1420,11 @@ testBinReportScriptsWithQuotes() {
   assertCaptured "build_script: \"concurrently \\\"npm run build-server\\\" npm run build-client\""
   assertCaptured "heroku_postbuild_script: \"if [ -z \\\"\${CI}\\\" ]; then yarn build-assets; fi\""
   assertCaptured "postinstall_script: \"if [ \\\"\${NODE_ENV}\\\" = \\\"staging\\\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \\\"Skipped heroku-postbuild\\\"; fi\""
+}
+
+testBinReportYarn() {
+  compile_and_report "yarn"
+  assertCaptured "package_manager: \"yarn\""
 }
 
 # Utils

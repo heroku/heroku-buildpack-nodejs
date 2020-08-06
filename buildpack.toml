@@ -5,6 +5,7 @@ name = "Node.js"
   files = [
       "etc/",
       "test/",
+      "spec/",
       ".github/",
       ".travis.yml",
       "makefile"

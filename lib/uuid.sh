@@ -28,7 +28,7 @@ uuid_fallback()
 }
 
 uuid() {
-  # On Heroku's stack, there is a uuid command
+  # On Scalingo's stack, there is a uuid command
   if [[ -f /proc/sys/kernel/random/uuid ]]; then
     cat /proc/sys/kernel/random/uuid
   # on macOS there is also a command
@@ -39,8 +39,8 @@ uuid() {
   # we can make no guarantees of true randomness or uniqueness of this ID. However it is
   # likely only being piped to /dev/null
   #
-  # If that's not true for you, please file an issue and let us know: 
-  # https://github.com/heroku/heroku-buildpack-nodejs/issues
+  # If that's not true for you, please file an issue and let us know:
+  # https://github.com/Scalingo/buildpack-nodejs/issues/new
   else
     uuid_fallback
   fi
