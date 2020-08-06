@@ -27,7 +27,7 @@ run_if_present() {
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
   if [[ "$has_script_name" == "true" ]]; then
-    if $YARN || $YARN2; then
+    if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
@@ -104,12 +104,12 @@ yarn_node_modules() {
   monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
 }
 
-yarn2_node_modules() {
+yarn_2_install() {
   local build_dir=${1:-}
 
   echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
-  monitor "yarn2-install" yarn install --immutable --immutable-cache 2>&1
+  monitor "yarn-2-install" yarn install --immutable --immutable-cache 2>&1
 }
 
 yarn_prune_devdependencies() {

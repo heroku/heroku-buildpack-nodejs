@@ -2,7 +2,7 @@
 
 YQ="$BP_DIR/lib/vendor/yq-$(get_os)"
 
-detect_yarn2() {
+detect_yarn_2() {
   local uses_yarn="$1"
   local build_dir="$2"
   local yml_metadata
