@@ -52,8 +52,8 @@ source "$BP_DIR/lib/metadata.sh"
 source "$BP_DIR/lib/features.sh"
 # shellcheck source=lib/builddata.sh
 source "$BP_DIR/lib/builddata.sh"
-# shellcheck source=lib/yarn2.sh
-source "$BP_DIR/lib/yarn2.sh"
+# shellcheck source=lib/yarn-2.sh
+source "$BP_DIR/lib/yarn-2.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -97,7 +97,7 @@ meta_set "build-step" "init"
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
-YARN2=$(detect_yarn2 "$YARN" "$BUILD_DIR")
+YARN2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
@@ -302,7 +302,7 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
   if [[ "$YARN2" == "true" ]]; then
-    yarn2_node_modules "$BUILD_DIR"
+    yarn_2_node_modules "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then

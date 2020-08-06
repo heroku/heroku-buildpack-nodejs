@@ -104,12 +104,12 @@ yarn_node_modules() {
   monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
 }
 
-yarn2_node_modules() {
+yarn_2_node_modules() {
   local build_dir=${1:-}
 
   echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
-  monitor "yarn2-install" yarn install --immutable --immutable-cache 2>&1
+  monitor "yarn-2-install" yarn install --immutable --immutable-cache 2>&1
 }
 
 yarn_prune_devdependencies() {
