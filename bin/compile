@@ -97,7 +97,7 @@ meta_set "build-step" "init"
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
-YARN2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
+YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
@@ -142,9 +142,9 @@ create_build_env
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 ### Configure vendored package manager
-export YARN2_PATH
+export YARN_2_PATH
 
-if [[ "$YARN2" == "true" ]]; then
+if [[ "$YARN_2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
       WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset NODE_MODULES_CACHE and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
@@ -169,13 +169,13 @@ if [[ "$YARN2" == "true" ]]; then
   fail_missing_yarnrc_yml "$BUILD_DIR"
 
   # get yarn_path
-  YARN2_PATH=$(get_yarn_path "$BUILD_DIR")
+  YARN_2_PATH=$(get_yarn_path "$BUILD_DIR")
 
   # fail for no yarnPath in rc
-  fail_missing_yarn_path "$BUILD_DIR" "$YARN2_PATH"
+  fail_missing_yarn_path "$BUILD_DIR" "$YARN_2_PATH"
 
   # fail for missing yarn in .yarn/releases
-  fail_missing_yarn_vendor "$BUILD_DIR" "$YARN2_PATH"
+  fail_missing_yarn_vendor "$BUILD_DIR" "$YARN_2_PATH"
 fi
 
 if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
@@ -190,7 +190,7 @@ install_bins() {
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
 
-  if [[ "$YARN2" == "true" && -n "$yarn_engine" ]]; then
+  if [[ "$YARN_2" == "true" && -n "$yarn_engine" ]]; then
     warn "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x, so that per project version can be used. More information here: https://yarnpkg.com/getting-started/install#global-install"
     unset yarn_engine
   fi
@@ -236,7 +236,7 @@ install_bins() {
 
   warn_old_npm
 
-  if [[ $YARN2 == true ]]; then
+  if [[ $YARN_2 == true ]]; then
     YARN=false
   fi
 }
@@ -301,7 +301,7 @@ build_dependencies() {
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
-  if [[ "$YARN2" == "true" ]]; then
+  if [[ "$YARN_2" == "true" ]]; then
     yarn_2_node_modules "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
@@ -358,7 +358,7 @@ prune_devdependencies() {
 #   and in the new feature
 #   and we're using the default cache directories
 # then save off the cache after we prune out devDepenencies
-if [[ "$YARN2" == "true" ]]; then
+if [[ "$YARN_2" == "true" ]]; then
   echo "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped." | output "$LOG_FILE"
   meta_set "build-step" "prune-dependencies"
   meta_set "build-step" "save-cache"

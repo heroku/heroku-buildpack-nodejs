@@ -70,7 +70,7 @@ install_yarn() {
   fi
   chmod +x "$dir"/bin/*
 
-  if $YARN2; then
+  if $YARN_2; then
     echo "Using yarn $(yarn --version)"
   else
     echo "Installed yarn $(yarn --version)"
