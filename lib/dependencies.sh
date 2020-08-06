@@ -104,7 +104,7 @@ yarn_node_modules() {
   monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines 2>&1
 }
 
-yarn_2_node_modules() {
+yarn_2_install() {
   local build_dir=${1:-}
 
   echo "Running 'yarn install' with yarn.lock"

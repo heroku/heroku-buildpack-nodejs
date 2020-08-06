@@ -142,7 +142,7 @@ create_build_env
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 ### Configure vendored package manager
-export YARN_2_PATH
+export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
@@ -169,13 +169,13 @@ if [[ "$YARN_2" == "true" ]]; then
   fail_missing_yarnrc_yml "$BUILD_DIR"
 
   # get yarn_path
-  YARN_2_PATH=$(get_yarn_path "$BUILD_DIR")
+  VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
 
   # fail for no yarnPath in rc
-  fail_missing_yarn_path "$BUILD_DIR" "$YARN_2_PATH"
+  fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
 
   # fail for missing yarn in .yarn/releases
-  fail_missing_yarn_vendor "$BUILD_DIR" "$YARN_2_PATH"
+  fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
 fi
 
 if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
@@ -302,7 +302,7 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(nowms)
   if [[ "$YARN_2" == "true" ]]; then
-    yarn_2_node_modules "$BUILD_DIR"
+    yarn_2_install "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PREBUILD; then
