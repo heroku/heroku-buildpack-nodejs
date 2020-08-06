@@ -216,8 +216,6 @@ testYarnNativeCache() {
   compile "yarn-native-cache" $cache
   # These will be created if yarn is using the directory for its cache
 
-  ls "$cache"
-
   # Run this again with a cache
   compile "yarn-native-cache" $cache
 
@@ -668,7 +666,7 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
-  assertCaptured "Heroku expects dependencies to be included in project with Yarn 2. Skipping installation."
+  assertCaptured "Running 'yarn install' with yarn.lock"
   # tsc output
   assertCaptured "Version 3.9.3"
   assertCaptured "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped."
@@ -690,7 +688,7 @@ testYarn2WithEngine() {
   assertCapturedSuccess
 }
 
-testYarn2WithNpmrc() {
+testYarn2WithNpmrcAndYarnrc() {
   compile "yarn-2-with-invalid-rc-files"
   assertCaptured "There is an existing .npmrc file that will not be used."
   assertCaptured "There is an existing .yarnrc file that will not be used."
