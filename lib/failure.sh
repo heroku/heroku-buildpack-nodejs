@@ -210,7 +210,7 @@ fail_yarn_lockfile_outdated() {
        $ yarn install
        $ git add yarn.lock
        $ git commit -m \"Updated Yarn lockfile\"
-       $ git push heroku master
+       $ git push heroku main
     " https://help.heroku.com/TXYS53YJ
     fail
   fi

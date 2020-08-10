@@ -26,7 +26,7 @@ if [ -z "$HEROKU_API_KEY" ]; then
 fi
 
 if [[ "$CIRCLE_PROJECT_REPONAME" == "nodebin" ]]; then
-  HATCHET_BUILDPACK_BRANCH="master"
+  HATCHET_BUILDPACK_BRANCH="main"
 elif [ -n "$CIRCLE_BRANCH" ]; then
   HATCHET_BUILDPACK_BRANCH="$CIRCLE_BRANCH"
 elif [ -n "$TRAVIS_PULL_REQUEST_BRANCH" ]; then
