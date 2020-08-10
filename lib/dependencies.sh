@@ -126,7 +126,7 @@ yarn_prune_devdependencies() {
   elif [ -n "$YARN_PRODUCTION" ]; then
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     warn "
-    WARNING- The —production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces. See https://yarnpkg.com/cli/workspaces/focus for additional information.
+    WARNING- The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces. See https://yarnpkg.com/cli/workspaces/focus for additional information.
     "
     meta_set "skipped-prune" "true"
     return 0
