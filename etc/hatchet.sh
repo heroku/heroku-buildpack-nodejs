@@ -38,10 +38,8 @@ fi
 
 export HATCHET_BUILDPACK_BRANCH
 
-bundle install
-
 export HATCHET_RETRIES=3
-export HATCHET_APP_LIMIT=20
+export HATCHET_APP_LIMIT=100
 export HATCHET_DEPLOY_STRATEGY=git
 export HATCHET_BUILDPACK_BASE="https://github.com/heroku/heroku-buildpack-nodejs"
 
