@@ -698,7 +698,7 @@ testYarn2WithProductionFlag() {
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/YARN_PRODUCTION
   compile "yarn-2" "$(mktmpdir)" $env_dir
-  assertCaptured "The —production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
+  assertCaptured "The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
   assertCapturedError
 
 }
