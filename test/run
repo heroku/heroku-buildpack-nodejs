@@ -693,6 +693,15 @@ testYarn2WithNpmrcAndYarnrc() {
   assertCaptured "There is an existing .yarnrc file that will not be used."
   assertCapturedSuccess
 }
+
+testYarn2WithProductionFlag() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/YARN_PRODUCTION
+  compile "yarn-2" "$(mktmpdir)" $env_dir
+  assertCaptured "The —production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
+  assertCapturedError
+
+}
 ###
 
 ###
@@ -922,7 +931,6 @@ testDevDepenenciesWithNoPruningYarn() {
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
   assertCaptured "Skipping because YARN_PRODUCTION is 'false'"
-  assertCaptured "The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
   assertCapturedSuccess
 
   env_dir=$(mktmpdir)
@@ -930,7 +938,6 @@ testDevDepenenciesWithNoPruningYarn() {
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertNotCaptured "lodash"
   assertCaptured "Skipping because YARN_PRODUCTION is 'true'"
-  assertCaptured "The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
   assertCapturedSuccess
 }
 
