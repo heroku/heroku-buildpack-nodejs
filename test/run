@@ -669,7 +669,6 @@ testYarn2() {
   assertCaptured "Running 'yarn install' with yarn.lock"
   # tsc output
   assertCaptured "Version 3.9.3"
-  assertCaptured "Using Yarn 2, writing to the cache and pruning of dependencies will be skipped."
   assertCapturedSuccess
 }
 ###
@@ -693,6 +692,15 @@ testYarn2WithNpmrcAndYarnrc() {
   assertCaptured "There is an existing .npmrc file that will not be used."
   assertCaptured "There is an existing .yarnrc file that will not be used."
   assertCapturedSuccess
+}
+
+testYarn2WithProductionFlag() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/YARN_PRODUCTION
+  compile "yarn-2" "$(mktmpdir)" $env_dir
+  assertCaptured "The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
+  assertCapturedError
+
 }
 ###
 
