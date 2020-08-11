@@ -149,7 +149,7 @@ if [[ "$YARN_2" == "true" ]]; then
 
   if [[ "$NODE_MODULES_CACHE" == "true" ]]; then
     warn "
-      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset NODE_MODULES_CACHE and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#change-environment-variables
+      WARNING- You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build. To unset NODE_MODULES_CACHE and other similar environment variables, read here: https://devcenter.heroku.com/articles/migrating-to-yarn-2#disable-dependency-caching
       "
   fi
 
