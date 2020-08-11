@@ -671,6 +671,13 @@ testYarn2() {
   assertCaptured "Version 3.9.3"
   assertCapturedSuccess
 }
+
+testYarn2WithNodeModules() {
+  compile "yarn-2-with-node-modules"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Caching build"
+  assertCapturedSuccess
+}
 ###
 
 ###
