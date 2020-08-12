@@ -20,6 +20,12 @@ detect_yarn_2() {
   fi
 }
 
+has_yarn_cache() {
+  local build_dir="$1"
+
+  [[ -d "$build_dir/.yarn/cache" ]]
+}
+
 get_yarn_path() {
   local build_dir="$1"
   $YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1
@@ -27,7 +33,9 @@ get_yarn_path() {
 
 node_modules_enabled() {
   local build_dir="$1"
-  local node_linker=$($YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1)
+  local node_linker
+  
+  node_linker=$($YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1)
 
   [[ "$node_linker" == "node-modules" ]]
 }
