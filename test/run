@@ -666,21 +666,23 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
+  assertCaptured "The buildpack won't cache the dependencies in .yarn/cache."
   assertCaptured "Running 'yarn install' with yarn.lock"
   # tsc output
   assertCaptured "Version 3.9.3"
+  assertCapturedSuccess
+}
+
+testYarn2WithNodeModules() {
+  compile "yarn-2-with-node-modules"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Caching build"
   assertCapturedSuccess
 }
 ###
 
 ###
 # Yarn 2 warnings
-testYarn2WithNodeModulesCache() {
-  compile "yarn-2"
-  assertCaptured "You are using Yarn 2. The buildpack won't cache because Heroku is expecting dependencies from the .yarn directory for each build."
-  assertCapturedSuccess
-}
-
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
   assertCaptured "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x"

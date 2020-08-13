@@ -5,6 +5,7 @@
 - Run `yarn install` for all Yarn 2 builds ([#819](https://github.com/heroku/heroku-buildpack-nodejs/pull/819))
 - Change all references from Yarn2 to Yarn 2 ([#824](https://github.com/heroku/heroku-buildpack-nodejs/pull/824))
 - Support Yarn 2 node modules ([#821](https://github.com/heroku/heroku-buildpack-nodejs/pull/821))
+- Detect for "node-modules" nodeLinker for Yarn 2 ([#828](https://github.com/heroku/heroku-buildpack-nodejs/pull/828))
 
 ## v174 (2020-07-23)
 - provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))

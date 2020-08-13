@@ -423,7 +423,7 @@ fail_yarn_2_production() {
   if [[ -n "$YARN_PRODUCTION" ]]; then
     header "Build failed"
     warn "
-      The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces. See https://devcenter.heroku.com/articles/migrating-to-yarn-2#update-heroku-environment-for-yarn-cache-remove-production-environment-variables for additional information.
+      The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces. See https://devcenter.heroku.com/articles/migrating-to-yarn-2#update-heroku-environment-with-plug-n-play-remove-production-environment-variables for additional information.
       "
     fail
   fi
