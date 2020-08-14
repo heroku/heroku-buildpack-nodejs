@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Only run immutable cache in yarn 2 if caching enabled ([#832](https://github.com/heroku/heroku-buildpack-nodejs/pull/832))
 - Added Hatchet regression tests ([#833](https://github.com/heroku/heroku-buildpack-nodejs/pull/833))
 - Delete unused fixtures ([#835](https://github.com/heroku/heroku-buildpack-nodejs/pull/835))
 
