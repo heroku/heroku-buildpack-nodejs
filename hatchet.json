@@ -2,7 +2,7 @@
   "heroku": [
     "heroku/node-js-getting-started"
   ],
-  "rack": [
+  "nodejs": [
     "sharpstone/default-node"
   ]
 }
