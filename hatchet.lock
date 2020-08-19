@@ -1,5 +1,5 @@
 ---
 - - "./repos/heroku/node-js-getting-started"
-  - a8ca3c56bde59ce00df12bc255238058bf03c38c
-- - "./repos/lillianzhang331/default-node"
-  - 4b74be2a9cb36809c2a504ab88a47168a5cd8222
+  - main
+- - "./repos/rack/default-node"
+  - master

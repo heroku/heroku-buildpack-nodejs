@@ -2,7 +2,7 @@
   "heroku": [
     "heroku/node-js-getting-started"
   ],
-  "lillianzhang331": [
-    "lillianzhang331/default-node"
+  "rack": [
+    "sharpstone/default-node"
   ]
 }

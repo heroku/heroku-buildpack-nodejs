@@ -7,9 +7,7 @@ describe "Stack Changes" do
     app.deploy do |app, heroku|
       app.update_stack("heroku-16")
       run!('git commit --allow-empty -m "heroku-16 migrate"')
-
       app.push!
-      puts app.output
       expect(app.output).to include("Cached directories were not restored due to a change in version of node, npm, yarn or stack")
     end
   end
@@ -21,7 +19,6 @@ describe "Stack Changes" do
       app.update_stack("heroku-16")
       run!('git commit --allow-empty -m "cedar migrate"')
       app.push!
-      puts app.output
       expect(app.output).to_not include("Cached directories were not restored due to a change in version of node, npm, yarn or stack")
       expect(app.output).to include("not cached - skipping")
     end

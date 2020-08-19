@@ -7,13 +7,9 @@ describe "Heroku CI" do
       # puts test_run.output
       # what is the behavior of this for node js
       # expect(test_run.output).to match("Fetching rake")
-      puts test_run.class
-      puts test_run.output
-      puts test_run.methods
+      expect(test_run.output).to_not include("Restoring cache")
       test_run.run_again
-      puts test_run.output
-      expect(test_run.output).to match("Using rake")
-      expect(test_run.output).to_not match("Fetching rake")
+      expect(test_run.output).to include("Restoring cache")
     end
   end
 end
