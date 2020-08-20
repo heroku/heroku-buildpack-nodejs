@@ -4,7 +4,7 @@ require_relative '../spec_helper'
 describe "Buildpack paths" do
   it "are absolute" do
     buildpacks = [
-      ENV["HATCHET_BUILDPACK_BASE"],
+      :default,
       "https://github.com/sharpstone/force_absolute_paths_buildpack"
     ]
     Hatchet::Runner.new("node-js-getting-started", buildpacks: buildpacks).deploy do |app|
