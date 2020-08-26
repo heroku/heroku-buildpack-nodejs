@@ -6,6 +6,10 @@
 set -o errexit    # always exit on error
 set -o pipefail   # don t ignore exit codes when piping output
 
+if [ -n "$BUILDPACK_DEBUG" ]; then
+    set -x
+fi
+
 unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
