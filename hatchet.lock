@@ -1,5 +1,5 @@
 ---
 - - "./repos/heroku/node-js-getting-started"
-  - master
+  - main
 - - "./repos/nodejs/default-node"
   - master
