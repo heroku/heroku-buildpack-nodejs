@@ -2,6 +2,8 @@
 
 set -e
 
+[ "$TRAVIS_PULL_REQUEST_SLUG" != "heroku/heroku-buildpack-nodejs" ] && echo "Run tests manually for forked PRs." && exit 0
+
 if [[ "$CIRCLE_PROJECT_REPONAME" == "nodebin" ]]; then
   HATCHET_BUILDPACK_BRANCH="main"
 elif [ -n "$CIRCLE_BRANCH" ]; then
