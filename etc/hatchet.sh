@@ -2,29 +2,6 @@
 
 set -e
 
-if [ "$CIRCLECI" == "true" ] && [ -n "$CI_PULL_REQUEST" ]; then
-  if [ "$CIRCLE_PR_USERNAME" != "heroku" ]; then
-    echo "Skipping integration tests on forked PR."
-    exit 0
-  fi
-fi
-
-if [ "$TRAVIS" == "true" ] && [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-  if [ "$TRAVIS_PULL_REQUEST_SLUG" != "heroku/heroku-buildpack-nodejs" ]; then
-    echo "Skipping integration tests on forked PR."
-    exit 0
-  fi
-fi
-
-if [ -z "$HEROKU_API_KEY" ]; then
-  echo ""
-  echo "ERROR: Missing \$HEROKU_API_KEY."
-  echo ""
-  echo "NOTE: You can create token this by running: heroku authorizations:create --description \"For Travis\""
-  echo ""
-  exit 1
-fi
-
 if [[ "$CIRCLE_PROJECT_REPONAME" == "nodebin" ]]; then
   HATCHET_BUILDPACK_BRANCH="main"
 elif [ -n "$CIRCLE_BRANCH" ]; then
