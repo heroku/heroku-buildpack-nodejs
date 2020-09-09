@@ -109,7 +109,13 @@ yarn_2_install() {
 
   echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
-  monitor "yarn-2-install" yarn install --immutable --immutable-cache 2>&1
+
+  # If there is no cache we can't run immutable cache because a cache will be created by default
+  if ! has_yarn_cache "$build_dir"; then
+    monitor "yarn-2-install" yarn install --immutable 2>&1
+  else
+    monitor "yarn-2-install" yarn install --immutable --immutable-cache 2>&1
+  fi
 }
 
 yarn_prune_devdependencies() {
