@@ -3,6 +3,7 @@
 ## main
 - Added Hatchet regression tests ([#833](https://github.com/heroku/heroku-buildpack-nodejs/pull/833))
 - Delete unused fixtures ([#835](https://github.com/heroku/heroku-buildpack-nodejs/pull/835))
+- Delete deprecated node hatchet tests ([#841](https://github.com/heroku/heroku-buildpack-nodejs/pull/841))
 
 ## v175 (2020-08-13)
 - Install Yarn version at 1.22.x when not specified in package.json engines ([#817](https://github.com/heroku/heroku-buildpack-nodejs/pull/817))
