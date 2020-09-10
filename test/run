@@ -679,6 +679,11 @@ testYarn2WithNodeModules() {
   assertCaptured "Caching build"
   assertCapturedSuccess
 }
+
+testYarn2WithoutYarnCache() {
+  compile "yarn-2-without-cache"
+  assertCapturedSuccess
+}
 ###
 
 ###
@@ -721,7 +726,7 @@ testYarn2WithoutYarnPath() {
 }
 
 testYarn2WithoutYarnRelease() {
-  compile "yarn-2-without-cache"
+  compile "yarn-2-without-yarn"
   assertCaptured "Yarn was not found"
   assertCapturedError
 }

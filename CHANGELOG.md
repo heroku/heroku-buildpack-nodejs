@@ -1,9 +1,10 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Only run immutable cache in yarn 2 if caching enabled ([#832](https://github.com/heroku/heroku-buildpack-nodejs/pull/832))
 - Added Hatchet regression tests ([#833](https://github.com/heroku/heroku-buildpack-nodejs/pull/833))
 - Delete unused fixtures ([#835](https://github.com/heroku/heroku-buildpack-nodejs/pull/835))
-- Delete deprecated node hatchet tests ([#841](https://github.com/heroku/heroku-buildpack-nodejs/pull/841))
+- Expand `npm ci` usage to 100% of builds ([#842](https://github.com/heroku/heroku-buildpack-nodejs/pull/842))
 
 ## v175 (2020-08-13)
 - Install Yarn version at 1.22.x when not specified in package.json engines ([#817](https://github.com/heroku/heroku-buildpack-nodejs/pull/817))
