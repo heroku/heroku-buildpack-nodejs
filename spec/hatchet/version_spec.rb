@@ -3,7 +3,7 @@ require_relative '../spec_helper'
 #Test that builds fail when a bad version is specified
 describe "bad node version" do
   it "gives a helpful error" do
-    Hatchet::Runner.new("spec/fixtures/repos/default-node", allow_failure: true).tap do |app|
+    Hatchet::Runner.new("default-node", allow_failure: true).tap do |app|
       app.before_deploy do
         File.open("package.json", "w+") do |f|
           f.write '{"engines": {
