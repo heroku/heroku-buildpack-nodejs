@@ -20,6 +20,9 @@ CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
+# Load the previuosly environment
+[ -e "${BUILD_DIR}/export" ] && source "${BUILD_DIR}/export"
+
 ### Load dependencies
 
 # shellcheck source=lib/vendor/stdlib_v7.sh
