@@ -456,10 +456,6 @@ testWarnDevDeps() {
   assertCaptured "A module may be missing"
   assertNotCaptured "This module may be specified"
   assertCapturedError
-  compile "failing-build"
-  assertNotCaptured "A module may be missing"
-  assertNotCaptured "This module may be specified"
-  assertCapturedError
 }
 
 testEnvBlacklist() {
@@ -700,19 +696,18 @@ testYarn2WithNpmrcAndYarnrc() {
   assertCaptured "There is an existing .yarnrc file that will not be used."
   assertCapturedSuccess
 }
+###
 
+###
+# Yarn 2 failures
 testYarn2WithProductionFlag() {
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/YARN_PRODUCTION
   compile "yarn-2" "$(mktmpdir)" $env_dir
   assertCaptured "The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
   assertCapturedError
-
 }
-###
 
-###
-# Yarn 2 failures
 testYarn2WithoutYarnrcYml() {
   compile "yarn-2-without-yarnrc-yml"
   assertCaptured "The 'yarnrc.yml' file is not found"
@@ -794,14 +789,6 @@ testFailingBuild() {
   assertCapturedError 1 ""
 }
 
-testTicketOnFailure() {
-  compile "invalid-dependency"
-  assertCaptured "troubleshooting-node-deploys"
-  assertCaptured "please submit a ticket"
-  assertNotCaptured "possible problems"
-  assertCapturedError
-}
-
 testInfoEmpty() {
   compile "info-empty"
   assertCaptured "engines.node (package.json):  unspecified"
@@ -836,6 +823,9 @@ testRangeWithSpace() {
 testInvalidDependency() {
   compile "invalid-dependency"
   assertCaptured "npm ERR! 404"
+  assertCaptured "troubleshooting-node-deploys"
+  assertCaptured "please submit a ticket"
+  assertNotCaptured "possible problems"
   assertCapturedError 1 ""
 }
 
@@ -968,24 +958,6 @@ testNodeEnvTestDepenenciesYarn() {
   assertCapturedSuccess
 }
 
-# When NPM_CONFIG_PRODUCTION = true we should not install devDependencies
-testOnlyDependenciesInstalled() {
-  env_dir=$(mktmpdir)
-  echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
-  compile "dependencies" "$(mktmpdir)" $env_dir
-  assertNotCaptured "lodash"
-  assertCapturedSuccess
-}
-
-# When NPM_CONFIG_PRODUCTION = true we should not install devDependencies with Yarn
-testOnlyDependenciesInstalledYarn() {
-  env_dir=$(mktmpdir)
-  echo "true" > $env_dir/YARN_PRODUCTION
-  compile "dependencies-yarn" "$(mktmpdir)" $env_dir
-  assertNotCaptured "lodash"
-  assertCapturedSuccess
-}
-
 testModulesCheckedInWithDevDependencies() {
   compile "dependencies-modules-checked-in-with-devdependencies"
   assertCaptured "Rebuilding any native modules"
@@ -1065,12 +1037,6 @@ testCIEnvVars() {
   compileTest "ci-env-test"
   assertCaptured "NODE_ENV: test"
   assertCapturedSuccess
-}
-
-# If compile fails, test-compile should also fail
-testCICompileFails() {
-  testCompile "failing-build"
-  assertCapturedError
 }
 
 testCIEnvVarsOverride() {
