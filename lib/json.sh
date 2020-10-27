@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 JQ="/usr/bin/jq"
+if ! test -f "$JQ"; then
+  JQ="$BP_DIR/lib/vendor/jq-$(get_os)"
+fi
 
 read_json() {
   local file="$1"
