@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Use jq from the stack image ([#854](https://github.com/heroku/heroku-buildpack-nodejs/pull/854))
 
 ## v176 (2020-09-10)
 - Only run immutable cache in yarn 2 if caching enabled ([#832](https://github.com/heroku/heroku-buildpack-nodejs/pull/832))
