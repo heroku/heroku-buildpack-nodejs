@@ -1251,6 +1251,11 @@ testBuildMetaData() {
   assertFileContains "restore-cache-time=" $log_file
   assertFileContains "save-cache-time=" $log_file
 
+  # resolve-version tests
+  assertFileContains 'resolve-v1-node="10.23.0 https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v10.23.0-linux-x64.tar.gz"' $log_file
+  assertFileContains 'resolve-v2-node="10.23.0 https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v10.23.0-linux-x64.tar.gz"' $log_file
+  assertFileContains "resolve-is-equal-node=true" $log_file
+
   # erase the log file
   echo "" > $log_file
   BUILDPACK_LOG_FILE="$log_file" compile "yarn"
@@ -1262,6 +1267,11 @@ testBuildMetaData() {
   assertFileContains "install-yarn-binary-memory=" $log_file
   assertFileContains "install-yarn-binary-time=" $log_file
   assertFileContains "node-build-success=true" $log_file
+
+  # resolve-version tests
+  assertFileContains 'resolve-v1-yarn="1.22.10 https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.10.tar.gz"' $log_file
+  assertFileContains 'resolve-v2-yarn="1.22.10 https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.10.tar.gz"' $log_file
+  assertFileContains "resolve-is-equal-yarn=true" $log_file
 }
 
 testWorkspaceMetaData() {
