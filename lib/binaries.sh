@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
+RESOLVE_V2="$BP_DIR/lib/vendor/resolve"
 
 resolve() {
   local binary="$1"
   local versionRequirement="$2"
   local n=0
-  local output
+  local output v2_output resolve_is_equal
 
   # retry this up to 5 times in case of spurious failed API requests
   until [ $n -ge 5 ]
@@ -17,6 +18,13 @@ resolve() {
     # script by the user
     # see testAvoidHttpProxyVersionResolutionIssue test and README
     if output=$($RESOLVE "$binary" "$versionRequirement"); then
+      v2_output=$($RESOLVE_V2 "$BP_DIR/inventory/$binary.toml" "$versionRequirement")
+      resolve_is_equal=$(if [[ "$output" == "$v2_output" ]]; then echo true; else echo false; fi)
+
+      meta_set "resolve-v1-$binary" "$output"
+      meta_set "resolve-v2-$binary" "$v2_output"
+      meta_set "resolve-is-equal-$binary" "$resolve_is_equal"
+
       echo "$output"
       return 0
     # don't retry if we get a negative result

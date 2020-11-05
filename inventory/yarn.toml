@@ -1,0 +1,553 @@
+name = "yarn"
+
+[[releases]]
+version = "0.16.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.16.0.tar.gz"
+etag = "e4cc76bea92fabb664edadc4db14a8f2"
+
+[[releases]]
+version = "0.16.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.16.1.tar.gz"
+etag = "b5445b351a68c573960b06564ef9267c"
+
+[[releases]]
+version = "0.17.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.0.tar.gz"
+etag = "49c1ab8d008eb831761cb223dc432466"
+
+[[releases]]
+version = "0.17.10"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.10.tar.gz"
+etag = "faec4c1a00eee8e76caaba32cd22ca83"
+
+[[releases]]
+version = "0.17.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.2.tar.gz"
+etag = "f4028eb5672205666c343c33e7b6a592"
+
+[[releases]]
+version = "0.17.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.3.tar.gz"
+etag = "3e832943295d44f9be9bcd9c409a6e79"
+
+[[releases]]
+version = "0.17.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.4.tar.gz"
+etag = "f385c5c6953a745accec7ec605eb7ebb"
+
+[[releases]]
+version = "0.17.5"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.5.tar.gz"
+etag = "0da233f2fd6c7a101ca0512aca902d1d"
+
+[[releases]]
+version = "0.17.6"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.6.tar.gz"
+etag = "e73409da852ceefeba4111d6e7c9c4e2"
+
+[[releases]]
+version = "0.17.7"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.7.tar.gz"
+etag = "82ee9ba3be948cf65f89554c79828f1f"
+
+[[releases]]
+version = "0.17.8"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.8.tar.gz"
+etag = "a8d1e7246e0aff37f47855b0e73e0dd3"
+
+[[releases]]
+version = "0.17.9"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.17.9.tar.gz"
+etag = "1d49af2d8a76dc9e3e0058f6d0ad63af"
+
+[[releases]]
+version = "0.18.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.18.0.tar.gz"
+etag = "e3fc0c09e7c3935c7f37729b6de3291d"
+
+[[releases]]
+version = "0.18.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.18.1.tar.gz"
+etag = "266a3f76f9ca02391074c87e661b5466"
+
+[[releases]]
+version = "0.18.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.18.2.tar.gz"
+etag = "d7aab1b37ffb6f308ef41366983c21af"
+
+[[releases]]
+version = "0.19.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.19.0.tar.gz"
+etag = "7749fa4e8be58114ca8a03932bad273f"
+
+[[releases]]
+version = "0.19.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.19.1.tar.gz"
+etag = "28b4eba034249540e03635dfaa89bedc"
+
+[[releases]]
+version = "0.20.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.20.0.tar.gz"
+etag = "12df75bdb018b0412580ccc5ffee5c6e"
+
+[[releases]]
+version = "0.20.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.20.3.tar.gz"
+etag = "9520b108ce17c2d3a0c8ce7e9b1e99ed"
+
+[[releases]]
+version = "0.20.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.20.4.tar.gz"
+etag = "b3a762307d08b8a2eac3661e966a6d71"
+
+[[releases]]
+version = "0.21.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.21.0.tar.gz"
+etag = "678759bcbf0676825cba2f4fb1417bca"
+
+[[releases]]
+version = "0.21.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.21.1.tar.gz"
+etag = "ec31fdc4ae983bafaf73c6291eb28098"
+
+[[releases]]
+version = "0.21.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.21.2.tar.gz"
+etag = "9ac335d46f4c0af97cd08b3013cf6d87"
+
+[[releases]]
+version = "0.21.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.21.3.tar.gz"
+etag = "779e0c868fbc2c8235d20755890202fc"
+
+[[releases]]
+version = "0.22.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.22.0.tar.gz"
+etag = "bd0fa3000a488d89f75b03efcbd32cec"
+
+[[releases]]
+version = "0.23.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.23.0.tar.gz"
+etag = "bf5ddf6d0031047afafe1fb9fbad5d5e"
+
+[[releases]]
+version = "0.23.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.23.2.tar.gz"
+etag = "8c40f98256c9f14234e6afb04af910b0"
+
+[[releases]]
+version = "0.23.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.23.3.tar.gz"
+etag = "54850071e7b675d569fdbbc328ee6b36"
+
+[[releases]]
+version = "0.23.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.23.4.tar.gz"
+etag = "e6837e4ca870c1e83728a426b221e5c3"
+
+[[releases]]
+version = "0.24.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.0.tar.gz"
+etag = "0efe461e8326f0ad2a2cfac18cff642e"
+
+[[releases]]
+version = "0.24.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.1.tar.gz"
+etag = "45d38d55725bfb4ef6ef05115f452882"
+
+[[releases]]
+version = "0.24.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.2.tar.gz"
+etag = "735df9bb556e8457857ec2922f04ff7d"
+
+[[releases]]
+version = "0.24.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.3.tar.gz"
+etag = "24a7c444b19980db53e459fb10d288cd"
+
+[[releases]]
+version = "0.24.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.4.tar.gz"
+etag = "da248c8867553d500c08efc3179850f7"
+
+[[releases]]
+version = "0.24.5"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.5.tar.gz"
+etag = "c2484941f0ff0dd20079d2b1f5229845"
+
+[[releases]]
+version = "0.24.6"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.24.6.tar.gz"
+etag = "156eb82fc7a7635bbc2738a9af936fc5"
+
+[[releases]]
+version = "0.25.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.25.1.tar.gz"
+etag = "91a2bbaf068a347fa2ba43ded3274beb"
+
+[[releases]]
+version = "0.25.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.25.2.tar.gz"
+etag = "9d825f5f0cd06b4fce28eba54dafef30"
+
+[[releases]]
+version = "0.25.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.25.3.tar.gz"
+etag = "47c165d679874eff6c029da8a7affb97"
+
+[[releases]]
+version = "0.25.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.25.4.tar.gz"
+etag = "017785ed5d2ed48ae32db4b853d4ceeb"
+
+[[releases]]
+version = "0.26.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.26.1.tar.gz"
+etag = "0bf0ee938c79e9286cd6eea2e2c58f61"
+
+[[releases]]
+version = "0.27.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.27.0.tar.gz"
+etag = "13e77d6b5affcac7c4c236e507c8a401"
+
+[[releases]]
+version = "0.27.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.27.1.tar.gz"
+etag = "12b771a045e13d63cf90952ddbcab76c"
+
+[[releases]]
+version = "0.27.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.27.2.tar.gz"
+etag = "48975e76fdd9121d7e1086ce84e49d04"
+
+[[releases]]
+version = "0.27.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.27.3.tar.gz"
+etag = "4ad6f69bcefb07ded5d4c5c308891dc4"
+
+[[releases]]
+version = "0.27.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.27.4.tar.gz"
+etag = "2bb09faf7673aa9a9a82558f1e1d1f3e"
+
+[[releases]]
+version = "0.27.5"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.27.5.tar.gz"
+etag = "7300299755265c169a8f05a1c7dfd4db"
+
+[[releases]]
+version = "0.28.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.28.1.tar.gz"
+etag = "cec620899d1e1e73e5915bd1cc404974"
+
+[[releases]]
+version = "0.28.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v0.28.4.tar.gz"
+etag = "60567689a1fd6bba33b2b6cdae6ef6ac"
+
+[[releases]]
+version = "1.0.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.0.0.tar.gz"
+etag = "5f66c6d6af1d4423c55291fe3f16925e"
+
+[[releases]]
+version = "1.0.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.0.1.tar.gz"
+etag = "bc4a5d0bebc7fdd43be6f8ca7d0c7ded"
+
+[[releases]]
+version = "1.0.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.0.2.tar.gz"
+etag = "bcdf44691092302858de5df1012861e3"
+
+[[releases]]
+version = "1.1.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.1.0.tar.gz"
+etag = "26588f716ac62a54a98094ee6c1284e4"
+
+[[releases]]
+version = "1.10.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.10.0.tar.gz"
+etag = "c8ad5d2a2f02ba666e92189dae951575"
+
+[[releases]]
+version = "1.10.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.10.1.tar.gz"
+etag = "3d34580367b4ea7ad6f4358e3aa6b2af"
+
+[[releases]]
+version = "1.11.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.11.0.tar.gz"
+etag = "d4f05075f534dd9a0a8c18c650b55f0d"
+
+[[releases]]
+version = "1.11.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.11.1.tar.gz"
+etag = "87308536d6e6bdad4d258d91e87c0980"
+
+[[releases]]
+version = "1.12.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.12.0.tar.gz"
+etag = "a02bfad92a883543cef480eedf9a92e4"
+
+[[releases]]
+version = "1.12.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.12.1.tar.gz"
+etag = "0f9197f5dceace96d93520e492c043a2"
+
+[[releases]]
+version = "1.12.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.12.3.tar.gz"
+etag = "925d0dd6eebf08f761a2efd4da981d17"
+
+[[releases]]
+version = "1.13.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.13.0.tar.gz"
+etag = "a466d851585045cf5a16f6c5bd7c3bad"
+
+[[releases]]
+version = "1.14.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.14.0.tar.gz"
+etag = "43175a59cfbb68aadb686b1ef62b074c"
+
+[[releases]]
+version = "1.15.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.15.0.tar.gz"
+etag = "197361f7c7c955eeb07950efd34af6e0"
+
+[[releases]]
+version = "1.15.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.15.1.tar.gz"
+etag = "affcf608656a9a5250fbfedf4b23a405"
+
+[[releases]]
+version = "1.15.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.15.2.tar.gz"
+etag = "35835237750040f08c0e87550e05dcea"
+
+[[releases]]
+version = "1.16.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.16.0.tar.gz"
+etag = "46790033c23803387890f545e4040690"
+
+[[releases]]
+version = "1.17.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.17.0.tar.gz"
+etag = "ce6a7e128618b5c9d058e2a8bd1a71f8"
+
+[[releases]]
+version = "1.17.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.17.1.tar.gz"
+etag = "15543697ad9ed6ee4e476f892128a41e"
+
+[[releases]]
+version = "1.17.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.17.2.tar.gz"
+etag = "e19c41ab602e43bbecc0e2ebf039ce4f"
+
+[[releases]]
+version = "1.17.3"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.17.3.tar.gz"
+etag = "4a02e1687a150113ad6b0215f9afdb3e"
+
+[[releases]]
+version = "1.18.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.18.0.tar.gz"
+etag = "dd0d505bdecc6b5d06a27df9927e0452"
+
+[[releases]]
+version = "1.19.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.19.0.tar.gz"
+etag = "e18cc1ee9aff041c634e3516d6d95702"
+
+[[releases]]
+version = "1.19.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.19.1.tar.gz"
+etag = "4d406e34b2461c4c4f2c3d1f93692bf8"
+
+[[releases]]
+version = "1.19.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.19.2.tar.gz"
+etag = "ad9878c3c55bfbd90c20c70146352610"
+
+[[releases]]
+version = "1.2.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.2.0.tar.gz"
+etag = "95b6c1c0e6504e5d4e31b720505471c9"
+
+[[releases]]
+version = "1.2.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.2.1.tar.gz"
+etag = "a16106e2b9a79bfdfad563d3fcbd97b4"
+
+[[releases]]
+version = "1.21.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.21.0.tar.gz"
+etag = "9ff2ac8062761ab1ed638d58df91bafb"
+
+[[releases]]
+version = "1.21.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.21.1.tar.gz"
+etag = "b7bfaa7dfe788074b3f51e57497a7c54"
+
+[[releases]]
+version = "1.22.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.0.tar.gz"
+etag = "451be8c7647720fa24ecc861715ee1dd"
+
+[[releases]]
+version = "1.22.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.1.tar.gz"
+etag = "480dec62fe76a52074f00734f444e823"
+
+[[releases]]
+version = "1.22.10"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.10.tar.gz"
+etag = "52e8dbe9d0cb90683dd3ee2ebf2becb8"
+
+[[releases]]
+version = "1.22.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.4.tar.gz"
+etag = "faf483d50aa8ccbdc802efa0cac5d4d3"
+
+[[releases]]
+version = "1.22.5"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.5.tar.gz"
+etag = "a4d5802cc7eec88edf47bd8887acb06c"
+
+[[releases]]
+version = "1.3.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.3.2.tar.gz"
+etag = "db82fa09c996e9318f2f1d2ab99228f9"
+
+[[releases]]
+version = "1.4.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.4.0.tar.gz"
+etag = "e5ff3f0c369fc52e38e5cd78801605a2"
+
+[[releases]]
+version = "1.5.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.5.1.tar.gz"
+etag = "561ac9089c33402abece941bc424cdd4"
+
+[[releases]]
+version = "1.6.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.6.0.tar.gz"
+etag = "a11a3d8a5d62712fc497a6d1cbea25f6"
+
+[[releases]]
+version = "1.7.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.7.0.tar.gz"
+etag = "e149b4cc0c2cb903551a0b857a2b3c78"
+
+[[releases]]
+version = "1.8.0"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.8.0.tar.gz"
+etag = "3e20c3c91a97512fc38ea797df032d84"
+
+[[releases]]
+version = "1.9.1"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.9.1.tar.gz"
+etag = "aaab1f955228b43b11c6a4ab9467321d"
+
+[[releases]]
+version = "1.9.2"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.9.2.tar.gz"
+etag = "d7a98e7bc7a80fe604b271d04589c7e1"
+
+[[releases]]
+version = "1.9.4"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.9.4.tar.gz"
+etag = "1202576a1a67d2228b44bb6f87a4eb64"
