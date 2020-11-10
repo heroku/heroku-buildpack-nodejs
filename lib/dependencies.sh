@@ -40,6 +40,38 @@ run_if_present() {
   fi
 }
 
+run_build_if_present() {
+  local build_dir=${1:-}
+  local script_name=${2:-}
+  local has_script_name
+  local script
+
+  has_script_name=$(has_script "$build_dir/package.json" "$script_name")
+  script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
+
+  if [[ "$has_script_name" == "true" ]]; then
+    if $YARN || $YARN_2; then
+      echo "Running $script_name (yarn)"
+      # yarn will throw an error if the script is an empty string, so check for this case
+      if [[ -n "$script" ]]; then
+        if [[ -n $NODE_BUILD_FLAG ]]; then
+          echo "Running with $NODE_BUILD_FLAG flags"
+          monitor "${script_name}-script" yarn run "$script_name" "$NODE_BUILD_FLAG"
+        fi
+        monitor "${script_name}-script" yarn run "$script_name"
+      fi
+    else
+      echo "Running $script_name"
+      if [[ -n $NODE_BUILD_FLAG ]]; then
+        echo "Running with $NODE_BUILD_FLAG flags"
+        monitor "${script_name}-script" npm run "$script_name" "$NODE_BUILD_FLAG" --if-present
+      else
+        monitor "${script_name}-script" npm run "$script_name" --if-present
+      fi
+    fi
+  fi
+}
+
 run_prebuild_script() {
   local build_dir=${1:-}
   local has_heroku_prebuild_script
@@ -59,7 +91,6 @@ run_build_script() {
 
   has_build_script=$(has_script "$build_dir/package.json" "build")
   has_heroku_build_script=$(has_script "$build_dir/package.json" "heroku-postbuild")
-
   if [[ "$has_heroku_build_script" == "true" ]] && [[ "$has_build_script" == "true" ]]; then
     echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
     mcount "scripts.heroku-postbuild-and-build"
@@ -69,7 +100,7 @@ run_build_script() {
     run_if_present "$build_dir" 'heroku-postbuild'
   elif [[ "$has_build_script" == "true" ]]; then
     mcount "scripts.build"
-    run_if_present "$build_dir" 'build'
+    run_build_if_present "$build_dir" 'build'
   fi
 }
 

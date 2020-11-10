@@ -70,6 +70,17 @@ testBuildScriptYarn() {
   assertCapturedSuccess
 }
 
+testBuildFlags() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAG
+  compile "build-script" $cache $env_dir
+  assertCaptured "Running build"
+  assertCaptured "Running with --prod --optimize flags"
+  assertCapturedSuccess
+}
+
 testPreferEmptyHerokuPostbuildOverBuild() {
   compile "empty-heroku-postbuild"
   assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
