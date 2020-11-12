@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- add Node 15.2.0 to inventory ([#861](https://github.com/heroku/heroku-buildpack-nodejs/pull/861))
 
 ## v177 (2020-11-12)
 - Use jq from the stack image ([#854](https://github.com/heroku/heroku-buildpack-nodejs/pull/854))
