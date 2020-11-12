@@ -9,7 +9,6 @@ env:
   - TEST=heroku-20-build STACK=heroku-20-build
   - TEST=heroku-18-build STACK=heroku-18-build
   - TEST=heroku-16-build STACK=heroku-16-build
-  - TEST=cedar-14 STACK=cedar-14
   - TEST=hatchet
   - TEST=unit
   - TEST=test-binary GO114MODULE=on
