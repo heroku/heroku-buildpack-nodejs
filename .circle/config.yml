@@ -1,0 +1,29 @@
+version: 2.1
+workflows:
+  test:
+    jobs:
+      - test:
+          make-command: shellcheck
+      - test:
+          make-command: heroku-20-build STACK=heroku-20-build
+      - test:
+          make-command: heroku-18-build STACK=heroku-18-build
+      - test:
+          make-command: heroku-16-build STACK=heroku-16-build   
+      - test:
+          make-command: hatchet
+      - test:
+          make-command: unit
+      - test:
+          make-command: test-binary GO114MODULE=on
+jobs:
+  test:
+    parameters:
+      make-command:
+        type: "string"
+        default: "shellcheck"
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - run: make << parameters.make-command >>
