@@ -1,9 +1,9 @@
 # Node.js Buildpack Changelog
 
 ## main
-- add Node 15.2.0 to inventory ([#861](https://github.com/heroku/heroku-buildpack-nodejs/pull/861))
 
 ## v177 (2020-11-12)
+- add Node 15.2.0 to inventory ([#861](https://github.com/heroku/heroku-buildpack-nodejs/pull/861))
 - Use jq from the stack image ([#854](https://github.com/heroku/heroku-buildpack-nodejs/pull/854))
 - Start testing new `resolve` binaries with inventory lists for Node and Yarn ([#855](https://github.com/heroku/heroku-buildpack-nodejs/pull/855))
 - Follow up to [#855](https://github.com/heroku/heroku-buildpack-nodejs/pull/855) to send captured data with bin/report ([#858](https://github.com/heroku/heroku-buildpack-nodejs/pull/858))
