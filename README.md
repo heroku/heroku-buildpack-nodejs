@@ -29,7 +29,7 @@ heroku buildpacks:set heroku/nodejs
 
 Your builds will always used the latest published release of the buildpack.
 
-If you need to use the git url, you can use the `latest` tag to make sure you always have the latest release. **`master` will always have the latest branch updates, but does not correspond with a numbered release.**
+If you need to use the git url, you can use the `latest` tag to make sure you always have the latest release. **The `main` branch will always have the latest buildpack updates, but it does not correspond with a numbered release.**
 
 ```sh
 heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#latest -a my-app
