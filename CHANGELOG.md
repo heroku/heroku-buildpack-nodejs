@@ -2,6 +2,7 @@
 
 ## main
 - Add NODE_BUILD_FLAG env var ([#859](https://github.com/heroku/heroku-buildpack-nodejs/pull/859))
+- Add 12.19.1, 14.15.1, and 15.2.1 to inventory for security releases ([#865](https://github.com/heroku/heroku-buildpack-nodejs/pull/865))
 
 ## v177 (2020-11-12)
 - add Node 15.2.0 to inventory ([#861](https://github.com/heroku/heroku-buildpack-nodejs/pull/861))
