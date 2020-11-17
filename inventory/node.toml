@@ -4096,6 +4096,13 @@ url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v12.1
 etag = "1962f4127fb09f2942b82f48f4ae2cf8-3"
 
 [[releases]]
+version = "12.19.1"
+channel = "release"
+arch = "linux-x64"
+url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v12.19.1-linux-x64.tar.gz"
+etag = "7851352d2c9d60d4c5779910af828755-3"
+
+[[releases]]
 version = "12.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -4362,6 +4369,13 @@ url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v14.1
 etag = "53ded239e3e7b19ff58c63a13fc7295a-5"
 
 [[releases]]
+version = "14.15.1"
+channel = "release"
+arch = "linux-x64"
+url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v14.15.1-linux-x64.tar.gz"
+etag = "ee95fa0dd4b142e075f7f61d6e9fdd3c-5"
+
+[[releases]]
 version = "14.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -4444,6 +4458,13 @@ channel = "release"
 arch = "linux-x64"
 url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v15.2.0-linux-x64.tar.gz"
 etag = "784df9e5242bb304820b2c14512d9ce3-4"
+
+[[releases]]
+version = "15.2.1"
+channel = "release"
+arch = "linux-x64"
+url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v15.2.1-linux-x64.tar.gz"
+etag = "ca1c922ba43df36fbb23fd8b3a8ea876-4"
 
 [[releases]]
 version = "4.0.0"
@@ -6824,6 +6845,13 @@ channel = "staging"
 arch = "linux-x64"
 url = "https://s3.amazonaws.com/heroku-nodebin/node/staging/linux-x64/node-v12.19.0-linux-x64.tar.gz"
 etag = "1962f4127fb09f2942b82f48f4ae2cf8-3"
+
+[[releases]]
+version = "12.19.1"
+channel = "staging"
+arch = "linux-x64"
+url = "https://s3.amazonaws.com/heroku-nodebin/node/staging/linux-x64/node-v12.19.1-linux-x64.tar.gz"
+etag = "7851352d2c9d60d4c5779910af828755-3"
 
 [[releases]]
 version = "12.2.0"
