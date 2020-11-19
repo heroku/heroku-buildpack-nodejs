@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 [ "$CI" != "true" ] && echo "Not running on CI!" && exit 1
-[ "$TRAVIS_PULL_REQUEST_SLUG" != "heroku/heroku-buildpack-nodejs" ] && echo "Run tests manually for forked PRs." && exit 0
+[ "$CIRCLE_PROJECT_USERNAME" != "heroku" ] && echo "Run tests manually for forked PRs." && exit 0
 
+gem install bundler:1.17.3
 bundle install
 bundle exec hatchet ci:setup
