@@ -52,15 +52,23 @@ workflows:
   version: 2
   test:
     jobs:
-      - unit-test
-      - unit-test-heroku-build
       - unit-test:
+          name: heroku-20 unit tests
+      - unit-test-heroku-build
+          name: heroku-20 build tests
+      - unit-test:
+          name: heroku-18 unit tests
           stack-number: "18"
       - unit-test-heroku-build:
+          name: heroku-18 build tests
           stack-number: "18"
       - unit-test:
+          name: heroku-16 unit tests
           stack-number: "16"
       - unit-test-heroku-build:
+          name: heroku-16 build tests
           stack-number: "16"
       - hatchet-test
-      - unit-test-binary
+          name: Hatchet tests
+      - unit-test-binary:
+          name: Go binary tests
