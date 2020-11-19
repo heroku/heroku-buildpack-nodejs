@@ -50,11 +50,11 @@ jobs:
           command: make test-binary
 workflows:
   version: 2
-  test:
+  buildpack-tests:
     jobs:
       - unit-test:
           name: heroku-20 unit tests
-      - unit-test-heroku-build
+      - unit-test-heroku-build:
           name: heroku-20 build tests
       - unit-test:
           name: heroku-18 unit tests
@@ -68,7 +68,7 @@ workflows:
       - unit-test-heroku-build:
           name: heroku-16 build tests
           stack-number: "16"
-      - hatchet-test
+      - hatchet-test:
           name: Hatchet tests
       - unit-test-binary:
           name: Go binary tests
