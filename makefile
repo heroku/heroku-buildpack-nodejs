@@ -1,4 +1,4 @@
-test: heroku-20-build heroku-18-build heroku-16-build cedar-14
+test: heroku-20-build heroku-18-build heroku-16-build
 
 build:
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
