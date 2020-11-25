@@ -4,7 +4,7 @@ orbs:
 jobs:
   hatchet-test:
     docker:
-      - image: circleci/ruby:2.7.2
+      - image: circleci/ruby:2.6.5
     steps:
       - checkout
       - run:
