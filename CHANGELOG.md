@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Fix syntax for passing in script flags for npm build script ([#869](https://github.com/heroku/heroku-buildpack-nodejs/pull/869))
 
 ## v178 (2020-11-17)
 - Add NODE_BUILD_FLAG env var ([#859](https://github.com/heroku/heroku-buildpack-nodejs/pull/859))

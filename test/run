@@ -74,10 +74,23 @@ testBuildFlags() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
 
-  echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAG
+  echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAGS
   compile "build-script" $cache $env_dir
   assertCaptured "Running build"
   assertCaptured "Running with --prod --optimize flags"
+  assertCaptured 'echo build hook message "--prod --optimize"'
+  assertCapturedSuccess
+}
+
+testBuildFlagsWithYarn() {
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAGS
+  compile "build-script-yarn" $cache $env_dir
+  assertCaptured "Running build"
+  assertCaptured "Running with --prod --optimize flags"
+  assertCaptured "$ echo build hook message '--prod --optimize'"
   assertCapturedSuccess
 }
 
