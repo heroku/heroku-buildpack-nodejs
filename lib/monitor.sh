@@ -47,7 +47,6 @@ monitor() {
   local peak_mem_output start
   local command_name=$1
   shift
-
   local command=( "$@" )
 
   peak_mem_output=$(mktemp)
