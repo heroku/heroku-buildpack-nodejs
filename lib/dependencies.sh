@@ -54,17 +54,18 @@ run_build_if_present() {
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
-        if [[ -n $NODE_BUILD_FLAG ]]; then
-          echo "Running with $NODE_BUILD_FLAG flags"
-          monitor "${script_name}-script" yarn run "$script_name" "$NODE_BUILD_FLAG"
+        if [[ -n $NODE_BUILD_FLAGS ]]; then
+          echo "Running with $NODE_BUILD_FLAGS flags"
+          monitor "${script_name}-script" yarn run "$script_name" "$NODE_BUILD_FLAGS"
+        else
+          monitor "${script_name}-script" yarn run "$script_name"
         fi
-        monitor "${script_name}-script" yarn run "$script_name"
       fi
     else
       echo "Running $script_name"
-      if [[ -n $NODE_BUILD_FLAG ]]; then
-        echo "Running with $NODE_BUILD_FLAG flags"
-        monitor "${script_name}-script" npm run "$script_name" "$NODE_BUILD_FLAG" --if-present
+      if [[ -n $NODE_BUILD_FLAGS ]]; then
+        echo "Running with $NODE_BUILD_FLAGS flags"
+        monitor "${script_name}-script" npm run "$script_name" --if-present -- "$NODE_BUILD_FLAGS"
       else
         monitor "${script_name}-script" npm run "$script_name" --if-present
       fi
