@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- add Node 15.4.0 to inventory ([#873](https://github.com/heroku/heroku-buildpack-nodejs/pull/873))
 
 ## v179 (2020-12-07)
 - Fix syntax for passing in script flags for npm build script ([#869](https://github.com/heroku/heroku-buildpack-nodejs/pull/869))
