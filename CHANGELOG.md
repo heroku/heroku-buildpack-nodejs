@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## main
+
+## v180 (2020-12-09)
 - add Node 15.4.0 to inventory ([#873](https://github.com/heroku/heroku-buildpack-nodejs/pull/873))
 
 ## v179 (2020-12-07)
