@@ -49,6 +49,10 @@ run_build_if_present() {
   has_script_name=$(has_script "$build_dir/package.json" "$script_name")
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
+  if [[ "$script" == "ng build" ]]; then
+    warn "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags. See https://devcenter.heroku.com/articles/nodejs-support#build-flags"
+  fi
+
   if [[ "$has_script_name" == "true" ]]; then
     if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
