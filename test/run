@@ -63,6 +63,11 @@ testBuildScriptBehavior() {
   assertCapturedSuccess
 }
 
+testNgBuildScriptWarning() {
+  compile "ng-build-script"
+  assertCaptured "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
+}
+
 testBuildScriptYarn() {
   compile "build-script-yarn"
   assertCaptured "Running build (yarn)"
