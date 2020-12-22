@@ -281,6 +281,22 @@ testBuildDataPreviousBuild() {
   assertEquals "$(meta_get test)" ""
 }
 
+testWebConcurrencyDoesNotOverrideManualValue() {
+  WEB_CONCURRENCY=123
+
+  source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+  assertEquals 123 "$WEB_CONCURRENCY"
+}
+
+testWebConcurrencySetsAValueWhenUnset() {
+  unset WEB_CONCURRENCY
+
+  source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+  assertNotNull "WEB_CONCURRENCY is null" "$WEB_CONCURRENCY"
+}
+
 testWebConcurrencyProfileScript() {
   # this was set when we sourced the WEB_CONCURRENCY.sh file
   unset WEB_MEMORY
