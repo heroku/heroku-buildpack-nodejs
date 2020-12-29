@@ -142,8 +142,10 @@ features_get() {
   fi
   if [[ "$result" == "true" ]]; then
     echo "true"
-  else
+  elif [[ "$result" == "false" ]]; then
     echo "false"
+  else
+    echo ""
   fi
 }
 
