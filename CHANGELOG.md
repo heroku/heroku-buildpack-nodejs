@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
 
 ## v181 (2020-12-16)
 - Warn to use build flag with ng build as build script ([#878](https://github.com/heroku/heroku-buildpack-nodejs/pull/878))
