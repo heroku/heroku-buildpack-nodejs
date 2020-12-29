@@ -44,6 +44,17 @@ testNpmCiFallback() {
   assertFileContains "npm-install-memory=" "$log_file"
 }
 
+testNpmCiDisabled() {
+  env_dir=$(mktmpdir)
+
+  echo "true" > $env_dir/USE_NPM_INSTALL
+
+  compile "node-10-npm-ci"
+
+  assertFileContains "feature-use-npm-ci=false" "$log_file"
+  assertCapturedSuccess
+}
+
 testFlatmapStream() {
   compile "flatmap-stream"
   assertCaptured "flatmap-stream module has been removed from the npm registry"
@@ -259,14 +270,11 @@ testYarnNativeCacheFalse() {
   compile "yarn-native-cache-false" $cache
   # These will be created if yarn is using the directory for its cache
 
-  ls "$cache"
-
   # Run this again with a cache
   compile "yarn-native-cache-false" $cache
 
   # assert that devDependencies are not cached
   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
-  assertCaptured "Using Yarn Cache has moved behind an environment variable."
   assertCapturedSuccess
 }
 

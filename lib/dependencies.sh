@@ -198,11 +198,12 @@ should_use_npm_ci() {
 npm_node_modules() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
+  local use_npm_install=${2:-false}
 
   if [ -e "$build_dir/package.json" ]; then
     cd "$build_dir" || return
 
-    if [[ "$(features_get "use-npm-ci")" == "true" ]] && [[ "$(should_use_npm_ci "$build_dir")" == "true" ]]; then
+    if [[ "$(should_use_npm_ci "$build_dir")" == "true" ]] && [[ "$use_npm_install" == "false" ]]; then
       meta_set "supports-npm-ci" "true"
       echo "Installing node modules"
       monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1

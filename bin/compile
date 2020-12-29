@@ -178,10 +178,8 @@ if [[ "$YARN_2" == "true" ]]; then
   fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
 fi
 
-if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
-  warn "You're currently using the heroku-buildpack-features file to configure. Using Yarn Cache has moved behind an environment variable. Use 'heroku config:set USE_YARN_CACHE=false' to set the variable."
-  USE_YARN_CACHE=false
-fi
+[[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false || USE_YARN_CACHE=true
+[[ $(features_get "use-npm-ci") == "false" ]] && USE_NPM_INSTALL=true
 
 install_bins() {
   local node_engine npm_engine yarn_engine npm_version node_version
@@ -309,7 +307,7 @@ build_dependencies() {
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
   else
-    npm_node_modules "$BUILD_DIR"
+    npm_node_modules "$BUILD_DIR" "$USE_NPM_INSTALL"
   fi
 
   mtime "modules.time.cache.$cache_status" "${start}"
