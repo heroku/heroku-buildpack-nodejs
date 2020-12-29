@@ -24,6 +24,7 @@ resolve() {
       meta_set "resolve-v1-$binary" "$output"
       meta_set "resolve-v2-$binary" "$v2_output"
       meta_set "resolve-is-equal-$binary" "$resolve_is_equal"
+      meta_set "resolve-v2-error" "$STD_ERR"
 
       echo "$output"
       return 0

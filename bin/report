@@ -152,6 +152,7 @@ kv_pair "resolve_v2_node" "$(meta_get "resolve-v2-node")"
 kv_pair "resolve_v2_yarn" "$(meta_get "resolve-v2-yarn")"
 kv_pair "resolve_is_equal_node" "$(meta_get "resolve-is-equal-node")"
 kv_pair "resolve_is_equal_yarn" "$(meta_get "resolve-is-equal-yarn")"
+kv_pair_string "resolve_v2_error" "$(meta_get "resolve-v2-error")"
 
 # save which features were turned on or off
 features_list | tr ' ' '\n' | while read -r key; do
