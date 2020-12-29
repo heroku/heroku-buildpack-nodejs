@@ -15,8 +15,7 @@ testNpmCi() {
   assertCapturedSuccess
 
    # test logging
-  assertFileContains "feature-use-npm-ci=true" "$log_file"
-  assertFileContains "supports-npm-ci=true" "$log_file"
+  assertFileContains "use-npm-ci=true" "$log_file"
   assertFileContains "npm-install-time=" "$log_file"
   assertFileContains "npm-install-memory=" "$log_file"
 
@@ -35,23 +34,22 @@ testNpmCiFallback() {
 
   assertCapturedSuccess
 
-  # make sure the feature is turned on
-  assertFileContains "feature-use-npm-ci=true" "$log_file"
-  # and detecting that we shouldn't use npm ci
-  assertFileContains "supports-npm-ci=false" "$log_file"
+  # detecting that we shouldn't use npm ci
+  assertFileContains "use-npm-ci=false" "$log_file"
   # and ran "npm install"
   assertFileContains "npm-install-time=" "$log_file"
   assertFileContains "npm-install-memory=" "$log_file"
 }
 
 testNpmCiDisabled() {
+  local env_dir
   env_dir=$(mktmpdir)
 
   echo "true" > $env_dir/USE_NPM_INSTALL
 
   compile "node-10-npm-ci"
 
-  assertFileContains "feature-use-npm-ci=false" "$log_file"
+  assertFileContains "use-npm-ci=false" "$log_file"
   assertCapturedSuccess
 }
 
