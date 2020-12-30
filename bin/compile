@@ -178,13 +178,9 @@ if [[ "$YARN_2" == "true" ]]; then
   fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
 fi
 
-if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
-  USE_YARN_CACHE=false
-else
-  USE_YARN_CACHE=true
-fi
+[[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false
 
-if [[ $(features_get_with_blank "use-npm-ci") == "false" ]] && [[ -z "$USE_NPM_INSTALL"]]; then
+if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
   USE_NPM_INSTALL=true
 fi
 
@@ -314,7 +310,7 @@ build_dependencies() {
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
   else
-    npm_node_modules "$BUILD_DIR" "$USE_NPM_INSTALL"
+    npm_node_modules "$BUILD_DIR"
   fi
 
   mtime "modules.time.cache.$cache_status" "${start}"

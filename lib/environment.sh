@@ -46,8 +46,8 @@ create_build_env() {
 list_node_config() {
   echo ""
   printenv | grep ^NPM_CONFIG_ || true
-  printenv | grep ^USE_NPM_ || true
   printenv | grep ^YARN_ || true
+  printenv | grep ^USE_NPM_ || true
   printenv | grep ^USE_YARN_ || true
   printenv | grep ^NODE_ || true
 

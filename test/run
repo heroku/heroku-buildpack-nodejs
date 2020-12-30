@@ -42,12 +42,14 @@ testNpmCiFallback() {
 }
 
 testNpmCiDisabled() {
-  local env_dir
+  local cache env_dir log_file
+  cache=$(mktmpdir)
   env_dir=$(mktmpdir)
+  log_file=$(mktemp)
 
   echo "true" > $env_dir/USE_NPM_INSTALL
 
-  compile "node-10-npm-ci"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" $cache $env_dir
 
   assertFileContains "use-npm-ci=false" "$log_file"
   assertCapturedSuccess
@@ -902,8 +904,10 @@ testDynamicProcfile() {
 testEnvVars() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
+  echo "true" > $env_dir/USE_NPM_INSTALL
   compile "stable-node" "$(mktmpdir)" $env_dir
   assertCaptured "NPM_CONFIG_PRODUCTION=false"
+  assertCaptured "USE_NPM_INSTALL=true"
   assertCapturedSuccess
 }
 
