@@ -179,7 +179,7 @@ if [[ "$YARN_2" == "true" ]]; then
 fi
 
 [[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false || USE_YARN_CACHE=true
-[[ $(features_get "use-npm-ci") == "false" ]] && USE_NPM_INSTALL=true
+[[ $(features_get_with_blank "use-npm-ci") == "false" ]] && USE_NPM_INSTALL=true
 
 install_bins() {
   local node_engine npm_engine yarn_engine npm_version node_version
