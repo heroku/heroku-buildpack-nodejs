@@ -30,7 +30,7 @@ create_default_env() {
     export USE_YARN_CACHE=${USE_YARN_CACHE:-true}
   fi
 
-  if [[ ! -z "$USE_NPM_INSTALL" ]]; then
+  if [[ -n "$USE_NPM_INSTALL" ]]; then
     export USE_NPM_INSTALL=${USE_NPM_INSTALL}
   fi
 }
