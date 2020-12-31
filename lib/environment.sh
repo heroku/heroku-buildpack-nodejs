@@ -29,6 +29,10 @@ create_default_env() {
   if $YARN; then
     export USE_YARN_CACHE=${USE_YARN_CACHE:-true}
   fi
+
+  if [[ -n "$USE_NPM_INSTALL" ]]; then
+    export USE_NPM_INSTALL=${USE_NPM_INSTALL}
+  fi
 }
 
 create_build_env() {
@@ -43,6 +47,7 @@ list_node_config() {
   echo ""
   printenv | grep ^NPM_CONFIG_ || true
   printenv | grep ^YARN_ || true
+  printenv | grep ^USE_NPM_ || true
   printenv | grep ^USE_YARN_ || true
   printenv | grep ^NODE_ || true
 

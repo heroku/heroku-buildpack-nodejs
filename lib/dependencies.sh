@@ -202,12 +202,12 @@ npm_node_modules() {
   if [ -e "$build_dir/package.json" ]; then
     cd "$build_dir" || return
 
-    if [[ "$(features_get "use-npm-ci")" == "true" ]] && [[ "$(should_use_npm_ci "$build_dir")" == "true" ]]; then
-      meta_set "supports-npm-ci" "true"
+    if [[ "$(should_use_npm_ci "$build_dir")" == "true" ]] && [[ "$USE_NPM_INSTALL" != "true" ]]; then
+      meta_set "use-npm-ci" "true"
       echo "Installing node modules"
       monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
-      meta_set "supports-npm-ci" "false"
+      meta_set "use-npm-ci" "false"
       if [ -e "$build_dir/package-lock.json" ]; then
         echo "Installing node modules (package.json + package-lock)"
       elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then

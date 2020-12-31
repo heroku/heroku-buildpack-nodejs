@@ -178,9 +178,10 @@ if [[ "$YARN_2" == "true" ]]; then
   fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
 fi
 
-if [[ $(features_get "cache-native-yarn-cache") == "false" ]]; then
-  warn "You're currently using the heroku-buildpack-features file to configure. Using Yarn Cache has moved behind an environment variable. Use 'heroku config:set USE_YARN_CACHE=false' to set the variable."
-  USE_YARN_CACHE=false
+[[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false
+
+if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
+  USE_NPM_INSTALL=true
 fi
 
 install_bins() {

@@ -15,8 +15,7 @@ testNpmCi() {
   assertCapturedSuccess
 
    # test logging
-  assertFileContains "feature-use-npm-ci=true" "$log_file"
-  assertFileContains "supports-npm-ci=true" "$log_file"
+  assertFileContains "use-npm-ci=true" "$log_file"
   assertFileContains "npm-install-time=" "$log_file"
   assertFileContains "npm-install-memory=" "$log_file"
 
@@ -35,13 +34,25 @@ testNpmCiFallback() {
 
   assertCapturedSuccess
 
-  # make sure the feature is turned on
-  assertFileContains "feature-use-npm-ci=true" "$log_file"
-  # and detecting that we shouldn't use npm ci
-  assertFileContains "supports-npm-ci=false" "$log_file"
+  # detecting that we shouldn't use npm ci
+  assertFileContains "use-npm-ci=false" "$log_file"
   # and ran "npm install"
   assertFileContains "npm-install-time=" "$log_file"
   assertFileContains "npm-install-memory=" "$log_file"
+}
+
+testNpmCiDisabled() {
+  local cache env_dir log_file
+  cache=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  log_file=$(mktemp)
+
+  echo "true" > $env_dir/USE_NPM_INSTALL
+
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci" $cache $env_dir
+
+  assertFileContains "use-npm-ci=false" "$log_file"
+  assertCapturedSuccess
 }
 
 testFlatmapStream() {
@@ -259,14 +270,11 @@ testYarnNativeCacheFalse() {
   compile "yarn-native-cache-false" $cache
   # These will be created if yarn is using the directory for its cache
 
-  ls "$cache"
-
   # Run this again with a cache
   compile "yarn-native-cache-false" $cache
 
   # assert that devDependencies are not cached
   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
-  assertCaptured "Using Yarn Cache has moved behind an environment variable."
   assertCapturedSuccess
 }
 
@@ -896,8 +904,10 @@ testDynamicProcfile() {
 testEnvVars() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
+  echo "true" > $env_dir/USE_NPM_INSTALL
   compile "stable-node" "$(mktmpdir)" $env_dir
   assertCaptured "NPM_CONFIG_PRODUCTION=false"
+  assertCaptured "USE_NPM_INSTALL=true"
   assertCapturedSuccess
 }
 

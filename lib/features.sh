@@ -147,6 +147,22 @@ features_get() {
   fi
 }
 
+features_get_with_blank() {
+  local result
+  if [[ -f "$OVERRIDE_FILE" ]]; then
+    result=$(kv_get "$OVERRIDE_FILE" "$1")
+  else
+    result=$(kv_get "$FEATURES_DATA_FILE" "$1")
+  fi
+  if [[ "$result" == "true" ]]; then
+    echo "true"
+  elif [[ "$result" == "false" ]]; then
+    echo "false"
+  else
+    echo ""
+  fi
+}
+
 # Outputs a list of feature names, one-per-line
 features_list() {
   if [[ -f "$OVERRIDE_FILE" ]]; then
