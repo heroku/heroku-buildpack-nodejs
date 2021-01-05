@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## main
+
+# v182 (2020-01-05)
 - add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
 - Report on parsing errors for `resolve-version.rs` ([#883](https://github.com/heroku/heroku-buildpack-nodejs/pull/883))
 - Add an environment variable for using npm install (instead of npm ci) ([#882](https://github.com/heroku/heroku-buildpack-nodejs/pull/882))
