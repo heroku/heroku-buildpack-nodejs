@@ -4,6 +4,7 @@
 - add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
 - Report on parsing errors for `resolve-version.rs` ([#883](https://github.com/heroku/heroku-buildpack-nodejs/pull/883))
 - Add an environment variable for using npm install (instead of npm ci) ([#882](https://github.com/heroku/heroku-buildpack-nodejs/pull/882))
+- add Node 10.23.1, 12.20.1, 14.15.4, and 15.5.1 to inventory ([#886](https://github.com/heroku/heroku-buildpack-nodejs/pull/886))
 
 ## v181 (2020-12-16)
 - Warn to use build flag with ng build as build script ([#878](https://github.com/heroku/heroku-buildpack-nodejs/pull/878))
