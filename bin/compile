@@ -158,9 +158,7 @@ if [[ "$YARN_2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
 
-  if has_yarn_cache "$BUILD_DIR"; then
-    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
-  fi
+  YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
 
   ### Configure Yarn 2
   # fail for no yarnrc.yml
