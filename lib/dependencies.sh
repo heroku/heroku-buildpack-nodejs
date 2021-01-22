@@ -169,6 +169,11 @@ yarn_prune_devdependencies() {
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     meta_set "skipped-prune" "true"
     return 0
+  elif $YARN_2; then
+    cd "$build_dir" || return
+    rm -rf "$build_dir/.yarn/cache"
+    monitor "yarn-prune" yarn workspaces focus --all --production
+    meta_set "skipped-prune" "false"
   else
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
