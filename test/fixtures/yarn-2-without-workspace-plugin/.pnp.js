@@ -37,7 +37,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         [null, {
           "packageLocation": "./",
           "packageDependencies": [
-            ["debug", "virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.1"],
+            ["debug", "virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.2"],
             ["lodash", "npm:4.17.20"],
             ["typescript", "patch:typescript@npm%3A3.9.7#builtin<compat/typescript>::version=3.9.7&hash=cc6730"]
           ],
@@ -45,17 +45,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["debug", [
-        ["npm:4.3.1", {
-          "packageLocation": "./.yarn/cache/debug-npm-4.3.1-22e08d605e-0d41ba5177.zip/node_modules/debug/",
+        ["npm:4.3.2", {
+          "packageLocation": "./.yarn/cache/debug-npm-4.3.2-f0148b6afe-5543570879.zip/node_modules/debug/",
           "packageDependencies": [
-            ["debug", "npm:4.3.1"]
+            ["debug", "npm:4.3.2"]
           ],
           "linkType": "SOFT",
         }],
-        ["virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.1", {
-          "packageLocation": "./.yarn/$$virtual/debug-virtual-960989c440/0/cache/debug-npm-4.3.1-22e08d605e-0d41ba5177.zip/node_modules/debug/",
+        ["virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.2", {
+          "packageLocation": "./.yarn/$$virtual/debug-virtual-9b5d79a0ba/0/cache/debug-npm-4.3.2-f0148b6afe-5543570879.zip/node_modules/debug/",
           "packageDependencies": [
-            ["debug", "virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.1"],
+            ["debug", "virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.2"],
             ["ms", "npm:2.1.2"],
             ["supports-color", null]
           ],
@@ -97,7 +97,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./",
           "packageDependencies": [
             ["yarn-2", "workspace:."],
-            ["debug", "virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.1"],
+            ["debug", "virtual:321235c81a7bc1233fba73cb438595965fb086fd4d3dc0d7ad8cf0afbe311645eadbbf8a8ae10005333296d5a00c388e2109b9bdf8ec20932a59b4ec21596c17#npm:4.3.2"],
             ["lodash", "npm:4.17.20"],
             ["typescript", "patch:typescript@npm%3A3.9.7#builtin<compat/typescript>::version=3.9.7&hash=cc6730"]
           ],
