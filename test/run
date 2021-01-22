@@ -157,8 +157,8 @@ testYarnRun() {
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version 12.x"
-  assertCaptured "Downloading and installing node 12."
+  assertCaptured "Resolving node version 14.x"
+  assertCaptured "Downloading and installing node 14."
   assertCapturedSuccess
 }
 
