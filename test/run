@@ -157,8 +157,8 @@ testYarnRun() {
 testNoVersion() {
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "Resolving node version 14.x"
-  assertCaptured "Downloading and installing node 14."
+  assertCaptured "Resolving node version 12.x"
+  assertCaptured "Downloading and installing node 12."
   assertCapturedSuccess
 }
 
@@ -701,8 +701,7 @@ testYarn2() {
   compile "yarn-2"
   assertCaptured "The buildpack won't cache the dependencies in .yarn/cache."
   assertCaptured "Running 'yarn install' with yarn.lock"
-  # tsc output
-  assertCaptured "Version 3.9.3"
+  assertCaptured "Version 3.9.3" # tsc output
   assertCapturedSuccess
 }
 
@@ -715,6 +714,12 @@ testYarn2WithNodeModules() {
 
 testYarn2WithoutYarnCache() {
   compile "yarn-2-without-cache"
+  assertCapturedSuccess
+}
+
+testYarn2WithoutWorkspaceModule() {
+  compile "yarn-2-without-workspace-plugin"
+  assertCaptured "Installing yarn workspace plugin"
   assertCapturedSuccess
 }
 ###
