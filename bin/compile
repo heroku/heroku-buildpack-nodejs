@@ -145,8 +145,6 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
-  fail_yarn_2_production "$BUILD_DIR"
-
   if [[ "$NODE_MODULES_CACHE" == "true" ]]  && ! node_modules_enabled "$BUILD_DIR"; then
     warn "
     The buildpack won't cache the dependencies in .yarn/cache. Since you're using Yarn 2 and Plug'n'Play, you will need to customize your cache or unset NODE_MODULES_CACHE." "https://devcenter.heroku.com/articles/migrating-to-yarn-2#disable-dependency-caching"
