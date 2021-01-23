@@ -3,6 +3,7 @@
 ## main
 - Update node version to 14 ([#885](https://github.com/heroku/heroku-buildpack-nodejs/pull/885))
 - Add unit tests around the behavior of `WEB_CONCURRENCY` ([#876](https://github.com/heroku/heroku-buildpack-nodejs/pull/876))
+- Support non-zero-install support for Yarn 2 ([#888](https://github.com/heroku/heroku-buildpack-nodejs/pull/888))
 
 ## v182 (2020-01-05)
 - add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
