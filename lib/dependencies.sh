@@ -156,6 +156,7 @@ yarn_2_install() {
 
 yarn_prune_devdependencies() {
   local build_dir=${1:-}
+  local cache_dir=${2:-}
   local workspace_plugin_path
 
   if [ "$NODE_ENV" == "test" ]; then
@@ -172,17 +173,15 @@ yarn_prune_devdependencies() {
     return 0
   elif $YARN_2; then
     cd "$build_dir" || return
-    workspace_plugin_path=$(yarn_workspace_plugin_path "$build_dir")
 
-    if [[ -n $workspace_plugin_path ]]; then
+    if has_yarn_workspace_plugin_installed "$build_dir"; then
       meta_set "install-workspace-plugin" "true"
     else
-      echo "Installing yarn workspace plugin"
       meta_set "install-workspace-plugin" "false"
       yarn plugin import workspace-tools
     fi
 
-    rm -rf "$build_dir/.yarn/cache"
+    rm -rf "$cache_dir"
     monitor "yarn-prune" yarn workspaces focus --all --production
     meta_set "skipped-prune" "false"
   else
