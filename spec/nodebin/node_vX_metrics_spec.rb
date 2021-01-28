@@ -7,7 +7,7 @@ versions.select { |version| version_supports_metrics(version) }.each do |version
     context "test metrics for Node v#{version} app" do
       let(:app) {
         Hatchet::Runner.new(
-          "spec/fixtures/repos/node-10-metrics",
+          "spec/fixtures/repos/node-14-metrics",
           before_deploy: -> { set_node_version(version) },
           config: {
             "HEROKU_METRICS_URL" => "http://localhost:3000",
