@@ -2,7 +2,7 @@ get_meteor_version() {
   if [ -e "${1:-}/.meteor/release" ]; then
     # removing space newline if .meteor/release has been edited by hand
     # and the editor added \r\n or \n
-    cat ${1:-}/.meteor/release | sed  's/[ \r\n]//'
+    cat ${1:-}/.meteor/release | sed 's/[ \r\n]//'
   fi
 }
 
@@ -14,34 +14,58 @@ get_meteor_minor_version() {
   echo $meteor_version | cut -d'.' -f2
 }
 
+get_meteor_major_version() {
+  local meteor_release_version="$meteor_version"
+  local meteor_version="$(echo $meteor_release_version | cut -d'@' -f2)"
+  echo $meteor_version | cut -d'.' -f1
+}
+
 # Format of .meteor/release file is METEOR@1.4.x-patchsomething
 meteor_node_version() {
   minor=$(get_meteor_minor_version)
-  if [ "$minor" -ge 10 ] ; then
-    echo "12.16.x"
-  elif [ "$minor" -ge 9 ] ; then
-    echo "12.16.x"
-  elif [ "$minor" -ge 8 ] ; then
-    echo "8.16.x"
-  elif [ "$minor" -ge 6 ] ; then
-    echo "8.11.x"
-  elif [ "$minor" -ge 4 ] ; then
-    echo "4.9.x"
-  else
-    echo "0.10.x"
+  major=$(get_meteor_major_version)
+  if [ "$major" -ge 2 ]; then
+    if [ "$minor" -ge 0 ]; then
+      echo "12.20.x"
+    fi
+  elif [[ "$major" -eq 1 ]]; then
+    if [ "$minor" -ge 12 ]; then
+      echo "12.20.x"
+    elif [ "$minor" -ge 10 ]; then
+      echo "12.16.x"
+    elif [ "$minor" -ge 9 ]; then
+      echo "12.16.x"
+    elif [ "$minor" -ge 8 ]; then
+      echo "8.16.x"
+    elif [ "$minor" -ge 6 ]; then
+      echo "8.11.x"
+    elif [ "$minor" -ge 4 ]; then
+      echo "4.9.x"
+    else
+      echo "0.10.x"
+    fi
   fi
 }
 
 meteor_npm_version() {
   minor=$(get_meteor_minor_version)
-  if [ "$minor" -ge 8 ] ; then
-    echo "6.x"
-  elif [ "$minor" -ge 6 ] ; then
-    echo "5.x"
-  elif [ "$minor" -ge 4 ] ; then
-    echo "4.6.x"
-  else
-    echo "3.x"
+  major=$(get_meteor_major_version)
+  if [ "$major" -ge 2 ]; then
+    if [ "$minor" -ge 0 ]; then
+      echo "6.x"
+    fi
+  elif [[ "$major" -eq 1 ]]; then
+    if [ "$minor" -ge 12 ]; then
+      echo "6.14.x"
+    elif [ "$minor" -ge 8 ]; then
+      echo "6.x"
+    elif [ "$minor" -ge 6 ]; then
+      echo "5.x"
+    elif [ "$minor" -ge 4 ]; then
+      echo "4.6.x"
+    else
+      echo "3.x"
+    fi
   fi
 }
 
