@@ -38,10 +38,10 @@ delete_old_plugin() {
     rm -f "$dir/heroku-nodejs-plugin-node-10.tar.gz"
     rm -f "$dir/heroku-nodejs-plugin-node-12.sha512"
     rm -f "$dir/heroku-nodejs-plugin-node-12.tar.gz"
-    rm -f "$dir/heroku-nodejs-plugin-node-13.sha512"
-    rm -f "$dir/heroku-nodejs-plugin-node-13.tar.gz"
     rm -f "$dir/heroku-nodejs-plugin-node-14.sha512"
     rm -f "$dir/heroku-nodejs-plugin-node-14.tar.gz"
+    rm -f "$dir/heroku-nodejs-plugin-node-15.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-15.tar.gz"
     rm -f "$dir/version"
 }
 
@@ -57,13 +57,13 @@ download_assets_for_release() {
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.sha512" "$dir/heroku-nodejs-plugin-node-12.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-12-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-12.tar.gz"
 
-    # Node 13
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-13-$tag.sha512" "$dir/heroku-nodejs-plugin-node-13.sha512"
-    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-13-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-13.tar.gz"
-
     # Node 14
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-14-$tag.sha512" "$dir/heroku-nodejs-plugin-node-14.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-14-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-14.tar.gz"
+
+    # Node 15
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-15-$tag.sha512" "$dir/heroku-nodejs-plugin-node-15.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-15-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-15.tar.gz"
 }
 
 test_hash() {
@@ -98,7 +98,7 @@ echo "Plugins downloaded"
 
 test_hash 10 $PLUGIN_DIR
 test_hash 12 $PLUGIN_DIR
-test_hash 13 $PLUGIN_DIR
 test_hash 14 $PLUGIN_DIR
+test_hash 15 $PLUGIN_DIR
 
 echo "Done"

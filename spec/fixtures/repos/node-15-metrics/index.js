@@ -70,4 +70,3 @@ const metricsListener = http.createServer((req, res) => {
 });
 
 metricsListener.listen(3000, () => console.log('Listening for metrics on 3000'));
-
