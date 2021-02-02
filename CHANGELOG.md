@@ -6,6 +6,7 @@
 - Add Node v15.6.0 to inventory ([#892](https://github.com/heroku/heroku-buildpack-nodejs/pull/892))
 - add Node 10.23.2 and 15.7.0 to inventory ([#894](https://github.com/heroku/heroku-buildpack-nodejs/pull/894))
 - Update Node.js plugin for Node 15; Add tests for Node 15 ([#895](https://github.com/heroku/heroku-buildpack-nodejs/pull/895))
+- Log the build time in a failed build ([#896](https://github.com/heroku/heroku-buildpack-nodejs/pull/896))
 
 ## v182 (2020-01-05)
 - add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
