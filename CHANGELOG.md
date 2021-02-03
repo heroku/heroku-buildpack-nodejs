@@ -1,5 +1,7 @@
 # Meteor Specific Changelog
 
+- add meteor v2.0 support
+
 ## 2017-11-05 (tag: sc-v1)
 
 - Support for Meteor 1.6 (Node 8.8.x and NPM 5.x)
