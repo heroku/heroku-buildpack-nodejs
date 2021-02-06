@@ -122,7 +122,7 @@ create_meteor_startup_file() {
   local minor=$(get_meteor_minor_version)
   local major=$(get_meteor_major_version)
 
-  if [ "$minor" -lt 8 && "$major" -le 1 ]; then
+  if [[ "$minor" -lt 8 && "$major" -le 1 ]]; then
     cat <<EOF >"${build_dir}/.start-meteor-app"
  cd .app-build/bundle/programs/server
  exec node \$NODE_BOOT_FLAGS boot.js program.json
