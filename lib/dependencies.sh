@@ -175,15 +175,17 @@ yarn_prune_devdependencies() {
     cd "$build_dir" || return
 
     if has_yarn_workspace_plugin_installed "$build_dir"; then
-      meta_set "install-workspace-plugin" "true"
-    else
-      meta_set "install-workspace-plugin" "false"
-      yarn plugin import workspace-tools
-    fi
+      meta_set "workspace-plugin-present" "true"
 
-    rm -rf "$cache_dir"
-    monitor "yarn-prune" yarn workspaces focus --all --production
-    meta_set "skipped-prune" "false"
+      # The cache is removed beforehand because the command is running an install on devDeps, and
+      # it will not remove the existing dependencies beforehand.
+      rm -rf "$cache_dir"
+      monitor "yarn-prune" yarn workspaces focus --all --production
+      meta_set "skipped-prune" "false"
+    else
+      meta_set "workspace-plugin-present" "false"
+      echo "Skipping because the Yarn workspace plugin is not present. Add the plugin to your source code with 'yarn plugin import workspace-tools'."
+    fi
   else
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1

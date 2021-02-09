@@ -719,6 +719,7 @@ testYarn2WithoutYarnCache() {
 
 testYarn2WithoutWorkspaceModule() {
   compile "yarn-2-without-workspace-plugin"
+  assertCaptured "Skipping because the Yarn workspace plugin is not present."
   assertCapturedSuccess
 }
 ###
