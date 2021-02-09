@@ -1,12 +1,9 @@
 {
-  "productTag": "a1aB0000000TwtFIAS",
-  "productTagLabel": {
-    "documentation": "a1aB0000000TwtAIAS"
-  },
+  "productTag": "a1aB0000000MR0MIAW",
   "issueTypeLabels": {
     "gus: story": "USER STORY",
-    "gus: bug": "BUG P3",
-    "gus: investigation": "INVESTIGATION P3"
+    "gus: bug": "BUG P4",
+    "gus: investigation": "INVESTIGATION P4"
   },
   "defaultBuild": "Heroku Unscheduled",
   "statusWhenClosed": "CLOSED"
