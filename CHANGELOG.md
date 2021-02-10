@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Prune devDependencies with Yarn 2 ([#891](https://github.com/heroku/heroku-buildpack-nodejs/pull/891))
 
 ## v183 (2020-02-03)
 - Update node version to 14 ([#885](https://github.com/heroku/heroku-buildpack-nodejs/pull/885))

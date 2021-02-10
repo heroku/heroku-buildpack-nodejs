@@ -418,18 +418,6 @@ fail_missing_yarn_vendor() {
   fi
 }
 
-fail_yarn_2_production() {
-  local build_dir="$1"
-
-  if [[ -n "$YARN_PRODUCTION" ]]; then
-    header "Build failed"
-    warn "
-      The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces. See https://devcenter.heroku.com/articles/migrating-to-yarn-2#update-heroku-environment-with-plug-n-play-remove-production-environment-variables for additional information.
-      "
-    fail
-  fi
-}
-
 log_other_failures() {
   local log_file="$1"
   if grep -qi "sh: 1: .*: not found" "$log_file"; then

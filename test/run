@@ -701,8 +701,7 @@ testYarn2() {
   compile "yarn-2"
   assertCaptured "The buildpack won't cache the dependencies in .yarn/cache."
   assertCaptured "Running 'yarn install' with yarn.lock"
-  # tsc output
-  assertCaptured "Version 3.9.3"
+  assertCaptured "Version 3.9.7" # tsc output
   assertCapturedSuccess
 }
 
@@ -715,6 +714,12 @@ testYarn2WithNodeModules() {
 
 testYarn2WithoutYarnCache() {
   compile "yarn-2-without-cache"
+  assertCapturedSuccess
+}
+
+testYarn2WithoutWorkspaceModule() {
+  compile "yarn-2-without-workspace-plugin"
+  assertCaptured "Skipping because the Yarn workspace plugin is not present."
   assertCapturedSuccess
 }
 ###
@@ -737,14 +742,6 @@ testYarn2WithNpmrcAndYarnrc() {
 
 ###
 # Yarn 2 failures
-testYarn2WithProductionFlag() {
-  env_dir=$(mktmpdir)
-  echo "true" > $env_dir/YARN_PRODUCTION
-  compile "yarn-2" "$(mktmpdir)" $env_dir
-  assertCaptured "The --production flag is no longer used for installing production dependencies for entire projects, but is still used in workspaces."
-  assertCapturedError
-}
-
 testYarn2WithoutYarnrcYml() {
   compile "yarn-2-without-yarnrc-yml"
   assertCaptured "The 'yarnrc.yml' file is not found"
