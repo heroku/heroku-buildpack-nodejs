@@ -7,10 +7,10 @@
     "url": "http://github.com/example/example.git"
   },
   "dependencies": {
-    "hashish": "*"
+    "@heroku/foreman": "^2.0"
   },
   "engines": {
-    "node": "10.x"
+    "node": "14.x"
   },
   "scripts": {
     "heroku-prebuild": "echo heroku-prebuild script",
