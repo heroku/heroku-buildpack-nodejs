@@ -2,6 +2,7 @@
 
 ## main
 - Prune devDependencies with Yarn 2 ([#891](https://github.com/heroku/heroku-buildpack-nodejs/pull/891))
+- Fix typo in conflicting lockfile failure message ([#901](https://github.com/heroku/heroku-buildpack-nodejs/pull/901))
 
 ## v183 (2020-02-03)
 - Update node version to 14 ([#885](https://github.com/heroku/heroku-buildpack-nodejs/pull/885))
