@@ -259,8 +259,6 @@ testYarnNativeCache() {
   # Run this again with a cache
   compile "yarn-native-cache" $cache
 
-  # assert that devDependencies are not cached
-  assertEquals "0" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
   assertCapturedSuccess
 }
 
@@ -295,7 +293,7 @@ testBuildWithCache() {
 
   compile "stable-node" $cache
   assertNotCaptured "Restoring cache"
-  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c hashish | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c @heroku | tr -d ' ')"
   assertCapturedSuccess
 
   compile "stable-node" $cache
@@ -743,8 +741,8 @@ testYarn2WithoutYarnRelease() {
 testSpecificVersion() {
   compile "specific-version"
   assertCaptured "Resolving node version"
-  assertCaptured "Downloading and installing node 14.15.4"
-  assertCaptured "Using default npm version: 6.14.11"
+  assertCaptured "Downloading and installing node 14.15.3"
+  assertCaptured "Using default npm version: 6.14.9"
   assertCapturedSuccess
 }
 
