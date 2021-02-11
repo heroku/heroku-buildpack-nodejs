@@ -13,6 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "grunt-steroids": "0.2.3"
+    "@heroku/foreman": "^1.0"
   }
 }

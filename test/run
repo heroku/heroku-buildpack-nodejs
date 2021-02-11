@@ -460,16 +460,6 @@ testWarnUnmetDepNpm() {
   assertCapturedSuccess
 }
 
-testWarnUnmetDepYarn() {
-  compile "unmet-dep-yarn"
-  assertCaptured "fail yarn install"
-  assertCaptured "may cause runtime issues"
-  assertCapturedSuccess
-  compile "no-version"
-  assertNotCaptured "may cause runtime issues"
-  assertCapturedSuccess
-}
-
 testWarnEconnreset() {
   compile "econnreset-mock"
   assertCaptured "may be related to npm versions"
