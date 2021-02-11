@@ -7,7 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "10.x"
+    "node": "14.x"
   },
   "scripts" : {
     "heroku-cleanup" : "echo heroku-cleanup hook message"
