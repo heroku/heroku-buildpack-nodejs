@@ -11,7 +11,7 @@
     "postinstall": "echo '(postinstall script)'"
   },
   "dependencies": {
-    "@heroku/function-toml": "*"
+    "@heroku/linewrap": "*"
   },
   "engines": {
     "node": "14.x"

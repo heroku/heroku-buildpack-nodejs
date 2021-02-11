@@ -7,7 +7,7 @@
     "url": "http://github.com/example/example.git"
   },
   "dependencies": {
-    "@heroku/function-toml": "*"
+    "@heroku/linewrap": "*"
   },
   "engines": {
     "node": "14.x"

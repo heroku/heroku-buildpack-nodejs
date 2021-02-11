@@ -7,7 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "dependencies": {
-    "@heroku/foreman": "^1.0"
+    "@heroku/linewrap": "^1.0"
   },
   "engines": {
     "node": "0.10.x",
