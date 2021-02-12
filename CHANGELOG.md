@@ -3,6 +3,7 @@
 ## main
 - Prune devDependencies with Yarn 2 ([#891](https://github.com/heroku/heroku-buildpack-nodejs/pull/891))
 - Add 10.x, 12.x, and 14.x to inventory ([902](https://github.com/heroku/heroku-buildpack-nodejs/pull/902))
+- Add support for running "npm ci" when "npm-shrinkwrap.json" is found on the project directory ([#899](https://github.com/heroku/heroku-buildpack-nodejs/pull/899))
 
 ## v183 (2020-02-03)
 - Update node version to 14 ([#885](https://github.com/heroku/heroku-buildpack-nodejs/pull/885))
