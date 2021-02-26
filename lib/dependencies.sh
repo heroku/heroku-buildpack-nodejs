@@ -175,6 +175,7 @@ yarn_prune_devdependencies() {
     cd "$build_dir" || return
 
     if has_yarn_workspace_plugin_installed "$build_dir"; then
+      echo "Running 'yarn workspaces focus --all --production'"
       meta_set "workspace-plugin-present" "true"
 
       # The cache is removed beforehand because the command is running an install on devDeps, and

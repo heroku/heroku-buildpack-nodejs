@@ -26,14 +26,8 @@ has_yarn_cache() {
 }
 
 has_yarn_workspace_plugin_installed() {
-  local build_dir="$1"
-  local plugin_paths=$(get_yarn_plugin_paths "$build_dir")
-  [[ ! -n $plugin_paths ]] && echo "$plugin_paths" | grep plugin-workspace-tools
-}
-
-get_yarn_plugin_paths() {
-  local build_dir="$1"
-  $YQ r "$build_dir/.yarnrc.yml" "plugins.[*].path" 2>&1
+  local has_workspace_plugin=$(yarn plugin runtime | grep plugin-workspace-tools)
+  [[ ! "$has_workspace_plugin" == "" ]]
 }
 
 get_yarn_path() {
