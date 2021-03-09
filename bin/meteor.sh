@@ -298,10 +298,10 @@ build_meteor_app() {
   build_flags="--architecture os.linux.x86_64 --directory .app-build"
   METEOR_DEBUG_BUILD=${METEOR_DEBUG_BUILD:-false}
 
-  if [[ "$(get_meteor_major_version)" -eq 1 && "$(get_meteor_minor_version)" -gt 2 ]] ; then
-    build_flags="--server-only ${build_flags}"
-  else
+  if [[ "$(get_meteor_major_version)" -eq 1 && "$(get_meteor_minor_version)" -lt 3 ]] ; then
     remove_mobile_platforms "$build_dir"
+  else
+    build_flags="--server-only ${build_flags}"
   fi
 
   if [ "x${METEOR_DEBUG_BUILD}" = "xtrue"  ] ; then
