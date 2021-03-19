@@ -32,7 +32,7 @@ detect_memory() {
 
 bound_memory() {
   local detected=$1
-  local detected max_detected_memory=14336
+  local max_detected_memory=14336
 
   # The hardcoded value is 16GB of memory
   if (( detected > max_detected_memory )); then
