@@ -334,9 +334,9 @@ testWebConcurrencyProfileScript() {
   assertEquals "28" "$(calculate_concurrency 14336 512)"
 
   # In case some very large memory available value gets passed in
-  assertEquals "1" "$(calculate_concurrency 103401 512)"
+  assertEquals "1" "$(validate_concurrency $(calculate_concurrency 103401 512))"
   # of if web memory is set really low
-  assertEquals "1" "$(calculate_concurrency 512 1)"
+  assertEquals "1" "$(validate_concurrency $(calculate_concurrency 512 1))"
 }
 
 isUUID() {

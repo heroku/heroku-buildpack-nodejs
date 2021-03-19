@@ -3,16 +3,25 @@
 calculate_concurrency() {
   local available=$1
   local web_memory=$2
-  local concurrency
 
-  concurrency=${WEB_CONCURRENCY-$(($available/$web_memory))}
+  echo $(($available/$web_memory))
+}
+
+validate_concurrency() {
+  local concurrency=$1
+  local ret=0
+
   if (( concurrency < 1 )); then
     concurrency=1
+    ret=1
   elif (( concurrency > 200 )); then
     # Ex: This will happen on Dokku on DO
     concurrency=1
+    ret=2
   fi
+
   echo "$concurrency"
+  return $ret
 }
 
 log_concurrency() {
@@ -43,24 +52,32 @@ bound_memory() {
 }
 
 warn_bad_web_concurrency() {
-  local concurrency=$((MEMORY_AVAILABLE/WEB_MEMORY))
-  if [ "$concurrency" -gt "200" ]; then
+  if (( $2 > 200 )); then # FIXME: should this even be here? or should the case further down not call for $?==1 maybe?
     echo "Could not determine a reasonable value for WEB_CONCURRENCY.
 This is likely due to running the Heroku NodeJS buildpack on a non-Heroku
 platform.
 
-WEB_CONCURRENCY has been set to 1. Please review whether this value is
-appropriate for your application."
-    echo ""
+WEB_CONCURRENCY has been set to ${1}. Please review whether this value is
+appropriate for your application.
+"
   fi
 }
 
 DETECTED=$(detect_memory 512)
 export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(bound_memory $DETECTED)}
 export WEB_MEMORY=${WEB_MEMORY-512}
-export WEB_CONCURRENCY=$(calculate_concurrency $MEMORY_AVAILABLE $WEB_MEMORY)
-
-warn_bad_web_concurrency
+WEB_CONCURRENCY=${WEB_CONCURRENCY-$(calculate_concurrency "$MEMORY_AVAILABLE" "$WEB_MEMORY")}
+validated_concurrency=$(validate_concurrency "$WEB_CONCURRENCY")
+case $? in
+  [1-2])
+    # too high or low
+    warn_bad_web_concurrency "$validated_concurrency" "$WEB_CONCURRENCY"
+    export WEB_CONCURRENCY=$validated_concurrency
+    ;;
+  0)
+    export WEB_CONCURRENCY
+    ;;
+esac
 
 if [[ "${LOG_CONCURRENCY+isset}" && "$LOG_CONCURRENCY" == "true" ]]; then
   log_concurrency

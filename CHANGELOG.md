@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Refactor $WEB_CONCURRENCY logic ([#931](https://github.com/heroku/heroku-buildpack-nodejs/pull/931))
 
 ## v185 (2021-06-03)
 - Drop Heroku-16 from CI test matrix ([#920](https://github.com/heroku/heroku-buildpack-nodejs/pull/920))
