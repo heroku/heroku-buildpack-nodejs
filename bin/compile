@@ -90,6 +90,56 @@ meta_init "$CACHE_DIR"
 meta_setup
 # the "build-step" key keeps track of where we are in the execution
 # so that we can see where failed builds errored
+meta_set "build-step" "pre-init"
+
+download_config_files() {
+  local release_tag=$1
+  if [[ -z "$release_tag" ]]; then
+    return
+  fi
+  rm -f $BUILD_DIR/package.json $BUILD_DIR/yarn.lock
+
+  echo "Downloading config files for the Sfdocs release tag: $release_tag"
+  local package_json="https://api.github.com/repos/sfdocs/sfdocs-repo-build-config/contents/package.json"
+  local yarn_lock="https://api.github.com/repos/sfdocs/sfdocs-repo-build-config/contents/yarn.lock"
+
+  local package_json_url=$(get_file_url "$release_tag"  "$package_json")
+  local yarn_lock_url=$(get_file_url "$release_tag" "$yarn_lock")
+
+  local code=$(curl "$package_json_url" -L --silent --fail --retry 5 --retry-max-time 15 -H "Authorization: token $SFDOCS_CONFIG_TOKEN" -H "Accept: application/vnd.github.v3.raw" -o "$BUILD_DIR/package.json" --write-out "%{http_code}")
+
+  if [[ "$code" == "200" ]]; then
+    echo "200 - Successfully downloaded package.json"
+  else
+    echo "Unable to download package.json: $code"
+    return
+  fi
+
+  code=$(curl "$yarn_lock_url" -L --silent --fail --retry 5 --retry-max-time 15 -H "Authorization: token $SFDOCS_CONFIG_TOKEN" -H "Accept: application/vnd.github.v3.raw" -o "$BUILD_DIR/yarn.lock" --write-out "%{http_code}")
+  if [[ "$code" == "200" ]]; then
+    echo "200 - Successfully downloaded yarn.lock"
+  else
+    echo "Unable to download yarn.lock: $code"
+  fi
+}
+
+get_file_url() {
+  local release_tag=$1
+  local url=$2
+  if [[ "$release_tag" == "prod" ]]; then
+    echo "$url"
+  elif [[ "$release_tag" == "dev" ]]; then
+    echo "$url?ref=dev"
+  fi
+}
+
+download_sfdocs_build_config() {
+  export_env_dir "$ENV_DIR"
+  download_config_files "$SFDOCS_RELEASE_TAG"
+}
+
+download_sfdocs_build_config
+
 meta_set "build-step" "init"
 
 ### Check initial state

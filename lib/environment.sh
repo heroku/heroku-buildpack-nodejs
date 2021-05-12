@@ -25,6 +25,8 @@ create_default_env() {
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
+  export SFDOCS_RELEASE_TAG=${SFDOCS_RELEASE_TAG:-none}
+  export SFDOCS_CONFIG_TOKEN=${SFDOCS_CONFIG_TOKEN:-error}
 
   if $YARN; then
     export USE_YARN_CACHE=${USE_YARN_CACHE:-true}
