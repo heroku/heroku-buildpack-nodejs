@@ -53,6 +53,14 @@ fail_invalid_package_json() {
   fi
 }
 
+fail_to_download_file() {
+  local file_name="${1}"
+  error "Unable to downlaod ${file_name}"
+  header "Build failed"
+  failure_message
+  fail
+}
+
 fail_dot_heroku() {
   if [ -f "${1:-}/.heroku" ]; then
     mcount "failures.dot-heroku"
