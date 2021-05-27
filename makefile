@@ -23,12 +23,12 @@ shellcheck:
 
 heroku-20-build:
 	@echo "Running tests in docker (heroku-20-build)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20-build" heroku/heroku:20-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20" heroku/heroku:20-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
 	@echo ""
 
 heroku-18-build:
 	@echo "Running tests in docker (heroku-18-build)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18-build" heroku/heroku:18-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18" heroku/heroku:18-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
 	@echo ""
 
 hatchet:
