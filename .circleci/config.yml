@@ -62,12 +62,6 @@ workflows:
       - unit-test-heroku-build:
           name: heroku-18 build tests
           stack-number: "18"
-      - unit-test:
-          name: heroku-16 unit tests
-          stack-number: "16"
-      - unit-test-heroku-build:
-          name: heroku-16 build tests
-          stack-number: "16"
       - hatchet-test:
           name: Hatchet tests
       - unit-test-binary:

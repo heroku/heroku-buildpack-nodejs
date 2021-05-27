@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Drop Heroku-16 from CI test matrix ([#920](https://github.com/heroku/heroku-buildpack-nodejs/pull/920))
 
 ## v184 (2021-05-20)
 - Prune devDependencies with Yarn 2 ([#891](https://github.com/heroku/heroku-buildpack-nodejs/pull/891))

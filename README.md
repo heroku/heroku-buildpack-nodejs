@@ -111,9 +111,8 @@ make test
 Or to just test a specific stack:
 
 ```
-make heroku-16
-make heroku-18
-make heroku-20
+make heroku-18-build
+make heroku-20-build
 ```
 
 The tests are run via the vendored
