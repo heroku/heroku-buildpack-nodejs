@@ -2,6 +2,8 @@
 
 ## main
 
+- Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
+
 ## v185 (2021-06-03)
 - Drop Heroku-16 from CI test matrix ([#920](https://github.com/heroku/heroku-buildpack-nodejs/pull/920))
 - Add metrics plugin for Node 16 ([#923](https://github.com/heroku/heroku-buildpack-nodejs/pull/923))
