@@ -7,6 +7,8 @@ set -o errexit    # always exit on error
 set -o pipefail   # don't ignore exit codes when piping output
 unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
+[ "$BUILDPACK_XTRACE" ] && set -o xtrace
+
 ### Constants
 
 # This is used by the buildpack stdlib for metrics
