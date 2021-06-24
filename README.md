@@ -57,7 +57,6 @@ into the `$PATH` for easy use in subsequent buildpacks.
 Having trouble? Dig it? Feature request?
 
 - [help.heroku.com](https://help.heroku.com/)
-- [@adamzdanielle](http://twitter.com/adamzdanielle)
 - [GitHub issues](https://github.com/heroku/heroku-buildpack-nodejs/issues)
 
 ## Development
@@ -111,9 +110,8 @@ make test
 Or to just test a specific stack:
 
 ```
-make heroku-16
-make heroku-18
-make heroku-20
+make heroku-18-build
+make heroku-20-build
 ```
 
 The tests are run via the vendored

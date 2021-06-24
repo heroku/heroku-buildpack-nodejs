@@ -1,11 +1,17 @@
 # Node.js Buildpack Changelog
 
 ## main
+
+## v185 (2021-06-03)
+- Drop Heroku-16 from CI test matrix ([#920](https://github.com/heroku/heroku-buildpack-nodejs/pull/920))
+- Add metrics plugin for Node 16 ([#923](https://github.com/heroku/heroku-buildpack-nodejs/pull/923))
+
+## v184 (2021-05-20)
 - Prune devDependencies with Yarn 2 ([#891](https://github.com/heroku/heroku-buildpack-nodejs/pull/891))
 - Add 10.x, 12.x, and 14.x to inventory ([902](https://github.com/heroku/heroku-buildpack-nodejs/pull/902))
 - Fix yarn workspace plugin detection ([#905](https://github.com/heroku/heroku-buildpack-nodejs/pull/905))
 
-## v183 (2020-02-03)
+## v183 (2021-02-03)
 - Update node version to 14 ([#885](https://github.com/heroku/heroku-buildpack-nodejs/pull/885))
 - Add unit tests around the behavior of `WEB_CONCURRENCY` ([#876](https://github.com/heroku/heroku-buildpack-nodejs/pull/876))
 - Add Node v15.6.0 to inventory ([#892](https://github.com/heroku/heroku-buildpack-nodejs/pull/892))
@@ -14,7 +20,7 @@
 - Log the build time in a failed build ([#896](https://github.com/heroku/heroku-buildpack-nodejs/pull/896))
 - Add Node v15.8.0 to inventory ([#897](https://github.com/heroku/heroku-buildpack-nodejs/pull/897))
 
-## v182 (2020-01-05)
+## v182 (2021-01-05)
 - add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
 - Report on parsing errors for `resolve-version.rs` ([#883](https://github.com/heroku/heroku-buildpack-nodejs/pull/883))
 - Add an environment variable for using npm install (instead of npm ci) ([#882](https://github.com/heroku/heroku-buildpack-nodejs/pull/882))
