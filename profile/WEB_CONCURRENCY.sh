@@ -51,16 +51,14 @@ bound_memory() {
   fi
 }
 
-warn_bad_web_concurrency() {
-  if (( $2 > 200 )); then # FIXME: should this even be here? or should the case further down not call for $?==1 maybe?
-    echo "Could not determine a reasonable value for WEB_CONCURRENCY.
+warn_high_web_concurrency() {
+  echo "Could not determine a reasonable value for WEB_CONCURRENCY.
 This is likely due to running the Heroku NodeJS buildpack on a non-Heroku
 platform.
 
 WEB_CONCURRENCY has been set to ${1}. Please review whether this value is
 appropriate for your application.
 "
-  fi
 }
 
 DETECTED=$(detect_memory 512)
@@ -68,10 +66,14 @@ export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(bound_memory $DETECTED)}
 export WEB_MEMORY=${WEB_MEMORY-512}
 WEB_CONCURRENCY=${WEB_CONCURRENCY-$(calculate_concurrency "$MEMORY_AVAILABLE" "$WEB_MEMORY")}
 validated_concurrency=$(validate_concurrency "$WEB_CONCURRENCY")
-case $? in
-  [1-2])
-    # too high or low
-    warn_bad_web_concurrency "$validated_concurrency" "$WEB_CONCURRENCY"
+case $? in # validate_concurrency exit code indicates result
+  1)
+    # too low
+    export WEB_CONCURRENCY=$validated_concurrency
+    ;;
+  2)
+    # too high
+    warn_high_web_concurrency "$validated_concurrency" "$WEB_CONCURRENCY"
     export WEB_CONCURRENCY=$validated_concurrency
     ;;
   0)
