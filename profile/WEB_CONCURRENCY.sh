@@ -64,6 +64,7 @@ appropriate for your application.
 DETECTED=$(detect_memory 512)
 export MEMORY_AVAILABLE=${MEMORY_AVAILABLE-$(bound_memory $DETECTED)}
 export WEB_MEMORY=${WEB_MEMORY-512}
+OLD_WEB_CONCURRENCY="${WEB_CONCURRENCY:-}" # we need to remember whether WEB_CONCURRENCY was set already
 WEB_CONCURRENCY=${WEB_CONCURRENCY-$(calculate_concurrency "$MEMORY_AVAILABLE" "$WEB_MEMORY")}
 validated_concurrency=$(validate_concurrency "$WEB_CONCURRENCY")
 case $? in # validate_concurrency exit code indicates result
@@ -80,6 +81,7 @@ case $? in # validate_concurrency exit code indicates result
     export WEB_CONCURRENCY
     ;;
 esac
+[[ -z "${OLD_WEB_CONCURRENCY:+isset}" || "${OLD_WEB_CONCURRENCY}" != "${WEB_CONCURRENCY}" ]] && export WEB_CONCURRENCY_SET_BY="heroku/nodejs"
 
 if [[ "${LOG_CONCURRENCY+isset}" && "$LOG_CONCURRENCY" == "true" ]]; then
   log_concurrency

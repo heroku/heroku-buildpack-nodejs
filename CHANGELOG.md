@@ -2,6 +2,7 @@
 
 ## main
 - Refactor $WEB_CONCURRENCY logic ([#931](https://github.com/heroku/heroku-buildpack-nodejs/pull/931))
+- Export `WEB_CONCURRENCY_SET_BY=heroku/nodejs` if we've calculated and set it ([#932](https://github.com/heroku/heroku-buildpack-nodejs/pull/932))
 
 ## v185 (2021-06-03)
 - Drop Heroku-16 from CI test matrix ([#920](https://github.com/heroku/heroku-buildpack-nodejs/pull/920))

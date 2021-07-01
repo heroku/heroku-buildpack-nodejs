@@ -287,6 +287,16 @@ testWebConcurrencyDoesNotOverrideManualValue() {
   source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
   assertEquals 123 "$WEB_CONCURRENCY"
+  assertNull "$WEB_CONCURRENCY_SET_BY"
+}
+
+testWebConcurrencyOverridesOutOfBounds() {
+  WEB_CONCURRENCY=400
+
+  source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+  assertEquals 1 "$WEB_CONCURRENCY"
+  assertEquals "heroku/nodejs" "$WEB_CONCURRENCY_SET_BY"
 }
 
 testWebConcurrencySetsAValueWhenUnset() {
@@ -295,6 +305,7 @@ testWebConcurrencySetsAValueWhenUnset() {
   source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
   assertNotNull "WEB_CONCURRENCY is null" "$WEB_CONCURRENCY"
+  assertEquals "heroku/nodejs" "$WEB_CONCURRENCY_SET_BY"
 }
 
 testWebConcurrencyProfileScript() {
