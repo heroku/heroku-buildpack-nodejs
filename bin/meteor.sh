@@ -25,12 +25,14 @@ meteor_node_version() {
   minor=$(get_meteor_minor_version)
   major=$(get_meteor_major_version)
   if [ "$major" -ge 2 ]; then
-    if [ "$minor" -ge 0 ]; then
-      echo "12.20.x"
-    elif [ "$minor" -ge 1 ]; then
-      echo "12.22.x"
+    if [ "$minor" -ge 3 ]; then
+      echo "14.17.x"
     elif [ "$minor" -ge 2 ]; then
       echo "12.22.x"
+    elif [ "$minor" -ge 1 ]; then
+      echo "12.22.x"
+    elif [ "$minor" -ge 0 ]; then
+      echo "12.20.x"
     fi
   elif [[ "$major" -eq 1 ]]; then
     if [ "$minor" -ge 12 ]; then
