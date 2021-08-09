@@ -246,8 +246,8 @@ testBuildDataPreviousBuild() {
   # the first time, there will be no previous build file
   meta_init "$cache_dir"
   meta_setup
-  assertContains "nodejs" "$BUILD_DATA_FILE"
-  assertContains "nodejs-prev" "$PREVIOUS_BUILD_DATA_FILE"
+  assertContains "$BUILD_DATA_FILE" "nodejs"
+  assertContains "$PREVIOUS_BUILD_DATA_FILE" "nodejs-prev"
   assertFileExists "$BUILD_DATA_FILE"
 
   # set a value in the build data file
