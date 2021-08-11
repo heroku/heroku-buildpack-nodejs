@@ -1301,8 +1301,8 @@ testBuildMetaData() {
   assertFileContains "node-build-success=true" $log_file
 
   # resolve-version tests
-  assertFileContains 'resolve-v1-yarn="1.22.' $log_file
-  assertFileContains 'resolve-v2-yarn="1.22.' $log_file
+  assertFileContainsMatch 'resolve-v1-yarn="1.[[:digit:]]+.[[:digit:]]+ https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
+  assertFileContainsMatch 'resolve-v2-yarn="1.[[:digit:]]+.[[:digit:]]+ https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
   assertFileContains "resolve-is-equal-yarn=true" $log_file
 }
 
