@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## main
+
+## v186 (2021-08-11)
 - Refactor $WEB_CONCURRENCY logic ([#931](https://github.com/heroku/heroku-buildpack-nodejs/pull/931))
 - Fix broken tests, update node and yarn inventory, update shunit2 ([#934](https://github.com/heroku/heroku-buildpack-nodejs/pull/934))
 
