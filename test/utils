@@ -147,16 +147,6 @@ _assertContains()
   fi
 }
 
-assertContains()
-{
-  _assertContains "$@" 0 "text"
-}
-
-assertNotContains()
-{
-  _assertContains "$@" 1 "text"
-}
-
 assertFileContains()
 {
   _assertContains "$@" 0 "file"
