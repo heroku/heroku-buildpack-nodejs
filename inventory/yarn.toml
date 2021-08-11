@@ -487,6 +487,12 @@ url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.10.tar.gz
 etag = "52e8dbe9d0cb90683dd3ee2ebf2becb8"
 
 [[releases]]
+version = "1.22.11"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.11.tar.gz"
+etag = "abac2ecbe725c04e91dafc56ae2163b3"
+
+[[releases]]
 version = "1.22.4"
 channel = "release"
 url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.4.tar.gz"
@@ -551,3 +557,4 @@ version = "1.9.4"
 channel = "release"
 url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.9.4.tar.gz"
 etag = "1202576a1a67d2228b44bb6f87a4eb64"
+
