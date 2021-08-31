@@ -89,10 +89,7 @@ install_yarn() {
 install_nodejs() {
   local version=${1:-14.x}
   local dir="${2:?}"
-  local code os cpu resolve_result
-
-  os=$(get_os)
-  cpu=$(get_cpu)
+  local code resolve_result
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
     url="$NODE_BINARY_URL"
@@ -115,9 +112,8 @@ install_nodejs() {
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false
   fi
-  tar xzf /tmp/node.tar.gz -C /tmp
   rm -rf "${dir:?}"/*
-  mv /tmp/node-v"$number"-"$os"-"$cpu"/* "$dir"
+  tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
   chmod +x "$dir"/bin/*
 }
 

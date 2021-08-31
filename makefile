@@ -1,4 +1,4 @@
-test: heroku-20-build heroku-18-build heroku-16-build
+test: heroku-20-build heroku-18-build
 
 build:
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
@@ -23,17 +23,12 @@ shellcheck:
 
 heroku-20-build:
 	@echo "Running tests in docker (heroku-20-build)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20-build" heroku/heroku:20-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20" heroku/heroku:20-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
 	@echo ""
 
 heroku-18-build:
 	@echo "Running tests in docker (heroku-18-build)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18-build" heroku/heroku:18-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
-	@echo ""
-
-heroku-16-build:
-	@echo "Running tests in docker (heroku-16-build)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-16-build" heroku/heroku:16-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18" heroku/heroku:18-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
 	@echo ""
 
 hatchet:
@@ -49,11 +44,11 @@ nodebin-test:
 	@echo ""
 
 unit:
-	@echo "Running unit tests in docker (heroku-18)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-18" heroku/heroku:18 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
+	@echo "Running unit tests in docker (heroku-20)..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20" heroku/heroku:20 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
 	@echo ""
 
 shell:
-	@echo "Opening heroku-16 shell..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:16 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
+	@echo "Opening heroku-20 shell..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:20 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
 	@echo ""
