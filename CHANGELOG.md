@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Upgrade heroku_hatchet to 7.3.4 to get CI green again ([#936](https://github.com/heroku/heroku-buildpack-nodejs/pull/936))
 
 ## v186 (2021-08-11)
 - Refactor $WEB_CONCURRENCY logic ([#931](https://github.com/heroku/heroku-buildpack-nodejs/pull/931))
