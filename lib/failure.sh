@@ -136,7 +136,7 @@ fail_multiple_lockfiles() {
 
          $ git rm yarn.lock
 
-       - To use yarn to install your application's dependences please delete
+       - To use yarn to install your application's dependencies please delete
          the package-lock.json file.
 
          $ git rm package-lock.json
