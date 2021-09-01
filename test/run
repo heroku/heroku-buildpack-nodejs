@@ -25,6 +25,30 @@ testNpmCi() {
   assertCapturedSuccess
 }
 
+testNpmCiShrinkwrap() {
+  local log_file cache
+  log_file=$(mktemp)
+  cache=$(mktmpdir)
+
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-shrinkwrap" "$cache"
+
+   # make sure that build scripts are being called
+  assertCaptured "heroku-prebuild script"
+  assertCaptured "build script"
+  assertCaptured "postinstall script"
+  assertCapturedSuccess
+
+   # test logging
+  assertFileContains "use-npm-ci=true" "$log_file"
+  assertFileContains "npm-install-time=" "$log_file"
+  assertFileContains "npm-install-memory=" "$log_file"
+
+   # test re-using the cache
+  echo "" > "$log_file"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-shrinkwrap" "$cache"
+  assertCapturedSuccess
+}
+
 testNpmCiFallback() {
   local log_file cache
   log_file=$(mktemp)
