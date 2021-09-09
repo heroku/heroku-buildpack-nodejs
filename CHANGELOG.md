@@ -1,14 +1,16 @@
 # Node.js Buildpack Changelog
 
 ## main
+
+## v188 (2021-09-09)
 - Update Node version inventory, includes 12.22.6, 14.17.6, 16.8.0, 16.7.0 and others ([#940](https://github.com/heroku/heroku-buildpack-nodejs/pull/940))
+- Support non-zero-install support for Yarn 2 ([#888](https://github.com/heroku/heroku-buildpack-nodejs/pull/888))
 
 ## v187 (2021-09-02)
 - Upgrade heroku_hatchet to 7.3.4 to get CI green again ([#936](https://github.com/heroku/heroku-buildpack-nodejs/pull/936))
 - Fix typo in conflicting lockfile failure message ([#901](https://github.com/heroku/heroku-buildpack-nodejs/pull/901))
 - Use local packages with Yarn when present ([#913](https://github.com/heroku/heroku-buildpack-nodejs/pull/913))
 - Add support for running "npm ci" when "npm-shrinkwrap.json" is found on the project directory ([#938](https://github.com/heroku/heroku-buildpack-nodejs/pull/938))
-- Support non-zero-install support for Yarn 2 ([#888](https://github.com/heroku/heroku-buildpack-nodejs/pull/888))
 
 ## v186 (2021-08-11)
 - Refactor $WEB_CONCURRENCY logic ([#931](https://github.com/heroku/heroku-buildpack-nodejs/pull/931))
