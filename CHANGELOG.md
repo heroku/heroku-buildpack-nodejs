@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Update Node version inventory, includes 12.22.6, 14.17.6, 16.8.0, 16.7.0 and others ([#940](https://github.com/heroku/heroku-buildpack-nodejs/pull/940))
 
 ## v187 (2021-09-02)
 - Upgrade heroku_hatchet to 7.3.4 to get CI green again ([#936](https://github.com/heroku/heroku-buildpack-nodejs/pull/936))
