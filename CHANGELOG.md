@@ -2,7 +2,7 @@
 
 ## main
 
-## v188 (2021-09-09)
+## v188 (2021-09-10)
 - Update Node version inventory, includes 12.22.6, 14.17.6, 16.8.0, 16.7.0 and others ([#940](https://github.com/heroku/heroku-buildpack-nodejs/pull/940))
 - Support non-zero-install support for Yarn 2 ([#888](https://github.com/heroku/heroku-buildpack-nodejs/pull/888))
 
