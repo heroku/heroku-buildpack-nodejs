@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Revert non-zero-install support from #888 ([#944](https://github.com/heroku/heroku-buildpack-nodejs/pull/944))
 
 ## v188 (2021-09-10)
 - Update Node version inventory, includes 12.22.6, 14.17.6, 16.8.0, 16.7.0 and others ([#940](https://github.com/heroku/heroku-buildpack-nodejs/pull/940))
