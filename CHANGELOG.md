@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## main
+
+## v189 (2021-09-14)
 - Revert non-zero-install support from #888 ([#944](https://github.com/heroku/heroku-buildpack-nodejs/pull/944))
 
 ## v188 (2021-09-10)
