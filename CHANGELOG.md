@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Add Yarn 1.22.1{2,3,4,5} to `inventory/yarn.toml` ([#947](https://github.com/heroku/heroku-buildpack-nodejs/pull/947))
 
 ## v189 (2021-09-14)
 - Revert non-zero-install support from #888 ([#944](https://github.com/heroku/heroku-buildpack-nodejs/pull/944))

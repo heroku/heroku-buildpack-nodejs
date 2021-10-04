@@ -493,6 +493,30 @@ url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.11.tar.gz
 etag = "abac2ecbe725c04e91dafc56ae2163b3"
 
 [[releases]]
+version = "1.22.12"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.12.tar.gz"
+etag = "1ff62ef8049c14c3e5f2fa3bf594132a"
+
+[[releases]]
+version = "1.22.13"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.13.tar.gz"
+etag = "5083b9c6ac6ed6fb4f8c666c41c1cab1"
+
+[[releases]]
+version = "1.22.14"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.14.tar.gz"
+etag = "8e166ebb48570c137bf801e38dcf4c5c"
+
+[[releases]]
+version = "1.22.15"
+channel = "release"
+url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.15.tar.gz"
+etag = "4113da7ab81a77fb30f74737a459a225"
+
+[[releases]]
 version = "1.22.4"
 channel = "release"
 url = "https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.22.4.tar.gz"
