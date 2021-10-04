@@ -18,11 +18,11 @@ GEM
       threaded (~> 0)
     moneta (1.0.0)
     multi_json (1.15.0)
-    parallel (1.19.2)
+    parallel (1.21.0)
     parallel_split_test (0.8.0)
       parallel (>= 0.5.13)
       rspec (>= 3.1.0)
-    parallel_tests (3.2.0)
+    parallel_tests (3.7.3)
       parallel
     platform-api (3.3.0)
       heroics (~> 0.1.1)
