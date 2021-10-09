@@ -3,7 +3,7 @@ GEM
   specs:
     diff-lcs (1.4.4)
     erubis (2.7.0)
-    excon (0.85.0)
+    excon (0.86.0)
     heroics (0.1.2)
       erubis (~> 2.0)
       excon
@@ -18,34 +18,25 @@ GEM
       threaded (~> 0)
     moneta (1.0.0)
     multi_json (1.15.0)
-    parallel (1.19.2)
-    parallel_split_test (0.8.0)
+    parallel (1.21.0)
+    parallel_split_test (0.10.0)
       parallel (>= 0.5.13)
-      rspec (>= 3.1.0)
-    parallel_tests (3.2.0)
-      parallel
+      rspec-core (>= 3.9.0)
     platform-api (3.3.0)
       heroics (~> 0.1.1)
       moneta (~> 1.0.0)
       rate_throttle_client (~> 0.1.0)
-    rake (13.0.1)
+    rake (13.0.6)
     rate_throttle_client (0.1.2)
     rrrretry (1.0.0)
-    rspec (3.9.0)
-      rspec-core (~> 3.9.0)
-      rspec-expectations (~> 3.9.0)
-      rspec-mocks (~> 3.9.0)
-    rspec-core (3.9.2)
-      rspec-support (~> 3.9.3)
-    rspec-expectations (3.9.2)
+    rspec-core (3.10.1)
+      rspec-support (~> 3.10.0)
+    rspec-expectations (3.10.1)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.9.0)
-    rspec-mocks (3.9.1)
-      diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.9.0)
+      rspec-support (~> 3.10.0)
     rspec-retry (0.6.2)
       rspec-core (> 3.3)
-    rspec-support (3.9.3)
+    rspec-support (3.10.2)
     sem_version (2.0.1)
     thor (1.1.0)
     threaded (0.0.4)
@@ -57,11 +48,10 @@ PLATFORMS
 DEPENDENCIES
   heroku_hatchet
   parallel_split_test
-  parallel_tests
   rake
   rspec-expectations
   rspec-retry
   sem_version
 
 BUNDLED WITH
-   2.2.22
+   2.2.28
