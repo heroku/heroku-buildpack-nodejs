@@ -103,9 +103,6 @@ meta_set "build-step" "init"
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 
-echo "USE YARN ? $YARN"
-echo "USE YARN_2 ? $YARN_2"
-
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
