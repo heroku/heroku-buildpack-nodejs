@@ -146,10 +146,6 @@ yarn_2_install() {
   echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
 
-  echo "has yarn cache ? $(has_yarn_cache '$build_dir')"
-  echo "use yarn cache ? $USE_YARN_CACHE"
-
-  # TODO: add USE_YARN_CACHE condition to avoid option --immutable-cache
   # If there is no cache we can't run immutable cache because a cache will be created by default
   if ! has_yarn_cache "$build_dir" || ! use_yarn_cache "$USE_YARN_CACHE"; then
     monitor "yarn-2-install" yarn install --immutable 2>&1

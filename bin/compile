@@ -168,8 +168,6 @@ if [[ "$YARN_2" == "true" ]]; then
   if has_yarn_cache "$BUILD_DIR"; then
     YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
   fi
-  echo "YARN_CACHE_FOLDER :"
-  echo "$YARN_CACHE_FOLDER"
 
   ### Configure Yarn 2
   # fail for no yarnrc.yml
