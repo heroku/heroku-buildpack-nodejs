@@ -25,6 +25,11 @@ has_yarn_cache() {
   [[ -d "$build_dir/.yarn/cache" ]]
 }
 
+use_yarn_cache() {
+  local use_cache="$1"
+  [[ "$use_cache" == "true" ]]
+}
+
 has_yarn_workspace_plugin_installed() {
   local has_workspace_plugin=$(yarn plugin runtime | grep plugin-workspace-tools)
   [[ ! "$has_workspace_plugin" == "" ]]

@@ -151,11 +151,11 @@ yarn_2_install() {
 
   # TODO: add USE_YARN_CACHE condition to avoid option --immutable-cache
   # If there is no cache we can't run immutable cache because a cache will be created by default
-  # if ! has_yarn_cache "$build_dir"; then
+  if ! has_yarn_cache "$build_dir" || ! use_yarn_cache "$USE_YARN_CACHE"; then
     monitor "yarn-2-install" yarn install --immutable 2>&1
-  # else
-  #   monitor "yarn-2-install" yarn install --immutable --immutable-cache 2>&1
-  # fi
+  else
+    monitor "yarn-2-install" yarn install --immutable --immutable-cache 2>&1
+  fi
 }
 
 yarn_prune_devdependencies() {

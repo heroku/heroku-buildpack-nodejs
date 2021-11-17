@@ -186,8 +186,6 @@ if [[ "$YARN_2" == "true" ]]; then
 fi
 
 [[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false
-echo "USE_YARN_CACHE :"
-echo "$USE_YARN_CACHE"
 
 if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
   USE_NPM_INSTALL=true
