@@ -98,10 +98,18 @@ meta_set "build-step" "init"
 
 ### Check initial state
 
+echo "BUILD_DIR :"
+echo "$BUILD_DIR"
+
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
+
+# echo "YARN_2 ? "
+# echo "$YARN_2"
+# force to use Yarn >=2
+YARN_2="true"
 
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
