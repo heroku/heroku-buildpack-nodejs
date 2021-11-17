@@ -13,6 +13,8 @@ detect_yarn_2() {
   # grep for version in case the output is a parsing error
   version=$(echo "$yml_metadata" | grep version)
 
+  echo "detect_yarn_2 ? $uses_yarn $version"
+
   if [[ "$uses_yarn" == "true" && "$version" != "" ]]; then
     echo "true"
   else
@@ -40,6 +42,8 @@ node_modules_enabled() {
   local node_linker
   
   node_linker=$($YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1)
+
+  echo "uses nodeLinker ? ${node_linker}"
 
   [[ "$node_linker" == "node-modules" ]]
 }

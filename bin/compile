@@ -3,9 +3,9 @@
 
 ### Configure environment
 
-set -o errexit    # always exit on error
-set -o pipefail   # don't ignore exit codes when piping output
-unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
+set -o errexit  # always exit on error
+set -o pipefail # don't ignore exit codes when piping output
+unset GIT_DIR   # Avoid GIT_DIR leak from previous build steps
 
 ### Constants
 
@@ -18,7 +18,11 @@ BPLOG_PREFIX="buildpack.nodejs"
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
-BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+BP_DIR=$(
+  cd "$(dirname "${0:-}")"
+  cd ..
+  pwd
+)
 
 ### Load dependencies
 
@@ -58,7 +62,7 @@ source "$BP_DIR/lib/yarn-2.sh"
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
-echo "" > "$LOG_FILE"
+echo "" >"$LOG_FILE"
 
 build_start_time=$(nowms)
 
@@ -78,7 +82,7 @@ handle_failure() {
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
   warn_econnreset "$LOG_FILE"
-  log_meta_data >> "$BUILDPACK_LOG_FILE"
+  log_meta_data >>"$BUILDPACK_LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
@@ -145,7 +149,7 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
-  if [[ "$NODE_MODULES_CACHE" == "true" ]]  && ! node_modules_enabled "$BUILD_DIR"; then
+  if [[ "$NODE_MODULES_CACHE" == "true" ]] && ! node_modules_enabled "$BUILD_DIR"; then
     warn "
     The buildpack won't cache the dependencies in .yarn/cache. Since you're using Yarn 2 and Plug'n'Play, you will need to customize your cache or unset NODE_MODULES_CACHE." "https://devcenter.heroku.com/articles/migrating-to-yarn-2#disable-dependency-caching"
   fi
@@ -161,6 +165,8 @@ if [[ "$YARN_2" == "true" ]]; then
   if has_yarn_cache "$BUILD_DIR"; then
     YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
   fi
+  echo "YARN_CACHE_FOLDER :"
+  echo "$YARN_CACHE_FOLDER"
 
   ### Configure Yarn 2
   # fail for no yarnrc.yml
@@ -177,6 +183,8 @@ if [[ "$YARN_2" == "true" ]]; then
 fi
 
 [[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false
+echo "USE_YARN_CACHE :"
+echo "$USE_YARN_CACHE"
 
 if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
   USE_NPM_INSTALL=true
@@ -400,4 +408,4 @@ warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile $NPM_LOCK
 
 meta_set "build-step" "finished"
-log_meta_data >> "$BUILDPACK_LOG_FILE"
+log_meta_data >>"$BUILDPACK_LOG_FILE"
