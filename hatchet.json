@@ -1,1 +1,8 @@
-{}
+{
+  "heroku": [
+    "heroku/node-js-getting-started"
+  ],
+  "nodejs": [
+    "sharpstone/default-node"
+  ]
+}

@@ -7,7 +7,7 @@ versions.each do |version|
     context "a single-process Node v#{version} app" do
       let(:app) {
         Hatchet::Runner.new(
-          "spec/fixtures/repos/node-10",
+          "spec/fixtures/repos/node-14",
           before_deploy: -> { set_node_version(version) }
         )
       }

@@ -15,7 +15,83 @@
 
 # Node.js Buildpack Changelog
 
-## master
+## main
+
+## v189 (2021-09-14)
+- Revert non-zero-install support from #888 ([#944](https://github.com/heroku/heroku-buildpack-nodejs/pull/944))
+
+## v188 (2021-09-10)
+- Update Node version inventory, includes 12.22.6, 14.17.6, 16.8.0, 16.7.0 and others ([#940](https://github.com/heroku/heroku-buildpack-nodejs/pull/940))
+- Support non-zero-install support for Yarn 2 ([#888](https://github.com/heroku/heroku-buildpack-nodejs/pull/888))
+
+## v187 (2021-09-02)
+- Upgrade heroku_hatchet to 7.3.4 to get CI green again ([#936](https://github.com/heroku/heroku-buildpack-nodejs/pull/936))
+- Fix typo in conflicting lockfile failure message ([#901](https://github.com/heroku/heroku-buildpack-nodejs/pull/901))
+- Use local packages with Yarn when present ([#913](https://github.com/heroku/heroku-buildpack-nodejs/pull/913))
+- Add support for running "npm ci" when "npm-shrinkwrap.json" is found on the project directory ([#938](https://github.com/heroku/heroku-buildpack-nodejs/pull/938))
+
+## v186 (2021-08-11)
+- Refactor $WEB_CONCURRENCY logic ([#931](https://github.com/heroku/heroku-buildpack-nodejs/pull/931))
+- Fix broken tests, update node and yarn inventory, update shunit2 ([#934](https://github.com/heroku/heroku-buildpack-nodejs/pull/934))
+- Fix NODE_BINARY_URL extraction prefix stripping logic ([#928](https://github.com/heroku/heroku-buildpack-nodejs/pull/928))
+
+## v185 (2021-06-03)
+- Drop Heroku-16 from CI test matrix ([#920](https://github.com/heroku/heroku-buildpack-nodejs/pull/920))
+- Add metrics plugin for Node 16 ([#923](https://github.com/heroku/heroku-buildpack-nodejs/pull/923))
+
+## v184 (2021-05-20)
+- Prune devDependencies with Yarn 2 ([#891](https://github.com/heroku/heroku-buildpack-nodejs/pull/891))
+- Add 10.x, 12.x, and 14.x to inventory ([902](https://github.com/heroku/heroku-buildpack-nodejs/pull/902))
+- Fix yarn workspace plugin detection ([#905](https://github.com/heroku/heroku-buildpack-nodejs/pull/905))
+
+## v183 (2021-02-03)
+- Update node version to 14 ([#885](https://github.com/heroku/heroku-buildpack-nodejs/pull/885))
+- Add unit tests around the behavior of `WEB_CONCURRENCY` ([#876](https://github.com/heroku/heroku-buildpack-nodejs/pull/876))
+- Add Node v15.6.0 to inventory ([#892](https://github.com/heroku/heroku-buildpack-nodejs/pull/892))
+- add Node 10.23.2 and 15.7.0 to inventory ([#894](https://github.com/heroku/heroku-buildpack-nodejs/pull/894))
+- Update Node.js plugin for Node 15; Add tests for Node 15 ([#895](https://github.com/heroku/heroku-buildpack-nodejs/pull/895))
+- Log the build time in a failed build ([#896](https://github.com/heroku/heroku-buildpack-nodejs/pull/896))
+- Add Node v15.8.0 to inventory ([#897](https://github.com/heroku/heroku-buildpack-nodejs/pull/897))
+
+## v182 (2021-01-05)
+- add Node 14.15.3 and 15.5.0 to inventory ([#881](https://github.com/heroku/heroku-buildpack-nodejs/pull/881))
+- Report on parsing errors for `resolve-version.rs` ([#883](https://github.com/heroku/heroku-buildpack-nodejs/pull/883))
+- Add an environment variable for using npm install (instead of npm ci) ([#882](https://github.com/heroku/heroku-buildpack-nodejs/pull/882))
+- add Node 10.23.1, 12.20.1, 14.15.4, and 15.5.1 to inventory ([#886](https://github.com/heroku/heroku-buildpack-nodejs/pull/886))
+
+## v181 (2020-12-16)
+- Warn to use build flag with ng build as build script ([#878](https://github.com/heroku/heroku-buildpack-nodejs/pull/878))
+- add Node 14.15.2 to inventory ([#879](https://github.com/heroku/heroku-buildpack-nodejs/pull/879))
+
+## v180 (2020-12-09)
+- add Node 15.4.0 to inventory ([#873](https://github.com/heroku/heroku-buildpack-nodejs/pull/873))
+
+## v179 (2020-12-07)
+- Fix syntax for passing in script flags for npm build script ([#869](https://github.com/heroku/heroku-buildpack-nodejs/pull/869))
+- add Node 15.3.0 and 12.20.0 to inventory ([#870](https://github.com/heroku/heroku-buildpack-nodejs/pull/870))
+
+## v178 (2020-11-17)
+- Add NODE_BUILD_FLAG env var ([#859](https://github.com/heroku/heroku-buildpack-nodejs/pull/859))
+- Add 12.19.1, 14.15.1, and 15.2.1 to inventory for security releases ([#865](https://github.com/heroku/heroku-buildpack-nodejs/pull/865))
+
+## v177 (2020-11-12)
+- add Node 15.2.0 to inventory ([#861](https://github.com/heroku/heroku-buildpack-nodejs/pull/861))
+- Use jq from the stack image ([#854](https://github.com/heroku/heroku-buildpack-nodejs/pull/854))
+- Start testing new `resolve` binaries with inventory lists for Node and Yarn ([#855](https://github.com/heroku/heroku-buildpack-nodejs/pull/855))
+- Follow up to [#855](https://github.com/heroku/heroku-buildpack-nodejs/pull/855) to send captured data with bin/report ([#858](https://github.com/heroku/heroku-buildpack-nodejs/pull/858))
+
+## v176 (2020-09-10)
+- Only run immutable cache in yarn 2 if caching enabled ([#832](https://github.com/heroku/heroku-buildpack-nodejs/pull/832))
+- Added Hatchet regression tests ([#833](https://github.com/heroku/heroku-buildpack-nodejs/pull/833))
+- Delete unused fixtures ([#835](https://github.com/heroku/heroku-buildpack-nodejs/pull/835))
+- Expand `npm ci` usage to 100% of builds ([#842](https://github.com/heroku/heroku-buildpack-nodejs/pull/842))
+
+## v175 (2020-08-13)
+- Install Yarn version at 1.22.x when not specified in package.json engines ([#817](https://github.com/heroku/heroku-buildpack-nodejs/pull/817))
+- Run `yarn install` for all Yarn 2 builds ([#819](https://github.com/heroku/heroku-buildpack-nodejs/pull/819))
+- Change all references from Yarn2 to Yarn 2 ([#824](https://github.com/heroku/heroku-buildpack-nodejs/pull/824))
+- Support Yarn 2 node modules ([#821](https://github.com/heroku/heroku-buildpack-nodejs/pull/821))
+- Detect for "node-modules" nodeLinker for Yarn 2 ([#828](https://github.com/heroku/heroku-buildpack-nodejs/pull/828))
 
 ## v174 (2020-07-23)
 - provide custom binary url for node and yarn binary downloads ([#804](https://github.com/heroku/heroku-buildpack-nodejs/pull/804))

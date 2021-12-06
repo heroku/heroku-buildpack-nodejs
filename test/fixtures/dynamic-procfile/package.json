@@ -6,9 +6,6 @@
     "type" : "git",
     "url" : "http://github.com/example/example.git"
   },
-  "dependencies": {
-    "hashish": "*"
-  },
   "engines": {
     "node": "0.10.x"
   },

@@ -9,8 +9,5 @@
   "dependencies": {
     "hashish": "*"
     "express": "*"
-  },
-  "engines": {
-    "node": "0.10.29"
   }
 }

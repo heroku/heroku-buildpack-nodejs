@@ -1,3 +1,5 @@
+ENV['HATCHET_BUILDPACK_BASE'] = 'https://github.com/heroku/heroku-buildpack-nodejs.git'
+
 require 'rspec/core'
 require 'hatchet'
 require 'fileutils'
@@ -10,12 +12,11 @@ require 'sem_version'
 ENV['RACK_ENV'] = 'test'
 
 RSpec.configure do |config|
-  config.filter_run focused: true unless ENV['IS_RUNNING_ON_TRAVIS']
   config.run_all_when_everything_filtered = true
   config.alias_example_to :fit, focused: true
   config.full_backtrace      = true
   config.verbose_retry       = true # show retry status in spec process
-  config.default_retry_count = 2 if ENV['IS_RUNNING_ON_TRAVIS'] # retry all tests that fail again
+  config.default_retry_count = 2 # retry all tests that fail again
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
@@ -25,7 +26,15 @@ end
 def successful_body(app, options = {})
   retry_limit = options[:retry_limit] || 100
   path = options[:path] ? "/#{options[:path]}" : ''
-  Excon.get("http://#{app.name}.herokuapp.com#{path}", :idempotent => true, :expects => 200, :retry_limit => retry_limit).body
+  Excon.get("http://#{app.name}.herokuapp.com#{path}",
+              idempotent:     true,
+              expects:        200,
+              retry_interval: 0.5,
+              retry_limit:    retry_limit
+           ).body
+rescue Excon::HTTPStatus => e
+  puts e.response.body
+  raise e
 end
 
 def successful_json_body(app, options = {})
@@ -68,7 +77,7 @@ def resolve_all_supported_node_versions(options = {})
 end
 
 def version_supports_metrics(version)
-  SemVersion.new(version).satisfies?('>= 10.0.0') && SemVersion.new(version).satisfies?('< 15.0.0')
+  SemVersion.new(version).satisfies?('>= 10.0.0') && SemVersion.new(version).satisfies?('< 16.0.0')
 end
 
 def get_test_versions
@@ -77,7 +86,7 @@ def get_test_versions
   elsif ENV['TEST_ALL_NODE_VERSIONS'] == 'true'
     versions = resolve_all_supported_node_versions()
   else
-    versions = resolve_node_version(['10.x', '12.x', '13.x', '14.x'])
+    versions = resolve_node_version(['10.x', '12.x', '14.x', '15.x'])
   end
   puts("Running tests for Node versions: #{versions.join(', ')}")
   versions
