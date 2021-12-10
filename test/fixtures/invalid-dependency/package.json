@@ -10,6 +10,6 @@
     "node": "0.12.4"
   },
   "dependencies": {
-    "some-crazy-dep-that-doesnt-exist": "*"
+    "@heroku/some-crazy-dep-that-doesnt-exist": "*"
   }
 }

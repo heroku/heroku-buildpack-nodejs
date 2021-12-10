@@ -6,11 +6,8 @@
     "type": "git",
     "url": "http://github.com/example/example.git"
   },
-  "dependencies": {
-    "hashish": "*"
-  },
   "engines": {
-    "node": "8.x"
+    "node": "14.x"
   },
   "devDependencies": {
     "lodash": "^2.4.1"

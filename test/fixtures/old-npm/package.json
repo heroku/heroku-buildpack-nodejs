@@ -7,8 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "dependencies": {
-    "hashish": "*",
-    "thisdoesnotexist": "*"
+    "@heroku/linewrap": "^1.0"
   },
   "engines": {
     "node": "0.10.x",

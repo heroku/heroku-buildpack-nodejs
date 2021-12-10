@@ -246,8 +246,8 @@ testBuildDataPreviousBuild() {
   # the first time, there will be no previous build file
   meta_init "$cache_dir"
   meta_setup
-  assertContains "nodejs" "$BUILD_DATA_FILE"
-  assertContains "nodejs-prev" "$PREVIOUS_BUILD_DATA_FILE"
+  assertContains "$BUILD_DATA_FILE" "nodejs"
+  assertContains "$PREVIOUS_BUILD_DATA_FILE" "nodejs-prev"
   assertFileExists "$BUILD_DATA_FILE"
 
   # set a value in the build data file
@@ -279,6 +279,22 @@ testBuildDataPreviousBuild() {
   assertFileExists "$PREVIOUS_BUILD_DATA_FILE"
   assertEquals "$(meta_prev_get test)" "bar"
   assertEquals "$(meta_get test)" ""
+}
+
+testWebConcurrencyDoesNotOverrideManualValue() {
+  WEB_CONCURRENCY=123
+
+  source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+  assertEquals 123 "$WEB_CONCURRENCY"
+}
+
+testWebConcurrencySetsAValueWhenUnset() {
+  unset WEB_CONCURRENCY
+
+  source "$(pwd)"/profile/WEB_CONCURRENCY.sh
+
+  assertNotNull "WEB_CONCURRENCY is null" "$WEB_CONCURRENCY"
 }
 
 testWebConcurrencyProfileScript() {
@@ -318,9 +334,9 @@ testWebConcurrencyProfileScript() {
   assertEquals "28" "$(calculate_concurrency 14336 512)"
 
   # In case some very large memory available value gets passed in
-  assertEquals "1" "$(calculate_concurrency 103401 512)"
+  assertEquals "1" "$(validate_concurrency $(calculate_concurrency 103401 512))"
   # of if web memory is set really low
-  assertEquals "1" "$(calculate_concurrency 512 1)"
+  assertEquals "1" "$(validate_concurrency $(calculate_concurrency 512 1))"
 }
 
 isUUID() {

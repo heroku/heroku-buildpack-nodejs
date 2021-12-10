@@ -122,6 +122,7 @@ kv_pair "node_modules_size" "$(measure_size)"
 kv_pair_string "build_step" "$(meta_get "build-step")"
 kv_pair_string "failure" "$(meta_get "failure")"
 kv_pair_string "cache_status" "$(meta_get "cache-status")"
+kv_pair "use_npm_ci" "$(meta_get "use-npm-ci")"
 kv_pair "build_time" "$(meta_get "build-time")"
 kv_pair "skipped_prune" "$(meta_get "skipped-prune")"
 kv_pair "cached_bower_components" "$(meta_get "cached-bower-components")"
@@ -144,6 +145,15 @@ kv_pair "npm_prune_time" "$(meta_get "yarn-prune-time")"
 kv_pair "npm_prune_memory" "$(meta_get "yarn-prune-memory")"
 kv_pair "yarn_prune_time" "$(meta_get "yarn-prune-time")"
 kv_pair "yarn_prune_memory" "$(meta_get "yarn-prune-memory")"
+
+# testing resolve-version differences
+kv_pair "resolve_v1_node" "$(meta_get "resolve-v1-node")"
+kv_pair "resolve_v1_yarn" "$(meta_get "resolve-v1-yarn")"
+kv_pair "resolve_v2_node" "$(meta_get "resolve-v2-node")"
+kv_pair "resolve_v2_yarn" "$(meta_get "resolve-v2-yarn")"
+kv_pair "resolve_is_equal_node" "$(meta_get "resolve-is-equal-node")"
+kv_pair "resolve_is_equal_yarn" "$(meta_get "resolve-is-equal-yarn")"
+kv_pair_string "resolve_v2_error" "$(meta_get "resolve-v2-error")"
 
 # save which features were turned on or off
 features_list | tr ' ' '\n' | while read -r key; do

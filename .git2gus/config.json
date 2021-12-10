@@ -1,0 +1,10 @@
+{
+  "productTag": "a1aB0000000MR0MIAW",
+  "issueTypeLabels": {
+    "gus: story": "USER STORY",
+    "gus: bug": "BUG P4",
+    "gus: investigation": "INVESTIGATION P4"
+  },
+  "defaultBuild": "Heroku Unscheduled",
+  "statusWhenClosed": "CLOSED"
+}

@@ -7,8 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "8.x",
-    "npm": "5.x"
+    "node": "14.x"
   },
   "dependencies": {
     "express": "latest"

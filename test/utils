@@ -147,16 +147,6 @@ _assertContains()
   fi
 }
 
-assertContains()
-{
-  _assertContains "$@" 0 "text"
-}
-
-assertNotContains()
-{
-  _assertContains "$@" 1 "text"
-}
-
 assertFileContains()
 {
   _assertContains "$@" 0 "file"
@@ -165,6 +155,17 @@ assertFileContains()
 assertFileNotContains()
 {
   _assertContains "$@" 1 "file"
+}
+
+assertFileContainsMatch()
+{
+  local needle=$1
+  local haystack=$2
+
+  grep -q -E -e "${needle}" ${haystack}
+  if [ "$?" != 0 ]; then
+    fail "Expected <${haystack}> to contain <${needle}>"
+  fi
 }
 
 command_exists () {

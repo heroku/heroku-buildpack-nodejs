@@ -7,7 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "10.x"
+    "node": "14.x"
   },
   "scripts" : {
     "build" : "echo build hook message"

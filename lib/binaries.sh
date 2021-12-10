@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
+RESOLVE_V2="$BP_DIR/lib/vendor/resolve"
 
 resolve() {
   local binary="$1"
   local versionRequirement="$2"
   local n=0
-  local output
+  local output v2_output resolve_is_equal
 
   # retry this up to 5 times in case of spurious failed API requests
   until [ $n -ge 5 ]
@@ -17,6 +18,14 @@ resolve() {
     # script by the user
     # see testAvoidHttpProxyVersionResolutionIssue test and README
     if output=$($RESOLVE "$binary" "$versionRequirement"); then
+      v2_output=$($RESOLVE_V2 "$BP_DIR/inventory/$binary.toml" "$versionRequirement")
+      resolve_is_equal=$(if [[ "$output" == "$v2_output" ]]; then echo true; else echo false; fi)
+
+      meta_set "resolve-v1-$binary" "$output"
+      meta_set "resolve-v2-$binary" "$v2_output"
+      meta_set "resolve-is-equal-$binary" "$resolve_is_equal"
+      meta_set "resolve-v2-error" "$STD_ERR"
+
       echo "$output"
       return 0
     # don't retry if we get a negative result
@@ -36,7 +45,7 @@ resolve() {
 
 install_yarn() {
   local dir="$1"
-  local version=${2:-1.x}
+  local version=${2:-1.22.x}
   local number url code resolve_result
 
   if [[ -n "$YARN_BINARY_URL" ]]; then
@@ -70,7 +79,7 @@ install_yarn() {
   fi
   chmod +x "$dir"/bin/*
 
-  if $YARN2; then
+  if $YARN_2; then
     echo "Using yarn $(yarn --version)"
   else
     echo "Installed yarn $(yarn --version)"
@@ -78,12 +87,9 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version=${1:-12.x}
+  local version=${1:-14.x}
   local dir="${2:?}"
-  local code os cpu resolve_result
-
-  os=$(get_os)
-  cpu=$(get_cpu)
+  local code resolve_result
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
     url="$NODE_BINARY_URL"
@@ -98,7 +104,7 @@ install_nodejs() {
       fail_bin_install node "$version"
     fi
 
-    echo "Downloading and installing node $number"
+    echo "Downloading and installing node $number..."
   fi
 
   code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 -o /tmp/node.tar.gz --write-out "%{http_code}")
@@ -106,9 +112,8 @@ install_nodejs() {
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false
   fi
-  tar xzf /tmp/node.tar.gz -C /tmp
   rm -rf "${dir:?}"/*
-  mv /tmp/node-v"$number"-"$os"-"$cpu"/* "$dir"
+  tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
   chmod +x "$dir"/bin/*
 }
 

@@ -1,0 +1,68 @@
+version: 2.1
+orbs:
+  shellcheck: circleci/shellcheck@1.3.16
+jobs:
+  hatchet-test:
+    docker:
+      - image: circleci/ruby:2.7.2
+    steps:
+      - checkout
+      - run:
+          name: Run hatchet tests
+          command: make hatchet
+  unit-test:
+    parameters:
+      stack-number:
+        type: "string"
+        default: "20"
+    docker:
+      - image: heroku/heroku:<< parameters.stack-number >>-build
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Run unit tests
+          command: test/unit
+  unit-test-heroku-build:
+    parameters:
+      stack-number:
+        type: "string"
+        default: "20"
+    docker:
+      - image: heroku/heroku:<< parameters.stack-number >>-build
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Test heroku-<< parameters.stack-number >>-build
+          command: test/run
+  unit-test-binary:
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Test Go Binary
+          command: make test-binary
+workflows:
+  version: 2
+  buildpack-tests:
+    jobs:
+      - unit-test:
+          name: heroku-20 unit tests
+      - unit-test-heroku-build:
+          name: heroku-20 build tests
+      - unit-test:
+          name: heroku-18 unit tests
+          stack-number: "18"
+      - unit-test-heroku-build:
+          name: heroku-18 build tests
+          stack-number: "18"
+      - hatchet-test:
+          name: Hatchet tests
+      - unit-test-binary:
+          name: Go binary tests
