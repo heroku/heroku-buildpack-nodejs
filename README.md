@@ -122,12 +122,11 @@ Set engines.node in package.json to the semver range (or specific version) of no
 
 ```json
 "engines": {
-  "node": "12.x"
+  "node": "14.x"
 }
 ```
 
-Default: the
-[latest stable version.](http://semver.io/node)
+Default: Latest version of v14 (Maintenance LTS): https://nodejs.org/en/about/releases/
 
 ### Specify an npm version
 
@@ -135,11 +134,9 @@ Set engines.npm in package.json to the semver range
 (or specific version) of npm you'd like to use.
 (It's a good idea to make this the same version you use during development)
 
-Since 'npm 2' shipped several major bugfixes, you might try:
-
 ```json
 "engines": {
-  "npm": "2.x"
+  "npm": "6.x"
 }
 ```
 
