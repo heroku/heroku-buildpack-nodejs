@@ -119,8 +119,9 @@ get_file_url() {
 # Downloading config files (package.json, yarn.lock) from sfdocs-repo-build-config repo
 download_sfdocs_build_config() {
   export_env_dir "$ENV_DIR"
-  local package_json_file_url="https://api.github.com/repos/sfdocs/sfdocs-repo-build-config/contents/package.json"
-  local yarn_lock_file_url="https://api.github.com/repos/sfdocs/sfdocs-repo-build-config/contents/yarn.lock"
+  local package_json_file_url="https://raw.githubusercontent.com/sfdocs/sfdocs-repo-build-config/ds/close-pilot-poc/package.json"
+  local yarn_lock_file_url="https://raw.githubusercontent.com/sfdocs/sfdocs-repo-build-config/ds/close-pilot-poc/yarn.lock"
+  local puge_cache_file_url="https://raw.githubusercontent.com/sfdocs/sfdocs-repo-build-config/ds/close-pilot-poc/purge.sh"
 
   if [[ -z "${SFDOCS_RELEASE_TAG}" ]]; then
     return
@@ -132,6 +133,7 @@ download_sfdocs_build_config() {
   echo "Downloading config files for the Sfdocs release tag: ${SFDOCS_RELEASE_TAG}"
   download_config_file "${package_json_file_url}" "package.json"
   download_config_file "${yarn_lock_file_url}" "yarn.lock"
+  download_config_file "${puge_cache_file_url}" "purge.sh"
 }
 
 download_sfdocs_build_config
