@@ -87,7 +87,7 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version=${1:-14.x}
+  local version=${1:-16.x}
   local dir="${2:?}"
   local code resolve_result
 
