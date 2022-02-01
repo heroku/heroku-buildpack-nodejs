@@ -35,6 +35,13 @@ get_yarn_path() {
   $YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1
 }
 
+detect_zero_install() {
+  local build_dir="$1"
+  node_modules_enabled "$build_dir" && return false
+  has_yarn_cache "$build_dir" && return true
+  false
+}
+
 node_modules_enabled() {
   local build_dir="$1"
   local node_linker

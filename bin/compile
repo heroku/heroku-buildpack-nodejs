@@ -162,6 +162,13 @@ if [[ "$YARN_2" == "true" ]]; then
     YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
   fi
 
+  # --immutable-cache will ensure the yarn cache is pristine, which is great
+  # in zero-install mode. When using the node_modules linker, or when the yarn
+  # cache is not included with the code, cache mutation is expected.
+  if detect_zero_install "$BUILD_DIR"; then
+    YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
+  fi
+
   ### Configure Yarn 2
   # fail for no yarnrc.yml
   fail_missing_yarnrc_yml "$BUILD_DIR"
