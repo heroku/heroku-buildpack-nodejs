@@ -154,14 +154,17 @@ if [[ "$YARN_2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
 
-  if has_yarn_cache "$BUILD_DIR" || ! node_modules_enabled "$BUILD_DIR"; then
+  # When using pnp mode (zero OR non-zero install), the yarn cache will
+  # include dependencies needed at runtime. The yarn cache needs to live
+  # in /app (and not /tmp) so that the dependencies are persisted.
+  if detect_pnp_app_cache "$BUILD_DIR"; then
     YARN_CACHE_FOLDER=${YARN_CACHE_FOLDER:-"$BUILD_DIR/.yarn/cache"}
   fi
 
   # --immutable-cache will ensure the yarn cache is pristine, which is great
   # in zero-install mode. When using the node_modules linker, or when the yarn
   # cache is not included with the code, cache mutation is expected.
-  if detect_zero_install "$BUILD_DIR"; then
+  if detect_pnp_zero_install "$BUILD_DIR"; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
   fi
 
