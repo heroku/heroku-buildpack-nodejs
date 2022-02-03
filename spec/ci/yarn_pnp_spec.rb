@@ -5,7 +5,7 @@ describe "yarn pnp hello world" do
     app = Hatchet::Runner.new(
       "spec/fixtures/repos/yarn-pnp-zero-install",
       config: { "NODE_MODLES_CACHE": "false" }
-    }
+    )
     app.deploy do |app|
       expect(successful_body(app).strip).to eq("Hello from yarn-pnp-zero-install")
     end
