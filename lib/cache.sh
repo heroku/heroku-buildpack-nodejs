@@ -50,10 +50,13 @@ restore_default_cache_directories() {
   local yarn_cache_dir=${3:-}
 
   if [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$YARN" == "true" ]]; then
-    if [[ -d "$cache_dir/node/cache/yarn" ]]; then
-      rm -rf "$yarn_cache_dir"
+    if [[ -d "$yarn_cache_dir" ]]; then
+      echo "- yarn cache is checked into source control and cannot be cached"
+    elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
       mv "$cache_dir/node/cache/yarn" "$yarn_cache_dir"
       echo "- yarn cache"
+    else
+      echo "- yarn cache (not cached - skipping)"
     fi
   else
     # node_modules
