@@ -22,7 +22,8 @@ detect_yarn_2() {
 
 has_yarn_cache() {
   local build_dir="$1"
-  [[ -n "$(find "$build_dir/.yarn/cache" -prune -empty -type d 2>/dev/null)" ]]
+  local yarn_cache="$build_dir/.yarn/cache"
+  [[ -d "$yarn_cache" ]] && [[ -n '$(ls -A "$yarn_cache")' ]]
 }
 
 has_yarn_workspace_plugin_installed() {
