@@ -50,7 +50,7 @@ restore_default_cache_directories() {
   local yarn_cache_dir=${3:-}
 
   if [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$YARN" == "true" ]]; then
-    if has_yarn_cache "$build_dir" then
+    if has_yarn_cache "$build_dir"; then
       echo "- yarn cache is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
       mv "$cache_dir/node/cache/yarn" "$yarn_cache_dir"
