@@ -12,10 +12,7 @@ describe "yarn pnp hello world" do
   end
 
   it "nonzero-install should deploy successfully and reuse the cache" do
-    app = Hatchet::Runner.new(
-      "spec/fixtures/repos/yarn-pnp-nonzero-install",
-      config: { "NODE_MODULES_CACHE": "false" }
-    )
+    app = Hatchet::Runner.new("spec/fixtures/repos/yarn-pnp-nonzero-install")
     app.deploy do |app|
       expect(successful_body(app).strip).to eq("Hello from yarn-pnp-nonzero-install")
 
