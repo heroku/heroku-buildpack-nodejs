@@ -1,7 +1,9 @@
 # Node.js Buildpack Changelog
 
 ## main
-- Update default node version to 16.x ([#973](https://github.com/heroku/heroku-buildpack-nodejs/pull/973)
+
+## v190 (2022-01-31)
+- Update default node version to 16.x ([#973](https://github.com/heroku/heroku-buildpack-nodejs/pull/973))
 - Add Yarn 1.22.1{2,3,4,5} to `inventory/yarn.toml` ([#947](https://github.com/heroku/heroku-buildpack-nodejs/pull/947))
 
 ## v189 (2021-09-14)
