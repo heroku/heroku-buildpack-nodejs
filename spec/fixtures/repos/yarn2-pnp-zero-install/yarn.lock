@@ -456,9 +456,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"yarn-pnp-zero-install@workspace:.":
+"yarn2-pnp-zero-install@workspace:.":
   version: 0.0.0-use.local
-  resolution: "yarn-pnp-zero-install@workspace:."
+  resolution: "yarn2-pnp-zero-install@workspace:."
   dependencies:
     express: ^4.17.2
   languageName: unknown

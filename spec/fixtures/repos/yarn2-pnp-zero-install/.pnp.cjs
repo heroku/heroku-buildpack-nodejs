@@ -19,14 +19,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
     ],
     "dependencyTreeRoots": [
       {
-        "name": "yarn-pnp-zero-install",
+        "name": "yarn2-pnp-zero-install",
         "reference": "workspace:."
       }
     ],
     "enableTopLevelFallback": true,
     "ignorePatternData": "(^(?:\\.yarn\\/sdks(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$)",
     "fallbackExclusionList": [
-      ["yarn-pnp-zero-install", ["workspace:."]]
+      ["yarn2-pnp-zero-install", ["workspace:."]]
     ],
     "fallbackPool": [
     ],
@@ -585,11 +585,11 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD",
         }]
       ]],
-      ["yarn-pnp-zero-install", [
+      ["yarn2-pnp-zero-install", [
         ["workspace:.", {
           "packageLocation": "./",
           "packageDependencies": [
-            ["yarn-pnp-zero-install", "workspace:."],
+            ["yarn2-pnp-zero-install", "workspace:."],
             ["express", "npm:4.17.2"]
           ],
           "linkType": "SOFT",
