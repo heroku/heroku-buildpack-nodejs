@@ -36,17 +36,9 @@ get_yarn_path() {
   $YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1
 }
 
-detect_pnp_app_cache() {
+use_yarn_app_cache() {
   local build_dir="$1"
   if has_yarn_cache "$build_dir" || ! node_modules_enabled "$build_dir"; then
-    return
-  fi
-  false
-}
-
-detect_pnp_zero_install() {
-  local build_dir="$1"
-  if has_yarn_cache "$build_dir" && ! node_modules_enabled "$build_dir"; then
     return
   fi
   false
