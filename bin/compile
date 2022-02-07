@@ -162,6 +162,7 @@ if [[ "$YARN_2" == "true" ]]; then
   if detect_pnp_zero_install "$BUILD_DIR"; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
   fi
+  meta_set "yarn-immutable-cache" ${YARN_ENABLE_IMMUTABLE_CACHE:-false}
 
   ### Configure Yarn 2
   # fail for no yarnrc.yml
