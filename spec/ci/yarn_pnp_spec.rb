@@ -1,8 +1,8 @@
 require_relative '../spec_helper'
 
-describe "yarn pnp hello world" do
-  it "zero-install with should deploy successfully and not use the cache" do
-    app = Hatchet::Runner.new("spec/fixtures/repos/yarn-pnp-zero-install")
+describe "yarn2 examples" do
+  it "pnp zero-install with should deploy successfully and not use the cache" do
+    app = Hatchet::Runner.new("spec/fixtures/repos/yarn2-pnp-zero-install")
     app.deploy do |app|
       expect(successful_body(app).strip).to eq("Hello from yarn-pnp-zero-install")
 
@@ -14,8 +14,8 @@ describe "yarn pnp hello world" do
     end
   end
 
-  it "nonzero-install should deploy successfully and reuse the cache" do
-    app = Hatchet::Runner.new("spec/fixtures/repos/yarn-pnp-nonzero-install")
+  it "pnp nonzero-install should deploy successfully and reuse the cache" do
+    app = Hatchet::Runner.new("spec/fixtures/repos/yarn2-pnp-nonzero-install")
     app.deploy do |app|
       expect(successful_body(app).strip).to eq("Hello from yarn-pnp-nonzero-install")
 
