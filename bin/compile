@@ -141,11 +141,6 @@ create_build_env
 export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
-  if [[ "$NODE_MODULES_CACHE" == "true" ]]  && ! node_modules_enabled "$BUILD_DIR"; then
-    warn "
-    The buildpack won't cache the dependencies in .yarn/cache. Since you're using Yarn 2 and Plug'n'Play, you will need to customize your cache or unset NODE_MODULES_CACHE." "https://devcenter.heroku.com/articles/migrating-to-yarn-2#disable-dependency-caching"
-  fi
-
   if [[ -f "$BUILD_DIR/.npmrc" ]]; then
     warn "There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
