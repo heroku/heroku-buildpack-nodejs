@@ -700,7 +700,6 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
-  assertCaptured "The buildpack won't cache the dependencies in .yarn/cache."
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
   assertCaptured "Running 'yarn workspaces focus --all --production'"

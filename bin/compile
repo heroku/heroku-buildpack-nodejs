@@ -136,20 +136,11 @@ create_env # can't pipe the whole thing because piping causes subshells, prevent
 list_node_config | output "$LOG_FILE"
 create_build_env
 
-### Configure package manager cache directories
-[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
-[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 ### Configure vendored package manager
 export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
-  if [[ "$NODE_MODULES_CACHE" == "true" ]]  && ! node_modules_enabled "$BUILD_DIR"; then
-    warn "
-    The buildpack won't cache the dependencies in .yarn/cache. Since you're using Yarn 2 and Plug'n'Play, you will need to customize your cache or unset NODE_MODULES_CACHE." "https://devcenter.heroku.com/articles/migrating-to-yarn-2#disable-dependency-caching"
-  fi
-
   if [[ -f "$BUILD_DIR/.npmrc" ]]; then
     warn "There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
@@ -158,8 +149,26 @@ if [[ "$YARN_2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
 
+  # When in Plug'n'Play mode the yarn cache will include dependencies needed at
+  # runtime; the cache must live in /app (not /tmp) so that dependencies are
+  # persisted. When using zero-install, /app/.yarn/cache will include all
+  # dependencies which yarn should reuse.
+  if use_yarn_app_cache "$BUILD_DIR"; then
+    YARN_CACHE_FOLDER=${YARN_CACHE_FOLDER:-"$BUILD_DIR/.yarn/cache"}
+  fi
+
+  # When in zero-install mode, use --immutable-cache to verify that the cache
+  # is pristine. Cache mutation is expected in nonzero installs.
   if has_yarn_cache "$BUILD_DIR"; then
-    YARN_CACHE_FOLDER="$BUILD_DIR/.yarn/cache"
+    YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
+  fi
+
+  meta_set "yarn2-immutable-cache" ${YARN_ENABLE_IMMUTABLE_CACHE:-false}
+
+  if node_modules_enabled "$BUILD_DIR"; then
+    meta_set "yarn2-pnp-linker" "false"
+  else
+    meta_set "yarn2-pnp-linker" "true"
   fi
 
   ### Configure Yarn 2
@@ -175,6 +184,11 @@ if [[ "$YARN_2" == "true" ]]; then
   # fail for missing yarn in .yarn/releases
   fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
 fi
+
+### Configure package manager cache directories
+[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 [[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false
 
