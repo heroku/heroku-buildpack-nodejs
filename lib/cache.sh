@@ -53,7 +53,15 @@ restore_default_cache_directories() {
     if has_yarn_cache "$build_dir"; then
       echo "- yarn cache is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
+      rm -rf "$yarn_cache_dir"
       mv "$cache_dir/node/cache/yarn" "$yarn_cache_dir"
+      if [[ -d "$yarn_cache_dir/yarn" ]]; then
+        # Older versions of the buildpack may have created nested yarn caches.
+        # This will remove the nested cache. This correction may be removed in
+        # the near future.
+        meta_set "yarn_nested_cache" "true"
+        rm -rf "$yarn_cache_dir/yarn"
+      fi
       echo "- yarn cache"
     else
       echo "- yarn cache (not cached - skipping)"
