@@ -53,6 +53,7 @@ restore_default_cache_directories() {
     if has_yarn_cache "$build_dir"; then
       echo "- yarn cache is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
+      rm -rf "$yarn_cache_dir"
       mv "$cache_dir/node/cache/yarn" "$yarn_cache_dir"
       echo "- yarn cache"
     else
