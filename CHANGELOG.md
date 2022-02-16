@@ -2,6 +2,8 @@
 
 ## main
 
+- Fix issue with nested yarn caches and cache growth ([#985](https://github.com/heroku/heroku-buildpack-nodejs/pull/985))
+
 ## v191 (2022-02-14)
 - Improve support for yarn 2+ installs ([#978](https://github.com/heroku/heroku-buildpack-nodejs/pull/978)
 
