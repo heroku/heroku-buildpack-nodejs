@@ -2,7 +2,7 @@
 
 BUILD_DIR=${1:-}
 if yarn --version > /dev/null 2>&1; then
-  cd "$BUILD_DIR" && yarn test
+  cd "$BUILD_DIR" && yarn run validate
 else
-  cd "$BUILD_DIR" && npm test
+  cd "$BUILD_DIR" && npm run validate
 fi
