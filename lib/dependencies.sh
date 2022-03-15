@@ -173,10 +173,8 @@ yarn_prune_devdependencies() {
       echo "Running 'yarn workspaces focus --all --production'"
       meta_set "workspace-plugin-present" "true"
 
-      # The cache is removed beforehand because the command is running an install on devDeps, and
-      # it will not remove the existing dependencies beforehand.
-      rm -rf "$cache_dir"
       monitor "yarn-prune" yarn workspaces focus --all --production
+      yarn_prune_devdependencies_for_each_workspace "$build_dir"
       meta_set "skipped-prune" "false"
     else
       meta_set "workspace-plugin-present" "false"
@@ -187,6 +185,23 @@ yarn_prune_devdependencies() {
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
     meta_set "skipped-prune" "false"
   fi
+}
+
+# removing all devDependencies this way *should* work but it would be nice if yarn supported
+# devDependency pruning like npm does when running `npm install --production`
+yarn_prune_devdependencies_for_each_workspace() {
+  local build_dir=${1:-}
+  local workspace_list=$(yarn workspaces list --json)
+  while IFS= read -r workspace; do
+    local name=$(echo "${workspace}" | jq -r '.name')
+    local location=$(echo "${workspace}" | jq -r '.location')
+    local devDependencies=$(cat "${build_dir}/${location}/package.json" | jq -r '.devDependencies | try keys | join(" ")')
+    if [ "${location}" == "." ]; then
+      monitor "yarn-prune" yarn remove ${devDependencies}
+    else
+      monitor "yarn-prune" yarn workspace "${name}" remove ${devDependencies}
+    fi
+  done <<< "${workspace_list}"
 }
 
 has_npm_lock() {
