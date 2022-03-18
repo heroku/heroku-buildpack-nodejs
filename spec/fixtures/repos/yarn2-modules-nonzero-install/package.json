@@ -1,0 +1,13 @@
+{
+  "name": "yarn2-modules-nonzero-install",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "yarn node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.2"
+  },
+  "packageManager": "yarn@3.1.1"
+}
