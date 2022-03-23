@@ -1,0 +1,11 @@
+{
+  "name": "package-1",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.16.4"
+  },
+  "devDependencies": {
+    "debug": "^4.1.1"
+  }
+}
