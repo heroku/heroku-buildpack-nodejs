@@ -2,11 +2,14 @@
 
 ## main
 
+## v194 (2022-03-28)
+- Added Yarn 1.22.18 to `inventory/yarn.toml` ([#992](https://github.com/heroku/heroku-buildpack-nodejs/pull/992))
+
 ## v193 (2022-03-15)
-- Fix issue with pruning yarn 2 cache when using the workspaces plugin ([#918](https://github.com/heroku/heroku-buildpack-nodejs/issues/918))
+- Fix issue with pruning yarn 2 cache when using the workspaces plugin ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))
 
 ## v192 (2022-02-16)
-- Fix issue with nested yarn cache during cache restoration ([987](https://github.com/heroku/heroku-buildpack-nodejs/pull/987))
+- Fix issue with nested yarn cache during cache restoration ([#987](https://github.com/heroku/heroku-buildpack-nodejs/pull/987))
 - Fix issue with nested yarn caches and cache growth ([#985](https://github.com/heroku/heroku-buildpack-nodejs/pull/985))
 
 ## v191 (2022-02-14)
