@@ -1,8 +1,0 @@
-{
-  "name": "yarn-2-with-workspaces",
-  "version": "1.0.0",
-  "license": "MIT",
-  "workspaces": [
-    "packages/*"
-  ]
-}
