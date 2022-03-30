@@ -2,6 +2,9 @@
 
 ## main
 
+## v194 (2022-03-30)
+- Revert fix for pruning yarn 2 cache due to an edge case that would cause all devDependencies to be installed ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))
+
 ## v193 (2022-03-28)
 - Added Yarn 1.22.18 to `inventory/yarn.toml` ([#992](https://github.com/heroku/heroku-buildpack-nodejs/pull/992))
 - Fix issue with pruning yarn 2 cache when using the workspaces plugin ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))

@@ -703,18 +703,6 @@ testYarn2() {
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
   assertCaptured "Running 'yarn workspaces focus --all --production'"
-  assertNotCaptured "can't be found in the cache and will be fetched from the remote registry"
-  assertCaptured "debug-npm-4.3.2-f0148b6afe-5543570879.zip appears to be unused - removing"
-  assertCapturedSuccess
-}
-
-testYarn2WithWorkspaces() {
-  compile "yarn-2-with-workspaces"
-  assertCaptured "Running 'yarn install' with yarn.lock"
-  assertCaptured "Running 'yarn workspaces focus --all --production'"
-  assertNotCaptured "can't be found in the cache and will be fetched from the remote registry"
-  assertCaptured "debug-npm-4.3.2-f0148b6afe-5543570879.zip appears to be unused - removing"
-  assertCaptured "typescript-npm-3.9.7-47ffbad2e0-10848a9c35.zip appears to be unused - removing"
   assertCapturedSuccess
 }
 
