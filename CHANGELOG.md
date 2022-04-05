@@ -2,8 +2,12 @@
 
 ## main
 
+## v195 (2022-04-05)
+- Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
+- Revert fix for pruning yarn 2 cache ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))
+
 ## v194 (2022-03-30)
-- Revert fix for pruning yarn 2 cache due to an edge case that would cause all devDependencies to be installed ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))
+- Rollback to v192 due to an edge case with yarn 2 pruning that would cause all devDependencies to be installed
 
 ## v193 (2022-03-28)
 - Added Yarn 1.22.18 to `inventory/yarn.toml` ([#992](https://github.com/heroku/heroku-buildpack-nodejs/pull/992))
@@ -19,7 +23,6 @@
 ## v190 (2022-01-31)
 - Update default node version to 16.x ([#973](https://github.com/heroku/heroku-buildpack-nodejs/pull/973))
 - Add Yarn 1.22.1{2,3,4,5} to `inventory/yarn.toml` ([#947](https://github.com/heroku/heroku-buildpack-nodejs/pull/947))
-- Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
 
 ## v189 (2021-09-14)
 - Revert non-zero-install support from #888 ([#944](https://github.com/heroku/heroku-buildpack-nodejs/pull/944))
