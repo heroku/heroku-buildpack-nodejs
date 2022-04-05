@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # bin/detect <build-dir>
 
+[ "$BUILDPACK_XTRACE" ] && set -o xtrace
+
 error() {
   local c="2,999 s/^/ !     /"
 	# send all of our output to stderr
