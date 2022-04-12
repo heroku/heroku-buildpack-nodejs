@@ -363,7 +363,7 @@ cache_build() {
 
 prune_devdependencies() {
   if $YARN || $YARN_2; then
-    yarn_prune_devdependencies "$BUILD_DIR" "$YARN_CACHE_FOLDER"
+    yarn_prune_devdependencies "$BUILD_DIR" "$YARN_CACHE_FOLDER" "$BP_DIR"
   else
     npm_prune_devdependencies "$BUILD_DIR"
   fi

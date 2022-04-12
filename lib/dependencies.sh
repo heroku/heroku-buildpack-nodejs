@@ -152,7 +152,7 @@ yarn_2_install() {
 yarn_prune_devdependencies() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
-  local workspace_plugin_path
+  local buildpack_dir=${3:-}
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
@@ -168,20 +168,10 @@ yarn_prune_devdependencies() {
     return 0
   elif $YARN_2; then
     cd "$build_dir" || return
-
-    if has_yarn_workspace_plugin_installed "$build_dir"; then
-      echo "Running 'yarn workspaces focus --all --production'"
-      meta_set "workspace-plugin-present" "true"
-
-      # The cache is removed beforehand because the command is running an install on devDeps, and
-      # it will not remove the existing dependencies beforehand.
-      rm -rf "$cache_dir"
-      monitor "yarn-prune" yarn workspaces focus --all --production
-      meta_set "skipped-prune" "false"
-    else
-      meta_set "workspace-plugin-present" "false"
-      echo "Skipping because the Yarn workspace plugin is not present. Add the plugin to your source code with 'yarn plugin import workspace-tools'."
-    fi
+    echo "Running 'yarn heroku prune'"
+    export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
+    monitor "yarn-prune" yarn heroku prune
+    meta_set "skipped-prune" "false"
   else
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1

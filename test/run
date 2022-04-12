@@ -702,7 +702,9 @@ testYarn2() {
   compile "yarn-2"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
-  assertCaptured "Running 'yarn workspaces focus --all --production'"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "debug-npm-4.3.2-f0148b6afe-5543570879.zip appears to be unused - removing"
+  assertCaptured "ms-npm-2.1.2-ec0c1512ff-9b65fb709b.zip appears to be unused - removing"
   assertCapturedSuccess
 }
 
@@ -710,6 +712,7 @@ testYarn2WithNodeModules() {
   compile "yarn-2-with-node-modules"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Caching build"
+  assertCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
 }
 
@@ -720,7 +723,7 @@ testYarn2WithoutYarnCache() {
 
 testYarn2WithoutWorkspaceModule() {
   compile "yarn-2-without-workspace-plugin"
-  assertCaptured "Skipping because the Yarn workspace plugin is not present."
+  assertCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
 }
 ###
