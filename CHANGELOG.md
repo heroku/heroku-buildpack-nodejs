@@ -2,6 +2,9 @@
 
 ## main
 
+## v196 (2022-04-12) 
+- Enable Yarn 2 `devDependency` pruning using a custom plugin for 20% of customers ([#999](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
+
 ## v195 (2022-04-05)
 - Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
 - Revert fix for pruning yarn 2 cache ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))
