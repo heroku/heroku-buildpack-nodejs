@@ -168,10 +168,26 @@ yarn_prune_devdependencies() {
     return 0
   elif $YARN_2; then
     cd "$build_dir" || return
-    echo "Running 'yarn heroku prune'"
-    export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
-    monitor "yarn-prune" yarn heroku prune
-    meta_set "skipped-prune" "false"
+    meta_set "use-heroku-yarn-prune-plugin" "$(features_get_with_blank "use-heroku-yarn-prune-plugin")"
+    if [[ $(features_get_with_blank "use-heroku-yarn-prune-plugin") == "true" ]]; then
+      echo "Running 'yarn heroku prune'"
+      export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
+      monitor "yarn-prune" yarn heroku
+      meta_set "workspace-plugin-present" "false"
+      meta_set "skipped-prune" "false"
+    elif has_yarn_workspace_plugin_installed "$build_dir"; then
+      echo "Running 'yarn workspaces focus --all --production'"
+      meta_set "workspace-plugin-present" "true"
+
+      # The cache is removed beforehand because the command is running an install on devDeps, and
+      # it will not remove the existing dependencies beforehand.
+      rm -rf "$cache_dir"
+      monitor "yarn-prune" yarn workspaces focus --all --production
+      meta_set "skipped-prune" "false"
+    else
+      meta_set "workspace-plugin-present" "false"
+      echo "Skipping because the Yarn workspace plugin is not present. Add the plugin to your source code with 'yarn plugin import workspace-tools'."
+    fi
   else
     cd "$build_dir" || return
     monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
