@@ -1,0 +1,29 @@
+{
+  "name": "yarn-plugin-prune-dev-dependencies",
+  "version": "0.0.1",
+  "packageManager": "npm",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@yarnpkg/builder": "^2.1.3",
+    "@yarnpkg/core": "^2.4.0",
+    "clipanion": "^2.6.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "@types/jest": "^27.4.1",
+    "@types/node": "^16.0.0",
+    "fs-extra": "^10.0.1",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.4",
+    "ts-standard": "^11.0.0",
+    "typescript": "4.4.4"
+  },
+  "scripts": {
+    "build": "npm run lint && builder build plugin",
+    "lint": "ts-standard --fix",
+    "test": "npm run build && jest"
+  },
+  "engines": {
+    "node": ">=16.9"
+  }
+}
