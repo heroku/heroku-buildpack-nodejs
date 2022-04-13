@@ -172,7 +172,7 @@ yarn_prune_devdependencies() {
     if [[ $(features_get_with_blank "use-heroku-yarn-prune-plugin") == "true" ]]; then
       echo "Running 'yarn heroku prune'"
       export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
-      monitor "yarn-prune" yarn heroku
+      monitor "yarn-prune" yarn heroku prune
       meta_set "workspace-plugin-present" "false"
       meta_set "skipped-prune" "false"
     elif has_yarn_workspace_plugin_installed "$build_dir"; then
