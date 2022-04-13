@@ -724,7 +724,6 @@ testYarn2WithNodeModules() {
   compile "yarn-2-with-node-modules"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Caching build"
-  assertCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
 }
 
@@ -735,7 +734,7 @@ testYarn2WithoutYarnCache() {
 
 testYarn2WithoutWorkspaceModule() {
   compile "yarn-2-without-workspace-plugin"
-  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "Skipping because the Yarn workspace plugin is not present."
   assertCapturedSuccess
 }
 ###
