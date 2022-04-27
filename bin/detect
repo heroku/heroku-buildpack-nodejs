@@ -19,7 +19,9 @@ error() {
 	exit 1
 }
 
-if [ -f "$1/package.json" ]; then
+
+PACKAGE_JSON_PATH=$(find $1 -maxdepth 5 -iname package.json -not -path "*node_modules/*")
+if [ -n "$PACKAGE_JSON_PATH" ]; then
   echo 'Node.js'
   exit 0
 fi
