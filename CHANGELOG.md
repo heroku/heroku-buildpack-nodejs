@@ -17,12 +17,23 @@
 
 ## main
 
+## v195 (2022-04-12)
+- Enable Yarn 2 `devDependency` pruning using a custom plugin for 20% of customers ([#999](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
+- Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
+
+## v194 (2022-03-30)
+- Rollback to v192 due to an edge case with yarn 2 pruning that would cause all devDependencies to be installed
+
+## v193 (2022-03-28)
+- Added Yarn 1.22.18 to `inventory/yarn.toml` ([#992](https://github.com/heroku/heroku-buildpack-nodejs/pull/992))
+- Fix issue with pruning yarn 2 cache when using the workspaces plugin ([#990](https://github.com/heroku/heroku-buildpack-nodejs/pull/990))
+
 ## v192 (2022-02-16)
-- Fix issue with nested yarn cache during cache restoration ([987](https://github.com/heroku/heroku-buildpack-nodejs/pull/987)
+- Fix issue with nested yarn cache during cache restoration ([#987](https://github.com/heroku/heroku-buildpack-nodejs/pull/987))
 - Fix issue with nested yarn caches and cache growth ([#985](https://github.com/heroku/heroku-buildpack-nodejs/pull/985))
 
 ## v191 (2022-02-14)
-- Improve support for yarn 2+ installs ([#978](https://github.com/heroku/heroku-buildpack-nodejs/pull/978)
+- Improve support for yarn 2+ installs ([#978](https://github.com/heroku/heroku-buildpack-nodejs/pull/978))
 
 ## v190 (2022-01-31)
 - Update default node version to 16.x ([#973](https://github.com/heroku/heroku-buildpack-nodejs/pull/973))
