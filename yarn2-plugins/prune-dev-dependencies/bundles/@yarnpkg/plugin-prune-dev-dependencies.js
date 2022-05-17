@@ -1,0 +1,8 @@
+/* eslint-disable */
+module.exports = {
+name: "@yarnpkg/plugin-prune-dev-dependencies",
+factory: function (require) {
+var plugin;(()=>{"use strict";var e={d:(t,o)=>{for(var r in o)e.o(o,r)&&!e.o(t,r)&&Object.defineProperty(t,r,{enumerable:!0,get:o[r]})},o:(e,t)=>Object.prototype.hasOwnProperty.call(e,t),r:e=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})}},t={};e.r(t),e.d(t,{default:()=>c});const o=require("@yarnpkg/core"),r=require("clipanion");var n=function(e,t,o,r){var n,a=arguments.length,c=a<3?t:null===r?r=Object.getOwnPropertyDescriptor(t,o):r;if("object"==typeof Reflect&&"function"==typeof Reflect.decorate)c=Reflect.decorate(e,t,o,r);else for(var i=e.length-1;i>=0;i--)(n=e[i])&&(c=(a<3?n(c):a>3?n(t,o,c):n(t,o))||c);return a>3&&c&&Object.defineProperty(t,o,c),c};class a extends r.Command{async execute(){const e=await o.Configuration.find(this.context.cwd,this.context.plugins),{project:t}=await o.Project.find(e,this.context.cwd),r=await o.Cache.find(e);await t.restoreInstallState({restoreResolutions:!1});for(const e of t.workspaces)e.manifest.devDependencies.clear();return(await o.StreamReport.start({configuration:e,json:!1,stdout:this.context.stdout,includeLogs:!0},async e=>{await t.install({cache:r,report:e,persistProject:!1}),await t.cacheCleanup({cache:r,report:e}),await t.persistInstallStateFile()})).exitCode()}}n([r.Command.Path("heroku","prune")],a.prototype,"execute",null);const c={commands:[a]};plugin=t})();
+return plugin;
+}
+};
