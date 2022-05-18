@@ -699,19 +699,7 @@ testIoJs() {
 ###
 # Yarn 2
 testYarn2() {
-  local log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "yarn-2"
-  assertFileContains "feature-use-heroku-yarn-prune-plugin=false" $log_file
-  assertCaptured "Running 'yarn install' with yarn.lock"
-  assertCaptured "Version 3.9.7" # tsc output
-  assertCaptured "Running 'yarn workspaces focus --all --production'"
-  assertCapturedSuccess
-}
-
-testYarn2WithPrunePlugin() {
-  local log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "yarn-2-with-prune-plugin"
-  assertFileContains "feature-use-heroku-yarn-prune-plugin=true" $log_file
+  compile "yarn-2"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
   assertCaptured "Running 'yarn heroku prune'"
@@ -734,7 +722,7 @@ testYarn2WithoutYarnCache() {
 
 testYarn2WithoutWorkspaceModule() {
   compile "yarn-2-without-workspace-plugin"
-  assertCaptured "Skipping because the Yarn workspace plugin is not present."
+  assertCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
 }
 ###
