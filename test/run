@@ -852,7 +852,7 @@ testDangerousRangeGreaterThan() {
 
 testRangeWithSpace() {
   compile "range-with-space"
-  assertCaptured "Resolving node version >= 0.8.x"
+  assertCaptured "Resolving node version = 0.8.x"
   assertCaptured "Downloading and installing node"
   assertCapturedSuccess
 }
