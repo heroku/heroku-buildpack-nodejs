@@ -2,7 +2,7 @@
 
 ## main
 
-## v196 (2022-05-18)
+## v196 (2022-05-19)
 - Enable Yarn 2 `devDependency` pruning using a custom plugin for all customers ([#1001](https://github.com/heroku/heroku-buildpack-nodejs/pull/1001))
 
 ## v195 (2022-04-13)
