@@ -128,6 +128,7 @@ install_npm() {
   echo "checking npm version again"
   npm --version 1>.npm-version 2>&1
   npm_version="$(cat .npm-version)"
+  echo $npm_version
 
   # If the user has not specified a version of npm, but has an npm lockfile
   # upgrade them to npm 5.x if a suitable version was not installed with Node
