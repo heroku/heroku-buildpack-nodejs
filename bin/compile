@@ -242,11 +242,15 @@ install_bins() {
   fi
 
   if $YARN; then
-    mcount "version.yarn.$(yarn --version)"
-    meta_set "yarn-version" "$(yarn --version)"
+    local installed_yarn_version
+    installed_yarn_version=$(yarn --version 2>&1)
+    mcount "version.yarn.$installed_yarn_version"
+    meta_set "yarn-version" "$installed_yarn_version"
   else
-    mcount "version.npm.$(npm --version)"
-    meta_set "npm-version" "$(npm --version)"
+    local installed_npm_version
+    installed_npm_version=$(npm --version 2>&1)
+    mcount "version.npm.$installed_npm_version"
+    meta_set "npm-version" "$installed_npm_version"
   fi
 
   warn_old_npm
