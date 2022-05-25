@@ -1,0 +1,21 @@
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "prettify": "prettier --single-quote --trailing-comma all --write 'bin/*' 'src/**/*.js'",
+    "test": "jest --silent",
+    "dev": "nodemon --watch . --watch src/* src/index.js",
+    "build": "echo NODE_OPTIONS: $NODE_OPTIONS"
+  },
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^19.0.2",
+    "nodemon": "^1.19.4",
+    "prettier": "^0.22.0"
+  },
+  "dependencies": {}
+}
