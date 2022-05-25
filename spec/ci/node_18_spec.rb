@@ -14,7 +14,7 @@ describe "Hello World for Node v18.x" do
   end
 
   context "on an incompatible stack (heroku-18)" do
-    it "should log a compatibility message" do
+    it "should log a stack compatibility message" do
       Hatchet::Runner.new(
         "spec/fixtures/repos/node-18",
         stack: "heroku-18",
