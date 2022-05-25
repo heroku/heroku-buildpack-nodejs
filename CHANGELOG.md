@@ -1,6 +1,8 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Add metrics plugin for Node 17 and 18 ([#1002](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
+- Add warning message for Node 18+ incompatibility with heroku-18 ([#1002](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
 
 ## v195 (2022-04-12)
 - Enable Yarn 2 `devDependency` pruning using a custom plugin for 20% of customers ([#999](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
