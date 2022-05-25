@@ -79,11 +79,12 @@ install_yarn() {
   fi
   chmod +x "$dir"/bin/*
 
-  yarn --version 1>.yarn-version 2>&1
+  # Verify yarn works before capturing and ensure it's stderr is inspectable later
+  yarn --version 2>&1 1>/dev/null
   if $YARN_2; then
-    echo "Using yarn $(cat .yarn-version)"
+    echo "Using yarn $(yarn --version)"
   else
-    echo "Installed yarn $(cat .yarn-version)"
+    echo "Installed yarn $(yarn --version)"
   fi
 }
 
@@ -123,6 +124,7 @@ install_npm() {
   local version="$1"
   local dir="$2"
   local npm_lock="$3"
+  # Verify npm works before capturing and ensure it's stderr is inspectable later
   npm --version 2>&1 1>/dev/null
   npm_version="$(npm --version)"
 
@@ -142,6 +144,7 @@ install_npm() {
     if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
       echo "Unable to install npm $version; does it exist?" && false
     fi
+    # Verify npm works before capturing and ensure it's stderr is inspectable later
     npm --version 2>&1 1>/dev/null
     echo "npm $(npm --version) installed"
   fi

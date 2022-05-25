@@ -432,9 +432,6 @@ log_other_failures() {
        stack." https://help.heroku.com/R7DTSTD0
 
     return 0
-  else
-    echo "didn't find GLIBC message"
-    cat "$log_file"
   fi
 
   if grep -qi "sh: 1: .*: not found" "$log_file"; then
