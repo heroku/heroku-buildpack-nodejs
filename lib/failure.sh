@@ -421,7 +421,7 @@ fail_missing_yarn_vendor() {
 log_other_failures() {
   local log_file="$1"
 
-  if grep -qP "version \`GLIBC_\d+\.\d+' not found"; then
+  if grep -qP "version \`GLIBC_\d+\.\d+' not found" "$log_file"; then
     mcount "failures.libc6-incomapitility"
     meta_set "failure" "libc6-incomapitility"
     warn "This Node.js version is not compatible with the current stack.
