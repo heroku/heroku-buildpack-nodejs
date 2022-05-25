@@ -1,4 +1,4 @@
-test: heroku-20-build heroku-18-build
+test: heroku-22-build heroku-20-build heroku-18-build
 
 build:
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
@@ -20,6 +20,11 @@ shellcheck:
 	@shellcheck -x lib/*.sh
 	@shellcheck -x ci-profile/**
 	@shellcheck -x etc/**
+
+heroku-22-build:
+	@echo "Running tests in docker (heroku-22-build)..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-22" heroku/heroku:22-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@echo ""
 
 heroku-20-build:
 	@echo "Running tests in docker (heroku-20-build)..."
@@ -44,11 +49,11 @@ nodebin-test:
 	@echo ""
 
 unit:
-	@echo "Running unit tests in docker (heroku-20)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20" heroku/heroku:20 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
+	@echo "Running unit tests in docker (heroku-22)..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-22" heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
 	@echo ""
 
 shell:
-	@echo "Opening heroku-20 shell..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:20 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
+	@echo "Opening heroku-22 shell..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
 	@echo ""
