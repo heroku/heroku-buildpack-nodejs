@@ -79,10 +79,11 @@ install_yarn() {
   fi
   chmod +x "$dir"/bin/*
 
+  yarn --version 1>.yarn-version 2>&1
   if $YARN_2; then
-    echo "Using yarn $(yarn --version 2>&1)"
+    echo "Using yarn $(cat .yarn-version)"
   else
-    echo "Installed yarn $(yarn --version 2>&1)"
+    echo "Installed yarn $(cat .yarn-version)"
   fi
 }
 
@@ -122,7 +123,8 @@ install_npm() {
   local version="$1"
   local dir="$2"
   local npm_lock="$3"
-  npm_version="$(npm --version 2>&1)"
+  npm --version 1>.npm-version 2>&1
+  npm_version="$(cat .npm-version)"
 
   # If the user has not specified a version of npm, but has an npm lockfile
   # upgrade them to npm 5.x if a suitable version was not installed with Node
@@ -140,6 +142,7 @@ install_npm() {
     if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
       echo "Unable to install npm $version; does it exist?" && false
     fi
-    echo "npm $(npm --version 2>&1) installed"
+    npm --version 1>.npm-version 2>&1
+    echo "npm $(cat .npm-version) installed"
   fi
 }
