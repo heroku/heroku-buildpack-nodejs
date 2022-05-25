@@ -123,6 +123,9 @@ install_npm() {
   local version="$1"
   local dir="$2"
   local npm_lock="$3"
+  echo "checking npm version"
+  npm --version
+  echo "checking npm version again"
   npm --version 1>.npm-version 2>&1
   npm_version="$(cat .npm-version)"
 
