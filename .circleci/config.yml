@@ -14,7 +14,6 @@ jobs:
     parameters:
       stack-number:
         type: "string"
-        default: "20"
     docker:
       - image: heroku/heroku:<< parameters.stack-number >>-build
     steps:
@@ -28,7 +27,6 @@ jobs:
     parameters:
       stack-number:
         type: "string"
-        default: "20"
     docker:
       - image: heroku/heroku:<< parameters.stack-number >>-build
     steps:
@@ -53,9 +51,17 @@ workflows:
   buildpack-tests:
     jobs:
       - unit-test:
+          name: heroku-22 unit tests
+          stack-number: "22"
+      - unit-test-heroku-build:
+          name: heroku-22 build tests
+          stack-number: "22"
+      - unit-test:
           name: heroku-20 unit tests
+          stack-number: "20"
       - unit-test-heroku-build:
           name: heroku-20 build tests
+          stack-number: "20"
       - unit-test:
           name: heroku-18 unit tests
           stack-number: "18"
