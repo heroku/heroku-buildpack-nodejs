@@ -422,8 +422,8 @@ log_other_failures() {
   local log_file="$1"
 
   if grep -qP "version \`GLIBC_\d+\.\d+' not found" "$log_file"; then
-    mcount "failures.libc6-incomapitility"
-    meta_set "failure" "libc6-incomapitility"
+    mcount "failures.libc6-incompatibility"
+    meta_set "failure" "libc6-incompatibility"
     warn "This Node.js version is not compatible with the current stack.
 
        For Node.js versions 18 and greater, heroku-20 or newer is required.
