@@ -124,7 +124,7 @@ install_npm() {
   local version="$1"
   local dir="$2"
   local npm_lock="$3"
-  # Verify npm works before capturing and ensure it's stderr is inspectable later
+  # Verify npm works before capturing and ensure its stderr is inspectable later
   npm --version 2>&1 1>/dev/null
   npm_version="$(npm --version)"
 
