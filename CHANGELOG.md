@@ -3,8 +3,11 @@
 ## main
 - Add metrics plugin for Node 17 and 18 ([#1002](https://github.com/heroku/heroku-buildpack-nodejs/pull/1002))
 - Add warning message for Node 18+ incompatibility with heroku-18 ([#1002](https://github.com/heroku/heroku-buildpack-nodejs/pull/1002))
+- Enable Yarn 2 `devDependency` pruning using a custom plugin for all customers ([#1001](https://github.com/heroku/heroku-buildpack-nodejs/pull/1001))
+- Test against Heroku-22 ([#1003](https://github.com/heroku/heroku-buildpack-nodejs/pull/1003))
 
-## v195 (2022-04-12)
+
+## v195 (2022-04-13)
 - Enable Yarn 2 `devDependency` pruning using a custom plugin for 20% of customers ([#999](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
 - Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
 
