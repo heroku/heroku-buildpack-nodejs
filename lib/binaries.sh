@@ -79,7 +79,7 @@ install_yarn() {
   fi
   chmod +x "$dir"/bin/*
 
-  # Verify yarn works before capturing and ensure it's stderr is inspectable later
+  # Verify yarn works before capturing and ensure its stderr is inspectable later
   yarn --version 2>&1 1>/dev/null
   if $YARN_2; then
     echo "Using yarn $(yarn --version)"
