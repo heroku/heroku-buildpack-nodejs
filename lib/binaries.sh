@@ -144,7 +144,7 @@ install_npm() {
     if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
       echo "Unable to install npm $version; does it exist?" && false
     fi
-    # Verify npm works before capturing and ensure it's stderr is inspectable later
+    # Verify npm works before capturing and ensure its stderr is inspectable later
     npm --version 2>&1 1>/dev/null
     echo "npm $(npm --version) installed"
   fi
