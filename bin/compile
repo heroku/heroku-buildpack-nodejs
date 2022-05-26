@@ -192,8 +192,6 @@ fi
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
-[[ $(features_get "cache-native-yarn-cache") == "false" ]] && USE_YARN_CACHE=false
-
 if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
   USE_NPM_INSTALL=true
 fi
