@@ -420,6 +420,20 @@ fail_missing_yarn_vendor() {
 
 log_other_failures() {
   local log_file="$1"
+
+  if grep -qP "version \`GLIBC_\d+\.\d+' not found" "$log_file"; then
+    mcount "failures.libc6-incompatibility"
+    meta_set "failure" "libc6-incompatibility"
+    warn "This Node.js version is not compatible with the current stack.
+
+       For Node.js versions 18 and greater, heroku-20 or newer is required.
+       Consider updating to a stack that is compatible with the Node.js version
+       or pinning the Node.js version to be compatible with the current
+       stack." https://help.heroku.com/R7DTSTD0
+
+    return 0
+  fi
+
   if grep -qi "sh: 1: .*: not found" "$log_file"; then
     mcount "failures.dev-dependency-tool-not-installed"
     meta_set "failure" "dev-dependency-tool-not-installed"
