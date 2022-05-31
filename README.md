@@ -40,7 +40,7 @@ heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#latest -
 Even though it's suggested to use the latest release, you may want to lock dependencies - including buildpacks - to a specific version.
 
 First, find the version you want from
-[the list of buildpack versions](https://github.com/heroku/heroku-buildpack-nodejs/releases).
+[the list of buildpack versions](https://github.com/heroku/heroku-buildpack-nodejs/tags).
 Then, specify that version with `buildpacks:set`:
 
 ```
