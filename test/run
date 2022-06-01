@@ -253,23 +253,13 @@ testYarn() {
   assertCapturedSuccess
 }
 
-testYarnCacheDirectory() {
+testYarnCache() {
   local cache=$(mktmpdir)
-  local env_dir=$(mktmpdir)
-  local cache_dir=$(mktmpdir)
-  echo "${cache_dir}/yarn"> "$env_dir/YARN_CACHE_FOLDER"
-  compile "yarn" $cache $env_dir
-  # These will be created if yarn is using the directory for its cache
 
-  assertDirectoryExists ${cache_dir}/yarn
-  # yarn frequently bumps the version number used in its cache
-  # so use a wildcard here to prevent frequent CI failures
-
-  # assert that the above ls command exited successfully, which only happens if the file exists
-  assertEquals "0" "$?"
+  compile "yarn" $cache
 
   # assert that devDependencies are cached
-  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
+  assertEquals "1" "$(ls -1 $cache/node/cache/yarn/v6 | grep -c debug | tr -d ' ')"
 
   assertCapturedSuccess
 }
@@ -283,20 +273,6 @@ testYarnNativeCache() {
   # Run this again with a cache
   compile "yarn-native-cache" $cache
 
-  assertCapturedSuccess
-}
-
-testYarnNativeCacheFalse() {
-  local cache=$(mktmpdir)
-
-  compile "yarn-native-cache-false" $cache
-  # These will be created if yarn is using the directory for its cache
-
-  # Run this again with a cache
-  compile "yarn-native-cache-false" $cache
-
-  # assert that devDependencies are not cached
-  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c debug | tr -d ' ')"
   assertCapturedSuccess
 }
 
