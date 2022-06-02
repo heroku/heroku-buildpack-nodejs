@@ -1419,6 +1419,21 @@ testBinReportYarn() {
   assertCaptured "package_manager: \"yarn\""
 }
 
+testNpmCiCaching() {
+  local cache_dir=$(mktmpdir)
+  compile "ci-caching" $cache_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
