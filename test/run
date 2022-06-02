@@ -684,6 +684,29 @@ testYarn2() {
   assertCapturedSuccess
 }
 
+testYarn2WithYarnProductionTrue() {
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/YARN_PRODUCTION
+  compile "yarn-2" "$(mktmpdir)" $env_dir
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Version 3.9.7" # tsc output
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "debug-npm-4.3.2-f0148b6afe-5543570879.zip appears to be unused - removing"
+  assertCaptured "ms-npm-2.1.2-ec0c1512ff-9b65fb709b.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
+testYarn2WithYarnProductionFalseToSkipPruning() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/YARN_PRODUCTION
+  compile "yarn-2" "$(mktmpdir)" $env_dir
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Version 3.9.7" # tsc output
+  assertCaptured "Skipping because YARN_PRODUCTION is 'false'"
+  assertNotCaptured "Running 'yarn heroku prune'"
+  assertCapturedSuccess
+}
+
 testYarn2WithNodeModules() {
   compile "yarn-2-with-node-modules"
   assertCaptured "Running 'yarn install' with yarn.lock"

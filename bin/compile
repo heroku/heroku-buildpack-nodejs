@@ -151,6 +151,11 @@ if [[ "$YARN_2" == "true" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
 
+  # YARN 2/3 does not like the YARN_PRODUCTION environment variable and will fail if it is set so
+  # we need to change the YARN_PRODUCTION environment variable to YARN_2_PRODUCTION
+  YARN_2_PRODUCTION=$YARN_PRODUCTION
+  unset YARN_PRODUCTION
+
   # When in Plug'n'Play mode the yarn cache will include dependencies needed at
   # runtime; the cache must live in /app (not /tmp) so that dependencies are
   # persisted. When using zero-install, /app/.yarn/cache will include all
