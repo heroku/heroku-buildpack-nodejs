@@ -684,9 +684,9 @@ testYarn2() {
   assertCapturedSuccess
 }
 
-testYarn2WithYarnProductionTrue() {
+testYarn2WithYarn2SkipPruningFalse() {
   env_dir=$(mktmpdir)
-  echo "true" > $env_dir/YARN_PRODUCTION
+  echo "false" > $env_dir/YARN2_SKIP_PRUNING
   compile "yarn-2" "$(mktmpdir)" $env_dir
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
@@ -696,16 +696,24 @@ testYarn2WithYarnProductionTrue() {
   assertCapturedSuccess
 }
 
-testYarn2WithYarnProductionFalseToSkipPruning() {
+testYarn2WithYarn2SkipPruningTrue() {
   env_dir=$(mktmpdir)
-  echo "false" > $env_dir/YARN_PRODUCTION
+  echo "true" > $env_dir/YARN2_SKIP_PRUNING
   compile "yarn-2" "$(mktmpdir)" $env_dir
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
-  assertCaptured "Skipping because YARN_PRODUCTION is 'false'"
+  assertCaptured "Skipping because YARN2_SKIP_PRUNING is 'true'"
   assertNotCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
 }
+
+testYarn2WithYarnProductionSetCapturesAndReportsError() {
+   env_dir=$(mktmpdir)
+   echo "false" > $env_dir/YARN_PRODUCTION
+   compile "yarn-2" "$(mktmpdir)" $env_dir
+   assertCaptured "Legacy Yarn 1.x configuration present"
+   assertCapturedError
+ }
 
 testYarn2WithNodeModules() {
   compile "yarn-2-with-node-modules"

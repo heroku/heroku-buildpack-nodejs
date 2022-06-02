@@ -69,6 +69,7 @@ build_start_time=$(nowms)
 handle_failure() {
   meta_set "node-build-success" "false"
   header "Build failed"
+  fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
   fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
   fail_node_install "$LOG_FILE" "$BUILD_DIR"
@@ -150,11 +151,6 @@ if [[ "$YARN_2" == "true" ]]; then
   if [[ -f "$BUILD_DIR/.yarnrc" ]]; then
     warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi
-
-  # YARN 2/3 does not like the YARN_PRODUCTION environment variable and will fail if it is set so
-  # we need to change the YARN_PRODUCTION environment variable to YARN_2_PRODUCTION
-  YARN_2_PRODUCTION=$YARN_PRODUCTION
-  unset YARN_PRODUCTION
 
   # When in Plug'n'Play mode the yarn cache will include dependencies needed at
   # runtime; the cache must live in /app (not /tmp) so that dependencies are

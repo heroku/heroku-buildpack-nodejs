@@ -166,12 +166,12 @@ yarn_prune_devdependencies() {
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
     meta_set "skipped-prune" "true"
     return 0
-  elif [ "$YARN_2_PRODUCTION" == "false" ]; then
-    # keeping the messaging the same even though we replaced out YARN_PRODUCTION with YARN_2_PRODUCTION
-    echo "Skipping because YARN_PRODUCTION is '$YARN_2_PRODUCTION'"
-    meta_set "skipped-prune" "true"
-    return 0
   elif $YARN_2; then
+    if [ "$YARN2_SKIP_PRUNING" == "true" ]; then
+      echo "Skipping because YARN2_SKIP_PRUNING is '$YARN2_SKIP_PRUNING'"
+      meta_set "skipped-prune" "true"
+      return 0
+    fi
     cd "$build_dir" || return
     echo "Running 'yarn heroku prune'"
     export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
