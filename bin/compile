@@ -69,6 +69,7 @@ build_start_time=$(nowms)
 handle_failure() {
   meta_set "node-build-success" "false"
   header "Build failed"
+  fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
   fail_yarn_outdated "$LOG_FILE"
   fail_yarn_lockfile_outdated "$LOG_FILE"
   fail_node_install "$LOG_FILE" "$BUILD_DIR"
