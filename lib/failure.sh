@@ -342,6 +342,33 @@ fail_invalid_semver() {
 
 # Yarn 2 failures
 
+fail_using_yarn2_with_yarn_production_environment_variable_set() {
+  local yarn_engine
+  local skip_pruning
+  local log_file="$1"
+
+  if grep -qi 'Unrecognized or legacy configuration settings found: production' "$log_file"; then
+    yarn_engine=$(yarn --version)
+    if [[ "$YARN_PRODUCTION" == "true" ]]; then
+      skip_pruning=false
+    else
+      skip_pruning=true
+    fi
+
+    mcount "failures.yarn2-with-yarn-production-env-set"
+    meta_set "failure" "yarn2-with-yarn-production-env-set"
+    echo ""
+    warn "Legacy Yarn 1.x configuration present:
+
+       Your application uses Yarn v$yarn_engine which does not support the YARN_PRODUCTION environment variable. Please
+       update your heroku config vars to remove YARN_PRODUCTION and set YARN2_SKIP_PRUNING instead.
+
+         $ heroku config:unset YARN_PRODUCTION && heroku config:set YARN2_SKIP_PRUNING=$skip_pruning
+    " https://devcenter.heroku.com/articles/nodejs-support#skip-pruning
+    fail
+  fi
+}
+
 fail_missing_yarnrc_yml() {
   local build_dir="$1"
 
