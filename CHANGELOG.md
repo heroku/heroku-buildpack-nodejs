@@ -2,6 +2,7 @@
 
 ## main
 - Drop the `yarn-native-cache` feature flag ([#1004](https://github.com/heroku/heroku-buildpack-nodejs/pull/1004))
+- Fix for `npm ci` caching ([#1009](https://github.com/heroku/heroku-buildpack-nodejs/pull/1009))
 - Fix skip pruning behavior with Yarn 2 ([#1008](https://github.com/heroku/heroku-buildpack-nodejs/pull/1008))
 
 ## v196 (2022-05-31)

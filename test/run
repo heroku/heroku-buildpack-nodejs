@@ -1450,6 +1450,67 @@ testBinReportYarn() {
   assertCaptured "package_manager: \"yarn\""
 }
 
+testNpmCiCaching() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertCaptured "npm http fetch GET"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertNotCaptured "npm http fetch GET"
+  assertCapturedSuccess
+}
+
+testNpmCiCachingWhenUseNpmInstallIsTrue() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/USE_NPM_INSTALL
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertNotCaptured "- npm cache"
+  assertCaptured "- node_modules"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- node_modules"
+  assertNotCaptured "- npm cache"
+  assertCapturedSuccess
+}
+
+testNpmCiCachingWhenUseNpmInstallIsFalse() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
+  echo "false" > $env_dir/USE_NPM_INSTALL
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertCaptured "npm http fetch GET"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertNotCaptured "npm http fetch GET"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

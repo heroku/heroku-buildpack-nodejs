@@ -193,10 +193,6 @@ fi
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
-if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
-  USE_NPM_INSTALL=true
-fi
-
 install_bins() {
   local node_engine npm_engine yarn_engine npm_version node_version
 
@@ -258,6 +254,14 @@ install_bins() {
 header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
 
+if [[ -z "$USE_NPM_INSTALL" ]]; then
+  if [[ "$(should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then
+    USE_NPM_INSTALL=false
+  else
+    USE_NPM_INSTALL=true
+  fi
+fi
+
 restore_cache() {
   local cache_status cache_directories restore_cache_start_time
   restore_cache_start_time=$(nowms)
@@ -280,7 +284,7 @@ restore_cache() {
   elif [[ "$cache_status" == "valid" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER"
+      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE"
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
@@ -351,7 +355,7 @@ cache_build() {
     :
   elif [[ "$cache_directories" == "" ]]; then
     header "Caching build"
-    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER"
+    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE"
   else
     header "Caching build"
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
