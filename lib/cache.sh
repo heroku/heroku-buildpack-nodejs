@@ -48,7 +48,7 @@ restore_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
-  local npm_cache="$(npm config get cache)"
+  local npm_cache=${4:-}
 
   if [[ "$YARN" == "true" ]]; then
     if has_yarn_cache "$build_dir"; then
@@ -130,7 +130,7 @@ save_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
-  local npm_cache="$(npm config get cache)"
+  local npm_cache=${4:-}
 
   if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then

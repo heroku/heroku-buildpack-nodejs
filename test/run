@@ -1420,17 +1420,22 @@ testBinReportYarn() {
 }
 
 testNpmCiCaching() {
-  local cache_dir=$(mktmpdir)
-  compile "ci-caching" $cache_dir
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
+
+  compile "ci-caching" $cache_dir $env_dir
   assertNotCaptured "Restoring cache"
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
+  assertCaptured "npm http fetch GET"
   assertCapturedSuccess
 
   compile "ci-caching" $cache_dir
   assertCaptured "Restoring cache"
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
+  assertNotCaptured "npm http fetch GET"
   assertCapturedSuccess
 }
 
