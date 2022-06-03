@@ -192,10 +192,6 @@ fi
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
-if [[ -z "$USE_NPM_INSTALL" ]] && [[ $(features_get_with_blank "use-npm-ci") == "false" ]]; then
-  USE_NPM_INSTALL=true
-fi
-
 install_bins() {
   local node_engine npm_engine yarn_engine npm_version node_version
 
@@ -256,6 +252,14 @@ install_bins() {
 
 header "Installing binaries" | output "$LOG_FILE"
 install_bins | output "$LOG_FILE"
+
+if [[ -z "$USE_NPM_INSTALL" ]]; then
+  if [[ "$(should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then
+    USE_NPM_INSTALL=false
+  else
+    USE_NPM_INSTALL=true
+  fi
+fi
 
 restore_cache() {
   local cache_status cache_directories restore_cache_start_time

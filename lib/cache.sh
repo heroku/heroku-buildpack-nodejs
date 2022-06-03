@@ -67,7 +67,7 @@ restore_default_cache_directories() {
     else
       echo "- yarn cache (not cached - skipping)"
     fi
-  elif [[ "$(should_use_npm_ci "$build_dir")" == "true" ]]; then
+  elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$cache_dir/node/cache/npm" ]]; then
       rm -rf "$npm_cache"
       mv "$cache_dir/node/cache/npm" "$npm_cache"
@@ -141,7 +141,7 @@ save_default_cache_directories() {
       fi
       echo "- yarn cache"
     fi
-  elif [[ "$(should_use_npm_ci "$build_dir")" == "true" ]]; then
+  elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$npm_cache" ]]; then
       mv "$npm_cache" "$cache_dir/node/cache/npm"
       echo "- npm cache"
