@@ -177,7 +177,7 @@ func TestResolveYarn(t *testing.T) {
 		if assert.Nil(t, err) {
 			assert.True(t, result.matched)
 			assert.Equal(t, result.release.version.String(), c.output)
-			assert.Equal(t, result.release.url, fmt.Sprintf("https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v%s.tar.gz", c.output))
+			assert.Equal(t, result.release.url, fmt.Sprintf("https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v%s.tar.gz", c.output))
 		}
 	}
 }
@@ -284,9 +284,9 @@ func TestResolveNodeStaging(t *testing.T) {
 			assert.Equal(t, result.release.version.String(), "10.15.1")
 			assert.Equal(t, result.versionRequirement, "10.15.1")
 			if platform == "linux-x64" {
-				assert.Equal(t, result.release.url, "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v10.15.1-linux-x64.tar.gz")
+				assert.Equal(t, result.release.url, "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v10.15.1-linux-x64.tar.gz")
 			} else {
-				assert.Equal(t, result.release.url, "https://s3.amazonaws.com/heroku-nodebin/node/release/darwin-x64/node-v10.15.1-darwin-x64.tar.gz")
+				assert.Equal(t, result.release.url, "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/darwin-x64/node-v10.15.1-darwin-x64.tar.gz")
 			}
 		}
 
@@ -296,9 +296,9 @@ func TestResolveNodeStaging(t *testing.T) {
 			assert.Equal(t, result.release.version.String(), "10.15.4")
 			assert.Equal(t, result.versionRequirement, "10.15.4")
 			if platform == "linux-x64" {
-				assert.Equal(t, result.release.url, "https://s3.amazonaws.com/heroku-nodebin/node/staging/linux-x64/node-v10.15.4-linux-x64.tar.gz")
+				assert.Equal(t, result.release.url, "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v10.15.4-linux-x64.tar.gz")
 			} else {
-				assert.Equal(t, result.release.url, "https://s3.amazonaws.com/heroku-nodebin/node/staging/darwin-x64/node-v10.15.4-darwin-x64.tar.gz")
+				assert.Equal(t, result.release.url, "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/darwin-x64/node-v10.15.4-darwin-x64.tar.gz")
 			}
 		}
 

@@ -26,7 +26,7 @@ func TestListS3Objects(t *testing.T) {
 	for _, obj := range objects {
 		release, err := parseObject(obj.Key)
 		assert.Nil(t, err)
-		assert.Regexp(t, regexp.MustCompile("https:\\/\\/s3.amazonaws.com\\/heroku-nodebin"), release.url)
+		assert.Regexp(t, regexp.MustCompile("https:\\/\\/heroku-nodebin.s3.us-east-1.amazonaws.com"), release.url)
 		assert.Regexp(t, regexp.MustCompile("[0-9]+.[0-9]+.[0-9]+"), release.version.String())
 	}
 
@@ -44,7 +44,7 @@ func TestListS3Objects(t *testing.T) {
 	for _, obj := range objects {
 		release, err := parseObject(obj.Key)
 		assert.Nil(t, err)
-		assert.Regexp(t, regexp.MustCompile("https:\\/\\/s3.amazonaws.com\\/heroku-nodebin"), release.url)
+		assert.Regexp(t, regexp.MustCompile("https:\\/\\/heroku-nodebin.s3.us-east-1.amazonaws.com"), release.url)
 		assert.Regexp(t, regexp.MustCompile("[0-9]+.[0-9]+.[0-9]+"), release.version.String())
 	}
 }
