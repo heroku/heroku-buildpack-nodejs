@@ -1311,8 +1311,8 @@ testBuildMetaData() {
 
   # resolve-version tests
   cat $log_file
-  assertFileContainsMatch 'resolve-v1-node="10.[[:digit:]]+.[[:digit:]]+ https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz"' $log_file
-  assertFileContainsMatch 'resolve-v2-node="10.[[:digit:]]+.[[:digit:]]+ https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz"' $log_file
+  assertFileContainsMatch 'resolve-v1-node="10.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz"' $log_file
+  assertFileContainsMatch 'resolve-v2-node="10.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz"' $log_file
   assertFileContains "resolve-is-equal-node=true" $log_file
 
   # erase the log file
@@ -1328,8 +1328,8 @@ testBuildMetaData() {
   assertFileContains "node-build-success=true" $log_file
 
   # resolve-version tests
-  assertFileContainsMatch 'resolve-v1-yarn="1.[[:digit:]]+.[[:digit:]]+ https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
-  assertFileContainsMatch 'resolve-v2-yarn="1.[[:digit:]]+.[[:digit:]]+ https://s3.amazonaws.com/heroku-nodebin/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
+  assertFileContainsMatch 'resolve-v1-yarn="1.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
+  assertFileContainsMatch 'resolve-v2-yarn="1.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
   assertFileContains "resolve-is-equal-yarn=true" $log_file
 }
 
