@@ -2,7 +2,7 @@
 
 ## main
 
-- `jq` is no longer installed if it doesn't already exist on the stack ([#1016](https://github.com/heroku/heroku-buildpack-nodejs/pull/1016))
+- `jq` is no longer installed by the buildpack([#1016](https://github.com/heroku/heroku-buildpack-nodejs/pull/1016))
 - Switch away from deprecated path-based S3 URLs ([#1013](https://github.com/heroku/heroku-buildpack-nodejs/pull/1013))
 
 ## v197 (2022-06-07)
