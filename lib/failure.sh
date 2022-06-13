@@ -746,7 +746,7 @@ warn_old_npm() {
   npm_version="$(npm --version)"
 
   if [ "${npm_version:0:1}" -lt "2" ]; then
-    latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 https://semver.herokuapp.com/npm/stable)"
+    latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 https://semver.herokuapp.com/npm/stable)"
     warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     mcount 'warnings.npm.old'
   fi
