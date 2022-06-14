@@ -21,33 +21,18 @@ Apps are built via one of four paths:
 You should only use #3 (omitting package.json) for quick tests or experiments.
 You should never use #4 - it's included for backwards-compatibility and will generate warnings.
 
-**Checking in `node_modules` is an antipattern.**
-For more information, see [the npm docs](https://docs.npmjs.com/misc/faq#should-i-check-my-node_modules-folder-into-git-)
+**Adding `node_modules` directory in git repository is an antipattern.**
 
-### Install last Node.js version
+### Specify Node.js/NPM version
 
-#### NodeJS
-
-Uses the [semver.io](https://semver.io) webservice to find the latest version of node that satisfies the [engines.node semver range](https://npmjs.org/doc/json.html#engines) in your package.json.
-
-#### Meteor
-
-You can write a file `.node_version` at the root of your project, and we'll use semver to get the best node version from this instruction
-
-##### Debug Build
-
-Define the environment variable `METEOR_DEBUG_BUILD` to true and we'll build your application in debug mode (unminifed code)
-
-```
-scalingo env-set METEOR_DEBUG_BUILD=true
-```
+Node.js and NPM version are read from the `engines` section of the `package.json` file: https://doc.scalingo.com/languages/nodejs/start#specifying-a-nodejs-version
 
 ### Common
 
-- Allows any recent version of node to be used, including [pre-release versions](https://semver.io/node.json).
+- Allows any recent version of node to be used, including [pre-release versions](https://semver.scalingo.com/node.json).
 - Discourages use of dangerous semver ranges like `*` and `>0.10`.
 - Uses the version of `npm` that comes bundled with `node`.
-- Puts `node` and `npm` on the `PATH` so they can be executed with [scalingo run](http://doc.scalingo.com/app/tasks).
+- Puts `node` and `npm` on the `PATH` so they can be executed with [scalingo run](https://doc.scalingo.com/app/tasks).
 
 ### Caching
 
@@ -55,20 +40,32 @@ scalingo env-set METEOR_DEBUG_BUILD=true
 - Meteor specific: we cache the meteor bundle to avoid spending time downloading it at each deployment
 - Doesn't use the cache if `node_modules` is checked into version control.
 - Runs `npm rebuild` if `node_modules` is checked into version control.
-- Always runs `npm install` to ensure [npm script hooks](https://npmjs.org/doc/misc/npm-scripts.html) are executed.
+- Always runs `npm install` to ensure [npm script hooks](https://docs.npmjs.com/cli/v8/using-npm/scripts) are executed.
 - Always runs `npm prune` after restoring cached modules to ensure cleanup of unused dependencies.
 
 For more technical details, see the [compile script](https://github.com/Scalingo/nodejs-buildpack/blob/master/bin/compile).
 
 ## Documentation
 
-For more information about using Node.js and buildpacks on Scalingo, see these Dev Center articles:
+For more information about using Node.js and buildpacks on Scalingo, see these Documentation pages:
 
-- [Scalingo Node.js Support](http://doc.scalingo.com/languages/javascript/nodejs)
-- [Buildpacks](http://doc.scalingo.com/buildpacks)
-- [Getting Started with Node.js on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-nodejs)
-- [Getting Started with Meteor on Scalingo](http://doc.scalingo.com/languages/javascript/nodejs/getting-started-with-meteor)
-- [Getting Started with io.js on Scalingo](http://doc.scalingo.com/languages/javascript/iojs/getting-started-with-iojs)
+- [Scalingo Node.js Support](https://doc.scalingo.com/languages/nodejs/start)
+- [Scalingo Meteor Support](https://doc.scalingo.com/languages/meteorjs/start)
+- [Buildpacks](https://doc.scalingo.com/buildpacks)
+- [Getting Started with Node.js on Scalingo](https://doc.scalingo.com/languages/nodejs/tutorial)
+- [Getting Started with Meteor on Scalingo](https://doc.scalingo.com/languages/meteorjs/tutorial)
+
+## Debug build
+
+### Meteor
+
+By default, Meteor minify all your assets to stand in one single javascript file,
+if you want to make a 'debug' build (assets unminified), please defined the following
+environment variable:
+
+```shell
+scalingo -a app-name env-set METEOR_DEBUG_BUILD=true
+```
 
 ## Options for Meteor
 
@@ -99,48 +96,11 @@ The following environment variable let you customize this.
 
 Example: (when meteor need to use 4GB of RAM)
 
-```
-scalingo env-set NODE_BOOT_FLAGS="--max-old-space-size=4096"
-```
-
-### Debug build
-
-By default, Meteor minify all your assets to stand in one single javascript file,
-if you want to make a 'debug' build (assets unminified), please defined the following
-environment variable:
-
-```
-scalingo env-set METEOR_DEBUG_BUILD=true
+```shell
+scalingo -a app-name env-set NODE_BOOT_FLAGS="--max-old-space-size=4096"
 ```
 
 ## Options for Node
-
-### Specify a node version
-
-Set engines.node in package.json to the semver range (or specific version) of node you'd like to use.
-(It's a good idea to make this the same version you use during development)
-
-```json
-"engines": {
-  "node": "14.x"
-}
-```
-
-Default: Latest version of v14 (Maintenance LTS): https://nodejs.org/en/about/releases/
-
-### Specify an npm version
-
-Set engines.npm in package.json to the semver range
-(or specific version) of npm you'd like to use.
-(It's a good idea to make this the same version you use during development)
-
-```json
-"engines": {
-  "npm": "6.x"
-}
-```
-
-Default: the version of npm bundled with your node install (varies).
 
 ### Enable or disable node_modules caching
 
@@ -170,13 +130,13 @@ npm has a 'production' config that can be set through the environment:
 To install *dependencies only:*
 
 ```shell
-scalingo env-set NPM_CONFIG_PRODUCTION=true
+scalingo -a app-name env-set NPM_CONFIG_PRODUCTION=true
 ```
 
 To install *dependencies and devDependencies:*
 
 ```shell
-scalingo env-set NPM_CONFIG_PRODUCTION=false
+scalingo -a app-name env-set NPM_CONFIG_PRODUCTION=false
 ```
 
 Default: `NPM_CONFIG_PRODUCTION` defaults to true on Scalingo
@@ -210,7 +170,7 @@ The default settings will cluster
 
 For example, when your app starts:
 
-```
+```shell
 app[web-1]: Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)
 app[web-1]: Recommending WEB_CONCURRENCY=2
 app[web-1]:
@@ -225,20 +185,20 @@ app[web-1]: Listening on 51118
 This buildpack automatically exports node, npm, and any node_modules binaries
 into the `$PATH` for easy use in subsequent buildpacks.
 
-## Feedback
+## Feedback or want to report an issue
 
-- [github issues](https://github.com/Scalingo/nodejs-buildpack/issues)
+- [GitHub issues](https://github.com/Scalingo/nodejs-buildpack/issues)
 
 ## Hacking
 
 To make changes to this buildpack, fork it on Github. Push up changes to your fork, then create a new Scalingo app to test it, or configure an existing app to use your buildpack:
 
-```
+```shell
 # Configure an existing Scalingo app to use your buildpack
-scalingo env-set BUILDPACK_URL=<your-github-url>
+scalingo -a app-name env-set BUILDPACK_URL=<your-github-url>
 
 # You can also use a git branch!
-scalingo env-set BUILDPACK_URL=<your-github-url>#your-branch
+scalingo -a app-name env-set BUILDPACK_URL=<your-github-url>#your-branch
 ```
 
 ## Tests
@@ -248,7 +208,7 @@ Scalingo environment.
 
 To run the test suite:
 
-```
+```shell
 make test
 ```
 
