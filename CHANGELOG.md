@@ -2,6 +2,8 @@
 
 ## main
 
+## v198 (2022-06-15)
+
 - Adjust curl retry and connection timeout handling ([#1017](https://github.com/heroku/heroku-buildpack-nodejs/pull/1017))
 - `jq` is no longer installed by the buildpack([#1016](https://github.com/heroku/heroku-buildpack-nodejs/pull/1016))
 - Switch away from deprecated path-based S3 URLs ([#1013](https://github.com/heroku/heroku-buildpack-nodejs/pull/1013))
