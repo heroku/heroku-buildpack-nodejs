@@ -20,12 +20,8 @@ if [[ -n "$HEROKU_METRICS_URL" ]] && \
 
 fi
 
-echo "!!! PROFILE"
-echo "$(pwd)"
-if [[ -f "openssl.cnf" ]]; then
-  echo "using custom openssl config"
+# because the default OpenSSL v3 config in Ubuntu gets read by Node.js's bundled OpenSSL 1.1.1o
+# we need to use the patched config that was created during the compile step
+if [[ -f "$(pwd)/openssl.cnf" ]]; then
   export OPENSSL_CONF="$(pwd)/openssl.cnf"
-else
-  echo "no custom openssl config"
 fi
-echo "!!! PROFILE"
