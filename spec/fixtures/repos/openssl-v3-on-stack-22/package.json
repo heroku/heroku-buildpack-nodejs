@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "scripts": {
+    "heroku-prebuild": "node prebuild.js",
     "start": "node index.js"
   },
   "dependencies": {
