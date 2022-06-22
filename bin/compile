@@ -97,6 +97,7 @@ meta_set "build-step" "init"
 
 # because the default OpenSSL v3 config in Ubuntu gets read by Node.js's bundled OpenSSL 1.1.1o
 # we may need to patch the config to avoid errors
+echo "STACK: ${STACK}"
 if [[ "${STACK}" == "heroku-22" ]]; then
   cp /etc/ssl/openssl.cnf "${BUILD_DIR}"
   sed -i '/_sect\b/s/^/# /' "${BUILD_DIR}/openssl.cnf"
