@@ -1,0 +1,12 @@
+{
+  "name": "openssl-v3-on-stack-22",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "heroku-prebuild": "node prebuild.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

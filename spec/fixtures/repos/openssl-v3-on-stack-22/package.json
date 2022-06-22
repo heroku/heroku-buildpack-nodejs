@@ -1,0 +1,14 @@
+{
+  "name": "openssl-v3-on-stack-22",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "start": "yarn node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.2"
+  }
+}

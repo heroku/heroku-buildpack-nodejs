@@ -1511,6 +1511,13 @@ testNpmCiCachingWhenUseNpmInstallIsFalse() {
   assertCapturedSuccess
 }
 
+testOpenSSL3WithStack22() {
+  compile "openssl-v3-on-stack-22"
+  cat $STD_OUT
+  cat $STD_ERR
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
