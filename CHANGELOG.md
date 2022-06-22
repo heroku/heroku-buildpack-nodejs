@@ -1,6 +1,7 @@
 # Node.js Buildpack Changelog
 
 ## main
+- Fix for OpenSSL v3 on Stack-22 ([#1021](https://github.com/heroku/heroku-buildpack-nodejs/pull/1021))
 
 ## v198 (2022-06-15)
 
