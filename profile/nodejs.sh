@@ -19,3 +19,13 @@ if [[ -n "$HEROKU_METRICS_URL" ]] && \
   fi
 
 fi
+
+echo "!!! PROFILE"
+echo "$(pwd)"
+if [[ -f "openssl.cnf" ]]; then
+  echo "using custom openssl config"
+  export OPENSSL_CONF="$(pwd)/openssl.cnf"
+else
+  echo "no custom openssl config"
+fi
+echo "!!! PROFILE"

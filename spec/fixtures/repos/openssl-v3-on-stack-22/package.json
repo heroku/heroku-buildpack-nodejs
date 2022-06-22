@@ -6,7 +6,7 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "start": "yarn node index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.17.2"
