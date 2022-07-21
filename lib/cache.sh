@@ -134,7 +134,7 @@ save_default_cache_directories() {
 
   if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then
-      if [[ "$YARN_2" == "true" ]] && ! node_modules_enabled "$BUILD_DIR"; then
+      if [[ "$YARN_2" == "true" ]]; then
         cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
       else
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"

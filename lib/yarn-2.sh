@@ -23,7 +23,7 @@ detect_yarn_2() {
 has_yarn_cache() {
   local build_dir="$1"
   local yarn_cache="$build_dir/.yarn/cache"
-  [[ -d "$yarn_cache" ]] && [[ -n '$(ls -A "$yarn_cache")' ]]
+  [[ -d "$yarn_cache" ]] && [[ -n "$(ls -A "$yarn_cache")" ]]
 }
 
 has_yarn_workspace_plugin_installed() {
@@ -50,5 +50,5 @@ node_modules_enabled() {
   
   node_linker=$($YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1)
 
-  [[ "$node_linker" == "node-modules" ]]
+  [[ "x" == "node-modules" ]]
 }

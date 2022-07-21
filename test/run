@@ -713,12 +713,30 @@ testYarn2WithYarnProductionSetCapturesAndReportsError() {
    compile "yarn-2" "$(mktmpdir)" $env_dir
    assertCaptured "Legacy Yarn 1.x configuration present"
    assertCapturedError
- }
+}
 
 testYarn2WithNodeModules() {
   compile "yarn-2-with-node-modules"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Caching build"
+  assertCapturedSuccess
+}
+
+testYarn2WithNodeModulesAndNoYarnCache() {
+  cache=$(mktmpdir)
+
+  compile "yarn-2-with-node-modules-and-no-yarn-cache" "$cache"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Caching build"
+  assertCaptured "- yarn cache"
+  assertCaptured "YN0013" # the status code printed by yarn when fetching packages
+  assertCapturedSuccess
+
+  compile "yarn-2-with-node-modules-and-no-yarn-cache" "$cache"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Restoring cache"
+  assertCaptured "- yarn cache"
+  assertNotCaptured "YN0013" # the status code printed by yarn when fetching packages
   assertCapturedSuccess
 }
 
