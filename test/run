@@ -733,6 +733,7 @@ testYarn2WithNodeModulesAndNoYarnCache() {
   assertCapturedSuccess
 
   compile "yarn-2-with-node-modules-and-no-yarn-cache" "$cache"
+  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Restoring cache"
   assertCaptured "- yarn cache"
@@ -1328,7 +1329,6 @@ testBuildMetaData() {
   assertFileContains "save-cache-time=" $log_file
 
   # resolve-version tests
-  cat $log_file
   assertFileContainsMatch 'resolve-v1-node="10.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz"' $log_file
   assertFileContainsMatch 'resolve-v2-node="10.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz"' $log_file
   assertFileContains "resolve-is-equal-node=true" $log_file
@@ -1336,6 +1336,7 @@ testBuildMetaData() {
   # erase the log file
   echo "" > $log_file
   BUILDPACK_LOG_FILE="$log_file" compile "yarn"
+  cat $log_file
 
   assertFileContains "node-package-manager=yarn" $log_file
   assertFileContains "has-node-lock-file=true" $log_file
