@@ -726,19 +726,22 @@ testYarn2WithNodeModulesAndNoYarnCache() {
   cache=$(mktmpdir)
 
   compile "yarn-2-with-node-modules-and-no-yarn-cache" "$cache"
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Caching build"
   assertCaptured "- yarn cache"
-  assertCaptured "debug@npm:4.2.0 can't be found in the cache and will be fetched from the remote registry"
+  # the output from circle ci is slightly different from running these locally
+  # but the following string appears in the uncached run in both the local & CI outputs
+  # when yarn needs to fetch the packages due to them not being cached
+  assertCaptured "fetched"
   assertCapturedSuccess
 
   compile "yarn-2-with-node-modules-and-no-yarn-cache" "$cache"
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Restoring cache"
   assertCaptured "- yarn cache"
-  assertNotCaptured "debug@npm:4.2.0 can't be found in the cache and will be fetched from the remote registry"
+  # see comment above, this string should not show up if the packages have
+  # been restored from the cache
+  assertNotCaptured "fetched"
   assertCapturedSuccess
 }
 
