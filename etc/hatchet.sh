@@ -16,7 +16,6 @@ else
   HATCHET_BUILDPACK_BRANCH=$(git name-rev HEAD 2> /dev/null | sed 's#HEAD\ \(.*\)#\1#' | sed 's#tags\/##')
 fi
 
-echo $HATCHET_BUILDPACK_BRANCH
 export HATCHET_BUILDPACK_BRANCH
 
 export HATCHET_RETRIES=3
