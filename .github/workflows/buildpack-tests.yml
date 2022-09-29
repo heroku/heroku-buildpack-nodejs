@@ -1,0 +1,90 @@
+name: heroku/heroku-buildpack-nodejs/buildpack-tests
+on:
+  push:
+env:
+  HEROKU_API_KEY: xxxxxxx
+  HEROKU_API_USER: xxxxxxx
+jobs:
+  unit-test:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ env.stack-number }}-build
+    env:
+      stack-number: xxxxxxx
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Run unit tests
+      run: test/unit
+  unit-test-heroku-build:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ env.stack-number }}-build
+    env:
+      stack-number: xxxxxxx
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Test heroku-${{ env.stack-number }}-build
+      run: test/run
+  unit-test_1:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ env.stack-number }}-build
+    env:
+      stack-number: xxxxxxx
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Run unit tests
+      run: test/unit
+  unit-test-heroku-build_1:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ env.stack-number }}-build
+    env:
+      stack-number: xxxxxxx
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Test heroku-${{ env.stack-number }}-build
+      run: test/run
+  unit-test_2:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ env.stack-number }}-build
+    env:
+      stack-number: xxxxxxx
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Run unit tests
+      run: test/unit
+  unit-test-heroku-build_2:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ env.stack-number }}-build
+    env:
+      stack-number: xxxxxxx
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Test heroku-${{ env.stack-number }}-build
+      run: test/run
+  hatchet-test:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: ruby:2.7.2
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run hatchet tests
+      run: make hatchet
+  unit-test-binary:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: golang:1.14
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+    - name: Test Go Binary
+      run: make test-binary
