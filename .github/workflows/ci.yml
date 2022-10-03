@@ -8,9 +8,6 @@ on:
 permissions:
   contents: read
 
-env:
-  HEROKU_API_KEY: xxxxxxx
-  HEROKU_API_USER: xxxxxxx
 
 jobs:
   unit-test:
@@ -38,20 +35,22 @@ jobs:
       run: test/run
 
   hatchet-test:
-    runs-on: sfdc-hk-ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: ruby:2.7.2
+    env:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      HEROKU_API_USER: ${{ secrets.HEROKU_API_USER }}
     steps:
     - uses: actions/checkout@v2
     - name: Run hatchet tests
       run: make hatchet
 
   unit-test-binary:
-    runs-on: sfdc-hk-ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
       image: golang:1.14
     steps:
     - uses: actions/checkout@v2
-#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
     - name: Test Go Binary
       run: make test-binary
