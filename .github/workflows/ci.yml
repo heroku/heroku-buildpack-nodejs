@@ -26,38 +26,17 @@ jobs:
         run: test/unit
 
   unit-test-heroku-build:
-    runs-on: sfdc-hk-ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
-      image: heroku/heroku:${{ env.stack-number }}-build
-    env:
-      stack-number: xxxxxxx
+      image: heroku/heroku:${{ matrix.stack_number }}-build
+    strategy:
+      matrix:
+        stack_number: ["18", "20", "22"]
     steps:
     - uses: actions/checkout@v2
-#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
     - name: Test heroku-${{ env.stack-number }}-build
       run: test/run
-  unit-test-heroku-build_1:
-    runs-on: sfdc-hk-ubuntu-latest
-    container:
-      image: heroku/heroku:${{ env.stack-number }}-build
-    env:
-      stack-number: xxxxxxx
-    steps:
-    - uses: actions/checkout@v2
-#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
-    - name: Test heroku-${{ env.stack-number }}-build
-      run: test/run
-  unit-test-heroku-build_2:
-    runs-on: sfdc-hk-ubuntu-latest
-    container:
-      image: heroku/heroku:${{ env.stack-number }}-build
-    env:
-      stack-number: xxxxxxx
-    steps:
-    - uses: actions/checkout@v2
-#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
-    - name: Test heroku-${{ env.stack-number }}-build
-      run: test/run
+
   hatchet-test:
     runs-on: sfdc-hk-ubuntu-latest
     container:
@@ -66,6 +45,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run hatchet tests
       run: make hatchet
+
   unit-test-binary:
     runs-on: sfdc-hk-ubuntu-latest
     container:
