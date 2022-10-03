@@ -2,6 +2,8 @@
 
 ## main
 
+- Remove dependency on semver.herokuapp.com ([#1037](https://github.com/heroku/heroku-buildpack-nodejs/pull/1037))
+
 ## v198 (2022-06-15)
 
 - Adjust curl retry and connection timeout handling ([#1017](https://github.com/heroku/heroku-buildpack-nodejs/pull/1017))

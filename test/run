@@ -795,7 +795,7 @@ testUnstableVersion() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "This version of npm (1.2.8000) has several known issues - consider upgrading to the latest release"
+  assertCaptured "This version of npm (1.2.8000) has several known issues. Please update your npm version in package.json."
   assertNotCaptured "integer expression expected"
   assertCapturedError
 }
