@@ -26,6 +26,8 @@ jobs:
     strategy:
       matrix:
         stack_number: ["20", "22"]
+    env:
+      STACK: heroku-${{ matrix.stack_number }}
     steps:
     - uses: actions/checkout@v2
     - name: Test heroku-${{ matrix.stack_number }}-build
