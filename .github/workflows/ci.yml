@@ -24,17 +24,18 @@ jobs:
         run: test/unit
 
   functional-test:
-    runs-on: ubuntu-${{ matrix.stack_number }}.04
+    runs-on: ubuntu-22.04
+    container:
+      image: heroku/heroku:${{ matrix.stack_number }}-build
     strategy:
       matrix:
         stack_number: ["18", "20", "22"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
-    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Functional tests on ubuntu-${{ matrix.stack_number }}.04
+      - name: Functional tests on heroku:${{ matrix.stack_number }}-build
         run: test/run
 
   hatchet-test:
