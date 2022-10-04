@@ -22,12 +22,10 @@ jobs:
         run: test/unit
 
   unit-test-heroku-build:
-    runs-on: ubuntu-22.04
-    container:
-      image: heroku/heroku:${{ matrix.stack_number }}-build
+    runs-on: ubuntu-${{ matrix.stack_number }}.04
     strategy:
       matrix:
-        stack_number: ["18", "20", "22"]
+        stack_number: ["20", "22"]
     steps:
     - uses: actions/checkout@v2
     - name: Test heroku-${{ matrix.stack_number }}-build
