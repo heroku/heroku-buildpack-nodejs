@@ -676,10 +676,6 @@ testIoJs() {
 # Yarn 2
 testYarn2() {
   compile "yarn-2"
-  echo $STD_ERR
-  cat $STD_ERR
-  echo $STD_OUT
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
   assertCaptured "Running 'yarn heroku prune'"
@@ -692,10 +688,6 @@ testYarn2WithYarn2SkipPruningFalse() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/YARN2_SKIP_PRUNING
   compile "yarn-2" "$(mktmpdir)" $env_dir
-  echo $STD_ERR
-  cat $STD_ERR
-  echo $STD_OUT
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
   assertCaptured "Running 'yarn heroku prune'"
@@ -708,10 +700,6 @@ testYarn2WithYarn2SkipPruningTrue() {
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/YARN2_SKIP_PRUNING
   compile "yarn-2" "$(mktmpdir)" $env_dir
-  echo $STD_ERR
-  cat $STD_ERR
-  echo $STD_OUT
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.7" # tsc output
   assertCaptured "Skipping because YARN2_SKIP_PRUNING is 'true'"
