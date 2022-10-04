@@ -40,14 +40,17 @@ jobs:
 
   hatchet-test:
     runs-on: ubuntu-22.04
-    container:
-      image: ruby:2.7.2
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_API_USER: ${{ secrets.HEROKU_API_USER }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Install Ruby and gems
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.7'
+          bundler-cache: true
       - name: Run hatchet tests
         run: make hatchet
 
