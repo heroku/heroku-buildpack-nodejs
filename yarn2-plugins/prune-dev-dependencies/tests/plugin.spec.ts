@@ -14,7 +14,7 @@ const nodeModulesBin = join(nodeModules, '.bin')
 describe('yarn-plugin-production-install', () => {
   beforeAll(async () => await emptyDir(tmpDir))
 
-  it('should prune dev dependencies from yarn 2 project using node modules linker', async () => {
+  it('should prune dev dependencies from yarn modern project using node modules linker', async () => {
     const yarnProject = await createYarnProject({
       fixture: 'using-node-modules-linker'
     })
@@ -61,7 +61,7 @@ describe('yarn-plugin-production-install', () => {
     ])
   })
 
-  it('should prune dev dependencies from yarn 2 project using node modules linker when some cached dependencies are missing', async () => {
+  it('should prune dev dependencies from yarn modern project using node modules linker when some cached dependencies are missing', async () => {
     const yarnProject = await createYarnProject({
       fixture: 'using-node-modules-linker'
     })
@@ -110,7 +110,7 @@ describe('yarn-plugin-production-install', () => {
     ])
   })
 
-  it('should prune dev dependencies from yarn 2 project using pnp linker', async () => {
+  it('should prune dev dependencies from yarn modern project using pnp linker', async () => {
     const yarnProject = await createYarnProject({
       fixture: 'using-pnp-linker'
     })
@@ -138,7 +138,7 @@ describe('yarn-plugin-production-install', () => {
     expect(stdout.trim()).toBe('production dependency binary works!')
   })
 
-  it('should prune dev dependencies from yarn 2 project using pnp linker when some cached dependencies are missing', async () => {
+  it('should prune dev dependencies from yarn modern project using pnp linker when some cached dependencies are missing', async () => {
     const yarnProject = await createYarnProject({
       fixture: 'using-pnp-linker'
     })
