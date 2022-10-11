@@ -771,6 +771,29 @@ testYarn2WithoutYarnRelease() {
 }
 ###
 
+###
+# Yarn 3 & 4 pruning plugin validation
+testYarn3() {
+  compile "yarn-3"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Version 3.9.10" # tsc output
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "debug-npm-4.3.4-4513954577-3dbad3f94e.zip appears to be unused - removing"
+  assertCaptured "ms-npm-2.1.2-ec0c1512ff-673cdb2c31.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
+testYarn4() {
+  compile "yarn-4"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Version 3.9.10" # tsc output
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "debug-npm-4.3.4-4513954577-3dbad3f94e.zip appears to be unused - removing"
+  assertCaptured "ms-npm-2.1.2-ec0c1512ff-673cdb2c31.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+###
+
 testSpecificVersion() {
   compile "specific-version"
   assertCaptured "Resolving node version"

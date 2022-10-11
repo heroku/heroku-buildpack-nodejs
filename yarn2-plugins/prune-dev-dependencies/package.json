@@ -1,11 +1,12 @@
 {
   "name": "yarn-plugin-prune-dev-dependencies",
   "version": "0.0.1",
-  "packageManager": "npm",
+  "packageManager": "npm@8.15.0",
   "main": "./src/index.ts",
   "dependencies": {
     "@yarnpkg/builder": "^4.0.0-rc.22",
     "@yarnpkg/core": "^4.0.0-rc.22",
+    "@yarnpkg/fslib": "^2.8.0",
     "clipanion": "^3.2.0-rc.12"
   },
   "devDependencies": {
