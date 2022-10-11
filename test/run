@@ -1693,4 +1693,15 @@ assertFile() {
   assertEquals "$1" "$(cat ${compile_dir}/$2)"
 }
 
+tearDown() {
+  # Remove any testing temporary directories created during tests to prevent
+  # CI from running out of disk space.
+  for dir in $bp_dir $compile_dir $cache_dir $env_dir;
+  do
+    if [[ -d $dir ]] && [[ "$dir" =~ test[[:alnum:]]{5}$ ]]; then
+      rm -rf $dir
+    fi
+  done
+}
+
 source "$(pwd)"/test/shunit2
