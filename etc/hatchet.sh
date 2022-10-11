@@ -4,7 +4,7 @@ set -e
 
 ci_repo_owner=${CIRCLE_PROJECT_USERNAME:-${GITHUB_REPOSITORY_OWNER}}
 ci_repo_name=${CIRCLE_PROJECT_REPONAME:-${GITHUB_REPOSITORY}}
-ci_branch=${CIRCLE_BRANCH:-${GITHUB_REF_NAME}}
+ci_branch=${CIRCLE_BRANCH:-${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}}
 
 [ "$ci_repo_owner" != "heroku" ] && echo "Run tests manually for forked PRs." && exit 0
 

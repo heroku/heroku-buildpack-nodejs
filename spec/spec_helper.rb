@@ -32,7 +32,7 @@ def successful_body(app, options = {})
               retry_interval: 0.5,
               retry_limit:    retry_limit
            ).body
-rescue Excon::HTTPStatus => e
+rescue Excon::Error::HTTPStatus => e
   puts e.response.body
   raise e
 end
