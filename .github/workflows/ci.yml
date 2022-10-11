@@ -44,7 +44,6 @@ jobs:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_API_USER: ${{ secrets.HEROKU_API_USER }}
       HATCHET_EXPENSIVE_MODE: "1"
-      HATCHET_RUN_MULTI: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v2
