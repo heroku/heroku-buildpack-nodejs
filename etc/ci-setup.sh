@@ -4,5 +4,4 @@
 ci_repo_owner=${CIRCLE_PROJECT_USERNAME:-${GITHUB_REPOSITORY_OWNER}}
 [ "$ci_repo_owner" != "heroku" ] && echo "Run tests manually for forked PRs." && exit 0
 
-bundle install
 bundle exec hatchet ci:setup
