@@ -3,7 +3,117 @@
 module.exports = {
 name: "@yarnpkg/plugin-prune-dev-dependencies",
 factory: function (require) {
-"use strict";var plugin=(()=>{var m=Object.defineProperty;var h=Object.getOwnPropertyDescriptor;var w=Object.getOwnPropertyNames;var g=Object.prototype.hasOwnProperty;var d=(t=>typeof require<"u"?require:typeof Proxy<"u"?new Proxy(t,{get:(e,o)=>(typeof require<"u"?require:e)[o]}):t)(function(t){if(typeof require<"u")return require.apply(this,arguments);throw new Error('Dynamic require of "'+t+'" is not supported')});var x=(t,e)=>{for(var o in e)m(t,o,{get:e[o],enumerable:!0})},C=(t,e,o,r)=>{if(e&&typeof e=="object"||typeof e=="function")for(let s of w(e))!g.call(t,s)&&s!==o&&m(t,s,{get:()=>e[s],enumerable:!(r=h(e,s))||r.enumerable});return t};var P=t=>C(m({},"__esModule",{value:!0}),t);var S={};x(S,{default:()=>v});var n=d("@yarnpkg/core"),i=d("@yarnpkg/fslib");var u=(t,e,o)=>{let r=e;for(let s=t.length-1,a;s>=0;s--)a=t[s],a&&(r=a(e,o,r)||r);return r&&Object.defineProperty(e,o,r),r};var f=d("clipanion"),y=n.YarnVersion??"0.0.0",c=class extends f.Command{async execute(){let e=await n.Configuration.find(this.context.cwd,this.context.plugins),{project:o}=await n.Project.find(e,this.context.cwd),r=await n.Cache.find(e);await o.restoreInstallState({restoreResolutions:!1});for(let a of o.workspaces)a.manifest.devDependencies.clear();return(await n.StreamReport.start({configuration:e,json:!1,stdout:this.context.stdout,includeLogs:!0},async a=>{try{await o.install({cache:r,report:a,persistProject:!1});for(let l of await i.xfs.readdirPromise(r.cwd)){let p=i.ppath.resolve(r.cwd,l);l===".gitignore"||r.markedFiles.has(p)||(a.reportInfo(n.MessageName.UNUSED_CACHE_ENTRY,`${n.formatUtils.pretty(e,i.ppath.basename(p),"magenta")} appears to be unused - removing`),await i.xfs.removePromise(p))}await o.persistInstallStateFile()}catch(l){console.warn("[yarn heroku prune] An error occurred while pruning development dependencies from the application!"),console.error(l)}})).exitCode()}};/^4\./.test(y)?c.paths=[["heroku","prune"]]:u([f.Command.Path("heroku","prune")],c.prototype,"execute");var j={commands:[c]},v=j;return P(S);})();
+"use strict";
+var plugin = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+    get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+  }) : x)(function(x) {
+    if (typeof require !== "undefined")
+      return require.apply(this, arguments);
+    throw new Error('Dynamic require of "' + x + '" is not supported');
+  });
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/index.ts
+  var src_exports = {};
+  __export(src_exports, {
+    default: () => src_default
+  });
+  var import_core = __require("@yarnpkg/core");
+  var import_fslib = __require("@yarnpkg/fslib");
+
+  // src/utils.ts
+  var decorateClass = (decorators, target, key) => {
+    let result = target;
+    for (let i = decorators.length - 1, decorator; i >= 0; i--) {
+      decorator = decorators[i];
+      if (decorator) {
+        result = decorator(target, key, result) || result;
+      }
+    }
+    if (result) {
+      Object.defineProperty(target, key, result);
+    }
+    return result;
+  };
+
+  // src/index.ts
+  var clipanion = __require("clipanion");
+  var version = import_core.YarnVersion ?? "0.0.0";
+  var YARN_4 = /^4\./.test(version);
+  var HerokuPruneDevDependenciesCommand = class extends clipanion.Command {
+    async execute() {
+      const configuration = await import_core.Configuration.find(this.context.cwd, this.context.plugins);
+      const { project } = await import_core.Project.find(configuration, this.context.cwd);
+      const cache = await import_core.Cache.find(configuration);
+      await project.restoreInstallState({
+        restoreResolutions: false
+      });
+      for (const workspace of project.workspaces) {
+        workspace.manifest.devDependencies.clear();
+      }
+      const report = await import_core.StreamReport.start({
+        configuration,
+        json: false,
+        stdout: this.context.stdout,
+        includeLogs: true
+      }, async (report2) => {
+        try {
+          await project.install({ cache, report: report2, persistProject: false });
+          if (YARN_4) {
+            for (const entry of await import_fslib.xfs.readdirPromise(cache.cwd)) {
+              const entryPath = import_fslib.ppath.resolve(cache.cwd, entry);
+              if (entry === ".gitignore" || cache.markedFiles.has(entryPath)) {
+                continue;
+              }
+              report2.reportInfo(import_core.MessageName.UNUSED_CACHE_ENTRY, `${import_core.formatUtils.pretty(configuration, import_fslib.ppath.basename(entryPath), "magenta")} appears to be unused - removing`);
+              await import_fslib.xfs.removePromise(entryPath);
+            }
+          } else {
+            await project.cacheCleanup({ cache, report: report2 });
+          }
+          await project.persistInstallStateFile();
+        } catch (e) {
+          console.warn("[yarn heroku prune] An error occurred while pruning development dependencies from the application!");
+          console.error(e);
+        }
+      });
+      return report.exitCode();
+    }
+  };
+  if (YARN_4) {
+    HerokuPruneDevDependenciesCommand.paths = [
+      ["heroku", "prune"]
+    ];
+  } else {
+    decorateClass([
+      clipanion.Command.Path("heroku", "prune")
+    ], HerokuPruneDevDependenciesCommand.prototype, "execute");
+  }
+  var plugin = {
+    commands: [
+      HerokuPruneDevDependenciesCommand
+    ]
+  };
+  var src_default = plugin;
+  return __toCommonJS(src_exports);
+})();
 return plugin;
 }
 };

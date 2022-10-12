@@ -143,7 +143,7 @@ async function createYarnProject (options: TestConfiguration): Promise<YarnProje
     }
   })
 
-  await yarnBin('set', 'version', options.yarnVersion)
+  await promiseSpawn('corepack', ['yarn', 'set', 'version', options.yarnVersion], { cwd: projectDir })
 
   // configure yarn with cache settings for the test
   await yarnBin('config', 'set', 'globalFolder', globalFolder)
