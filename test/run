@@ -775,7 +775,6 @@ testYarn2WithoutYarnRelease() {
 # Yarn 3 & 4 pruning plugin validation
 testYarn3() {
   compile "yarn-3"
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.10" # tsc output
   assertCaptured "Running 'yarn heroku prune'"
@@ -786,7 +785,6 @@ testYarn3() {
 
 testYarn4() {
   compile "yarn-4"
-  cat $STD_OUT
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Version 3.9.3" # tsc output
   assertCaptured "Running 'yarn heroku prune'"
