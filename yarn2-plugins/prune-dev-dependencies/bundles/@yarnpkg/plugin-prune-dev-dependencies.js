@@ -36,7 +36,6 @@ var plugin = (() => {
     default: () => src_default
   });
   var import_core = __require("@yarnpkg/core");
-  var import_fslib = __require("@yarnpkg/fslib");
 
   // src/utils.ts
   var decorateClass = (decorators, target, key) => {
@@ -76,18 +75,7 @@ var plugin = (() => {
       }, async (report2) => {
         try {
           await project.install({ cache, report: report2, persistProject: false });
-          if (YARN_4) {
-            for (const entry of await import_fslib.xfs.readdirPromise(cache.cwd)) {
-              const entryPath = import_fslib.ppath.resolve(cache.cwd, entry);
-              if (entry === ".gitignore" || cache.markedFiles.has(entryPath)) {
-                continue;
-              }
-              report2.reportInfo(import_core.MessageName.UNUSED_CACHE_ENTRY, `${import_core.formatUtils.pretty(configuration, import_fslib.ppath.basename(entryPath), "magenta")} appears to be unused - removing`);
-              await import_fslib.xfs.removePromise(entryPath);
-            }
-          } else {
-            await project.cacheCleanup({ cache, report: report2 });
-          }
+          await project.cacheCleanup({ cache, report: report2 });
           await project.persistInstallStateFile();
         } catch (e) {
           console.warn("[yarn heroku prune] An error occurred while pruning development dependencies from the application!");
