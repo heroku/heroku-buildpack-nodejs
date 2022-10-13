@@ -786,10 +786,10 @@ testYarn3() {
 testYarn4() {
   compile "yarn-4"
   assertCaptured "Running 'yarn install' with yarn.lock"
-  assertCaptured "Version 3.9.10" # tsc output
+  assertCaptured "Version 3.9.3" # tsc output
   assertCaptured "Running 'yarn heroku prune'"
-  assertCaptured "debug-npm-4.3.4-4513954577-3dbad3f94e.zip appears to be unused - removing"
-  assertCaptured "ms-npm-2.1.2-ec0c1512ff-673cdb2c31.zip appears to be unused - removing"
+  assertCaptured "debug-npm-4.1.1-540248b3aa-d2a5a370d1.zip appears to be unused - removing"
+  assertCaptured "ms-npm-2.1.3-81ff3cfac1-78c12f6b47.zip appears to be unused - removing"
   assertCapturedSuccess
 }
 ###
