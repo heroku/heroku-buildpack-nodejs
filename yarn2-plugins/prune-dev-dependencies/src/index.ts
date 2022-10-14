@@ -4,17 +4,12 @@ import {
   Plugin,
   Project,
   StreamReport,
-  CommandContext,
-  YarnVersion
+  CommandContext
 } from '@yarnpkg/core'
-import { decorateClass } from './utils'
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const clipanion = require('clipanion')
-const version = YarnVersion ?? '0.0.0'
-const YARN_4 = /^4\./.test(version)
+const { Command } = require('clipanion')
 
-class HerokuPruneDevDependenciesCommand extends clipanion.Command<CommandContext> {
+class HerokuPruneDevDependenciesCommand extends Command<CommandContext> {
   async execute (): Promise<number> {
     const configuration = await Configuration.find(this.context.cwd, this.context.plugins)
     const { project } = await Project.find(configuration, this.context.cwd)
@@ -48,17 +43,17 @@ class HerokuPruneDevDependenciesCommand extends clipanion.Command<CommandContext
   }
 }
 
-if (YARN_4) {
-  // Yarn 4 and above don't provide the compatibility layer for the old
-  // Clipanion annotation (`@Command.Path()`), so we need to add paths.
-  HerokuPruneDevDependenciesCommand.paths = [
-    ['heroku', 'prune']
-  ]
-} else {
-  // Yarn 3 and below work with the annotation, so we'll add it.
-  decorateClass([
-    clipanion.Command.Path('heroku', 'prune')
-  ], HerokuPruneDevDependenciesCommand.prototype, 'execute')
+try {
+  // Yarn 2 & 3 and below work with the annotation, so we'll add it.
+  Command.Path('heroku', 'prune')(HerokuPruneDevDependenciesCommand.prototype, 'execute')
+} catch {
+  try {
+    // Yarn 4 doesn't provide the compatibility layer for the old Clipanion annotation (`@Command.Path()`), so we need to add paths.
+    HerokuPruneDevDependenciesCommand.paths = [['heroku', 'prune']]
+  } catch (e) {
+    console.warn('[yarn heroku prune] An error occurred while configuring the plugin!')
+    console.error(e)
+  }
 }
 
 const plugin: Plugin = {

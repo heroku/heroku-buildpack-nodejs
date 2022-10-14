@@ -36,27 +36,8 @@ var plugin = (() => {
     default: () => src_default
   });
   var import_core = __require("@yarnpkg/core");
-
-  // src/utils.ts
-  var decorateClass = (decorators, target, key) => {
-    let result = target;
-    for (let i = decorators.length - 1, decorator; i >= 0; i--) {
-      decorator = decorators[i];
-      if (decorator) {
-        result = decorator(target, key, result) || result;
-      }
-    }
-    if (result) {
-      Object.defineProperty(target, key, result);
-    }
-    return result;
-  };
-
-  // src/index.ts
-  var clipanion = __require("clipanion");
-  var version = import_core.YarnVersion ?? "0.0.0";
-  var YARN_4 = /^4\./.test(version);
-  var HerokuPruneDevDependenciesCommand = class extends clipanion.Command {
+  var { Command } = __require("clipanion");
+  var HerokuPruneDevDependenciesCommand = class extends Command {
     async execute() {
       const configuration = await import_core.Configuration.find(this.context.cwd, this.context.plugins);
       const { project } = await import_core.Project.find(configuration, this.context.cwd);
@@ -85,14 +66,15 @@ var plugin = (() => {
       return report.exitCode();
     }
   };
-  if (YARN_4) {
-    HerokuPruneDevDependenciesCommand.paths = [
-      ["heroku", "prune"]
-    ];
-  } else {
-    decorateClass([
-      clipanion.Command.Path("heroku", "prune")
-    ], HerokuPruneDevDependenciesCommand.prototype, "execute");
+  try {
+    Command.Path("heroku", "prune")(HerokuPruneDevDependenciesCommand.prototype, "execute");
+  } catch {
+    try {
+      HerokuPruneDevDependenciesCommand.paths = [["heroku", "prune"]];
+    } catch (e) {
+      console.warn("[yarn heroku prune] An error occurred while configuring the plugin!");
+      console.error(e);
+    }
   }
   var plugin = {
     commands: [
