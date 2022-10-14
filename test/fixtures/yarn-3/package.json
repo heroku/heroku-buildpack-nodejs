@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "dependencies": {
-    "lodash": "^4.16.4",
-    "typescript": "^3.9.3"
-  },
   "devDependencies": {
-    "debug": "^4.1.1"
+    "@types/node": "16.11.26",
+    "uuid": "9.0.0"
+  },
+  "dependencies": {
+    "echo-cli": "2.0.0"
   },
   "scripts": {
-    "build": "tsc --version"
+    "build": "echo-cli 'Build script check'"
   }
 }

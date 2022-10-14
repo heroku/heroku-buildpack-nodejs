@@ -26,59 +26,56 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["debug", "virtual:2d6d70c871d8d9123d5b4dbc55c955e26dfe9471fcd8f10e47b5fcfa7bbbcd04f6cde4762bc4562ea6122da12ee8d2251ce7ee92bca8e09d74b5ccf3a0c7f1a1#npm:4.1.1"],\
-          ["lodash", "npm:4.16.4"],\
-          ["typescript", "patch:typescript@npm%3A3.9.3#optional!builtin<compat/typescript>::version=3.9.3&hash=701156"]\
+          ["@types/node", "npm:16.11.26"],\
+          ["echo-cli", "npm:2.0.0"],\
+          ["uuid", "npm:9.0.0"]\
         ],\
         "linkType": "SOFT"\
       }]\
     ]],\
-    ["debug", [\
-      ["npm:4.1.1", {\
-        "packageLocation": "./.yarn/cache/debug-npm-4.1.1-540248b3aa-d2a5a370d1.zip/node_modules/debug/",\
+    ["@types/node", [\
+      ["npm:16.11.26", {\
+        "packageLocation": "./.yarn/cache/@types-node-npm-16.11.26-6163d95b7d-8c7a9a6d08.zip/node_modules/@types/node/",\
         "packageDependencies": [\
-          ["debug", "npm:4.1.1"]\
-        ],\
-        "linkType": "SOFT"\
-      }],\
-      ["virtual:2d6d70c871d8d9123d5b4dbc55c955e26dfe9471fcd8f10e47b5fcfa7bbbcd04f6cde4762bc4562ea6122da12ee8d2251ce7ee92bca8e09d74b5ccf3a0c7f1a1#npm:4.1.1", {\
-        "packageLocation": "./.yarn/__virtual__/debug-virtual-45ae78f29b/0/cache/debug-npm-4.1.1-540248b3aa-d2a5a370d1.zip/node_modules/debug/",\
-        "packageDependencies": [\
-          ["debug", "virtual:2d6d70c871d8d9123d5b4dbc55c955e26dfe9471fcd8f10e47b5fcfa7bbbcd04f6cde4762bc4562ea6122da12ee8d2251ce7ee92bca8e09d74b5ccf3a0c7f1a1#npm:4.1.1"],\
-          ["@types/supports-color", null],\
-          ["ms", "npm:2.1.3"],\
-          ["supports-color", null]\
-        ],\
-        "packagePeers": [\
-          "@types/supports-color",\
-          "supports-color"\
+          ["@types/node", "npm:16.11.26"]\
         ],\
         "linkType": "HARD"\
       }]\
     ]],\
-    ["lodash", [\
-      ["npm:4.16.4", {\
-        "packageLocation": "./.yarn/cache/lodash-npm-4.16.4-8927463097-7ed0ea4fab.zip/node_modules/lodash/",\
+    ["echo-cli", [\
+      ["npm:2.0.0", {\
+        "packageLocation": "./.yarn/cache/echo-cli-npm-2.0.0-b40e6b6835-93a888ffa5.zip/node_modules/echo-cli/",\
         "packageDependencies": [\
-          ["lodash", "npm:4.16.4"]\
+          ["echo-cli", "npm:2.0.0"],\
+          ["unescape-js", "npm:1.1.4"]\
         ],\
         "linkType": "HARD"\
       }]\
     ]],\
-    ["ms", [\
-      ["npm:2.1.3", {\
-        "packageLocation": "./.yarn/cache/ms-npm-2.1.3-81ff3cfac1-78c12f6b47.zip/node_modules/ms/",\
+    ["string.fromcodepoint", [\
+      ["npm:0.2.1", {\
+        "packageLocation": "./.yarn/cache/string.fromcodepoint-npm-0.2.1-84d94c4fb5-56752f506e.zip/node_modules/string.fromcodepoint/",\
         "packageDependencies": [\
-          ["ms", "npm:2.1.3"]\
+          ["string.fromcodepoint", "npm:0.2.1"]\
         ],\
         "linkType": "HARD"\
       }]\
     ]],\
-    ["typescript", [\
-      ["patch:typescript@npm%3A3.9.3#optional!builtin<compat/typescript>::version=3.9.3&hash=701156", {\
-        "packageLocation": "./.yarn/cache/typescript-patch-1cfbe4d6c2-0f66dd2309.zip/node_modules/typescript/",\
+    ["unescape-js", [\
+      ["npm:1.1.4", {\
+        "packageLocation": "./.yarn/cache/unescape-js-npm-1.1.4-f41cc6935a-e4ad524356.zip/node_modules/unescape-js/",\
         "packageDependencies": [\
-          ["typescript", "patch:typescript@npm%3A3.9.3#optional!builtin<compat/typescript>::version=3.9.3&hash=701156"]\
+          ["unescape-js", "npm:1.1.4"],\
+          ["string.fromcodepoint", "npm:0.2.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["uuid", [\
+      ["npm:9.0.0", {\
+        "packageLocation": "./.yarn/cache/uuid-npm-9.0.0-46c41e3e43-e1f76aff37.zip/node_modules/uuid/",\
+        "packageDependencies": [\
+          ["uuid", "npm:9.0.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -88,9 +85,9 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["yarn-4", "workspace:."],\
-          ["debug", "virtual:2d6d70c871d8d9123d5b4dbc55c955e26dfe9471fcd8f10e47b5fcfa7bbbcd04f6cde4762bc4562ea6122da12ee8d2251ce7ee92bca8e09d74b5ccf3a0c7f1a1#npm:4.1.1"],\
-          ["lodash", "npm:4.16.4"],\
-          ["typescript", "patch:typescript@npm%3A3.9.3#optional!builtin<compat/typescript>::version=3.9.3&hash=701156"]\
+          ["@types/node", "npm:16.11.26"],\
+          ["echo-cli", "npm:2.0.0"],\
+          ["uuid", "npm:9.0.0"]\
         ],\
         "linkType": "SOFT"\
       }]\

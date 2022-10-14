@@ -5,46 +5,46 @@ __metadata:
   version: 7
   cacheKey: 9
 
-"debug@npm:4.1.1":
-  version: 4.1.1
-  resolution: "debug@npm:4.1.1"
+"@types/node@npm:16.11.26":
+  version: 16.11.26
+  resolution: "@types/node@npm:16.11.26"
+  checksum: 8c7a9a6d0882d130cf4ab92149075919282c6b19342ea13f91b81601b1569a971d0e51ced82c375e846b8e93d39a659349ba840ce5e0ca077ace3678a86666bb
+  languageName: node
+  linkType: hard
+
+"echo-cli@npm:2.0.0":
+  version: 2.0.0
+  resolution: "echo-cli@npm:2.0.0"
   dependencies:
-    ms: "npm:^2.1.1"
-  checksum: d2a5a370d13858fa8831d318a4f67d2381cf336e3eea3dcbdd4489c636ec332c4825d97e11d764593afb3caba2ca294d1f645468575826b30e00031248e0e817
-  languageName: node
-  linkType: hard
-
-"lodash@npm:4.16.4":
-  version: 4.16.4
-  resolution: "lodash@npm:4.16.4"
-  checksum: 7ed0ea4fab416a5c951ed26b1744570eb63947da219d74906d45311ddd7b799852c89c5572066f581993ffa4f391d422915184b2dbc7da6034a1bff52cd3e21c
-  languageName: node
-  linkType: hard
-
-"ms@npm:^2.1.1":
-  version: 2.1.3
-  resolution: "ms@npm:2.1.3"
-  checksum: 78c12f6b473a022ebacc393fc14b76fe40b8feda7218124b86c4684e440e10377a063bec1d3902df1f74714f02b74b36ad7d3a6de9e2fbffa26fc29e5ce018fc
-  languageName: node
-  linkType: hard
-
-"typescript@npm:3.9.3":
-  version: 3.9.3
-  resolution: "typescript@npm:3.9.3"
+    unescape-js: "npm:^1.0.3"
   bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 24e2d1d3072d1b816a61380a54f7d2ac50f246ff489a5bfb0375d09bb825c87dea3f4e2c068a9b63f0c321ec7ff993a8b58e33f4e5e71ded7dff16b75246c74f
+    echo-cli: dist/index.js
+  checksum: 93a888ffa5b09fd50eff90b38a6f395c51a1605b8d538deb80498799b8d9c9c02d8daf578577c5fe34f087a8b3f3b16852c9d26e78cfecd7e00b9cd859d4d4d0
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A3.9.3#optional!builtin<compat/typescript>":
-  version: 3.9.3
-  resolution: "typescript@patch:typescript@npm%3A3.9.3#optional!builtin<compat/typescript>::version=3.9.3&hash=701156"
+"string.fromcodepoint@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "string.fromcodepoint@npm:0.2.1"
+  checksum: 56752f506e4edd94643fce78ffdb8fe59bfe3870ef57e4316d970aa6d239be57427cf089db10a97c072877099255f558a6e3c32a29b472ef9bd810c68aebef2e
+  languageName: node
+  linkType: hard
+
+"unescape-js@npm:^1.0.3":
+  version: 1.1.4
+  resolution: "unescape-js@npm:1.1.4"
+  dependencies:
+    string.fromcodepoint: "npm:^0.2.1"
+  checksum: e4ad52435686db3c34423450c97f82e66317cb455c3dd72a0d35e47de312481daf904c3f2a06d72ff39001ac229b666c01ae5a3f311297a984823a1248b149d2
+  languageName: node
+  linkType: hard
+
+"uuid@npm:9.0.0":
+  version: 9.0.0
+  resolution: "uuid@npm:9.0.0"
   bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 0f66dd2309d6273f9649d4f44e38acacb9e6cf720286b46d91821227967e32c7497e1cd8e8def28c648c6a98501d61068a3e1d4bae27fdf5f00ac0ab25cc7d0f
+    uuid: dist/bin/uuid
+  checksum: e1f76aff372e430bb129157360fd4cd3b393411b245604ea78e178a822ab7874ec2ebecec03ce94422b0b80bbd24733c6fa1df166c9cbad5086ef4b4843140bb
   languageName: node
   linkType: hard
 
@@ -52,8 +52,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "yarn-4@workspace:."
   dependencies:
-    debug: "npm:4.1.1"
-    lodash: "npm:4.16.4"
-    typescript: "npm:3.9.3"
+    "@types/node": "npm:16.11.26"
+    echo-cli: "npm:2.0.0"
+    uuid: "npm:9.0.0"
   languageName: unknown
   linkType: soft
