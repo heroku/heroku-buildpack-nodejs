@@ -1,5 +1,5 @@
 {
-  "name": "yarn-2",
+  "name": "yarn-4",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -12,5 +12,6 @@
   },
   "scripts": {
     "build": "echo-cli 'Build script check'"
-  }
+  },
+  "packageManager": "yarn@4.0.0-rc.22"
 }

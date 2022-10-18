@@ -2,6 +2,8 @@
 
 ## main
 
+- Dependency pruning support for Yarn 2 / 3 / 4 ([#1040](https://github.com/heroku/heroku-buildpack-nodejs/pull/1040))
+
 ## v199 (2022-10-03)
 
 - Remove dependency on semver.herokuapp.com ([#1037](https://github.com/heroku/heroku-buildpack-nodejs/pull/1037))

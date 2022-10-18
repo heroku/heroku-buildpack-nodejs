@@ -677,10 +677,10 @@ testIoJs() {
 testYarn2() {
   compile "yarn-2"
   assertCaptured "Running 'yarn install' with yarn.lock"
-  assertCaptured "Version 3.9.7" # tsc output
+  assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
-  assertCaptured "debug-npm-4.3.2-f0148b6afe-5543570879.zip appears to be unused - removing"
-  assertCaptured "ms-npm-2.1.2-ec0c1512ff-9b65fb709b.zip appears to be unused - removing"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
   assertCapturedSuccess
 }
 
@@ -689,10 +689,10 @@ testYarn2WithYarn2SkipPruningFalse() {
   echo "false" > $env_dir/YARN2_SKIP_PRUNING
   compile "yarn-2" "$(mktmpdir)" $env_dir
   assertCaptured "Running 'yarn install' with yarn.lock"
-  assertCaptured "Version 3.9.7" # tsc output
+  assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
-  assertCaptured "debug-npm-4.3.2-f0148b6afe-5543570879.zip appears to be unused - removing"
-  assertCaptured "ms-npm-2.1.2-ec0c1512ff-9b65fb709b.zip appears to be unused - removing"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
   assertCapturedSuccess
 }
 
@@ -701,7 +701,7 @@ testYarn2WithYarn2SkipPruningTrue() {
   echo "true" > $env_dir/YARN2_SKIP_PRUNING
   compile "yarn-2" "$(mktmpdir)" $env_dir
   assertCaptured "Running 'yarn install' with yarn.lock"
-  assertCaptured "Version 3.9.7" # tsc output
+  assertCaptured "Build script check"
   assertCaptured "Skipping because YARN2_SKIP_PRUNING is 'true'"
   assertNotCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
@@ -768,6 +768,29 @@ testYarn2WithoutYarnRelease() {
   compile "yarn-2-without-yarn"
   assertCaptured "Yarn was not found"
   assertCapturedError
+}
+###
+
+###
+# Yarn 3 & 4 pruning plugin validation
+testYarn3() {
+  compile "yarn-3"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
+testYarn4() {
+  compile "yarn-4"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-8c7a9a6d08.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-e1f76aff37.zip appears to be unused - removing"
+  assertCapturedSuccess
 }
 ###
 

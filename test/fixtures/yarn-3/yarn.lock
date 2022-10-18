@@ -2,13 +2,13 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 4
-  cacheKey: 7
+  version: 6
+  cacheKey: 8
 
 "@types/node@npm:16.11.26":
   version: 16.11.26
   resolution: "@types/node@npm:16.11.26"
-  checksum: 478d5c315f27813c1bc717b2c1ebe052d7030810107db9dd551e2d68a7ea89c50b2dcbab8fb9a0640b33e31733924983f33abf2092b8b097873ff5a9a4027d5e
+  checksum: 57757caaba3f0d95de82198cb276a1002c49b710108c932a1d02d7c91ff2fa57cfe2dd19fde60853b6dd90b0964b3cf35557981d2628e20aed6a909057aedfe6
   languageName: node
   linkType: hard
 
@@ -19,14 +19,14 @@ __metadata:
     unescape-js: ^1.0.3
   bin:
     echo-cli: dist/index.js
-  checksum: 4fd169d4d4410f696716084d0618fa1a0b5eba5601ab4503863dd3392d805a565649d4aa95de29a06c48a46b2a4883c2775947c11e55bbf649a153cac52d1b2e
+  checksum: 81a056580ef80b05e1b834cbeebc0f6febb0a36f2c57d28cd93acd25f52ec54126afd84a766e32173d4d3534c6c85518a3f82ea001a6ae23c0e23767f8973906
   languageName: node
   linkType: hard
 
 "string.fromcodepoint@npm:^0.2.1":
   version: 0.2.1
   resolution: "string.fromcodepoint@npm:0.2.1"
-  checksum: 715fe85fef97bc4e3d1830625457e063709a989f9e18892d79714e9a10a8b2e289fa3580712528ec6cbad9bf83f4059121998f27793e3aac3bba0ae7211d3fb9
+  checksum: 6ba80f70c3e2a36dab87f5d68168936403295a73838564e701f5c861d397d77d9e97b0e2aa0f3c163a25a96c785dcc2145452b220753fb7b3e6c6fe431c9c411
   languageName: node
   linkType: hard
 
@@ -35,7 +35,7 @@ __metadata:
   resolution: "unescape-js@npm:1.1.4"
   dependencies:
     string.fromcodepoint: ^0.2.1
-  checksum: 4891e05c1f220e3edc66960692168b24d2aa0ee80cf43a917190175d6b236be7272cf8739e186014e5d5af18c6c60a9e171dfc7ab72185c32f63103357130ba2
+  checksum: 97acf60a8f6c170f8a66b48b71f5c56bda728c2ff6b08c3443c5f21635bf5fa38a4265bcfcf46d17cb6ac9bbb8b913a34b1abc5cfe8db5d7cc5c8eecb1817472
   languageName: node
   linkType: hard
 
@@ -44,13 +44,13 @@ __metadata:
   resolution: "uuid@npm:9.0.0"
   bin:
     uuid: dist/bin/uuid
-  checksum: 5a7f936a25dad15398521ae14412d70b278e1187f108f5c68c5af97138e61cc4c80dbb61ee194756f825e2f1e70d37095b9239b3fdf78f9d892b93ad30085e6a
+  checksum: 8dd2c83c43ddc7e1c71e36b60aea40030a6505139af6bee0f382ebcd1a56f6cd3028f7f06ffb07f8cf6ced320b76aea275284b224b002b289f89fe89c389b028
   languageName: node
   linkType: hard
 
-"yarn-2@workspace:.":
+"yarn-3@workspace:.":
   version: 0.0.0-use.local
-  resolution: "yarn-2@workspace:."
+  resolution: "yarn-3@workspace:."
   dependencies:
     "@types/node": 16.11.26
     echo-cli: 2.0.0

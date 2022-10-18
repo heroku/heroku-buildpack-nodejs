@@ -1,16 +1,12 @@
 {
-  "name": "yarn-2",
-  "version": "1.0.0",
+  "name": "using-node-modules-linker",
   "main": "index.js",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "devDependencies": {
     "@types/node": "16.11.26",
     "uuid": "9.0.0"
   },
   "dependencies": {
     "echo-cli": "2.0.0"
-  },
-  "scripts": {
-    "build": "echo-cli 'Build script check'"
   }
 }
