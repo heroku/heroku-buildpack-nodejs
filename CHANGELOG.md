@@ -2,7 +2,7 @@
 
 ## main
 
-- Update default node version to 18.x ([#1045](https://github.com/heroku/heroku-buildpack-nodejs/pull/1045))
+- Update default node version to 18.x for heroku-20 and newer ([#1045](https://github.com/heroku/heroku-buildpack-nodejs/pull/1045))
 
 ## v200 (2022-10-19)
 
