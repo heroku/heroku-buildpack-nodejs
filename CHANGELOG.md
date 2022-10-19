@@ -2,6 +2,8 @@
 
 ## main
 
+## v200 (2022-10-19)
+
 - Dependency pruning support for Yarn 2 / 3 / 4 ([#1040](https://github.com/heroku/heroku-buildpack-nodejs/pull/1040))
 
 ## v199 (2022-10-03)
