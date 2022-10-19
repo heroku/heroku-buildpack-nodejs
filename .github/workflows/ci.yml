@@ -19,7 +19,7 @@ jobs:
         stack_number: ["18", "20", "22"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Unit tests on heroku:${{ matrix.stack_number }}-build
         run: test/unit
 
@@ -34,7 +34,7 @@ jobs:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Functional tests on heroku:${{ matrix.stack_number }}-build
         run: test/run
 
@@ -46,7 +46,7 @@ jobs:
       HATCHET_EXPENSIVE_MODE: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
@@ -61,6 +61,6 @@ jobs:
       image: golang:1.14
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Test Go Binary
         run: make test-binary
