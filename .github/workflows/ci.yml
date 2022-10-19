@@ -17,6 +17,8 @@ jobs:
     strategy:
       matrix:
         stack_number: ["18", "20", "22"]
+    env:
+      STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
