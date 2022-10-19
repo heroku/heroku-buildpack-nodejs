@@ -2,6 +2,8 @@
 
 ## main
 
+- Update default node version to 16.x ([#1045](https://github.com/heroku/heroku-buildpack-nodejs/pull/1045))
+
 ## v200 (2022-10-19)
 
 - Dependency pruning support for Yarn 2 / 3 / 4 ([#1040](https://github.com/heroku/heroku-buildpack-nodejs/pull/1040))
