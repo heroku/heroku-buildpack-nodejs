@@ -244,7 +244,7 @@ fail_bin_install() {
   elif [[ $error == "Could not parse"* ]] || [[ $error == "Could not get"* ]]; then
     echo "Error: Invalid semantic version \"$version\""
   else
-    echo "Error: Unknown error installing \"$version\" of $bin"
+    echo "Error: Unknown error installing \"$version\" of $bin: \"$error\""
   fi
 
   return 1
