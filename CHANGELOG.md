@@ -2,6 +2,10 @@
 
 ## main
 
+## v202 (2022-11-03)
+
+- Update go to 1.19 and recompile resolve-version ([#1050](https://github.com/heroku/heroku-buildpack-nodejs/pull/1050))
+
 ## v201 (2022-10-19)
 
 - Add metrics and tests for Node.js 19.x line ([#1046](https://github.com/heroku/heroku-buildpack-nodejs/pull/1046))
