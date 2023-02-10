@@ -2,6 +2,10 @@
 
 ## main
 
+## v203 (2023-02-10)
+
+- Allow yarn version selection for yarn berry projects ([#1060](https://github.com/heroku/heroku-buildpack-nodejs/pull/1060))
+
 ## v202 (2022-11-03)
 
 - Update go to 1.19 and recompile resolve-version ([#1050](https://github.com/heroku/heroku-buildpack-nodejs/pull/1050))
