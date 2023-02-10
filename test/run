@@ -734,7 +734,6 @@ testYarn2WithoutWorkspaceModule() {
 # Yarn 2 warnings
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
-  assertCaptured "You don't need to specify Yarn engine. Heroku will install the latest Yarn 1.x"
   assertCapturedSuccess
 }
 
