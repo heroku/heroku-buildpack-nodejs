@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "engines": {
-    "yarn": "2.x"
+    "yarn": "1.x"
   },
   "dependencies": {
     "lodash": "^4.16.4"
