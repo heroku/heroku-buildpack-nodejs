@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 
+# Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
+RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
 
 resolve() {
-  # Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
-  local resolver="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
   local binary="$1"
   local versionRequirement="$2"
+  local output
 
-  $resolver "$BP_DIR/inventory/$binary.toml" "$versionRequirement"
+  if output=$($RESOLVE "$BP_DIR/inventory/$binary.toml" "$versionRequirement"); then
+    if [[ $output = "No result" ]]; then
+      return 1
+    else
+      echo $output
+      return 0
+    fi
+  fi
+  return 1
 }
 
 install_yarn() {
