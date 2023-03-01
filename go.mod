@@ -3,7 +3,7 @@ module github.com/heroku/heroku-buildpack-nodejs
 go 1.19
 
 require (
-	github.com/jmorrell/semver v0.0.0-20190521202929-0d1a4bb09cfa
+	github.com/jmorrell/semver v3.5.1+incompatible
 	github.com/stretchr/testify v1.8.1
 )
 
