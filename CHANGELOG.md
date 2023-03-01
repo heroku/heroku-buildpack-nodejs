@@ -2,6 +2,8 @@
 
 ## main
 
+- Switch to inventory-based Node.js and Yarn version resolver ([#1061](https://github.com/heroku/heroku-buildpack-nodejs/pull/1061))
+
 ## v203 (2023-02-10)
 
 - Allow yarn version selection for yarn berry projects ([#1060](https://github.com/heroku/heroku-buildpack-nodejs/pull/1060))
