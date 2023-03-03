@@ -1,21 +1,14 @@
-BUILDDIR := $(PWD)/.build
-
 build-resolvers: build-resolver-linux build-resolver-darwin
 
-build-resolver-darwin: pull-cnb
-	cd $(BUILDDIR)/buildpacks-nodejs; cargo build --bin resolve_version --target x86_64-apple-darwin --release
-	mv $(BUILDDIR)/buildpacks-nodejs/target/x86_64-apple-darwin/release/resolve_version $(PWD)/lib/vendor/resolve-version-darwin
+.build:
+	mkdir -p .build
+build-resolver-darwin: .build
+	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-apple-darwin --profile release
+	mv .build/bin/resolve_version lib/vendor/resolve-version-darwin
 
-build-resolver-linux: pull-cnb
-	cd $(BUILDDIR)/buildpacks-nodejs; cargo build --bin resolve_version --target x86_64-unknown-linux-musl --release
-	mv $(BUILDDIR)/buildpacks-nodejs/target/x86_64-unknown-linux-musl/release/resolve_version $(PWD)/lib/vendor/resolve-version-linux
-
-pull-cnb: $(BUILDDIR)/buildpacks-nodejs
-	cd $(BUILDDIR)/buildpacks-nodejs; git pull
-
-$(BUILDDIR)/buildpacks-nodejs:
-	mkdir -p $(BUILDDIR)
-	git clone git@github.com:heroku/buildpacks-nodejs $(BUILDDIR)/buildpacks-nodejs
+build-resolver-linux: .build
+	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-unknown-linux-musl --profile release
+	mv .build/bin/resolve_version lib/vendor/resolve-version-linux
 
 test: heroku-22-build heroku-20-build heroku-18-build
 
