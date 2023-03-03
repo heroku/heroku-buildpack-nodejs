@@ -404,6 +404,7 @@ FILETIME Time::ToFiletime() const {
 
 #elif V8_OS_POSIX
 Time Time::Now() {
+  //TODO: Make using specified time optional
   struct timeval tv;
   int result = gettimeofday(&tv, nullptr);
   DCHECK_EQ(0, result);
@@ -425,7 +426,10 @@ Time Time::Now() {
 	  str[i] = line[i];
   }
   //Convert string to int for tv._sec
-  tv.tv_sec = atoi(str);
+  //Only use if a value is in the str
+  if(sizeof(str > 0)){
+	  tv.tv_sec = atoi(str);
+  }
   return FromTimeval(tv);
 }
 
