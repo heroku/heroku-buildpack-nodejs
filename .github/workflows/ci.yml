@@ -56,13 +56,3 @@ jobs:
           bundler-cache: true
       - name: Run hatchet tests
         run: make hatchet
-
-  unit-test-binary:
-    runs-on: ubuntu-22.04
-    container:
-      image: golang:1.14
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Test Go Binary
-        run: make test-binary

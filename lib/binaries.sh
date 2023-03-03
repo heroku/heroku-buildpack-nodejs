@@ -1,45 +1,23 @@
 #!/usr/bin/env bash
 
+# Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
 RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
-RESOLVE_V2="$BP_DIR/lib/vendor/resolve"
 
 resolve() {
   local binary="$1"
   local versionRequirement="$2"
-  local n=0
-  local output v2_output resolve_is_equal
+  local output
 
-  # retry this up to 5 times in case of spurious failed API requests
-  until [ $n -ge 5 ]
-  do
-    # if a user sets the HTTP_PROXY ENV var, it could prevent this from making the S3 requests
-    # it needs here. We can ignore this proxy for aws urls with NO_PROXY. Some environments
-    # require a proxy for all HTTP requests, so the NO_PROXY ENV var should be set outside the
-    # script by the user
-    # see testAvoidHttpProxyVersionResolutionIssue test and README
-    if output=$($RESOLVE "$binary" "$versionRequirement"); then
-      v2_output=$($RESOLVE_V2 "$BP_DIR/inventory/$binary.toml" "$versionRequirement")
-      resolve_is_equal=$(if [[ "$output" == "$v2_output" ]]; then echo true; else echo false; fi)
-
-      meta_set "resolve-v1-$binary" "$output"
-      meta_set "resolve-v2-$binary" "$v2_output"
-      meta_set "resolve-is-equal-$binary" "$resolve_is_equal"
-      meta_set "resolve-v2-error" "$STD_ERR"
-
-      echo "$output"
-      return 0
-    # don't retry if we get a negative result
-    elif [[ $output = "No result" ]]; then
-      return 1
-    elif [[ $output == "Could not parse"* ]] || [[ $output == "Could not get"* ]]; then
+  if output=$($RESOLVE "$BP_DIR/inventory/$binary.toml" "$versionRequirement"); then
+    meta_set "resolve-v2-$binary" "$output"
+    meta_set "resolve-v2-error" "$STD_ERR"
+    if [[ $output = "No result" ]]; then
       return 1
     else
-      n=$((n+1))
-      # break for a second with a linear backoff
-      sleep $((n+1))
+      echo $output
+      return 0
     fi
-  done
-
+  fi
   return 1
 }
 
