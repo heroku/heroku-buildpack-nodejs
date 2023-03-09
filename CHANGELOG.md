@@ -2,6 +2,9 @@
 
 ## main
 
+- Added node version 18.15.0
+- Added yarn version 4.0.0-rc.40
+
 ## v204 (2023-03-03)
 
 - Switch to inventory-based Node.js and Yarn version resolver ([#1061](https://github.com/heroku/heroku-buildpack-nodejs/pull/1061))

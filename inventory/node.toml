@@ -9143,6 +9143,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/
 etag = "2a33290e3c193b654808b29ec7aef765-6"
 
 [[releases]]
+version = "18.15.0"
+channel = "staging"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v18.15.0-linux-x64.tar.gz"
+etag = "26343f5611dc89155f9d066aa8164dfe-6"
+
+[[releases]]
 version = "18.2.0"
 channel = "staging"
 arch = "linux-x64"
@@ -9393,4 +9400,3 @@ channel = "staging"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v8.17.0-linux-x64.tar.gz"
 etag = "6218e59c4e3632a4b4eae5214aceeb08"
-
