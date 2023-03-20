@@ -24,9 +24,9 @@ jobs:
           cargo install heroku-nodejs-utils --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
-        run: echo "::set-output name=msg::$(./diff_versions node inventory/node.toml)"
+        run: echo "::set-output name=msg::$(diff_versions node inventory/node.toml)"
       - name: Rebuild Inventory
-        run: "./list_versions node > inventory/node.toml"
+        run: "list_versions node > inventory/node.toml"
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
@@ -55,9 +55,9 @@ jobs:
           cargo install heroku-nodejs-utils --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
-        run: echo "::set-output name=msg::$(./diff_versions yarn inventory/yarn.toml)"
+        run: echo "::set-output name=msg::$(diff_versions yarn inventory/yarn.toml)"
       - name: Rebuild Inventory
-        run: "./list_versions yarn > inventory/yarn.toml"
+        run: "list_versions yarn > inventory/yarn.toml"
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
