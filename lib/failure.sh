@@ -363,10 +363,10 @@ fail_using_yarn2_with_yarn_production_environment_variable_set() {
     warn "Legacy Yarn 1.x configuration present:
 
        Your application uses Yarn v$yarn_engine which does not support the YARN_PRODUCTION environment variable. Please
-       update your heroku config vars to remove YARN_PRODUCTION and set YARN2_SKIP_PRUNING instead.
+       update your scalingo config vars to remove YARN_PRODUCTION and set YARN2_SKIP_PRUNING instead.
 
-         $ heroku config:unset YARN_PRODUCTION && heroku config:set YARN2_SKIP_PRUNING=$skip_pruning
-    " https://devcenter.heroku.com/articles/nodejs-support#skip-pruning
+         $ scalingo --app med-sample env-unset YARN_PRODUCTION && scalingo --app med-sample env-set YARN2_SKIP_PRUNING=$skip_pruning
+    "
     fail
   fi
 }
@@ -455,10 +455,10 @@ log_other_failures() {
     meta_set "failure" "libc6-incompatibility"
     warn "This Node.js version is not compatible with the current stack.
 
-       For Node.js versions 18 and greater, heroku-20 or newer is required.
+       For Node.js versions 18 and greater, scalingo-20 or newer is required.
        Consider updating to a stack that is compatible with the Node.js version
        or pinning the Node.js version to be compatible with the current
-       stack." https://help.heroku.com/R7DTSTD0
+       stack."
 
     return 0
   fi

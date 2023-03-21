@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
 RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
 
 resolve() {
@@ -72,10 +71,10 @@ install_nodejs() {
   local code resolve_result
 
   if [[ -z "$version" ]]; then
-    # Node.js 18+ is incompatible with ubuntu:18 (and thus heroku-18) because of a libc mismatch:
+    # Node.js 18+ is incompatible with ubuntu:18 (and thus scalingo-18) because of a libc mismatch:
     # node: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.28' not found (required by node)
-    # Fallback to a 16.x default for heroku-18 until heroku-18 or Node.js 16.x are EOL.
-    if [[ "$STACK" == "heroku-18" ]]; then
+    # Fallback to a 16.x default for scalingo-18 until scalingo-18 or Node.js 16.x are EOL.
+    if [[ "$STACK" == "scalingo-18" ]]; then
       version="16.x"
     else
       version="18.x"
