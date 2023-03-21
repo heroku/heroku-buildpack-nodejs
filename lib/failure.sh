@@ -363,7 +363,7 @@ fail_using_yarn2_with_yarn_production_environment_variable_set() {
     warn "Legacy Yarn 1.x configuration present:
 
        Your application uses Yarn v$yarn_engine which does not support the YARN_PRODUCTION environment variable. Please
-       update your scalingo config vars to remove YARN_PRODUCTION and set YARN2_SKIP_PRUNING instead.
+       update your Scalingo config vars to remove YARN_PRODUCTION and set YARN2_SKIP_PRUNING instead.
 
          $ scalingo --app med-sample env-unset YARN_PRODUCTION && scalingo --app med-sample env-set YARN2_SKIP_PRUNING=$skip_pruning
     "
