@@ -11,16 +11,12 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
+      - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - id: install-rust-inventory-binaries
-        name: Install Rust Inventory Binaries
-        run: |
-          cargo install heroku-nodejs-utils --bin diff_versions --git https://github.com/heroku/buildpacks-nodejs
-          cargo install heroku-nodejs-utils --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
+      - name: Install Rust Inventory Binaries
+        run: cargo install heroku-nodejs-utils --bin diff_versions --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
         run: echo "::set-output name=msg::$(diff_versions node inventory/node.toml)"
@@ -29,7 +25,7 @@ jobs:
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v4.2.4
         with:
           title: "Update Node.js Engine Inventory"
           commit-message: "Update Inventory for heroku/nodejs-engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
@@ -47,11 +43,8 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - id: install-rust-inventory-binaries
-        name: Install Rust Inventory Binaries
-        run: |
-          cargo install heroku-nodejs-utils --bin diff_versions --git https://github.com/heroku/buildpacks-nodejs
-          cargo install heroku-nodejs-utils --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
+      - name: Install Rust Inventory Binaries
+        run: cargo install heroku-nodejs-utils --bin diff_versions --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
         run: echo "::set-output name=msg::$(diff_versions yarn inventory/yarn.toml)"
@@ -60,7 +53,7 @@ jobs:
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v4.2.4
         with:
           title: "Update Node.js Yarn Inventory"
           commit-message: "Update Inventory for heroku/nodejs-yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
