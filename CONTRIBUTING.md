@@ -30,7 +30,7 @@ There are unit tests that are run with `shunit`. For any change you make, write 
 
 ### Running Tests
 
-To run the tests, run `make test`. You will need Docker installed. This will start a test run of all 3 Heroku stack images that will run serially. If you want to test one stack image (which is usually adequate), run `make heroku-20` (or whatever stack image you'd like to test).
+To run the tests, run `make test`. You will need Docker installed. This will start a test run of all 3 Heroku stack images that will run serially. If you want to test one stack image (which is usually adequate), run `make heroku-22` (or whatever stack image you'd like to test).
 
 ## Opening a Pull Request
 

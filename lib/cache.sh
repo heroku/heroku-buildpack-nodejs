@@ -48,8 +48,9 @@ restore_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
+  local npm_cache=${4:-}
 
-  if [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$YARN" == "true" ]]; then
+  if [[ "$YARN" == "true" ]]; then
     if has_yarn_cache "$build_dir"; then
       echo "- yarn cache is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
@@ -65,6 +66,15 @@ restore_default_cache_directories() {
       echo "- yarn cache"
     else
       echo "- yarn cache (not cached - skipping)"
+    fi
+  elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
+    if [[ -d "$cache_dir/node/cache/npm" ]]; then
+      rm -rf "$npm_cache"
+      mv "$cache_dir/node/cache/npm" "$npm_cache"
+      echo "- npm cache"
+      meta_set "npm_cache" "true"
+    else
+      echo "- npm cache (not cached - skipping)"
     fi
   else
     # node_modules
@@ -120,8 +130,9 @@ save_default_cache_directories() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
+  local npm_cache=${4:-}
 
-  if [[ $(features_get "cache-native-yarn-cache") == "true" ]] && [[ "$YARN" == "true" ]]; then
+  if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then
       if [[ "$YARN_2" == "true" ]] && ! node_modules_enabled "$BUILD_DIR"; then
         cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
@@ -129,6 +140,13 @@ save_default_cache_directories() {
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
       fi
       echo "- yarn cache"
+    fi
+  elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
+    if [[ -d "$npm_cache" ]]; then
+      mv "$npm_cache" "$cache_dir/node/cache/npm"
+      echo "- npm cache"
+    else
+      echo "- npm cache (nothing to cache)"
     fi
   else
     # node_modules

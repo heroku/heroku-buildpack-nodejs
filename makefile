@@ -1,16 +1,16 @@
-test: heroku-20-build heroku-18-build
+build-resolvers: build-resolver-linux build-resolver-darwin
 
-build:
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-linux ./cmd/resolve-version
+.build:
+	mkdir -p .build
+build-resolver-darwin: .build
+	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-apple-darwin --profile release
+	mv .build/bin/resolve_version lib/vendor/resolve-version-darwin
 
-build-production:
-	# build go binaries and then compress them
-	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-darwin ./cmd/resolve-version
-	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -v -o ./lib/vendor/resolve-version-linux ./cmd/resolve-version
-	# https://blog.filippo.io/shrink-your-go-binaries-with-this-one-weird-trick/
-	upx --brute lib/vendor/resolve-version-linux
-	upx --brute lib/vendor/resolve-version-darwin
+build-resolver-linux: .build
+	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-unknown-linux-musl --profile release
+	mv .build/bin/resolve_version lib/vendor/resolve-version-linux
+
+test: heroku-22-build heroku-20-build heroku-18-build
 
 test-binary:
 	go test -v ./cmd/... -tags=integration
@@ -20,6 +20,11 @@ shellcheck:
 	@shellcheck -x lib/*.sh
 	@shellcheck -x ci-profile/**
 	@shellcheck -x etc/**
+
+heroku-22-build:
+	@echo "Running tests in docker (heroku-22-build)..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-22" heroku/heroku:22-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@echo ""
 
 heroku-20-build:
 	@echo "Running tests in docker (heroku-20-build)..."
@@ -44,11 +49,11 @@ nodebin-test:
 	@echo ""
 
 unit:
-	@echo "Running unit tests in docker (heroku-20)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-20" heroku/heroku:20 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
+	@echo "Running unit tests in docker (heroku-22)..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-22" heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
 	@echo ""
 
 shell:
-	@echo "Opening heroku-20 shell..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:20 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
+	@echo "Opening heroku-22 shell..."
+	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
 	@echo ""

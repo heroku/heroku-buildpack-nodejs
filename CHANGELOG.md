@@ -17,7 +17,54 @@
 
 ## main
 
-## v195 (2022-04-12)
+## v205 (2023-03-13)
+
+- Added node version 18.15.0
+- Added yarn version 4.0.0-rc.40
+
+## v204 (2023-03-03)
+
+- Switch to inventory-based Node.js and Yarn version resolver ([#1061](https://github.com/heroku/heroku-buildpack-nodejs/pull/1061))
+
+## v203 (2023-02-10)
+
+- Allow yarn version selection for yarn berry projects ([#1060](https://github.com/heroku/heroku-buildpack-nodejs/pull/1060))
+
+## v202 (2022-11-03)
+
+- Update go to 1.19 and recompile resolve-version ([#1050](https://github.com/heroku/heroku-buildpack-nodejs/pull/1050))
+
+## v201 (2022-10-19)
+
+- Add metrics and tests for Node.js 19.x line ([#1046](https://github.com/heroku/heroku-buildpack-nodejs/pull/1046))
+- Update default node version to 18.x for heroku-20 and newer ([#1045](https://github.com/heroku/heroku-buildpack-nodejs/pull/1045))
+
+## v200 (2022-10-19)
+
+- Dependency pruning support for Yarn 2 / 3 / 4 ([#1040](https://github.com/heroku/heroku-buildpack-nodejs/pull/1040))
+
+## v199 (2022-10-03)
+
+- Remove dependency on semver.herokuapp.com ([#1037](https://github.com/heroku/heroku-buildpack-nodejs/pull/1037))
+
+## v198 (2022-06-15)
+
+- Adjust curl retry and connection timeout handling ([#1017](https://github.com/heroku/heroku-buildpack-nodejs/pull/1017))
+- `jq` is no longer installed by the buildpack([#1016](https://github.com/heroku/heroku-buildpack-nodejs/pull/1016))
+- Switch away from deprecated path-based S3 URLs ([#1013](https://github.com/heroku/heroku-buildpack-nodejs/pull/1013))
+
+## v197 (2022-06-07)
+- Drop the `yarn-native-cache` feature flag ([#1004](https://github.com/heroku/heroku-buildpack-nodejs/pull/1004))
+- Fix for `npm ci` caching ([#1009](https://github.com/heroku/heroku-buildpack-nodejs/pull/1009))
+- Fix skip pruning behavior with Yarn 2 ([#1008](https://github.com/heroku/heroku-buildpack-nodejs/pull/1008))
+
+## v196 (2022-05-31)
+- Add metrics plugin for Node 17 and 18 ([#1002](https://github.com/heroku/heroku-buildpack-nodejs/pull/1002))
+- Add warning message for Node 18+ incompatibility with heroku-18 ([#1002](https://github.com/heroku/heroku-buildpack-nodejs/pull/1002))
+- Enable Yarn 2 `devDependency` pruning using a custom plugin for all customers ([#1001](https://github.com/heroku/heroku-buildpack-nodejs/pull/1001))
+- Test against Heroku-22 ([#1003](https://github.com/heroku/heroku-buildpack-nodejs/pull/1003))
+
+## v195 (2022-04-13)
 - Enable Yarn 2 `devDependency` pruning using a custom plugin for 20% of customers ([#999](https://github.com/heroku/heroku-buildpack-nodejs/pull/999))
 - Set xtrace mode in buildpack when BUILDPACK_XTRACE environment variable is set ([#925](https://github.com/heroku/heroku-buildpack-nodejs/pull/925))
 

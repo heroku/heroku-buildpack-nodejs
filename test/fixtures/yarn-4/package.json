@@ -1,0 +1,17 @@
+{
+  "name": "yarn-4",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "16.11.26",
+    "uuid": "9.0.0"
+  },
+  "dependencies": {
+    "echo-cli": "2.0.0"
+  },
+  "scripts": {
+    "build": "echo-cli 'Build script check'"
+  },
+  "packageManager": "yarn@4.0.0-rc.22"
+}
