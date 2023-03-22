@@ -226,7 +226,7 @@ fail_bin_install() {
   set +e
 
   # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$bin" "$version")
+  error=$($RESOLVE "$BP_DIR/inventory/$bin.toml" "$version" 2>&1)
 
   # re-enable trapping
   set -e
@@ -344,6 +344,33 @@ fail_invalid_semver() {
 
 # Yarn 2 failures
 
+fail_using_yarn2_with_yarn_production_environment_variable_set() {
+  local yarn_engine
+  local skip_pruning
+  local log_file="$1"
+
+  if grep -qi 'Unrecognized or legacy configuration settings found: production' "$log_file"; then
+    yarn_engine=$(yarn --version)
+    if [[ "$YARN_PRODUCTION" == "true" ]]; then
+      skip_pruning=false
+    else
+      skip_pruning=true
+    fi
+
+    mcount "failures.yarn2-with-yarn-production-env-set"
+    meta_set "failure" "yarn2-with-yarn-production-env-set"
+    echo ""
+    warn "Legacy Yarn 1.x configuration present:
+
+       Your application uses Yarn v$yarn_engine which does not support the YARN_PRODUCTION environment variable. Please
+       update your Scalingo config vars to remove YARN_PRODUCTION and set YARN2_SKIP_PRUNING instead.
+
+         $ scalingo --app med-sample env-unset YARN_PRODUCTION && scalingo --app med-sample env-set YARN2_SKIP_PRUNING=$skip_pruning
+    "
+    fail
+  fi
+}
+
 fail_missing_yarnrc_yml() {
   local build_dir="$1"
 
@@ -422,6 +449,20 @@ fail_missing_yarn_vendor() {
 
 log_other_failures() {
   local log_file="$1"
+
+  if grep -qP "version \`GLIBC_\d+\.\d+' not found" "$log_file"; then
+    mcount "failures.libc6-incompatibility"
+    meta_set "failure" "libc6-incompatibility"
+    warn "This Node.js version is not compatible with the current stack.
+
+       For Node.js versions 18 and greater, scalingo-20 or newer is required.
+       Consider updating to a stack that is compatible with the Node.js version
+       or pinning the Node.js version to be compatible with the current
+       stack."
+
+    return 0
+  fi
+
   if grep -qi "sh: 1: .*: not found" "$log_file"; then
     mcount "failures.dev-dependency-tool-not-installed"
     meta_set "failure" "dev-dependency-tool-not-installed"

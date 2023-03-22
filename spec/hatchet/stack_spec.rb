@@ -4,8 +4,8 @@ describe "Stack Changes" do
   #Test upgrading stack invalidates the cache
   it "should not restore cached directories" do
     Hatchet::Runner.new("default-node", stack: "heroku-20").deploy do |app, heroku|
-      app.update_stack("heroku-18")
-      run!('git commit --allow-empty -m "heroku-18 migrate"')
+      app.update_stack("heroku-22")
+      app.commit!
       app.push!
       expect(app.output).to include("Cached directories were not restored due to a change in version of node, npm, yarn or stack")
     end
@@ -15,7 +15,7 @@ describe "Stack Changes" do
   it "should not restore cache if the stack did not change" do
     Hatchet::Runner.new('default-node', stack: "heroku-20").deploy do |app, heroku|
       app.update_stack("heroku-20")
-      run!('git commit --allow-empty -m "cedar migrate"')
+      app.commit!
       app.push!
       expect(app.output).to_not include("Cached directories were not restored due to a change in version of node, npm, yarn or stack")
       expect(app.output).to include("not cached - skipping")

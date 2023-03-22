@@ -3,10 +3,29 @@ name = "Node.js"
 
   [publish.Ignore]
   files = [
-      ".circle/",
+      ".circleci/",
       ".github/",
+      ".git2gus/",
       "etc/",
       "spec/",
       "test/",
-      "makefile"
+      "makefile",
+      "Gemfile.lock",
+      "Gemfile",
+      "hatchet.json",
+      "go.mod",
+      "go.sum",
+      "hatchet.lock",
+      "cmd/",
+      # TODO: get rid of these ignores once the yarn plugins are moved into a separate repo
+      #       for now we just need the compiled plugin in yarn2-plugin/prune-dev-dependencies/bundles
+      "yarn2-plugins/prune-dev-dependencies/.editorconfig",
+      "yarn2-plugins/prune-dev-dependencies/package-lock.json",
+      "yarn2-plugins/prune-dev-dependencies/.gitignore",
+      "yarn2-plugins/prune-dev-dependencies/package.json",
+      "yarn2-plugins/prune-dev-dependencies/tsconfig.json",
+      "yarn2-plugins/prune-dev-dependencies/README.md",
+      "yarn2-plugins/prune-dev-dependencies/tests",
+      "yarn2-plugins/prune-dev-dependencies/jest.config.js",
+      "yarn2-plugins/prune-dev-dependencies/src",
   ]

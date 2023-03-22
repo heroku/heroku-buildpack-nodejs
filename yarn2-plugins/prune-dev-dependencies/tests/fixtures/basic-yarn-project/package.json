@@ -1,0 +1,12 @@
+{
+  "name": "using-node-modules-linker",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "16.11.26",
+    "uuid": "9.0.0"
+  },
+  "dependencies": {
+    "echo-cli": "2.0.0"
+  }
+}
