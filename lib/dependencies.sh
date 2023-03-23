@@ -245,7 +245,7 @@ _install_preselected_modules() {
   # Separe the modules names with '\n'
   preselected_modules="phantomjs"
   for module in $preselected_modules ; do
-    out=$($JQ ".dependencies.${module}" < package.json)
+    out=$(jq ".dependencies.${module}" < package.json)
     if [ "$out" != "null" ] ; then
       npm install --unsafe-perm --quiet --userconfig $build_dir/.npmrc $module 2>&1
     fi
