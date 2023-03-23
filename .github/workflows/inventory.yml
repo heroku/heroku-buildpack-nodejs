@@ -23,15 +23,15 @@ jobs:
       - name: Rebuild Inventory
         run: "list_versions node > inventory/node.toml"
       - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' CHANGELOG.md
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## main\s+/## main\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4.2.4
         with:
           title: "Update Node.js Engine Inventory"
-          commit-message: "Update Inventory for heroku/nodejs-engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          commit-message: "Update Inventory for heroku/nodejs engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
           branch: update-nodejs-inventory
           labels: "automation"
-          body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          body: "Automated pull-request to update heroku/nodejs engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
   update-yarn-inventory:
     name: Update Node.js Yarn Inventory
     runs-on: pub-hk-ubuntu-22.04-small
@@ -56,7 +56,7 @@ jobs:
         uses: peter-evans/create-pull-request@v4.2.4
         with:
           title: "Update Node.js Yarn Inventory"
-          commit-message: "Update Inventory for heroku/nodejs-yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          commit-message: "Update Inventory for heroku/nodejs yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
           branch: update-yarn-inventory
           labels: "automation"
-          body: "Automated pull-request to update heroku/nodejs-yarn inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          body: "Automated pull-request to update heroku/nodejs yarn inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
