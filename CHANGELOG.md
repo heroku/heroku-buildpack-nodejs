@@ -2,6 +2,11 @@
 
 ## main
 
+## v206 (2023-03-24)
+
+- Added node versions 19.8.0, 19.8.1
+- Added yarn version 3.5.0
+
 ## v205 (2023-03-13)
 
 - Added node version 18.15.0
