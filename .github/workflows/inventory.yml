@@ -51,7 +51,7 @@ jobs:
       - name: Rebuild Inventory
         run: "list_versions yarn > inventory/yarn.toml"
       - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' CHANGELOG.md
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## main\s+/## main\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4.2.4
         with:
