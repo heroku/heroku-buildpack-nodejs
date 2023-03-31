@@ -846,3 +846,15 @@ channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.40.tar.gz"
 etag = "e8d683cfc6e318dfe12489934648ca8a"
 
+[[releases]]
+version = "4.0.0-rc.41"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.41.tar.gz"
+etag = "9ac49479f979ca49c922b6b50b6e637f"
+
+[[releases]]
+version = "4.0.0-rc.42"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.42.tar.gz"
+etag = "9e930241ba51de085ce10c871adc686b"
+
