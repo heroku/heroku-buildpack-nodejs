@@ -2,6 +2,7 @@
 
 ## main
 
+- Added node version 16.20.0.
 - Added yarn version 4.0.0-rc.42, 4.0.0-rc.41.
 ## v206 (2023-03-24)
 
