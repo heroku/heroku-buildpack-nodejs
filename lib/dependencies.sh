@@ -146,7 +146,12 @@ yarn_2_install() {
   echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
 
-  monitor "yarn-2-install" yarn install --immutable 2>&1
+  if [ -n "$YARN2_FOCUS_WORKSPACE" ]; then
+    echo "Running with focused workspace $YARN2_FOCUS_WORKSPACE"
+    monitor "yarn-2-install" yarn workspaces focus "$YARN2_FOCUS_WORKSPACE"
+  else
+    monitor "yarn-2-install" yarn install --immutable 2>&1
+  fi
 }
 
 yarn_prune_devdependencies() {
@@ -170,6 +175,11 @@ yarn_prune_devdependencies() {
     if [ "$YARN2_SKIP_PRUNING" == "true" ]; then
       echo "Skipping because YARN2_SKIP_PRUNING is '$YARN2_SKIP_PRUNING'"
       meta_set "skipped-prune" "true"
+      return 0
+    fi
+    if [ -n "$YARN2_FOCUS_WORKSPACE" ]; then
+      echo "Running 'yarn workspaces focus --production'"
+      monitor "yarn-prune" yarn workspaces focus --production $YARN2_FOCUS_WORKSPACE
       return 0
     fi
     cd "$build_dir" || return
