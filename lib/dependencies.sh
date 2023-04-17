@@ -178,7 +178,7 @@ yarn_prune_devdependencies() {
       return 0
     fi
     if [ -n "$YARN2_FOCUS_WORKSPACE" ]; then
-      echo "Running 'yarn workspaces focus --production'"
+      echo "Running yarn workspaces focus --production ${YARN2_FOCUS_WORKSPACE}"
       monitor "yarn-prune" yarn workspaces focus --production $YARN2_FOCUS_WORKSPACE
       return 0
     fi
