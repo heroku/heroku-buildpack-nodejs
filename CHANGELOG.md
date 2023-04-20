@@ -2,6 +2,10 @@
 
 ## main
 
+## v211 (2023-04-20)
+
+- Add metrics and tests for Node.js 20.x line
+
 ## v210 (2023-04-20)
  
 - Added node version 20.0.0.

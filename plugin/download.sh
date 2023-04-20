@@ -42,6 +42,8 @@ delete_old_plugin() {
     rm -f "$dir/heroku-nodejs-plugin-node-18.tar.gz"
     rm -f "$dir/heroku-nodejs-plugin-node-19.sha512"
     rm -f "$dir/heroku-nodejs-plugin-node-19.tar.gz"
+    rm -f "$dir/heroku-nodejs-plugin-node-20.sha512"
+    rm -f "$dir/heroku-nodejs-plugin-node-20.tar.gz"
     rm -f "$dir/version"
 }
 
@@ -64,6 +66,10 @@ download_assets_for_release() {
     # Node 19
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-19-$tag.sha512" "$dir/heroku-nodejs-plugin-node-19.sha512"
     download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-19-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-19.tar.gz"
+
+    # Node 20
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-20-$tag.sha512" "$dir/heroku-nodejs-plugin-node-20.sha512"
+    download "https://github.com/heroku/heroku-nodejs-plugin/releases/download/$tag/heroku-nodejs-plugin-node-20-$tag.tar.gz" "$dir/heroku-nodejs-plugin-node-20.tar.gz"
 }
 
 test_hash() {
@@ -100,5 +106,6 @@ test_hash 14 $PLUGIN_DIR
 test_hash 16 $PLUGIN_DIR
 test_hash 18 $PLUGIN_DIR
 test_hash 19 $PLUGIN_DIR
+test_hash 20 $PLUGIN_DIR
 
 echo "Done"
