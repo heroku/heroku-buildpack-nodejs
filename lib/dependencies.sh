@@ -147,7 +147,7 @@ yarn_2_install() {
   cd "$build_dir" || return
 
   if [ -n "$YARN2_FOCUS_WORKSPACE" ]; then
-    echo "Running with focused workspace $YARN2_FOCUS_WORKSPACE"
+    echo "Running focused install for workspace $YARN2_FOCUS_WORKSPACE"
     monitor "yarn-2-install" yarn workspaces focus "$YARN2_FOCUS_WORKSPACE"
   else
     monitor "yarn-2-install" yarn install --immutable 2>&1
@@ -178,7 +178,7 @@ yarn_prune_devdependencies() {
       return 0
     fi
     if [ -n "$YARN2_FOCUS_WORKSPACE" ]; then
-      echo "Running yarn workspaces focus --production ${YARN2_FOCUS_WORKSPACE}"
+      echo "Running focused install with --production flag"
       monitor "yarn-prune" yarn workspaces focus --production $YARN2_FOCUS_WORKSPACE
       return 0
     fi

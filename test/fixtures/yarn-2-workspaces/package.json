@@ -1,0 +1,11 @@
+{
+  "name": "yarn-2-workspaces",
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "start": "echo start"
+  },
+  "license": "MIT"
+}
