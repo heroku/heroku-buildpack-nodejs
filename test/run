@@ -728,6 +728,16 @@ testYarn2WithoutWorkspaceModule() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCapturedSuccess
 }
+
+testYarn2WithFocusedWorkspace() {
+  env_dir=$(mktmpdir)
+  echo "@sample/server" > $env_dir/YARN2_FOCUS_WORKSPACE
+  compile "yarn-2-workspaces" "$(mktmpdir)" $env_dir
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Running focused install for workspace @sample/server"
+  assertCaptured "Running focused install with --production flag"
+  assertCapturedSuccess
+}
 ###
 
 ###
