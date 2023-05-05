@@ -10,7 +10,7 @@ GEM
       moneta
       multi_json (>= 1.9.2)
       webrick
-    heroku_hatchet (8.0.1)
+    heroku_hatchet (8.0.2)
       excon (~> 0)
       platform-api (~> 3)
       rrrretry (~> 1)
