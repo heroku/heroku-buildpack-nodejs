@@ -17,6 +17,32 @@
 
 ## main
 
+## v211 (2023-04-20)
+
+- Add metrics and tests for Node.js 20.x line
+
+## v210 (2023-04-20)
+ 
+- Added node version 20.0.0.
+
+## v209 (2023-04-17)
+
+- Added node version 18.16.0.
+
+## v208 (2023-04-11)
+
+- Added node version 19.9.0.
+
+## v207 (2023-04-03)
+
+- Added node version 16.20.0.
+- Added yarn version 4.0.0-rc.42, 4.0.0-rc.41.
+
+## v206 (2023-03-24)
+
+- Added node versions 19.8.0, 19.8.1
+- Added yarn version 3.5.0
+
 ## v205 (2023-03-13)
 
 - Added node version 18.15.0
