@@ -180,9 +180,6 @@ testYarnRun() {
 
 testNoVersion() {
   local default_version="18"
-  if [[ $STACK == "heroku-18" ]]; then
-    default_version="16"
-  fi
   compile "no-version"
   assertCaptured "engines.node (package.json):  unspecified"
   assertCaptured "Resolving node version ${default_version}.x"
