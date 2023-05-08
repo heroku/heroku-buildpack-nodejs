@@ -2,6 +2,8 @@
 
 ## main
 
+- Drop all support and references to the now end-of-life heroku-18.
+
 ## v211 (2023-04-20)
 
 - Add metrics and tests for Node.js 20.x line

@@ -12,16 +12,4 @@ describe "Hello World for Node v18.x" do
       end
     end
   end
-
-  context "on an incompatible stack (heroku-18)" do
-    it "should log a stack compatibility message" do
-      Hatchet::Runner.new(
-        "spec/fixtures/repos/node-18",
-        stack: "heroku-18",
-        allow_failure: true
-      ).deploy do |app|
-        expect(app.output).to match("Node.js version is not compatible with the current stack")
-      end
-    end
-  end
 end
