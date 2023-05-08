@@ -2,6 +2,7 @@
 
 ## main
 
+- Added yarn version 4.0.0-rc.43, 3.5.1.
 - Drop all support and references to the now end-of-life heroku-18.
 
 ## v211 (2023-04-20)
