@@ -2,6 +2,7 @@
 
 ## main
 
+- Added node version 20.2.0.
 ## v212 (2023-05-09)
 
 - Added node version 20.1.0.
