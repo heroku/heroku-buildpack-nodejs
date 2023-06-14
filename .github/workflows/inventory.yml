@@ -16,12 +16,12 @@ jobs:
         with:
           toolchain: stable
       - name: Install Rust Inventory Binaries
-        run: cargo install heroku-nodejs-utils --bin diff_versions --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
+        run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
         run: echo "::set-output name=msg::$(diff_versions node inventory/node.toml)"
       - name: Rebuild Inventory
-        run: "list_versions node > inventory/node.toml"
+        run: "generate_inventory node > inventory/node.toml"
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## main\s+/## main\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
@@ -44,12 +44,12 @@ jobs:
         with:
           toolchain: stable
       - name: Install Rust Inventory Binaries
-        run: cargo install heroku-nodejs-utils --bin diff_versions --bin list_versions --git https://github.com/heroku/buildpacks-nodejs
+        run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
         run: echo "::set-output name=msg::$(diff_versions yarn inventory/yarn.toml)"
       - name: Rebuild Inventory
-        run: "list_versions yarn > inventory/yarn.toml"
+        run: "generate_inventory yarn > inventory/yarn.toml"
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## main\s+/## main\n\n- {}/' CHANGELOG.md
       - name: Create Pull Request
