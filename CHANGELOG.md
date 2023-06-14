@@ -2,6 +2,7 @@
 
 ## main
 
+- - Added Yarn version 4.0.0-rc.45.
 ## v213 (2023-05-24)
 
 - Added node version 20.2.0.
