@@ -1,4 +1,4 @@
-name = "node"
+name = "Node.js"
 
 [[releases]]
 version = "0.10.0"
@@ -5538,6 +5538,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "262c2e27fdb5b764df8a642e6e942106-6"
 
 [[releases]]
+version = "20.3.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v20.3.0-linux-x64.tar.gz"
+etag = "65d88a642f89392d1a5348df3c20dfcb-6"
+
+[[releases]]
 version = "4.0.0"
 channel = "release"
 arch = "linux-x64"
@@ -9106,13 +9113,6 @@ channel = "staging"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v17.7.0-linux-x64.tar.gz"
 etag = "3ae4ee1f090945e80ad2209beb2c019e-6"
-
-[[releases]]
-version = "17.7.1"
-channel = "staging"
-arch = "linux-x64"
-url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v17.7.1-linux-x64.tar.gz"
-etag = "45444848e3db9df8e1906f30303f0b73-6"
 
 [[releases]]
 version = "17.7.2"
