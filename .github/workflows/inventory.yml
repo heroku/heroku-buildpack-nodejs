@@ -41,7 +41,7 @@ jobs:
           body: "Automated pull-request to update heroku/nodejs engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
       - name: Configure PR
         if: steps.pr.outputs.pull-request-operation == 'created'
-        run: gh pr merge "${{ steps.pr.outputs.pull-request-number }}" --auto
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
           
@@ -82,6 +82,6 @@ jobs:
           body: "Automated pull-request to update heroku/nodejs yarn inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
       - name: Configure PR
         if: steps.pr.outputs.pull-request-operation == 'created'
-        run: gh pr merge "${{ steps.pr.outputs.pull-request-number }}" --auto
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
