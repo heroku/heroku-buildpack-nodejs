@@ -26,7 +26,7 @@ end
 def successful_body(app, options = {})
   retry_limit = options[:retry_limit] || 100
   path = options[:path] ? "/#{options[:path]}" : ''
-  Excon.get("http://#{app.name}.herokuapp.com#{path}",
+  Excon.get("#{app.web_url}#{path}",
               idempotent:     true,
               expects:        200,
               retry_interval: 0.5,
