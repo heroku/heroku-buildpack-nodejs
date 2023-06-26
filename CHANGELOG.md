@@ -17,6 +17,26 @@
 
 ## main
 
+## v215 (2023-06-21)
+
+- Added Node.js version 20.3.1, 18.16.1, 16.20.1.
+
+## v214 (2023-06-20)
+
+- Added Yarn version 4.0.0-rc.45.
+- Added Node.js version 20.3.0.
+
+## v213 (2023-05-24)
+
+- Added node version 20.2.0.
+- Added yarn version 4.0.0-rc.44.
+
+## v212 (2023-05-09)
+
+- Added node version 20.1.0.
+- Added yarn version 4.0.0-rc.43, 3.5.1.
+- Drop all support and references to the now end-of-life heroku-18.
+
 ## v211 (2023-04-20)
 
 - Add metrics and tests for Node.js 20.x line
