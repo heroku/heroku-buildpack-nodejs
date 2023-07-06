@@ -5566,6 +5566,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "9f1f86365832de86bbd5f69d708d7b92-6"
 
 [[releases]]
+version = "20.4.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v20.4.0-linux-x64.tar.gz"
+etag = "c79bd136991f23975504c1b9ba49e438-6"
+
+[[releases]]
 version = "4.0.0"
 channel = "release"
 arch = "linux-x64"
