@@ -17,6 +17,15 @@
 
 ## main
 
+## v217 (2023-07-19)
+
+- Added Node.js version 18.17.0.
+
+## v216 (2023-07-07)
+
+- Added Node.js version 20.4.0.
+- Added Yarn version 3.6.1.
+
 ## v215 (2023-06-21)
 
 - Added Node.js version 20.3.1, 18.16.1, 16.20.1.
