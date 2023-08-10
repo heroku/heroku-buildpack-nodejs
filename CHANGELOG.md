@@ -2,6 +2,7 @@
 
 ## main
 
+- Added Node.js version 16.20.2.
 ## v218 (2023-07-24)
 
 - Added Node.js version 20.5.0.
