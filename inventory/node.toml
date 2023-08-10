@@ -5097,6 +5097,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "313de9955d2e869fd3a3dc80bde922b9-5"
 
 [[releases]]
+version = "16.20.2"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v16.20.2-linux-x64.tar.gz"
+etag = "340ee5fabdbd527b9ae833c3e6b88d3b-5"
+
+[[releases]]
 version = "16.3.0"
 channel = "release"
 arch = "linux-x64"
@@ -5384,6 +5391,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "85fc8af719a2480b4104d663b30ea0b4-6"
 
 [[releases]]
+version = "18.17.1"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v18.17.1-linux-x64.tar.gz"
+etag = "40bed92d4aebcdbb9cee979e1f03859e-6"
+
+[[releases]]
 version = "18.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -5585,6 +5599,13 @@ channel = "release"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v20.5.0-linux-x64.tar.gz"
 etag = "4cdf6ecb33b6e7c2c6b0e180ba2da698-6"
+
+[[releases]]
+version = "20.5.1"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v20.5.1-linux-x64.tar.gz"
+etag = "f3de44a4f1ce4a000f2119dbfe66c54e-6"
 
 [[releases]]
 version = "4.0.0"
