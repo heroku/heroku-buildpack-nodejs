@@ -818,7 +818,7 @@ testOldNpm() {
 testNonexistentNpm() {
   compile "nonexistent-npm"
   assertCaptured "Unable to install npm 1.1.65"
-  assertCapturedError 1 ""
+  assertCapturedError
 }
 
 testSameNpm() {
@@ -835,8 +835,9 @@ testNpmVersionRange() {
 
 testNpmVersionBracket() {
   compile "npm-version-bracket"
-  assertCaptured "Bootstrapping npm >9"
+  assertCaptured "Unable to install npm >9"
   assertCaptured "> and < are not supported in engines.npm"
+  assertCapturedError
 }
 
 testNpmVersionSpecific() {
