@@ -833,6 +833,12 @@ testNpmVersionRange() {
   assertCapturedSuccess
 }
 
+testNpmVersionBracket() {
+  compile "npm-version-bracket"
+  assertCaptured "Bootstrapping npm >9"
+  assertCaptured "> and < are not supported in engines.npm"
+}
+
 testNpmVersionSpecific() {
   compile "npm-version-specific"
   assertCaptured "Bootstrapping npm 2.1.11"

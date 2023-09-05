@@ -124,7 +124,13 @@ install_npm() {
   else
     echo "Bootstrapping npm $version (replacing $npm_version)..."
     if ! npm install --unsafe-perm --quiet -g "npm@$version" 2>@1>/dev/null; then
-      echo "Unable to install npm $version; does it exist?" && false
+      echo "Unable to install npm $version; does it exist?"
+      if [[ $version == *<* || $version == *>* ]]; then
+        echo "Detected angle brackets in $version. " \
+          "> and < are not supported in engines.npm from package.json." \
+          "Consider using other semantic versioning operators such as ~."
+      fi
+      return false
     fi
     # Verify npm works before capturing and ensure its stderr is inspectable later
     npm --version 2>&1 1>/dev/null
