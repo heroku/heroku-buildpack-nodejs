@@ -2,6 +2,8 @@
 
 ## main
 
+- Add error messaging when using `>` or `<` with `engines.npm`.
+
 ## v219 (2023-08-10)
 
 - Added Node.js version 16.20.2.
