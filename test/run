@@ -1146,7 +1146,7 @@ testNodeEnvNpmConfigProductionFalse() {
   assertCaptured "preinstall: production"
   assertCaptured "postinstall: production"
   assertCaptured "heroku-postbuild: production"
-  assertCapturedSuccess
+  assertEquals "Expected successful exit code" "0" "${RETURN}"
 }
 
 # Avoid this issue
