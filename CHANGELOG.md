@@ -2,6 +2,8 @@
 
 ## main
 
+- Improved error messaging when installing an incompatible npm version.
+
 ## v219 (2023-08-10)
 
 - Added Node.js version 16.20.2.
