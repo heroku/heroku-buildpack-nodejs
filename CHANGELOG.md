@@ -4,6 +4,9 @@
 
 - Added Yarn version 3.6.2.
 - Added Yarn version 3.6.3.
+- Added Yarn version 4.0.0-rc.49
+- Added Yarn version 4.0.0-rc.50
+- Added Yarn version 4.0.0-rc.51
 
 ## v220 (2023-09-13)
 
