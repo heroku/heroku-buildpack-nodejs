@@ -2,6 +2,8 @@
 
 ## main
 
+- Added Node.js version 18.18.0.
+- Added Node.js version 20.7.0.
 - Added Yarn version 3.6.2.
 - Added Yarn version 3.6.3.
 - Added Yarn version 4.0.0-rc.49
