@@ -3,6 +3,8 @@
 ## main
 
 - Added Yarn version 3.6.2.
+- Added Yarn version 3.6.3.
+
 ## v220 (2023-09-13)
 
 - Added Node.js version 20.6.0.
