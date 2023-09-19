@@ -2,6 +2,7 @@
 
 ## main
 
+- Improved error messaging when installing an incompatible npm version.
 - Added Node.js version 18.18.0.
 - Added Node.js version 20.7.0.
 
