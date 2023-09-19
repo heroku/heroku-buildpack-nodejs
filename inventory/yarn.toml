@@ -829,6 +829,18 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v3.6.
 etag = "69dd9c5317552e7db1a6b5393b3168c2"
 
 [[releases]]
+version = "3.6.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v3.6.2.tar.gz"
+etag = "2477fb8fb76f5ef96360fc85620d80f4"
+
+[[releases]]
+version = "3.6.3"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v3.6.3.tar.gz"
+etag = "cd87545d08991cb3089d89bfb60716f0"
+
+[[releases]]
 version = "4.0.0-rc.35"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.35.tar.gz"
@@ -911,4 +923,22 @@ version = "4.0.0-rc.48"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.48.tar.gz"
 etag = "c202595e39bec0030ea6b2b091a0b6a3"
+
+[[releases]]
+version = "4.0.0-rc.49"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.49.tar.gz"
+etag = "dbb6782c7c7715406b5db25b32d106a7"
+
+[[releases]]
+version = "4.0.0-rc.50"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.50.tar.gz"
+etag = "96350f65ac4b0f33b4e8d300ac4c1cec"
+
+[[releases]]
+version = "4.0.0-rc.51"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.51.tar.gz"
+etag = "b23bee873d416ec64cf88b80de604327"
 
