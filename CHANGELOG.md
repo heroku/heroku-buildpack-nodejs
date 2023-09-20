@@ -2,6 +2,8 @@
 
 ## main
 
+- Fixed issue where npm versions `>=10` were being downgraded to version `5.x`
+
 ## v221 (2023-09-19)
 
 - Improved error messaging when installing an incompatible npm version.
