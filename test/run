@@ -1531,8 +1531,8 @@ testNpmCiCachingWhenUseNpmInstallIsFalse() {
 
 testUseNpm10() {
   compile "use-npm-v10"
-  assertCaptured "Bootstrapping npm 10.x"
   assertNotCaptured "Detected package-lock.json: defaulting npm to version 5.x.x"
+  assertCaptured "Using default npm version: 10"
   assertCapturedSuccess
 }
 

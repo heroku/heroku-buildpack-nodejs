@@ -32,6 +32,8 @@ source "$BP_DIR/lib/output.sh"
 source "$BP_DIR/lib/monitor.sh"
 # shellcheck source=lib/environment.sh
 source "$BP_DIR/lib/environment.sh"
+# shellcheck source=lib/npm.sh
+source "$BP_DIR/lib/npm.sh"
 # shellcheck source=lib/failure.sh
 source "$BP_DIR/lib/failure.sh"
 # shellcheck source=lib/binaries.sh
