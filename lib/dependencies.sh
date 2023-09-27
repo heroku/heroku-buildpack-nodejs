@@ -197,12 +197,10 @@ has_npm_lock() {
 should_use_npm_ci() {
   local build_dir=${1:-}
   local npm_version
+  local major
 
   npm_version=$(npm --version)
-  # major_string will be ex: "4." "5." "10"
-  local major_string=${npm_version:0:2}
-  # strip any "."s from major_string
-  local major=${major_string//.}
+  major=$(npm_version_major)
 
   # We should only run `npm ci` if all of the manifest files are there, and we are running at least npm 6.x
   # `npm ci` was introduced in the 5.x line in 5.7.0, but this sees very little usage, < 5% of builds

@@ -746,9 +746,8 @@ warn_old_npm() {
 
   npm_version="$(npm --version)"
 
-  if [ "${npm_version:0:1}" -lt "2" ]; then
-    latest_npm="$(curl --silent --get --retry 5 --retry-max-time 15 https://semver.herokuapp.com/npm/stable)"
-    warning "This version of npm ($npm_version) has several known issues - consider upgrading to the latest release ($latest_npm)" "https://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
+  if [ "$(npm_version_major)" -lt "2" ]; then
+    warning "This version of npm ($npm_version) has several known issues. Please update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
     mcount 'warnings.npm.old'
   fi
 }
@@ -777,7 +776,7 @@ warn_old_npm_lockfile() {
 
   npm_version="$(npm --version)"
 
-  if $npm_lock && [ "${npm_version:0:1}" -lt "5" ]; then
+  if $npm_lock && [ "$(npm_version_major)" -lt "5" ]; then
     warn "This version of npm ($npm_version) does not support package-lock.json. Please
        update your npm version in package.json." "http://doc.scalingo.com/languages/javascript/nodejs#specifying-a-nodejs-version"
     mcount 'warnings.npm.old-and-lockfile'
