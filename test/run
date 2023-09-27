@@ -865,6 +865,13 @@ testNpmVersionSpecific() {
   assertCapturedSuccess
 }
 
+testNpmVersionIncompatible() {
+  compile "npm-version-incompat"
+  assertCaptured "Unable to install npm 10.x"
+  assertCaptured "Is npm 10.x compatible with this Node.js version?"
+  assertCapturedError
+}
+
 testFailingBuild() {
   compile "failing-build"
   assertCaptured "Build failed"
@@ -1164,7 +1171,7 @@ testNodeEnvNpmConfigProductionFalse() {
   assertCaptured "preinstall: production"
   assertCaptured "postinstall: production"
   assertCaptured "heroku-postbuild: production"
-  assertCapturedSuccess
+  assertEquals "Expected successful exit code" "0" "${RETURN}"
 }
 
 # Avoid this issue
@@ -1544,6 +1551,13 @@ testNpmCiCachingWhenUseNpmInstallIsFalse() {
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
   assertNotCaptured "npm http fetch GET"
+  assertCapturedSuccess
+}
+
+testUseNpm10() {
+  compile "use-npm-v10"
+  assertNotCaptured "Detected package-lock.json: defaulting npm to version 5.x.x"
+  assertCaptured "Using default npm version: 10"
   assertCapturedSuccess
 }
 
