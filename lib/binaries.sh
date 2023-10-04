@@ -58,7 +58,7 @@ install_yarn() {
   chmod +x "$dir"/bin/*
 
   # Verify yarn works before capturing and ensure its stderr is inspectable later
-  yarn --version 2>&1 1>/dev/null
+  suppress_output yarn --version
   if $YARN_2; then
     echo "Using yarn $(yarn --version)"
   else
@@ -107,7 +107,7 @@ install_npm() {
   local dir="$2"
   local npm_lock="$3"
   # Verify npm works before capturing and ensure its stderr is inspectable later
-  npm --version 2>&1 1>/dev/null
+  suppress_output npm --version
   npm_version="$(npm --version)"
 
   # If the user has not specified a version of npm, but has an npm lockfile
@@ -129,7 +129,20 @@ install_npm() {
         "Is npm $version compatible with this Node.js version?" && false
     fi
     # Verify npm works before capturing and ensure its stderr is inspectable later
-    npm --version 2>&1 1>/dev/null
+    suppress_output npm --version
     echo "npm $(npm --version) installed"
   fi
+}
+
+suppress_output() {
+  local TMP_COMMAND_OUTPUT
+  TMP_COMMAND_OUTPUT=$(mktemp)
+  trap "rm -rf '$TMP_COMMAND_OUTPUT' >/dev/null" RETURN
+
+  "$@" >"$TMP_COMMAND_OUTPUT" 2>&1 || {
+    local exit_code="$?"
+    cat "$TMP_COMMAND_OUTPUT"
+    return "$exit_code"
+  }
+  return 0
 }
