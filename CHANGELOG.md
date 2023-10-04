@@ -2,6 +2,7 @@
 
 ## main
 
+- Added Node.js version 20.8.0.
 - Added Yarn version 3.6.4.
 - Added Yarn version 4.0.0-rc.52.
 - Added Yarn version 4.0.0-rc.53.
