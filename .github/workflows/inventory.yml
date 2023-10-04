@@ -10,7 +10,7 @@ jobs:
     runs-on: pub-hk-ubuntu-22.04-small
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -50,7 +50,7 @@ jobs:
     runs-on: pub-hk-ubuntu-22.04-small
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - id: install-rust-toolchain
         name: Install Rust Toolchain
         uses: actions-rs/toolchain@v1
