@@ -2,7 +2,7 @@
 
 ## main
 
-- Report errors when checking `npm` and `yarn` output ([#1148](https://github.com/heroku/heroku-buildpack-nodejs/pull/1148))
+- Report errors when checking `npm` and `yarn` output ([#1147](https://github.com/heroku/heroku-buildpack-nodejs/pull/1147))
 
 ## v223 (2023-10-04)
 
