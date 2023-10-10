@@ -2,6 +2,8 @@
 
 ## main
 
+- Report errors when checking `npm` and `yarn` output ([#1147](https://github.com/heroku/heroku-buildpack-nodejs/pull/1147))
+
 ## v223 (2023-10-04)
 
 - Added Node.js version 20.8.0.
