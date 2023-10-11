@@ -2,6 +2,7 @@
 
 ## main
 
+- Added Node.js version 18.18.1.
 - Report errors when checking `npm` and `yarn` output ([#1147](https://github.com/heroku/heroku-buildpack-nodejs/pull/1147))
 
 ## v223 (2023-10-04)
