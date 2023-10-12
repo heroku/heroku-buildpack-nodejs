@@ -19,7 +19,13 @@ jobs:
         run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
-        run: echo "::set-output name=msg::$(diff_versions node inventory/node.toml)"
+        run: |
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "msg<<${delimiter}"
+            diff_versions node inventory/node.toml
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
       - name: Rebuild Inventory
         run: "generate_inventory node > inventory/node.toml"
       - name: Update Changelog
@@ -61,7 +67,13 @@ jobs:
         run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
         name: Set Diff Message
-        run: echo "::set-output name=msg::$(diff_versions yarn inventory/yarn.toml)"
+        run: |
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "msg<<${delimiter}"
+            diff_versions yarn inventory/yarn.toml
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
       - name: Rebuild Inventory
         run: "generate_inventory yarn > inventory/yarn.toml"
       - name: Update Changelog
