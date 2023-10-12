@@ -37,8 +37,9 @@ jobs:
           title: "Update Node.js Engine Inventory"
           commit-message: "Update Inventory for heroku/nodejs engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
           branch: update-nodejs-inventory
-          labels: "automation"
           body: "Automated pull-request to update heroku/nodejs engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
       - name: Configure PR
         if: steps.pr.outputs.pull-request-operation == 'created'
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
@@ -78,8 +79,9 @@ jobs:
           title: "Update Node.js Yarn Inventory"
           commit-message: "Update Inventory for heroku/nodejs yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
           branch: update-yarn-inventory
-          labels: "automation"
           body: "Automated pull-request to update heroku/nodejs yarn inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
       - name: Configure PR
         if: steps.pr.outputs.pull-request-operation == 'created'
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
