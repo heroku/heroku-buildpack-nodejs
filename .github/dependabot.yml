@@ -4,11 +4,20 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ruby"
+      - "skip changelog"
+    groups:
+      ruby-dependencies:
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
-  - package-ecosystem: "gomod"
-    directory: "/"
-    schedule:
-      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "github actions"
+      - "skip changelog"
