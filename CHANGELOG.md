@@ -3,6 +3,8 @@
 ## main
 
 - Added Node.js version 21.0.0.
+- Add metrics and tests for Node.js 21. ([#1161](https://github.com/heroku/heroku-buildpack-nodejs/pull/1161))
+
 ## v225 (2023-10-17)
 
 - Added Node.js version 20.8.1.
