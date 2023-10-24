@@ -2,7 +2,6 @@
 
 ## main
 
-- Added Yarn version 4.0.0.
 ## v226 (2023-10-19)
 
 - Added Node.js version 21.0.0.
