@@ -780,8 +780,7 @@ testYarn4() {
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
-  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-8c7a9a6d08.zip appears to be unused - removing"
-  assertCaptured "uuid-npm-9.0.0-46c41e3e43-e1f76aff37.zip appears to be unused - removing"
+  assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
   assertCapturedSuccess
 }
 ###
