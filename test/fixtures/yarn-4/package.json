@@ -13,5 +13,5 @@
   "scripts": {
     "build": "echo-cli 'Build script check'"
   },
-  "packageManager": "yarn@4.0.0-rc.22"
+  "packageManager": "yarn@4.0.0"
 }
