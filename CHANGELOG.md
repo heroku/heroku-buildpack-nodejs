@@ -2,6 +2,8 @@
 
 ## main
 
+- Update default node version to 20.x
+
 ## v227 (2023-10-26)
 
 - Added Yarn version 4.0.0.
