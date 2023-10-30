@@ -2,7 +2,7 @@
 
 ## main
 
-- Update default node version to 20.x
+- Update default node version to 20.x ([#1171](https://github.com/heroku/heroku-buildpack-nodejs/pull/1171))
 
 ## v227 (2023-10-26)
 
