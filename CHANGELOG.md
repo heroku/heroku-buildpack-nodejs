@@ -2,6 +2,8 @@
 
 ## main
 
+## v228 (2023-10-31)
+
 - Update default node version to 20.x ([#1171](https://github.com/heroku/heroku-buildpack-nodejs/pull/1171))
 - Added Yarn version 4.0.1.
 
