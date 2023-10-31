@@ -72,7 +72,7 @@ install_nodejs() {
   local code resolve_result
 
   if [[ -z "$version" ]]; then
-      version="18.x"
+      version="20.x"
   fi
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
