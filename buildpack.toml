@@ -1,4 +1,5 @@
 [buildpack]
+id = "pnpm.node.buildpack"
 name = "Node.js"
 
   [publish.Ignore]
