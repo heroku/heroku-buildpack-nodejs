@@ -2,6 +2,10 @@
 
 ## main
 
+- Added Yarn version 4.0.2.
+- Added Yarn version 3.7.0.
+- Added Yarn version 1.22.21.
+- Added Yarn version 1.22.20.
 - Added Node.js version 21.2.0.
 - Added Node.js version 20.10.0.
 ## v228 (2023-10-31)
