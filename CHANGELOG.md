@@ -2,6 +2,8 @@
 
 ## main
 
+- Added Node.js version 21.2.0.
+- Added Node.js version 20.10.0.
 ## v228 (2023-10-31)
 
 - Update default node version to 20.x ([#1171](https://github.com/heroku/heroku-buildpack-nodejs/pull/1171))
