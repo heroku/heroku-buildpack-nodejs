@@ -2,6 +2,8 @@
 
 ## main
 
+- Updated metrics plugin to v14
+
 ## v229 (2023-11-27)
 
 - Added Node.js version 21.2.0.
