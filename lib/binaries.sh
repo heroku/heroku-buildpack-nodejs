@@ -71,14 +71,7 @@ install_nodejs() {
   local code resolve_result
 
   if [[ -z "$version" ]]; then
-    # Node.js 18+ is incompatible with ubuntu:18 (and thus scalingo-18) because of a libc mismatch:
-    # node: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.28' not found (required by node)
-    # Fallback to a 16.x default for scalingo-18 until scalingo-18 or Node.js 16.x are EOL.
-    if [[ "$STACK" == "heroku-18" || "$STACK" == "scalingo-18" ]]; then
-      version="16.x"
-    else
-      version="18.x"
-    fi
+      version="20.x"
   fi
 
   if [[ -n "$NODE_BINARY_URL" ]]; then

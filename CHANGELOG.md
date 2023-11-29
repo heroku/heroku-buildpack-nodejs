@@ -17,6 +17,22 @@
 
 ## main
 
+## v229 (2023-11-27)
+
+- Added Node.js version 21.2.0.
+- Added Node.js version 20.10.0.
+- Added Yarn version 4.0.2.
+- Added Yarn version 3.7.0.
+- Added Yarn version 1.22.21.
+- Added Yarn version 1.22.20.
+
+## v228 (2023-10-31)
+
+- Update default node version to 20.x ([#1171](https://github.com/heroku/heroku-buildpack-nodejs/pull/1171))
+- Added Yarn version 4.0.1.
+
+## v227 (2023-10-26)
+
 - Added Yarn version 4.0.0.
 - Added Node.js version 21.1.0.
 - Added Node.js version 20.9.0.
@@ -30,7 +46,7 @@
 
 - Added Node.js version 20.8.1.
 - Added Node.js version 18.18.2.
- 
+
 ## v224 (2023-10-11)
 
 - Added Node.js version 18.18.1.
@@ -68,7 +84,7 @@
 - Added Node.js version 16.20.2.
 - Added Node.js version 18.17.1.
 - Added Node.js version 20.5.1.
-    
+
 ## v218 (2023-07-24)
 
 - Added Node.js version 20.5.0.
@@ -107,7 +123,7 @@
 - Add metrics and tests for Node.js 20.x line
 
 ## v210 (2023-04-20)
- 
+
 - Added node version 20.0.0.
 
 ## v209 (2023-04-17)
