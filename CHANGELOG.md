@@ -2,7 +2,7 @@
 
 ## main
 
-- Updated metrics plugin to v14
+- Updated metrics plugin to v14 ([#1180](https://github.com/heroku/heroku-buildpack-nodejs/pull/1180))
 
 ## v229 (2023-11-27)
 
