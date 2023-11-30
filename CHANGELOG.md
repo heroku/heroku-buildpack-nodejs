@@ -2,6 +2,8 @@
 
 ## main
 
+- Added new metrics instrumentation for Node 21.
+
 ## v228 (2023-10-31)
 
 - Update default node version to 20.x ([#1171](https://github.com/heroku/heroku-buildpack-nodejs/pull/1171))
