@@ -2,6 +2,8 @@
 
 ## main
 
+## v230 (2023-11-30)
+
 - Added Node.js version 18.19.0.
 - Updated metrics plugin to v14 ([#1180](https://github.com/heroku/heroku-buildpack-nodejs/pull/1180))
 
