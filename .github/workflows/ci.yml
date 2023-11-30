@@ -62,7 +62,7 @@ jobs:
       fail-fast: false
       matrix:
         version: [latest, lts/*, lts/-1]
-    name: Test Metrics (${{ matrix.version }}
+    name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

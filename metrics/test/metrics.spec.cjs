@@ -29,7 +29,7 @@ describe('Metrics plugin', () => {
 
     describe('normal operations', () => {
         function assertExpectedOutput(pluginOutput, herokuMetricsUrl) {
-            assert.match(pluginOutput, /\[heroku-metrics] Starting metrics collection/)
+            assert.match(pluginOutput, /\[heroku-metrics] Registering metrics instrumentation/)
             assert.match(pluginOutput, new RegExp(`\\[heroku-metrics] HEROKU_METRICS_URL set to "${herokuMetricsUrl}"`))
             assert.match(pluginOutput, /\[heroku-metrics] METRICS_INTERVAL_OVERRIDE set to "10000"/)
             assert.match(pluginOutput, /\[heroku-metrics] Using interval of 10000ms/)
