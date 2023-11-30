@@ -2,7 +2,21 @@
 
 ## main
 
-- Added new metrics instrumentation for Node 21.
+- Added new metrics instrumentation for Node 21. ([#1178](https://github.com/heroku/heroku-buildpack-nodejs/pull/1178))
+
+## v230 (2023-11-30)
+
+- Added Node.js version 18.19.0.
+- Updated metrics plugin to v14 ([#1180](https://github.com/heroku/heroku-buildpack-nodejs/pull/1180))
+
+## v229 (2023-11-27)
+
+- Added Node.js version 21.2.0.
+- Added Node.js version 20.10.0.
+- Added Yarn version 4.0.2.
+- Added Yarn version 3.7.0.
+- Added Yarn version 1.22.21.
+- Added Yarn version 1.22.20.
 
 ## v228 (2023-10-31)
 
@@ -24,7 +38,7 @@
 
 - Added Node.js version 20.8.1.
 - Added Node.js version 18.18.2.
- 
+
 ## v224 (2023-10-11)
 
 - Added Node.js version 18.18.1.
@@ -62,7 +76,7 @@
 - Added Node.js version 16.20.2.
 - Added Node.js version 18.17.1.
 - Added Node.js version 20.5.1.
-    
+
 ## v218 (2023-07-24)
 
 - Added Node.js version 20.5.0.
@@ -101,7 +115,7 @@
 - Add metrics and tests for Node.js 20.x line
 
 ## v210 (2023-04-20)
- 
+
 - Added node version 20.0.0.
 
 ## v209 (2023-04-17)
