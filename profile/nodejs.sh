@@ -9,22 +9,20 @@ if [[ -n "$HEROKU_METRICS_URL" ]] && \
    # the user has not opted out
    [[ -z "$HEROKU_SKIP_NODE_PLUGIN" ]]; then
 
-  # if the plugin was installed for this node version
   if [[ -d $HOME/.heroku/heroku-nodejs-plugin ]]; then
-    # Don't clobber NODE_OPTIONS if the user has set it, just add the require flag to the end
-    if [[ -z "$NODE_OPTIONS" ]]; then
-        export NODE_OPTIONS="--require $HOME/.heroku/heroku-nodejs-plugin"
-    else
-        export NODE_OPTIONS="${NODE_OPTIONS} --require $HOME/.heroku/heroku-nodejs-plugin"
-    fi
-  # or if the metrics script was installed
+    # if the plugin was installed for this node version
+    metrics_handler="$HOME/.heroku/heroku-nodejs-plugin"
   elif [[ -d $HOME/.heroku/metrics ]]; then
-    # Don't clobber NODE_OPTIONS if the user has set it, just add the require flag to the end
-    if [[ -z "$NODE_OPTIONS" ]]; then
-        export NODE_OPTIONS="--require $HOME/.heroku/metrics/metrics_collector.cjs"
-    else
-        export NODE_OPTIONS="${NODE_OPTIONS} --require $HOME/.heroku/metrics/metrics_collector.cjs"
-    fi
+    # or if the metrics script was installed
+    metrics_handler="$HOME/.heroku/metrics/metrics_collector.cjs"
+  else
+    return
   fi
 
+  # Don't clobber NODE_OPTIONS if the user has set it, just add the require flag to the end
+  if [[ -z "$NODE_OPTIONS" ]]; then
+    export NODE_OPTIONS="--require $metrics_handler"
+  else
+    export NODE_OPTIONS="${NODE_OPTIONS} --require $metrics_handler"
+  fi
 fi
