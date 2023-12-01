@@ -120,7 +120,7 @@ function parseHerokuMetricsUrl() {
 /**
  * Returns the time in milliseconds to wait between requests to send metrics to the collecting service. This value is
  * either parsed from the environment variable `METRICS_INTERVAL_OVERRIDE` or defaults to 20s. The parsed value also
- * cannot exceed 10s.
+ * can be no less than 10s.
  * @returns {number}
  */
 function parseHerokuMetricsInterval() {
