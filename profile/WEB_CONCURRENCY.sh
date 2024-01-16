@@ -76,7 +76,6 @@ export WEB_MEMORY=${WEB_MEMORY-$(default_web_memory "$MEMORY_AVAILABLE")}
 # Calculate/validate WEB_CONCURRENCY if not already set
 if [ -z "${WEB_CONCURRENCY}" ]; then
     calculated_concurrency=$(calculate_concurrency "$MEMORY_AVAILABLE" "$WEB_MEMORY")
-    validated_concurrency=$(validate_concurrency "$calculated_concurrency")
     if ! validated_concurrency=$(validate_concurrency "$calculated_concurrency"); then
         warn_web_concurrency "$validated_concurrency"
     fi
