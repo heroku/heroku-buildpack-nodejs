@@ -53,7 +53,7 @@ default_web_memory() {
     local available_memory=$1
     # Allow more memory per process on memory heavy dyno types.
     if (( available_memory > 16384 )); then
-        echo 1024
+        echo 2048
     else
         echo 512
     fi
