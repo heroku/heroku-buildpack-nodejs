@@ -333,7 +333,7 @@ testWebConcurrencyProfileScript() {
   # Performance-L
   assertEquals "28" "$(calculate_concurrency 14336 512)"
   # Memory heavy
-  assertEquals "124" "$(calculate_concurrency 63488 2048)"
+  assertEquals "31" "$(calculate_concurrency 63488 2048)"
 
   # In case some very large memory available value gets passed in
   assertEquals "1" "$(validate_concurrency $(calculate_concurrency 103401 512))"
