@@ -2,7 +2,7 @@
 
 ## main
 
-- Adjust WEB_CONCURRENCY calculations to support larger, memory heavy instances. ([#1196](https://github.com/heroku/heroku-buildpack-nodejs/pull/1196v))
+- Adjust WEB_CONCURRENCY calculations to support larger, memory heavy instances. ([#1196](https://github.com/heroku/heroku-buildpack-nodejs/pull/1196))
 
 ## v233 (2024-01-02)
 
