@@ -1,10 +1,13 @@
-const { isPrimary, fork } = require('node:cluster')
+const cluster = require('cluster')
 
 require('./_cpu_and_memory_simulator.cjs')
 
-if (isPrimary) {
+if (
+    cluster.isPrimary ||
+    cluster.isMaster // deprecated in Node v16
+) {
     console.log(`Starting primary cluster ${process.pid} running with NODE_OPTIONS="${process.env.NODE_OPTIONS || ''}"`)
-    fork()
+    cluster.fork()
     process.on('SIGINT', () => {
         process.exit(0)
     })

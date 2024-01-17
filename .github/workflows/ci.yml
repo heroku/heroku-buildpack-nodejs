@@ -61,7 +61,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [latest, lts/*, lts/-1]
+        # check the minimum node version supported by the metrics script and the latest node version
+        # (assumes the versions between have backwards-compatible APIs)
+        version: [14.10.0, latest]
     name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-latest
     steps:
@@ -69,4 +71,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.version }}
-      - run: node --test metrics/test/metrics.spec.cjs
+      - run: npx mocha metrics/test/metrics.spec.cjs

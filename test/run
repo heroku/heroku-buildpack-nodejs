@@ -1199,17 +1199,20 @@ testPluginInstallationBuildTime() {
   compile "node-13"
   assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-14"
+  compile "node-14.9"
   assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+
+  compile "node-14"
+  assertFileExists "${compile_dir}/.heroku/metrics/metrics_collector.cjs"
 
   # but not for earlier versions
   compile "node-6"
   assertFileDoesNotExist "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 }
 
-testPluginInstallationRunTime() {
+testPluginInstallationRunTimeNodeAddon() {
   local env_dir=$(mktmpdir)
-  compile "node-14" "$(mktmpdir)" $env_dir
+  compile "node-12" "$(mktmpdir)" $env_dir
 
   # by default $NODE_OPTIONS is unmodifed
   executeStartup $env_dir
@@ -1235,6 +1238,45 @@ testPluginInstallationRunTime() {
   export NODE_OPTIONS="--max-old-space-size=128"
   executeStartup $env_dir
   assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
+  export HEROKU_METRICS_URL=https://localhost:5000
+  export NODE_OPTIONS="--max-old-space-size=128"
+  export HEROKU_SKIP_NODE_PLUGIN=true
+  executeStartup $env_dir
+  assertEquals "--max-old-space-size=128" "$NODE_OPTIONS"
+  cleanupStartup
+}
+
+testPluginInstallationRunTimeNodeScript() {
+  local env_dir=$(mktmpdir)
+  compile "node-14" "$(mktmpdir)" $env_dir
+
+  # by default $NODE_OPTIONS is unmodifed
+  executeStartup $env_dir
+  assertEquals "" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # If $HEROKU_METRICS_URL is defined at run time, the script
+  # should add a require statement to $NODE_OPTIONS
+  export HEROKU_METRICS_URL=https://localhost:5000
+  executeStartup $env_dir
+  assertEquals "--require $compile_dir/.heroku/metrics/metrics_collector.cjs" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # unless $HEROKU_SKIP_NODE_PLUGIN is defined
+  export HEROKU_METRICS_URL=https://localhost:5000
+  export HEROKU_SKIP_NODE_PLUGIN=true
+  executeStartup $env_dir
+  assertEquals "" "$NODE_OPTIONS"
+  cleanupStartup
+
+  # if $NODE_OPTIONS already exists, it will append the require command
+  export HEROKU_METRICS_URL=https://localhost:5000
+  export NODE_OPTIONS="--max-old-space-size=128"
+  executeStartup $env_dir
+  assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/metrics/metrics_collector.cjs" "$NODE_OPTIONS"
   cleanupStartup
 
   # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined

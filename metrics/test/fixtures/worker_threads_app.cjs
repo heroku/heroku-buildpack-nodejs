@@ -1,4 +1,4 @@
-const { Worker, isMainThread} = require('node:worker_threads')
+const { Worker, isMainThread} = require('worker_threads')
 
 require('./_cpu_and_memory_simulator.cjs')
 

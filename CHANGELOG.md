@@ -2,6 +2,8 @@
 
 ## main
 
+- Expand new metrics instrumentation to Node 14+. ([#1198](https://github.com/heroku/heroku-buildpack-nodejs/pull/1198))
+
 ## v234 (2024-01-16)
 
 - Added Node.js version 21.6.0.
