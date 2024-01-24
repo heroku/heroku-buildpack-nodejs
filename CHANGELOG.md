@@ -2,6 +2,9 @@
 
 ## main
 
+
+## [v235] - 2024-01-24
+
 - Adjust WEB_CONCURRENCY calculations to support larger, memory heavy instances. ([#1196](https://github.com/heroku/heroku-buildpack-nodejs/pull/1196))
 - Added Node.js version 21.6.1.
 
