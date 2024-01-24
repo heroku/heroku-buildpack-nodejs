@@ -2,6 +2,7 @@
 
 ## main
 
+- Added Node.js version 21.6.1.
 ## v234 (2024-01-16)
 
 - Added Node.js version 21.6.0.
