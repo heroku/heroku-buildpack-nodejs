@@ -17,6 +17,30 @@
 
 ## main
 
+## v234 (2024-01-16)
+
+- Added Node.js version 21.6.0.
+- Added Node.js version 20.11.0.
+
+## v233 (2024-01-02)
+
+- Added Node.js version 21.5.0.
+
+## v232 (2023-12-07)
+
+- Added Node.js version 21.4.0.
+- Added new metrics instrumentation for Node 21. ([#1178](https://github.com/heroku/heroku-buildpack-nodejs/pull/1178))
+
+## v231 (2023-12-01)
+
+- Updated metrics plugin to v15. ([#1184](https://github.com/heroku/heroku-buildpack-nodejs/pull/1184))
+- Added Node.js version 21.3.0.
+
+## v230 (2023-11-30)
+
+- Added Node.js version 18.19.0.
+- Updated metrics plugin to v14 ([#1180](https://github.com/heroku/heroku-buildpack-nodejs/pull/1180))
+
 ## v229 (2023-11-27)
 
 - Added Node.js version 21.2.0.

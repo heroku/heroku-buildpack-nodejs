@@ -5419,6 +5419,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "840d418911ebab9041cc40478e88481a-6"
 
 [[releases]]
+version = "18.19.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v18.19.0-linux-x64.tar.gz"
+etag = "461c309590898b3c14c81415d391338c-6"
+
+[[releases]]
 version = "18.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -5594,6 +5601,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "b5ad95e5081d4eac6d9e110d41ca113c-6"
 
 [[releases]]
+version = "20.11.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v20.11.0-linux-x64.tar.gz"
+etag = "a16cdc046eb902f001f3d804d21dfcc4-6"
+
+[[releases]]
 version = "20.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -5697,6 +5711,34 @@ channel = "release"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v21.2.0-linux-x64.tar.gz"
 etag = "778a67c5ab73dce04532b6ee57ab3fec-6"
+
+[[releases]]
+version = "21.3.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v21.3.0-linux-x64.tar.gz"
+etag = "781ad38fed32c307945252a4741a6516-6"
+
+[[releases]]
+version = "21.4.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v21.4.0-linux-x64.tar.gz"
+etag = "26dae86935144cb59b664b6dad930094-6"
+
+[[releases]]
+version = "21.5.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v21.5.0-linux-x64.tar.gz"
+etag = "298ce3676087bdbc14a0681eaa51f34f-6"
+
+[[releases]]
+version = "21.6.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v21.6.0-linux-x64.tar.gz"
+etag = "5378b4b305c3158f220eaf66e8038210-6"
 
 [[releases]]
 version = "4.0.0"
