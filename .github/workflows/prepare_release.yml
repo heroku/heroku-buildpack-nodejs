@@ -2,8 +2,6 @@ name: Prepare Buildpack Release
 
 on:
   workflow_dispatch:
-  # TODO: remove the pull_request trigger before merge, it's just for testing.
-  pull_request:
 
 jobs:
   prepare-release:
