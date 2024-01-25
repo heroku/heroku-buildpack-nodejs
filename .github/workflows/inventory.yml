@@ -29,7 +29,7 @@ jobs:
       - name: Rebuild Inventory
         run: "generate_inventory node > inventory/node.toml"
       - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## main\s+/## main\n\n{}/' CHANGELOG.md
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## \[Unreleased\]\s+/## \[Unreleased\]\n\n{}/' CHANGELOG.md
       - uses: heroku/use-app-token-action@main
         id: generate-token
         with:
@@ -77,7 +77,7 @@ jobs:
       - name: Rebuild Inventory
         run: "generate_inventory yarn > inventory/yarn.toml"
       - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## main\s+/## main\n\n{}/' CHANGELOG.md
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## \[Unreleased\]\s+/## \[Unreleased\]\n\n{}/' CHANGELOG.md
       - uses: heroku/use-app-token-action@main
         id: generate-token
         with:
