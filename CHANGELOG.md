@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 
+## [v236] - 2024-01-25
+
+
 
 ## [v235] - 2024-01-24
 
@@ -769,7 +772,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v235...HEAD
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v236...main
+[v236]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v235...v236
 [v235]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v234...v235
 [v234]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v233...v234
 [v233]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v232...v233
