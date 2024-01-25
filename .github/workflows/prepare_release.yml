@@ -2,13 +2,9 @@ name: Prepare Buildpack Release
 
 on:
   workflow_dispatch:
+  pull_request: # TODO: Remove me after testing.
 
 jobs:
   prepare-release:
-    uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-prepare-release.yml@prepare_release_for_classic_buildpacks
-    with:
-      app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-      buildpack_name: heroku/nodejs
-      unreleased_header_text: main
-    secrets:
-      app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+    uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-prepare-release.yml@edmorley/classic-prepare-release
+    secrets: inherit
