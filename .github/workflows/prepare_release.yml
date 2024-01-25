@@ -7,4 +7,8 @@ on:
 jobs:
   prepare-release:
     uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-prepare-release.yml@edmorley/classic-prepare-release
+    with:
+      custom_update_command: |
+        echo "existing version: $EXISTING_VERSION"
+        echo "new version: $NEW_VERSION"
     secrets: inherit
