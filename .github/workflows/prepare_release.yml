@@ -1,4 +1,4 @@
-name: Prepare Buildpack Release
+name: Prepare Release
 
 on:
   workflow_dispatch:
