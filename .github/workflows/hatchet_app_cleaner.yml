@@ -1,4 +1,4 @@
-name: Hatchet app cleaner
+name: Hatchet App Cleaner
 
 on:
   schedule:
