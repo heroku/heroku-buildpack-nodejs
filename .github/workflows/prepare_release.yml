@@ -1,0 +1,9 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare-release:
+    uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-prepare-release.yml@latest
+    secrets: inherit
