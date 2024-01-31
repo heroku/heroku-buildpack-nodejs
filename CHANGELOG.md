@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Yarn version 4.1.0.
 
 
 ## [v235] - 2024-01-24
