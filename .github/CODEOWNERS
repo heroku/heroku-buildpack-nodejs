@@ -7,4 +7,4 @@ buildpack.toml @joshwlewis @colincasey
 CHANGELOG.md @joshwlewis @colincasey
 Cargo.toml @joshwlewis @colincasey
 Cargo.lock @joshwlewis @colincasey
-inventory.toml @joshwlewis @colincasey
+inventory/ @joshwlewis @colincasey
