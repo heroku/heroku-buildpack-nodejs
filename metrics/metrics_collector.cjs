@@ -21,16 +21,18 @@
  *     gauges: EventLoopGauges;
  * }} MetricsPayload
  */
-const { setInterval } = require('node:timers')
-const { URL } = require('node:url');
-const { debuglog } = require('node:util');
-const { monitorEventLoopDelay, PerformanceObserver, constants, performance } = require('node:perf_hooks')
+const { setInterval } = require('timers')
+const { URL } = require('url');
+const { debuglog } = require('util');
+const { monitorEventLoopDelay, PerformanceObserver, constants, performance } = require('perf_hooks')
+const { request: insecureRequest } = require('http');
+const { request: secureRequest } = require('https');
 
 try {
     // failures from the instrumentation shouldn't mess with the application
     registerInstrumentation()
 } catch (e) {
-    log(`An unexpected error occurred: ${e.message}`)
+    log(`An unexpected error occurred: ${e.stack}`)
 }
 
 /**
@@ -53,7 +55,7 @@ function registerInstrumentation() {
     const gcObserver = new PerformanceObserver((value) => {
         value.getEntries().forEach(entry => updateMemoryCounters(memoryCounters, entry))
     })
-    gcObserver.observe({ type: 'gc' })
+    gcObserver.observe({ entryTypes: ['gc'] })
 
     const eventLoopHistogram = monitorEventLoopDelay()
     eventLoopHistogram.enable()
@@ -61,25 +63,25 @@ function registerInstrumentation() {
     let previousEventLoopUtilization = performance.eventLoopUtilization()
 
     const timeout  = setInterval(() => {
-        const eventLoopUtilization = performance.eventLoopUtilization(previousEventLoopUtilization)
-        eventLoopHistogram.disable()
-        gcObserver.disconnect()
+        try {
+            const eventLoopUtilization = performance.eventLoopUtilization(previousEventLoopUtilization)
+            eventLoopHistogram.disable()
+            gcObserver.disconnect()
 
-        const payload = {
-            counters: { ...memoryCounters },
-            gauges: captureEventLoopGauges(eventLoopUtilization, eventLoopHistogram)
+            sendMetrics(herokuMetricsUrl, {
+                counters: {...memoryCounters},
+                gauges: captureEventLoopGauges(eventLoopUtilization, eventLoopHistogram)
+            })
+
+            // reset memory and event loop measures
+            previousEventLoopUtilization = eventLoopUtilization
+            memoryCounters = initializeMemoryCounters()
+            gcObserver.observe({ entryTypes: ['gc'] })
+            eventLoopHistogram.reset()
+            eventLoopHistogram.enable()
+        } catch (e) {
+            log(`An unexpected error occurred: ${e.stack}`)
         }
-
-        sendMetrics(herokuMetricsUrl, payload).catch((err) => {
-            log(`An error occurred while sending metrics - ${err}`)
-        })
-
-        // reset memory and event loop measures
-        previousEventLoopUtilization = eventLoopUtilization
-        memoryCounters = initializeMemoryCounters()
-        gcObserver.observe({ type: 'gc' })
-        eventLoopHistogram.reset()
-        eventLoopHistogram.enable()
     }, herokuMetricsInterval)
 
     // `setInterval` actually returns a Timeout object but this isn't recognized by the type-checker which
@@ -171,19 +173,31 @@ function initializeMemoryCounters(){
  * @param {PerformanceEntry} performanceEntry
  */
 function updateMemoryCounters(memoryCounters, performanceEntry) {
-    // only record entries with that contain a 'detail' object with 'kind' property
-    // since these are only available for NodeGCPerformanceDetail entries
-    if ('detail' in performanceEntry && 'kind' in performanceEntry.detail) {
-        const nsDuration = millisecondsToNanoseconds(performanceEntry.duration)
-        memoryCounters['node.gc.collections'] += 1
-        memoryCounters['node.gc.pause.ns'] += nsDuration
-        if (performanceEntry.detail.kind === constants.NODE_PERFORMANCE_GC_MINOR) {
-            memoryCounters['node.gc.young.collections'] += 1
-            memoryCounters['node.gc.young.pause.ns'] += nsDuration
-        } else {
-            memoryCounters['node.gc.old.collections'] += 1
-            memoryCounters['node.gc.old.pause.ns'] += nsDuration
-        }
+    const nsDuration = millisecondsToNanoseconds(performanceEntry.duration)
+    memoryCounters['node.gc.collections'] += 1
+    memoryCounters['node.gc.pause.ns'] += nsDuration
+    if (getGcPerformanceEntryKind(performanceEntry) === constants.NODE_PERFORMANCE_GC_MINOR) {
+        memoryCounters['node.gc.young.collections'] += 1
+        memoryCounters['node.gc.young.pause.ns'] += nsDuration
+    } else {
+        memoryCounters['node.gc.old.collections'] += 1
+        memoryCounters['node.gc.old.pause.ns'] += nsDuration
+    }
+}
+
+/**
+ * Reads the `kind` field for the 'gc' performance entry in a backwards-compatible way
+ * @param {PerformanceEntry} performanceEntry
+ * @returns {number}
+ */
+function getGcPerformanceEntryKind(performanceEntry) {
+    // using try/catch to avoid triggering deprecation warnings
+    try {
+        // for v16 and up
+        return performanceEntry.detail.kind
+    } catch (e) {
+        // fallback for v14 & v15
+        return performanceEntry.kind
     }
 }
 
@@ -209,7 +223,7 @@ function captureEventLoopGauges(eventLoopUtilization, eventLoopHistogram) {
  * @return {number}
  */
 function millisecondsToNanoseconds(ms) {
-    return ms * 1_000_000
+    return ms * 1e6 // 1_000_000
 }
 
 /**
@@ -218,26 +232,47 @@ function millisecondsToNanoseconds(ms) {
  * @return {number}
  */
 function nanosecondsToMilliseconds(ns) {
-    return ns / 1_000_000
+    return ns / 1e6 // 1_000_000
 }
 
 /**
  * Sends the collected metrics to the given endpoint using a POST request.
  * @param {URL} url
  * @param {MetricsPayload} payload
- * @returns {Promise<void>}
+ * @returns void
  */
 function sendMetrics(url, payload) {
+    const request = url.protocol === 'https:' ? secureRequest : insecureRequest
+    const payloadAsJson = JSON.stringify(payload)
+
     log(`Sending metrics to ${url.toString()}`)
-    return fetch(url, {
+    const clientRequest = request({
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    }).then(res => {
-        if (res.ok) {
-            log('Metrics sent successfully')
-        } else {
-            log(`Tried to send metrics but response was: ${res.status} - ${res.statusText}`)
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(payloadAsJson)
         }
     })
+
+    clientRequest.on('response', (res) => {
+        if (res.statusCode === 200) {
+            log('Metrics sent successfully')
+        } else {
+            log(`Tried to send metrics but response was: ${res.statusCode} - ${res.statusMessage}`)
+        }
+        // consume response data to free up memory
+        // see: https://nodejs.org/docs/latest/api/http.html#http_class_http_clientrequest
+        res.resume()
+    })
+
+    clientRequest.on('error', (err) => {
+        log(`An error occurred while sending metrics - ${err}`)
+    })
+
+    clientRequest.write(payloadAsJson)
+    clientRequest.end()
 }

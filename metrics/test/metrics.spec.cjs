@@ -1,29 +1,31 @@
-const { existsSync} = require('node:fs')
-const { join, resolve, dirname } = require('node:path')
-const { spawn } = require('node:child_process')
-const http = require('node:http')
-const { afterEach, beforeEach, describe, it } = require('node:test')
-const assert = require("node:assert");
+/**
+ * This test suite can be executed with `npx mocha ./metrics.spec.cjs`. Initially it was meant to run with the built-in
+ * Node.js test runner but now that support is being expanded to Node.js v14.10.0 and up we need an external test runner
+ * and so `mocha` + the built-in assertion library in Node.js is all we need.
+ */
+
+const { existsSync} = require('fs')
+const { join, resolve, dirname } = require('path')
+const { spawn } = require('child_process')
+const http = require('http')
+const assert = require('assert');
 
 const metricsScript = resolve(__dirname, '..', 'metrics_collector.cjs')
 
-const testOptions = {
-    // the default metric interval is 20 seconds, so we'll make these tests run just slightly longer than
-    // the time required to collect a single metric
-    timeout: 21000,
-}
+// the default metric interval is 20 seconds, so we'll make these tests run just slightly longer than
+// the time required to collect a single metric
+const TEST_TIMEOUT = 21000
 
-describe('Metrics plugin', () => {
-    let abortController
+describe('Metrics plugin', function () {
+    // because we use `this` here the above describe needs to use `function () { ... }` instead of `() => { ... }`
+    this.timeout(TEST_TIMEOUT)
 
-    beforeEach(() => {
-        // this is used to shut down the internal web server that receives metrics
-        abortController = new AbortController()
-    })
+    let metricsReceiver
+    let application
 
     afterEach( () => {
-        if (abortController) {
-            abortController.abort('Test Complete')
+        if (metricsReceiver) {
+            metricsReceiver.disconnect()
         }
     })
 
@@ -59,9 +61,9 @@ describe('Metrics plugin', () => {
             }
         }
 
-        it('should collect metrics from an application running in a single process', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should collect metrics from an application running in a single process', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: 10000 // let's collect more than one metric
             })
@@ -69,9 +71,9 @@ describe('Metrics plugin', () => {
             assertMetricsReceived(metricsReceiver.metricsReceived, 2)
         })
 
-        it('should support worker threads', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('worker_threads_app.cjs', {
+        it('should support worker threads', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('worker_threads_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: 10000 // let's collect more than one metric
             })
@@ -79,9 +81,9 @@ describe('Metrics plugin', () => {
             assertMetricsReceived(metricsReceiver.metricsReceived, 4)
         })
 
-        it('should support clustering', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('clustered_app.cjs', {
+        it('should support clustering', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('clustered_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: 10000 // let's collect more than one metric
             })
@@ -91,8 +93,8 @@ describe('Metrics plugin', () => {
     })
 
     describe('configuration', () => {
-        it('should exit if no metrics url is provided', testOptions, async () => {
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should exit if no metrics url is provided', async () => {
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: undefined,
                 msToExecute: 1000
             })
@@ -100,8 +102,8 @@ describe('Metrics plugin', () => {
             assert.match(application.pluginOutput, /\[heroku-metrics] Metrics will not be collected for this application/)
         })
 
-        it('should exit if metrics url is invalid', testOptions, async () => {
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should exit if metrics url is invalid', async () => {
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: 'not a url',
                 msToExecute: 1000
             })
@@ -109,9 +111,9 @@ describe('Metrics plugin', () => {
             assert.match(application.pluginOutput, /\[heroku-metrics] Invalid URL:/)
         })
 
-        it('should use a default interval of 20 seconds', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should use a default interval of 20 seconds', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: undefined,
                 msToExecute: 1000
@@ -119,9 +121,9 @@ describe('Metrics plugin', () => {
             assert.match(application.pluginOutput, /\[heroku-metrics] Using default interval of 20000ms/)
         })
 
-        it('should allow the default interval to be changed', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should allow the default interval to be changed', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: 10000,
                 msToExecute: 1000
@@ -130,9 +132,9 @@ describe('Metrics plugin', () => {
             assert.match(application.pluginOutput, /\[heroku-metrics] Using interval of 10000ms/)
         })
 
-        it('should not allow the default interval to be changed to less than 10 seconds', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should not allow the default interval to be changed to less than 10 seconds', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: 9999,
                 msToExecute: 1000
@@ -141,9 +143,9 @@ describe('Metrics plugin', () => {
             assert.match(application.pluginOutput, /\[heroku-metrics] Interval is lower than the minimum, using the minimum interval of 10000ms instead/)
         })
 
-        it('should not allow the default interval to be changed to by a non-numeric value', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController)
-            const application = await spawnApplication('single_process_app.cjs', {
+        it('should not allow the default interval to be changed to by a non-numeric value', async () => {
+            metricsReceiver = await startMetricsReceiver()
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: metricsReceiver.url,
                 metricsIntervalOverride: 'not a number',
                 msToExecute: 1000
@@ -154,11 +156,11 @@ describe('Metrics plugin', () => {
     })
 
     describe('http error', () => {
-        it('should report when requests fail', testOptions, async () => {
-            const metricsReceiver = await startMetricsReceiver(abortController, {
+        it('should report when requests fail', async () => {
+            metricsReceiver = await startMetricsReceiver( {
                 responseStatusCode: 429
             })
-            const application = await spawnApplication('single_process_app.cjs', {
+            application = await spawnApplication('single_process_app.cjs', {
                 metricsUrl: metricsReceiver.url
             })
             assert.match(application.pluginOutput, /\[heroku-metrics] Tried to send metrics but response was: 429 - Too Many Requests/)
@@ -166,7 +168,7 @@ describe('Metrics plugin', () => {
     })
 })
 
-function startMetricsReceiver(abortController, options = {}) {
+function startMetricsReceiver(options = {}) {
     const metricsReceived = []
     options = {
         responseStatusCode: 200,
@@ -186,13 +188,13 @@ function startMetricsReceiver(abortController, options = {}) {
 
         metricsReceiver.listen({
             port: 0, // auto-assign the port
-            signal: abortController.signal
         }, () => {
             const port = metricsReceiver.address().port
             console.log(`- metrics receiver listening on ${port}`)
             resolve({
                 url: `http://localhost:${port}`,
-                metricsReceived
+                metricsReceived,
+                disconnect: () => metricsReceiver.close()
             })
         })
 
@@ -214,7 +216,7 @@ function spawnApplication(fixture, options = {}) {
     options = {
         metricsUrl: undefined,
         metricsIntervalOverride: undefined,
-        msToExecute: testOptions.timeout - 200, // kill the service just before the timeout is reached
+        msToExecute: TEST_TIMEOUT - 200, // kill the service just before the timeout is reached (so tests don't hang)
         ...options
     }
 
@@ -249,9 +251,15 @@ function spawnApplication(fixture, options = {}) {
             process.stdout.write(d)
         })
 
-        metricsProducer.on('close', (code) => {
+        metricsProducer.once('close', (code) => {
+            if (!code) {
+                code = 0
+            }
             if (code === 0 || code === 130) {
-                resolve({code, pluginOutput})
+                resolve({
+                    code,
+                    pluginOutput
+                })
             } else {
                 console.log(`EXIT: ${code}`)
                 console.log(`STDERR:\n${pluginOutput}`)
@@ -259,7 +267,7 @@ function spawnApplication(fixture, options = {}) {
             }
         })
 
-        // kill the service just before the timeout is reached
+        // run the application for the given time and then kill it
         setTimeout(() => {
             metricsProducer.kill('SIGINT') // code 130
         }, options.msToExecute)

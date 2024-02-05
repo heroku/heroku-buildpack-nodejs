@@ -5,6 +5,7 @@
 - Added Yarn version 3.8.0.
 - Added Yarn version 4.1.0.
 
+- Expand new metrics instrumentation to Node >= 14.10 ([#1198](https://github.com/heroku/heroku-buildpack-nodejs/pull/1198))
 
 ## [v235] - 2024-01-24
 
