@@ -865,6 +865,12 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v3.7.
 etag = "f73d3de3fec0107a8fe748d8049354a5"
 
 [[releases]]
+version = "3.8.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v3.8.0.tar.gz"
+etag = "ed508731c1669a348ab779d4ec4cb1ef"
+
+[[releases]]
 version = "4.0.0-rc.35"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.0.0-rc.35.tar.gz"

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Yarn version 3.8.0.
 - Added Yarn version 4.1.0.
 
 
