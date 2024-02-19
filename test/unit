@@ -315,12 +315,12 @@ testWebConcurrencyProfileScript() {
   # memory in MB of a Peformance-L dyno
   assertEquals "14336" "$(bound_memory 14336)"
 
-  # one more MB
-  assertEquals "14336" "$(bound_memory 14337)"
-
   # On non-Heroku systems `detect_memory` can return non-sensically large values
-  # In this case, we should bound
-  assertEquals "14336" "$(bound_memory 1000000)"
+  # so bound to largest known dyno size
+  assertEquals "129024" "$(bound_memory 129024)"
+
+  # One larger than largest known
+  assertEquals "129024" "$(bound_memory 129025)"
 
   # test calculate_concurrency
 
@@ -332,6 +332,8 @@ testWebConcurrencyProfileScript() {
   assertEquals "5" "$(calculate_concurrency 2560 512)"
   # Performance-L
   assertEquals "28" "$(calculate_concurrency 14336 512)"
+  # Memory heavy
+  assertEquals "31" "$(calculate_concurrency 63488 2048)"
 
   # In case some very large memory available value gets passed in
   assertEquals "1" "$(validate_concurrency $(calculate_concurrency 103401 512))"
