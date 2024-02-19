@@ -113,8 +113,8 @@ kv_pair "lock_file" "$(meta_get "has-node-lock-file")"
 kv_pair "uses_workspaces" "$(json_has_key "$BUILD_DIR/package.json" "workspaces")"
 # what workspaces are defined? Logs as: `["packages/*","a","b"]`
 kv_pair_string "workspaces" "$(read_json "$BUILD_DIR/package.json" ".workspaces")"
-# count # of js, jsx, ts, coffee, vue, and html files to approximate project size, exclude any files in node_modules
-kv_pair "num_project_files" "$(find "$BUILD_DIR" -name '*.js' -o -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
+# count # of js, cjs, mjs, jsx, ts, coffee, vue, and html files to approximate project size, exclude any files in node_modules
+kv_pair "num_project_files" "$(find "$BUILD_DIR" -name '*.js' -o -name '*.cjs' -o -name '*.mjs' -o  -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
 # measure how large node_modules is on disk
 kv_pair "node_modules_size" "$(measure_size)"
 
