@@ -37,7 +37,7 @@ jobs:
           private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       - name: Create Pull Request
         id: pr
-        uses: peter-evans/create-pull-request@v6.0.0
+        uses: peter-evans/create-pull-request@v6.0.1
         with:
           token: ${{ steps.generate-token.outputs.app_token }}
           title: "Update Node.js Engine Inventory"
@@ -85,7 +85,7 @@ jobs:
           private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       - name: Create Pull Request
         id: pr
-        uses: peter-evans/create-pull-request@v6.0.0
+        uses: peter-evans/create-pull-request@v6.0.1
         with:
           token: ${{ steps.generate-token.outputs.app_token }}
           title: "Update Node.js Yarn Inventory"
