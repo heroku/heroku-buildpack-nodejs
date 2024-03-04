@@ -3,8 +3,6 @@
 
 # However, request review from the language owners instead for files that are updated
 # by Dependabot or inventory/release automation, to reduce team review request noise.
-buildpack.toml @joshwlewis @colincasey
 CHANGELOG.md @joshwlewis @colincasey
-Cargo.toml @joshwlewis @colincasey
-Cargo.lock @joshwlewis @colincasey
+Gemfile.lock @joshwlewis @colincasey
 inventory/ @joshwlewis @colincasey
