@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 21.7.0.
 - Added Yarn version 4.1.1.
 - Added Yarn version 3.8.1.
 
