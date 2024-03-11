@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Yarn version 1.22.22.
 
 ## [v238] - 2024-03-07
 
