@@ -134,6 +134,36 @@ install_npm() {
   fi
 }
 
+install_yarn_using_corepack_package_manager() {
+  local package_manager="$1"
+  local node_version="$2"
+  install_corepack_package_manager "$package_manager" "$node_version"
+  suppress_output yarn --version
+  echo "Using yarn $(yarn --version)"
+}
+
+install_corepack_package_manager() {
+  local node_major_version
+  local node_minor_version
+
+  local package_manager="$1"
+  local node_version="$2"
+
+  node_major_version=$(echo "$node_version" | cut -d "." -f 1 | sed 's/^v//')
+  node_minor_version=$(echo "$node_version" | cut -d "." -f 2)
+
+  # Corepack is available in: v16.9.0, v14.19.0
+  if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
+    suppress_output corepack --version
+    corepack_version=$(corepack --version)
+
+    echo "Installing ${package_manager} via corepack ${corepack_version}"
+    corepack enable
+  else
+    fail_corepack_not_available "$package_manager" "$node_version"
+  fi
+}
+
 suppress_output() {
   local TMP_COMMAND_OUTPUT
   TMP_COMMAND_OUTPUT=$(mktemp)
