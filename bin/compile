@@ -102,6 +102,7 @@ meta_set "build-step" "init"
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
+[ -f "$BUILD_DIR/pnpm-lock.yaml" ] && PNPM=true || PNPM=false
 YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 
 ### Save build info
@@ -257,9 +258,23 @@ install_bins() {
     fi
   fi
 
+  if $PNPM; then
+    meta_set "build-step" "install-pnpm-using-corepack"
+    if [[ "$package_manager" == pnpm* ]]; then
+      package_manager="$package_manager"
+    else
+      warn "Currently pnpm installation is only supported through the 'packageManager' field in package.json"
+      fail
+    fi
+    monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version"
+  fi
+
   if $YARN; then
     mcount "version.yarn.$(yarn --version)"
     meta_set "yarn-version" "$(yarn --version)"
+  elif $PNPM; then
+    mcount "version.pnpm.$(pnpm --version)"
+    meta_set "pnpm-version" "$(pnpm --version)"
   else
     mcount "version.npm.$(npm --version)"
     meta_set "npm-version" "$(npm --version)"
@@ -344,6 +359,8 @@ build_dependencies() {
     yarn_2_install "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
+  elif $PNPM; then
+    pnpm_install "$BUILD_DIR"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
@@ -388,6 +405,8 @@ cache_build() {
 prune_devdependencies() {
   if $YARN || $YARN_2; then
     yarn_prune_devdependencies "$BUILD_DIR" "$YARN_CACHE_FOLDER" "$BP_DIR"
+  elif $PNPM; then
+    pnpm_prune_devdependencies "$BUILD_DIR"
   else
     npm_prune_devdependencies "$BUILD_DIR"
   fi

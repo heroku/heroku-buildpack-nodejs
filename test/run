@@ -1753,6 +1753,43 @@ testCorepackInvalidVersion() {
   assertCapturedError
 }
 
+# PNPM
+
+testPnpm7Pnp() {
+  compile "pnpm-7-pnp"
+  assertCaptured "packageManager (package.json): pnpm@7.32.3"
+  assertCaptured "Installing pnpm@7.32.3 via corepack"
+  assertCaptured "Using pnpm 7.32.3"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "+ dotenv"
+  assertCaptured "- dotenv"
+  assertCaptured "heroku-prebuild"
+  assertCaptured "heroku-build"
+  assertCaptured "heroku-cleanup"
+  assertCapturedSuccess
+}
+
+testPnpm8Hoist() {
+  compile "pnpm-8-hoist"
+  assertCaptured "packageManager (package.json): pnpm@8.4.0"
+  assertCaptured "Installing pnpm@8.4.0 via corepack"
+  assertCaptured "Using pnpm 8.4.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+testPnpm8Nuxt() {
+  compile "pnpm-8-nuxt"
+  assertCaptured "packageManager (package.json): pnpm@8.11.0"
+  assertCaptured "Installing pnpm@8.11.0 via corepack"
+  assertCaptured "Using pnpm 8.11.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "> nuxt prepare"
+  assertCaptured "> pnpm-8-nuxt@ build"
+  assertCaptured "> nuxt build"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

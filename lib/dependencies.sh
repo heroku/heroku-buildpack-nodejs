@@ -33,6 +33,9 @@ run_if_present() {
       if [[ -n "$script" ]]; then
         monitor "${script_name}-script" yarn run "$script_name"
       fi
+    elif $PNPM; then
+      echo "Running $script_name"
+      monitor "${script_name}-script" pnpm run --if-present "$script_name"
     else
       echo "Running $script_name"
       monitor "${script_name}-script" npm run "$script_name" --if-present
@@ -64,6 +67,14 @@ run_build_if_present() {
         else
           monitor "${script_name}-script" yarn run "$script_name"
         fi
+      fi
+    elif $PNPM; then
+      echo "Running $script_name"
+      if [[ -n $NODE_BUILD_FLAGS ]]; then
+        echo "Running with $NODE_BUILD_FLAGS flags"
+        monitor "${script_name}-script" pnpm run --if-present "$script_name" -- "$NODE_BUILD_FLAGS"
+      else
+        monitor "${script_name}-script" pnpm run --if-present "$script_name"
       fi
     else
       echo "Running $script_name"
@@ -304,4 +315,48 @@ npm_prune_devdependencies() {
     monitor "npm-prune" npm prune --userconfig "$build_dir/.npmrc" 2>&1
     meta_set "skipped-prune" "false"
   fi
+}
+
+pnpm_install() {
+  local build_dir=${1:-}
+
+  echo "Running 'pnpm install' with pnpm-lock.yaml"
+  cd "$build_dir" || return
+
+  monitor "pnpm-install" pnpm install --prod=false --frozen-lockfile 2>&1
+
+  # prune the store after install to remove any package versions which may have been upgraded/removed
+  # since the last install.
+  suppress_output pnpm store prune
+}
+
+pnpm_prune_devdependencies() {
+  local build_dir=${1:-}
+
+  cd "$build_dir" || return
+
+  # seems like we can't use prune without some workarounds because it triggers pre/post-install scripts
+  # and does not respect the `--ignore-scripts` argument:
+  # https://github.com/pnpm/pnpm/issues/5030
+  #
+  # so we're going to create a temporary .npmrc file which does allow us to set the ignore-scripts config:
+  # https://pnpm.io/npmrc#ignore-scripts
+  local app_npmrc="$build_dir/.npmrc"
+  local tmp_npmrc=$(mktemp)
+
+  # copy the original .npmrc if it exists
+  if [ -f "$app_npmrc" ]; then
+    cp "$app_npmrc" "$tmp_npmrc"
+  fi
+
+  # append the temporary configuration setting
+  echo -e "\nignore-scripts=true" >> "$app_npmrc"
+  pnpm prune --prod 2>&1
+
+  # restore the original .npmrc if it exists
+  if [ -f "$app_npmrc" ]; then
+    cp "$tmp_npmrc" "$app_npmrc"
+  fi
+
+  meta_set "skipped-prune" "false"
 }
