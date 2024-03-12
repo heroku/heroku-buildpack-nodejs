@@ -183,11 +183,14 @@ if [[ "$YARN_2" == "true" ]]; then
   # get yarn_path
   VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
 
-  # fail for no yarnPath in rc
-  fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
-
-  # fail for missing yarn in .yarn/releases
-  fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
+  # if we're installing yarn via corepack we don't need to fail
+  # on the yarn path configuration or vendored script
+  if [[ "$(read_json "$BUILD_DIR/package.json" ".packageManager")" != yarn* ]]; then
+    # fail for no yarnPath in rc
+    fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
+    # fail for missing yarn in .yarn/releases
+    fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
+  fi
 fi
 
 ### Configure package manager cache directories
@@ -196,24 +199,40 @@ fi
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine npm_engine yarn_engine npm_version node_version
+  local node_engine npm_engine yarn_engine node_version package_manager
 
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
 
   meta_set "node-version-request" "$node_engine"
   meta_set "npm-version-request" "$npm_engine"
   meta_set "yarn-version-request" "$yarn_engine"
+  meta_set "package-manager-request" "$package_manager"
 
-  echo "engines.node (package.json):  ${node_engine:-unspecified}"
-  echo "engines.npm (package.json):   ${npm_engine:-unspecified (use default)}"
+  echo "engines.node (package.json):   ${node_engine:-unspecified}"
+  echo "engines.npm (package.json):    ${npm_engine:-unspecified (use default)}"
+
   if $YARN || [ -n "$yarn_engine" ]; then
-    echo "engines.yarn (package.json):  ${yarn_engine:-unspecified (use default)}"
+    echo "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
   fi
+
+  if [ -n "$package_manager" ]; then
+    echo "packageManager (package.json): $package_manager"
+  fi
+
   echo ""
 
   warn_node_engine "$node_engine"
+
+  if [ -n "$yarn_engine" ] && [[ "$package_manager" == yarn* ]]; then
+    warn_multiple_yarn_version "$package_manager" "$yarn_engine"
+  fi
+
+  if has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
+    warn_yarn_release_script_with_package_manager "$package_manager" "$(get_yarn_path "$BUILD_DIR")"
+  fi
 
   meta_set "build-step" "install-nodejs"
   monitor "install-node-binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
@@ -225,12 +244,17 @@ install_bins() {
   mcount "version.node.$node_version"
   meta_set "node-version" "$node_version"
 
-  # Download yarn if there is a yarn.lock file or if the user
-  # has specified a version of yarn under "engines". We'll still
-  # only install using yarn if there is a yarn.lock file
-  if $YARN || [ -n "$yarn_engine" ]; then
-    meta_set "build-step" "install-yarn"
-    monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+  if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
+    meta_set "build-step" "install-yarn-using-corepack"
+    monitor "install-yarn-using-corepack" install_yarn_using_corepack_package_manager "$package_manager" "$node_version"
+  else
+    # Download yarn if there is a yarn.lock file or if the user
+    # has specified a version of yarn under "engines". We'll still
+    # only install using yarn if there is a yarn.lock file
+    if $YARN || [ -n "$yarn_engine" ]; then
+      meta_set "build-step" "install-yarn"
+      monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+    fi
   fi
 
   if $YARN; then
