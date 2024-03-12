@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Support [Corepack](https://nodejs.org/api/corepack.html) installation of [Yarn](https://yarnpkg.com/) ([#1222](https://github.com/heroku/heroku-buildpack-nodejs/pull/1222))
 
 ## [v240] - 2024-03-27
 
