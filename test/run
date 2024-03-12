@@ -181,7 +181,7 @@ testYarnRun() {
 testNoVersion() {
   local default_version="20"
   compile "no-version"
-  assertCaptured "engines.node (package.json):  unspecified"
+  assertCaptured "engines.node (package.json):   unspecified"
   assertCaptured "Resolving node version ${default_version}.x"
   assertCaptured "Downloading and installing node ${default_version}."
   assertCapturedSuccess
@@ -777,6 +777,51 @@ testYarn3() {
 
 testYarn4() {
   compile "yarn-4"
+  assertCaptured "engines.yarn (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): yarn@4.1.1"
+  assertCaptured 'Yarn release script may conflict with "packageManager"'
+  assertCaptured "The package.json file indicates the target version of Yarn to install with:"
+  assertCaptured '- "packageManager": "yarn@4.1.1"'
+  assertCaptured "But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:"
+  assertCaptured '- yarnPath: ".yarn/releases/yarn-4.0.0.cjs"'
+  assertCaptured "This will cause the buildpack to install yarn@4.1.1 but, when running Yarn commands, the vendored release"
+  assertCaptured 'at ".yarn/releases/yarn-4.0.0.cjs" will be executed instead.'
+  assertCaptured "To ensure we install the version of Yarn you want, choose only one of the following actions:"
+  assertCaptured '- Remove the "packageManager" field from package.json'
+  assertCaptured '- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at ".yarn/releases/yarn-4.0.0.cjs"'
+  assertCaptured "Using yarn 4.0.0"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
+  assertCapturedSuccess
+}
+
+testYarn4WithCorepackEnabled() {
+  compile "yarn-4-with-corepack"
+  assertCaptured "engines.yarn (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): yarn@4.1.1"
+  assertCaptured "Installing yarn@4.1.1 via corepack"
+  assertCaptured "Using yarn 4.1.1"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
+  assertCapturedSuccess
+}
+
+testYarn4WithCorepackAndEngine() {
+  compile "yarn-4-with-corepack-and-engine"
+  assertCaptured "engines.yarn (package.json):   4.1.1"
+  assertCaptured "packageManager (package.json): yarn@4.1.1"
+  assertCaptured "Multiple Yarn versions declared"
+  assertCaptured "The package.json file indicates the target version of Yarn to install in two fields:"
+  assertCaptured '- "packageManager": "yarn@4.1.1"'
+  assertCaptured '- "engines.yarn": "4.1.1"'
+  assertCaptured 'If both fields are present, then "packageManager" will take precedence and "yarn@4.1.1" will be installed.'
+  assertCaptured "To ensure we install the version of Yarn you want, remove one of these fields."
+  assertCaptured "Installing yarn@4.1.1 via corepack"
+  assertCaptured "Using yarn 4.1.1"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
@@ -856,8 +901,8 @@ testFailingBuild() {
 
 testInfoEmpty() {
   compile "info-empty"
-  assertCaptured "engines.node (package.json):  unspecified"
-  assertCaptured "engines.npm (package.json):   unspecified"
+  assertCaptured "engines.node (package.json):   unspecified"
+  assertCaptured "engines.npm (package.json):    unspecified"
   assertCaptured "Installing node modules (package.json)"
   assertCapturedSuccess
 }
@@ -1662,6 +1707,50 @@ testUseNpm10() {
   assertNotCaptured "Detected package-lock.json: defaulting npm to version 5.x.x"
   assertCaptured "Using default npm version: 10"
   assertCapturedSuccess
+}
+
+testCorepackAvailable() {
+  compile "corepack-node-14.19"
+  assertCaptured "Installing yarn@2.2.2 via corepack 0.10.0"
+  assertCapturedSuccess
+
+  compile "corepack-node-16.9"
+  assertCaptured "Installing yarn@2.2.2 via corepack 0.9.0"
+  assertCapturedSuccess
+
+  compile "corepack-node-20.12"
+  assertCaptured "Installing yarn@3.6.3 via corepack 0.25.2"
+  assertCapturedSuccess
+}
+
+testCorepackNotAvailable() {
+  compile "corepack-node-14.18"
+  assertCaptured "Corepack is not supported in Node.js v14.18.0"
+  assertCapturedError
+
+  compile "corepack-node-15"
+  assertCaptured "Corepack is not supported in Node.js v15"
+  assertCapturedError
+
+  compile "corepack-node-16.8"
+  assertCaptured "Corepack is not supported in Node.js v16.8.0"
+  assertCapturedError
+}
+
+testCorepackInvalidVersion() {
+  compile "corepack-invalid-package-manager"
+  assertCaptured "packageManager (package.json): yarn@999.999.999"
+  assertCaptured "Installing yarn@999.999.999 via corepack 0.20.0"
+  assertCaptured "Error installing yarn version 999.999.999"
+  assertCaptured "Can’t find the yarn version that matches the requested version declared in package.json (999.999.999)"
+  assertCapturedError
+
+  compile "corepack-invalid-package-manager-sha"
+  assertCaptured "packageManager (package.json): yarn@3.2.3"
+  assertCaptured "Installing yarn@3.2.3 via corepack 0.20.0"
+  assertCaptured "Error installing yarn version 3.2.3"
+  assertCaptured "The hash provided for the yarn version declared in package.json (sha224.BADSHA) is incorrect"
+  assertCapturedError
 }
 
 # Utils

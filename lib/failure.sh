@@ -445,6 +445,25 @@ fail_missing_yarn_vendor() {
   fi
 }
 
+fail_corepack_not_available() {
+  local package_manager="$1"
+  local node_version="$2"
+
+  mcount "failures.corepack-unsupported"
+  meta_set "failure" "failures.corepack-unsupported"
+  header "Build failed"
+  warn "Corepack is not supported in Node.js $node_version
+
+    Your application indicated that $package_manager should be installed using Corepack. This feature
+    is included with all Node.js releases starting from Node.js 14.19.0 / 16.9.0. The version
+    of Node.js used in this build is $node_version which does not support Corepack.
+
+    To use Corepack, update your Node.js version:
+    https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version
+  "
+  fail
+}
+
 log_other_failures() {
   local log_file="$1"
 
@@ -839,4 +858,83 @@ warn_unmet_dep() {
     warn "Unmet dependencies don't fail $package_manager install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
     mcount 'warnings.modules.unmet'
   fi
+}
+
+warn_multiple_yarn_version() {
+  local package_manager="$1"
+  local yarn_engine="$2"
+  warn "Multiple Yarn versions declared
+
+       The package.json file indicates the target version of Yarn to install in two fields:
+       - \"packageManager\": \"$package_manager\"
+       - \"engines.yarn\": \"$yarn_engine\"
+
+       If both fields are present, then \"packageManager\" will take precedence and \"$package_manager\" will be installed.
+
+       To ensure we install the version of Yarn you want, remove one of these fields."
+  mcount 'warnings.yarn.multiple-version'
+}
+
+warn_yarn_release_script_with_package_manager() {
+  local package_manager="$1"
+  local release_script="$2"
+  warn "Yarn release script may conflict with \"packageManager\"
+
+       The package.json file indicates the target version of Yarn to install with:
+       - \"packageManager\": \"$package_manager\"
+
+       But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:
+       - yarnPath: \"$release_script\"
+
+       This will cause the buildpack to install $package_manager but, when running Yarn commands, the vendored release
+       at \"$release_script\" will be executed instead.
+
+       To ensure we install the version of Yarn you want, choose only one of the following actions:
+       - Remove the \"packageManager\" field from package.json
+       - Remove the \"yarnPath\" configuration from .yarnrc.yml and delete the vendored release at \"$release_script\""
+  mcount 'warnings.yarn.release-script-with-package-manager'
+}
+
+fail_corepack_install_invalid_hash() {
+  local package_manager="$1"
+  package_manager_name=$(echo "$package_manager" | cut -d "@" -f 1)
+  package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 1)
+  package_manager_hash=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 2)
+
+  mcount "failures.corepack-install.hash"
+  meta_set "failure" "failures.corepack-install.hash"
+  header "Build failed"
+  warn "Error installing $package_manager_name version $package_manager_version
+
+       The hash provided for the $package_manager_name version declared in package.json ($package_manager_hash) is incorrect.
+
+       To correct this, run the following command:
+
+       > corepack use $package_manager_name@$package_manager_version
+
+       Then commit and push the changes to package.json." \
+    "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version"
+  fail
+}
+
+fail_corepack_install_invalid_version() {
+  local package_manager="$1"
+  package_manager_name=$(echo "$package_manager" | cut -d "@" -f 1)
+  package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 1)
+
+  mcount "failures.corepack-install.version"
+  meta_set "failure" "failures.corepack-install.version"
+  header "Build failed"
+  warn "Error installing $package_manager_name version $package_manager_version
+
+       Can’t find the $package_manager_name version that matches the requested version declared in package.json ($package_manager_version).
+
+       Verify that the requested version range matches a published version of $package_manager_name by checking
+       https://www.npmjs.com/package/$package_manager_name?activeTab=versions or trying the following command:
+
+       > npm show '$package_manager' versions
+
+       Update the version specified field in package.json to a published $package_manager_name version" \
+    "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version"
+  fail
 }
