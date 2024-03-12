@@ -1,0 +1,23 @@
+{
+  "name": "pnpm-7-pnp",
+  "version": "1.0.0",
+  "packageManager": "pnpm@7.32.3",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "heroku-prebuild": "echo 'heroku-prebuild'",
+    "build": "echo 'heroku-build'",
+    "heroku-cleanup": "echo 'heroku-cleanup'",
+    "start": "node ./server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^4.26.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
