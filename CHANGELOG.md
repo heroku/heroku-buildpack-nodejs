@@ -18,6 +18,17 @@
 ## [Unreleased]
 
 
+## [v239] - 2024-03-11
+
+- Added Node.js version 21.7.1.
+- Added Yarn version 1.22.22.
+
+## [v238] - 2024-03-07
+
+- Added Node.js version 21.7.0.
+- Added Yarn version 4.1.1.
+- Added Yarn version 3.8.1.
+
 ## [v237] - 2024-02-15
 
 - Added Node.js version 21.6.2.
@@ -795,7 +806,9 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v237...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v239...main
+[v239]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v238...v239
+[v238]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v237...v238
 [v237]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v236...v237
 [v236]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v235...v236
 [v235]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v234...v235
