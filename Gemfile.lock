@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    diff-lcs (1.5.0)
+    diff-lcs (1.5.1)
     erubis (2.7.0)
     excon (0.99.0)
     heroics (0.1.2)
@@ -29,14 +29,14 @@ GEM
     rake (13.1.0)
     rate_throttle_client (0.1.2)
     rrrretry (1.0.0)
-    rspec-core (3.12.0)
-      rspec-support (~> 3.12.0)
-    rspec-expectations (3.12.3)
+    rspec-core (3.13.0)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.12.0)
+      rspec-support (~> 3.13.0)
     rspec-retry (0.6.2)
       rspec-core (> 3.3)
-    rspec-support (3.12.1)
+    rspec-support (3.13.1)
     sem_version (2.0.1)
     thor (1.2.1)
     threaded (0.0.4)
