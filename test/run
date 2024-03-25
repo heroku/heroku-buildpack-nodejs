@@ -1872,6 +1872,15 @@ testPnpmCacheComplex() {
   assertCapturedSuccess
 }
 
+testPnpmWithNoPackageManagerEntry() {
+  compile "pnpm-unknown-version"
+  assertCaptured "Installing pnpm@latest via corepack"
+  assertCaptured "Using pnpm"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Default pnpm version used"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
