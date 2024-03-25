@@ -1765,6 +1765,7 @@ testCorepackInvalidVersion() {
 
 testPnpm7Pnp() {
   compile "pnpm-7-pnp"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@7.32.3"
   assertCaptured "Installing pnpm@7.32.3 via corepack"
   assertCaptured "Using pnpm 7.32.3"
@@ -1779,6 +1780,7 @@ testPnpm7Pnp() {
 
 testPnpm8Hoist() {
   compile "pnpm-8-hoist"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@8.4.0"
   assertCaptured "Installing pnpm@8.4.0 via corepack"
   assertCaptured "Using pnpm 8.4.0"
@@ -1788,6 +1790,7 @@ testPnpm8Hoist() {
 
 testPnpm8Nuxt() {
   compile "pnpm-8-nuxt"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@8.11.0"
   assertCaptured "Installing pnpm@8.11.0 via corepack"
   assertCaptured "Using pnpm 8.11.0"
@@ -1795,6 +1798,40 @@ testPnpm8Nuxt() {
   assertCaptured "> nuxt prepare"
   assertCaptured "> pnpm-8-nuxt@ build"
   assertCaptured "> nuxt build"
+  assertCapturedSuccess
+}
+
+testPnpmEngine() {
+  compile "pnpm-engine"
+  assertCaptured "engines.pnpm (package.json):   8.x"
+  assertCaptured "Installing pnpm@8.x via corepack"
+  assertCaptured "Using pnpm 8"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+testPnpmBadEngine() {
+  compile "pnpm-bad-engine"
+  assertCaptured "engines.pnpm (package.json):   999.x"
+  assertCaptured "Installing pnpm@999.x via corepack"
+  assertCaptured "Error installing pnpm version 999.x"
+  assertCaptured "Can’t find the pnpm version that matches the requested version declared in package.json (999.x)"
+  assertCapturedError
+}
+
+testPnpmWithCorepackAndEngine() {
+  compile "pnpm-with-corepack-and-engine"
+  assertCaptured "engines.pnpm (package.json):   8.x"
+  assertCaptured "packageManager (package.json): pnpm@8.4.0"
+  assertCaptured "Multiple pnpm versions declared"
+  assertCaptured "The package.json file indicates the target version of pnpm to install in two fields:"
+  assertCaptured '- "packageManager": "pnpm@8.4.0"'
+  assertCaptured '- "engines.pnpm": "8.x"'
+  assertCaptured 'If both fields are present, then "packageManager" will take precedence and "pnpm@8.4.0" will be installed.'
+  assertCaptured "To ensure we install the version of pnpm you want, remove one of these fields."
+  assertCaptured "Installing pnpm@8.4.0 via corepack"
+  assertCaptured "Using pnpm 8.4.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCapturedSuccess
 }
 

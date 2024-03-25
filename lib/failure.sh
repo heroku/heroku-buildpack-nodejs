@@ -152,7 +152,6 @@ fail_multiple_lockfiles() {
        Please delete the lockfile(s) that should not be in use.
     " https://help.heroku.com/0KU2EM53
     fail
-
   fi
 
   if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
@@ -963,4 +962,19 @@ warn_default_pnpm_version_used() {
 
        Then commit and push the changes to package.json."
   mcount 'warnings.pnpm.default-version'
+}
+
+warn_multiple_pnpm_version() {
+  local package_manager="$1"
+  local pnpm_engine="$2"
+  warn "Multiple pnpm versions declared
+
+       The package.json file indicates the target version of pnpm to install in two fields:
+       - \"packageManager\": \"$package_manager\"
+       - \"engines.pnpm\": \"$pnpm_engine\"
+
+       If both fields are present, then \"packageManager\" will take precedence and \"$package_manager\" will be installed.
+
+       To ensure we install the version of pnpm you want, remove one of these fields."
+  mcount 'warnings.pnpm.multiple-version'
 }
