@@ -167,6 +167,12 @@ install_corepack_package_manager() {
 
     echo "Installing ${package_manager} via corepack ${corepack_version}"
     corepack enable
+
+    # this will force the install of the specific package manager
+    # and raise any issues if the requested version is invalid
+    if ! suppress_output corepack "$package_manager" --version; then
+      fail_corepack_usage "$package_manager"
+    fi
   else
     fail_corepack_not_available "$package_manager" "$node_version"
   fi

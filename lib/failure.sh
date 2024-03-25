@@ -464,6 +464,30 @@ fail_corepack_not_available() {
   fail
 }
 
+fail_corepack_usage() {
+  local package_manager="$1"
+  package_manager_name=$(echo "$package_manager" | cut -d "@" -f 1)
+  package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2)
+
+  mcount "failures.corepack-unsupported"
+  meta_set "failure" "failures.corepack-usage"
+  header "Build failed"
+  warn "Error installing $package_manager_name version $package_manager_version
+
+    Can’t find the $package_manager_name version that matches the requested version declared in package.json ($package_manager_version).
+
+    Verify that the requested version range matches a published version of $package_manager_name by checking
+    https://www.npmjs.com/package/$package_manager_name?activeTab=versions or trying the following command:
+
+    > npm show '$package_manager' versions
+
+    Update the version specified field in package.json to a published $package_manager_name version.
+
+    See https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version
+  "
+  fail
+}
+
 log_other_failures() {
   local log_file="$1"
 
@@ -893,4 +917,19 @@ warn_yarn_release_script_with_package_manager() {
        - Remove the \"packageManager\" field from package.json
        - Remove the \"yarnPath\" configuration from .yarnrc.yml and delete the vendored release at \"$release_script\""
   mcount 'warnings.yarn.release-script-with-package-manager'
+}
+
+warn_multiple_pnpm_version() {
+  local package_manager="$1"
+  local pnpm_engine="$2"
+  warn "Multiple pnpm versions declared
+
+       The package.json file indicates the target version of pnpm to install in two fields:
+       - \"packageManager\": \"$package_manager\"
+       - \"engines.pnpm\": \"$pnpm_engine\"
+
+       If both fields are present, then \"packageManager\" will take precedence and \"$package_manager\" will be installed.
+
+       To ensure we install the version of pnpm you want, remove one of these fields."
+  mcount 'warnings.pnpm.multiple-version'
 }
