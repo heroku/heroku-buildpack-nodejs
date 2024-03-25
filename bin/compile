@@ -263,8 +263,7 @@ install_bins() {
     if [[ "$package_manager" == pnpm* ]]; then
       package_manager="$package_manager"
     else
-      warn "Currently pnpm installation is only supported through the 'packageManager' field in package.json"
-      fail
+      package_manager="pnpm@latest"
     fi
     monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version"
   fi
