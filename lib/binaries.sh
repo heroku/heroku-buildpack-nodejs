@@ -145,9 +145,11 @@ install_yarn_using_corepack_package_manager() {
 install_pnpm_using_corepack_package_manager() {
   local package_manager="$1"
   local node_version="$2"
+  local pnpm_cache="$3"
   install_corepack_package_manager "$package_manager" "$node_version"
   suppress_output pnpm --version
   echo "Using pnpm $(pnpm --version)"
+  pnpm config set store-dir "$pnpm_cache" 2>&1
 }
 
 install_corepack_package_manager() {

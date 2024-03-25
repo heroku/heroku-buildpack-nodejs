@@ -197,7 +197,8 @@ fi
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
+[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(mktemp -d -t pnpmcache.XXXXX)
+export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager
@@ -266,7 +267,7 @@ install_bins() {
       warn "Currently pnpm installation is only supported through the 'packageManager' field in package.json"
       fail
     fi
-    monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version"
+    monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
   fi
 
   if $YARN; then
@@ -320,7 +321,7 @@ restore_cache() {
   elif [[ "$cache_status" == "valid" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE"
+      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
@@ -393,7 +394,7 @@ cache_build() {
     :
   elif [[ "$cache_directories" == "" ]]; then
     header "Caching build"
-    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE"
+    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
   else
     header "Caching build"
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
