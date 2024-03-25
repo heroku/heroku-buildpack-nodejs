@@ -1,0 +1,8 @@
+{
+  "name": "pnpm-8-hoist",
+  "version": "1.0.0",
+  "packageManager": "pnpm@8.4.0",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

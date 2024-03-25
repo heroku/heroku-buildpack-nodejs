@@ -142,6 +142,14 @@ install_yarn_using_corepack_package_manager() {
   echo "Using yarn $(yarn --version)"
 }
 
+install_pnpm_using_corepack_package_manager() {
+  local package_manager="$1"
+  local node_version="$2"
+  install_corepack_package_manager "$package_manager" "$node_version"
+  suppress_output pnpm --version
+  echo "Using pnpm $(pnpm --version)"
+}
+
 install_corepack_package_manager() {
   local node_major_version
   local node_minor_version
