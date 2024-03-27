@@ -20,6 +20,13 @@ detect_yarn_2() {
   fi
 }
 
+has_release_script() {
+  local build_dir="$1"
+  local yarn_path
+  yarn_path=$($YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1)
+  [[ -n "$yarn_path" ]] && [ -f "$build_dir/$yarn_path" ]
+}
+
 has_yarn_cache() {
   local build_dir="$1"
   local yarn_cache="$build_dir/.yarn/cache"
