@@ -49,6 +49,7 @@ restore_default_cache_directories() {
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
   local npm_cache=${4:-}
+  local pnpm_cache_dir=${5:-}
 
   if [[ "$YARN" == "true" ]]; then
     if has_yarn_cache "$build_dir"; then
@@ -66,6 +67,15 @@ restore_default_cache_directories() {
       echo "- yarn cache"
     else
       echo "- yarn cache (not cached - skipping)"
+    fi
+  elif [[ "$PNPM" == "true" ]]; then
+    if [[ -d "$cache_dir/node/cache/pnpm" ]]; then
+      rm -rf "$pnpm_cache_dir"
+      mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
+      echo "- pnpm cache"
+      meta_set "pnpm_cache" "true"
+    else
+      echo "- pnpm cache (not cached - skipping)"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$cache_dir/node/cache/npm" ]]; then
@@ -131,6 +141,7 @@ save_default_cache_directories() {
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
   local npm_cache=${4:-}
+  local pnpm_cache_dir=${5:-}
 
   if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then
@@ -140,6 +151,11 @@ save_default_cache_directories() {
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
       fi
       echo "- yarn cache"
+    fi
+  elif [[ "$PNPM" == "true" ]]; then
+    if [[ -d "$pnpm_cache_dir" ]]; then
+      mv "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm"
+      echo "- pnpm cache"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$npm_cache" ]]; then

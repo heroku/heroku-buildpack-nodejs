@@ -1774,6 +1774,32 @@ testPnpm8Nuxt() {
   assertCapturedSuccess
 }
 
+testPnpmCacheSimple() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertNotCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+}
+
+testPnpmCacheComplex() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-8-nuxt" "$cache_dir"
+  assertNotCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+
+  compile "pnpm-8-nuxt" "$cache_dir"
+  assertCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
