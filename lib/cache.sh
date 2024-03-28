@@ -194,3 +194,37 @@ save_custom_cache_directories() {
 
   meta_set "node-custom-cache-dirs" "true"
 }
+
+DEFAULT_PNPM_PRUNE_COUNTER_VALUE="40"
+
+load_pnpm_prune_store_counter() {
+  local cache_dir=${1:-}
+
+  if [ -f "$cache_dir/pnpm_prune_store_counter" ]; then
+    counter=$(<"$cache_dir/pnpm_prune_store_counter")
+    if ! is_int "$counter" || (( counter < 0 )); then
+      counter="$DEFAULT_PNPM_PRUNE_COUNTER_VALUE"
+    fi
+  else
+    counter="$DEFAULT_PNPM_PRUNE_COUNTER_VALUE"
+  fi
+
+  echo "$counter"
+}
+
+save_pnpm_prune_store_counter() {
+  local cache_dir=${1:-}
+  local new_value=${2:-}
+
+  if ! is_int "$new_value" || (( new_value < 0 )); then
+    new_value="$DEFAULT_PNPM_PRUNE_COUNTER_VALUE"
+  fi
+
+  echo "$new_value" > "$cache_dir/pnpm_prune_store_counter"
+}
+
+is_int() {
+  case ${1#[-+]} in
+    '' | *[!0-9]*) return 1;;
+  esac
+}
