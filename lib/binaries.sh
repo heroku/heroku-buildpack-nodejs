@@ -156,9 +156,31 @@ install_corepack_package_manager() {
   if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
     suppress_output corepack --version
     corepack_version=$(corepack --version)
+    corepack enable 2>&1
 
-    echo "Installing ${package_manager} via corepack ${corepack_version}"
-    corepack enable
+    # The Corepack CLI interface was refactored in 0.20, before that the `install` command was called `prepare` and it
+    # doesn't support the --global argument - https://github.com/nodejs/corepack/blob/main/CHANGELOG.md#0200-2023-08-29
+    corepack_major_version=$(echo "$corepack_version" | cut -d "." -f 1)
+    corepack_minor_version=$(echo "$corepack_version" | cut -d "." -f 2)
+    if (( corepack_major_version == 0 )) && (( corepack_minor_version < 20 )); then
+      corepack_install_command="prepare"
+      corepack_install_args=()
+    else
+      corepack_install_command="install"
+      corepack_install_args=("--global")
+    fi
+
+    echo "Installing $(echo "$package_manager" | cut -d "+" -f 1) via corepack ${corepack_version}"
+    install_output=$(mktemp)
+    if ! corepack "${corepack_install_args[@]}" "$corepack_install_command" "$package_manager" > "$install_output" 2>&1; then
+      # always show the output on error
+      cat "$install_output"
+      if grep --ignore-case "mismatch hashes" "$install_output"; then
+        fail_corepack_install_invalid_hash "$package_manager"
+      else
+        fail_corepack_install_invalid_version "$package_manager"
+      fi
+    fi
   else
     fail_corepack_not_available "$package_manager" "$node_version"
   fi

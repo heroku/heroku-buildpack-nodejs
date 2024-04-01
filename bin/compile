@@ -219,7 +219,7 @@ install_bins() {
   fi
 
   if [ -n "$package_manager" ]; then
-    echo "packageManager (package.json): $package_manager"
+    echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
 
   echo ""

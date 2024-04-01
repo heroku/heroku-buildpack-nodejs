@@ -12,5 +12,5 @@
   "scripts": {
     "start": "node foo.js"
   },
-  "packageManager": "yarn@3.6.3"
+  "packageManager": "yarn@3.2.3+sha224.BADSHA"
 }

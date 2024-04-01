@@ -1718,7 +1718,7 @@ testCorepackAvailable() {
   assertCaptured "Installing yarn@2.2.2 via corepack 0.9.0"
   assertCapturedSuccess
 
-  compile "corepack-node-20.9"
+  compile "corepack-node-20.12"
   assertCaptured "Installing yarn@3.6.3 via corepack 0.20.0"
   assertCapturedSuccess
 }
@@ -1734,6 +1734,22 @@ testCorepackNotAvailable() {
 
   compile "corepack-node-16.8"
   assertCaptured "Corepack is not supported in Node.js v16.8.0"
+  assertCapturedError
+}
+
+testCorepackInvalidVersion() {
+  compile "corepack-invalid-package-manager"
+  assertCaptured "packageManager (package.json): yarn@999.999.999"
+  assertCaptured "Installing yarn@999.999.999 via corepack 0.20.0"
+  assertCaptured "Error installing yarn version 999.999.999"
+  assertCaptured "Can’t find the yarn version that matches the requested version declared in package.json (999.999.999)"
+  assertCapturedError
+
+  compile "corepack-invalid-package-manager-sha"
+  assertCaptured "packageManager (package.json): yarn@3.2.3"
+  assertCaptured "Installing yarn@3.2.3 via corepack 0.20.0"
+  assertCaptured "Error installing yarn version 3.2.3"
+  assertCaptured "The hash provided for the yarn version declared in package.json (sha224.BADSHA) is incorrect"
   assertCapturedError
 }
 
