@@ -194,6 +194,7 @@ if [[ "$YARN_2" == "true" ]]; then
 fi
 
 ### Configure package manager cache directories
+export COREPACK_HOME="$CACHE_DIR/corepack"
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE

@@ -156,9 +156,33 @@ install_corepack_package_manager() {
   if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
     suppress_output corepack --version
     corepack_version=$(corepack --version)
+    corepack enable 2>&1
 
+    # The Corepack CLI interface was refactored in 0.20, before that the `install` command was called `prepare` and it
+    # doesn't support the --global argument - https://github.com/nodejs/corepack/blob/main/CHANGELOG.md#0200-2023-08-29
+    corepack_major_version=$(echo "$corepack_version" | cut -d "." -f 1)
+    corepack_minor_version=$(echo "$corepack_version" | cut -d "." -f 2)
+    corepack_install_command="install"
+    corepack_install_args=("--global")
+    if (( corepack_major_version == 0 )) && (( corepack_minor_version < 20 )); then
+      corepack_install_command="prepare"
+      corepack_install_args=()
+    fi
+
+    if [[ "$(load_corepack_cache_signature)" != "$package_manager" ]]; then
+      clear_corepack_cache
+    fi
+
+    # the output of the corepack install command is suppressed (since it is redundant) unless the
+    # DEBUG environment variable is set
     echo "Installing ${package_manager} via corepack ${corepack_version}"
-    corepack enable
+    if [ -z "$DEBUG" ]; then
+      suppress_output corepack "${corepack_install_args[@]}" "$corepack_install_command" "$package_manager"
+    else
+      corepack "${corepack_install_args[@]}" "$corepack_install_command" "$package_manager" 2>&1
+    fi
+
+    save_corepack_cache_signature "$package_manager"
   else
     fail_corepack_not_available "$package_manager" "$node_version"
   fi

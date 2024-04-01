@@ -194,3 +194,23 @@ save_custom_cache_directories() {
 
   meta_set "node-custom-cache-dirs" "true"
 }
+
+save_corepack_cache_signature() {
+  local package_manager=${1:-}
+  local corepack_home=${2:-$COREPACK_HOME}
+  echo "$package_manager" > "$corepack_home/.signature"
+}
+
+load_corepack_cache_signature() {
+  local corepack_home=${1:-$COREPACK_HOME}
+  if [ -f "$corepack_home/.signature" ]; then
+    cat "$corepack_home/.signature"
+  else
+    echo ""
+  fi
+}
+
+clear_corepack_cache() {
+  local corepack_home=${1:-$COREPACK_HOME}
+  rm -rf "$corepack_home"
+}

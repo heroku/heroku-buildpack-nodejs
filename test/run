@@ -1737,6 +1737,38 @@ testCorepackNotAvailable() {
   assertCapturedError
 }
 
+testCorepackCaching() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  # because we set DEBUG here we sometimes get extra output in STD_ERR
+  # so avoid assertCapturedSuccess in these tests and explicitly check
+  # the exit code instead
+  echo "corepack" > "$env_dir/DEBUG"
+
+  # empty cache
+  compile "corepack-node-14.19" "$cache_dir" "$env_dir"
+  assertCaptured "Installing yarn@2.2.2 via corepack 0.10.0"
+  assertCaptured "corepack Installing yarn@2.2.2"
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+  assertDirectoryExists "$cache_dir/corepack/yarn/2.2.2"
+
+  # cache is restored
+  compile "corepack-node-16.9" "$cache_dir" "$env_dir"
+  assertCaptured "Installing yarn@2.2.2 via corepack 0.9.0"
+  assertCaptured "corepack Reusing yarn@2.2.2"
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+  assertDirectoryExists "$cache_dir/corepack/yarn/2.2.2"
+
+  # cache is invalidated
+  compile "corepack-node-20.9" "$cache_dir" "$env_dir"
+  assertCaptured "Installing yarn@3.6.3 via corepack 0.20.0"
+  assertCaptured "corepack Installing yarn@3.6.3"
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+  assertFileDoesNotExist "$cache_dir/corepack/yarn/2.2.2"
+  assertDirectoryExists "$cache_dir/corepack/yarn/3.6.3"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
