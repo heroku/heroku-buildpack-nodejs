@@ -261,13 +261,21 @@ install_bins() {
 
   if $PNPM; then
     meta_set "build-step" "install-pnpm-using-corepack"
+
+    default_pnpm_version="pnpm@latest"
+    using_default_pnpm=false
+
     if [[ "$package_manager" == pnpm* ]]; then
       package_manager="$package_manager"
     else
-      warn "Currently pnpm installation is only supported through the 'packageManager' field in package.json"
-      fail
+      using_default_pnpm=true
+      package_manager="$default_pnpm_version"
     fi
+
     monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
+    if [ "$using_default_pnpm" == true ]; then
+      warn_default_pnpm_version_used "$default_pnpm_version"
+    fi
   fi
 
   if $YARN; then

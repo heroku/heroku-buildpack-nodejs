@@ -947,3 +947,20 @@ fail_corepack_install_invalid_version() {
     "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version"
   fail
 }
+
+warn_default_pnpm_version_used() {
+  local default_version="$1"
+  warn "Default pnpm version used
+
+       A pnpm lockfile (pnpm-lock.yaml) was detected but no specific version of pnpm was defined in package.json in either of the following fields:
+       - \"packageManager\"
+       - \"engines.pnpm\"
+
+       Without a specific version defined, this build will use \"$default_version\" by default. We highly recommend setting an explicit version
+       of pnpm to improve the reliability of your builds. You can set this with:
+
+       > corepack use pnpm@{your_preferred_version}
+
+       Then commit and push the changes to package.json."
+  mcount 'warnings.pnpm.default-version'
+}
