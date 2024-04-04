@@ -388,8 +388,8 @@ testYarnOnlyEngine() {
 testErrorYarnAndNpmLockfiles() {
   compile "yarn-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Two different lockfiles found: package-lock.json and yarn.lock"
-  assertCaptured "Both npm and yarn have created lockfiles"
+  assertCaptured "Multiple lockfiles found"
+  assertCaptured "Multiple package managers (npm,Yarn) have created lockfiles for this application"
   assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
@@ -397,8 +397,16 @@ testErrorYarnAndNpmLockfiles() {
 testErrorYarnAndNpmShrinkwrap() {
   compile "yarn-and-shrinkwrap-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Two different lockfiles found"
-  assertCaptured "Please make sure there is only one of the following files"
+  assertCaptured "Multiple lockfiles conflicting with npm-shrinkwrap.json"
+  assertCaptured "https://help.heroku.com/0KU2EM53"
+  assertCapturedError
+}
+
+testErrorYarnAndPnpmAndNpmLockfiles() {
+  compile "yarn-pnpm-and-npm-lockfiles"
+  assertNotCaptured "Creating runtime environment"
+  assertCaptured "Multiple lockfiles found"
+  assertCaptured "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
   assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
