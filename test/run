@@ -1790,6 +1790,54 @@ testPnpm8Nuxt() {
   assertCapturedSuccess
 }
 
+testPnpmStorePruning() {
+  default_counter_value="40"
+  cache_dir=$(mktmpdir)
+
+  # initial state, no counter exists
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+
+  # set the counter to right before it triggers the store to be pruned
+  echo "1" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be 0; was <${counter}>" "0" "${counter}"
+
+  # the store should be pruned on the next build and counter reset
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $default_counter_value; was <${counter}>" "$default_counter_value" "${counter}"
+
+  # ensure the cache can't get into a bad state (negative counter) and it resets to the initial state
+  echo "-1" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+
+  # ensure the cache can't get into a bad state (non-integer counter) and it resets to the initial state
+  echo "" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

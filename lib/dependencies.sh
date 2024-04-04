@@ -319,15 +319,20 @@ npm_prune_devdependencies() {
 
 pnpm_install() {
   local build_dir=${1:-}
+  local cache_dir=${2:-}
 
   echo "Running 'pnpm install' with pnpm-lock.yaml"
   cd "$build_dir" || return
 
   monitor "pnpm-install" pnpm install --prod=false --frozen-lockfile 2>&1
 
-  # prune the store after install to remove any package versions which may have been upgraded/removed
-  # since the last install.
-  suppress_output pnpm store prune
+  # prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
+  counter=$(load_pnpm_prune_store_counter "$cache_dir")
+  if (( counter == 0 )); then
+    echo "Cleaning up pnpm store"
+    suppress_output pnpm store prune
+  fi
+  save_pnpm_prune_store_counter "$cache_dir" "$(( counter - 1 ))"
 }
 
 pnpm_prune_devdependencies() {
