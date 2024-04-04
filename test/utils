@@ -210,3 +210,10 @@ assertFileDoesNotExist()
   filename=$1
   assertTrue "$filename exists" "[[ ! -e $filename ]]"
 }
+
+assertCapturedTimes() {
+  expected_times="$1"
+  capture_text="$2"
+  actual_times=$(grep --only-matching --regexp "$capture_text" "$STD_OUT" | wc -l)
+  assertEquals "Expected '$capture_text' text to appear $expected_times times; it appeared <$actual_times> times" "$expected_times" "$actual_times"
+}
