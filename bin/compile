@@ -201,16 +201,18 @@ fi
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine npm_engine yarn_engine node_version package_manager
+  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
 
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  pnpm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")
   package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
 
   meta_set "node-version-request" "$node_engine"
   meta_set "npm-version-request" "$npm_engine"
   meta_set "yarn-version-request" "$yarn_engine"
+  meta_set "pnpm-version-request" "$pnpm_engine"
   meta_set "package-manager-request" "$package_manager"
 
   echo "engines.node (package.json):   ${node_engine:-unspecified}"
@@ -220,6 +222,10 @@ install_bins() {
     echo "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
   fi
 
+  if $PNPM || [ -n "$pnpm_engine" ]; then
+    echo "engines.pnpm (package.json):   ${pnpm_engine:-unspecified (use default)}"
+  fi
+
   if [ -n "$package_manager" ]; then
     echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
@@ -227,6 +233,10 @@ install_bins() {
   echo ""
 
   warn_node_engine "$node_engine"
+
+  if [ -n "$pnpm_engine" ] && [[ "$package_manager" == pnpm* ]]; then
+    warn_multiple_pnpm_version "$package_manager" "$pnpm_engine"
+  fi
 
   if [ -n "$yarn_engine" ] && [[ "$package_manager" == yarn* ]]; then
     warn_multiple_yarn_version "$package_manager" "$yarn_engine"
@@ -267,6 +277,8 @@ install_bins() {
 
     if [[ "$package_manager" == pnpm* ]]; then
       package_manager="$package_manager"
+    elif [ -n "$pnpm_engine" ]; then
+      package_manager="pnpm@${pnpm_engine}"
     else
       using_default_pnpm=true
       package_manager="$default_pnpm_version"
