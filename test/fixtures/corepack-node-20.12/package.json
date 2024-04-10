@@ -1,0 +1,16 @@
+{
+  "name": "corepack-test-app",
+  "version": "0.0.1",
+  "description": "corepack availability test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "20.12.0"
+  },
+  "scripts": {
+    "start": "node foo.js"
+  },
+  "packageManager": "yarn@3.6.3"
+}
