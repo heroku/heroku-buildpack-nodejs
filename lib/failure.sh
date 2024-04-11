@@ -978,3 +978,20 @@ warn_multiple_pnpm_version() {
        To ensure we install the version of pnpm you want, remove one of these fields."
   mcount 'warnings.pnpm.multiple-version'
 }
+
+warn_skipping_unsafe_pnpm_prune() {
+  local pnpm_version="$1"
+  warn "Pruning skipped due to presence of lifecycle scripts
+
+       The version of pnpm used ($pnpm_version) will execute the following lifecycle scripts
+       declared in package.json during pruning which can cause build failures:
+       - pnpm:devPreinstall
+       - preinstall
+       - install
+       - postinstall
+       - prepare
+
+       Since pruning can't be done safely for your build, it will be skipped. To fix this you
+       must upgrade your version of pnpm to 8.15.6 or higher."
+  mcount 'warnings.pnpm.unsafe-prune'
+}

@@ -340,28 +340,35 @@ pnpm_prune_devdependencies() {
 
   cd "$build_dir" || return
 
-  # seems like we can't use prune without some workarounds because it triggers pre/post-install scripts
-  # and does not respect the `--ignore-scripts` argument:
-  # https://github.com/pnpm/pnpm/issues/5030
-  #
-  # so we're going to create a temporary .npmrc file which does allow us to set the ignore-scripts config:
-  # https://pnpm.io/npmrc#ignore-scripts
-  local app_npmrc="$build_dir/.npmrc"
-  local tmp_npmrc=$(mktemp)
+  pnpm_version=$(pnpm --version)
+  pnpm_major_version=$(echo "$pnpm_version" | cut -d "." -f 1)
+  pnpm_minor_version=$(echo "$pnpm_version" | cut -d "." -f 2)
+  pnpm_patch_version=$(echo "$pnpm_version" | cut -d "." -f 3)
 
-  # copy the original .npmrc if it exists
-  if [ -f "$app_npmrc" ]; then
-    cp "$app_npmrc" "$tmp_npmrc"
+  pnpm_prune_args=("prune" "--prod")
+
+  # prior to 8.15.6, pnpm prune would execute lifecycle scripts such as `preinstall` and `postinstall`
+  # so we should check if we're on that version + there are lifecycle scripts registered and, if so,
+  # we'll let the user know that pruning can't be done safely so we're skipping it
+  if (( "$pnpm_major_version" < 8 )) || \
+    (( "$pnpm_major_version" == 8 && "$pnpm_minor_version" < 15 )) || \
+    (( "$pnpm_major_version" == 8 && "$pnpm_minor_version" == 15 && "$pnpm_patch_version" < 6)); then
+      # the following are lifecycle scripts that will execute on install/prune by pnpm
+      if [ -n "$(read_json "$build_dir/package.json" ".scripts.\"pnpm:devPreinstall\"")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.preinstall")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.install")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.postinstall")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.prepare")" ]; then
+        warn_skipping_unsafe_pnpm_prune "$pnpm_version"
+        meta_set "skipped-prune" "true"
+        return
+      fi
+  else
+    # we're on a version that supports this flag (8.15.6 and higher)
+    pnpm_prune_args+=("--ignore-scripts")
   fi
 
-  # append the temporary configuration setting
-  echo -e "\nignore-scripts=true" >> "$app_npmrc"
-  pnpm prune --prod 2>&1
-
-  # restore the original .npmrc if it exists
-  if [ -f "$app_npmrc" ]; then
-    cp "$tmp_npmrc" "$app_npmrc"
-  fi
+  pnpm "${pnpm_prune_args[@]}" 2>&1
 
   meta_set "skipped-prune" "false"
 }

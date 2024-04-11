@@ -1918,6 +1918,40 @@ testPnpmWithNoPackageManagerEntry() {
   assertCapturedSuccess
 }
 
+testPnpmSafePruningSupport() {
+  # no pre/post install script is safe to prune (<8.15.6)
+  compile "pnpm-8.15.5"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedSuccess
+
+  # a pre/post install script is not safe to prune (<8.15.6)
+  compile "pnpm-8.15.5-with-pre-post-install"
+  assertNotCaptured "- dotenv 16.4.5"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedTimes 1 "'pnpm:devPreinstall_0'"
+  assertCapturedTimes 1 "'preinstall_1'"
+  assertCapturedTimes 1 "'install_2'"
+  assertCapturedTimes 1 "'postinstall_3'"
+  assertCapturedTimes 0 "'prepublish_4'"
+  assertCapturedTimes 0 "'preprepare_5'"
+  assertCapturedTimes 1 "'prepare_6'"
+  assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
+
+  # a pre/post install script is safe to prune (>=8.15.6)
+  compile "pnpm-8.15.6-with-pre-post-install"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedTimes 1 "'pnpm:devPreinstall_0'"
+  assertCapturedTimes 1 "'preinstall_1'"
+  assertCapturedTimes 1 "'install_2'"
+  assertCapturedTimes 1 "'postinstall_3'"
+  assertCapturedTimes 0 "'prepublish_4'"
+  assertCapturedTimes 0 "'preprepare_5'"
+  assertCapturedTimes 1 "'prepare_6'"
+  assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
