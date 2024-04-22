@@ -16,7 +16,7 @@ jobs:
       image: heroku/heroku:${{ matrix.stack_number }}-build
     strategy:
       matrix:
-        stack_number: ["20", "22"]
+        stack_number: ["20", "22", "24"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
