@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add support for heroku-24.
 
 ## [v243] - 2024-04-10
 
@@ -14,7 +15,7 @@
 - Support [Corepack](https://nodejs.org/api/corepack.html) installation of [Yarn](https://yarnpkg.com/) ([#1222](https://github.com/heroku/heroku-buildpack-nodejs/pull/1222))
 
 ## [v241] - 2024-04-04
- 
+
 - Added Node.js version 21.7.2.
 - Added Node.js version 20.12.1.
 - Added Node.js version 18.20.1.

@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: heroku/heroku:${{ matrix.stack_number }}-build
+      options: --user root
     strategy:
       matrix:
-        stack_number: ["20", "22"]
+        stack_number: ["20", "22", "24"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
@@ -29,9 +30,10 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: heroku/heroku:${{ matrix.stack_number }}-build
+      options: --user root
     strategy:
       matrix:
-        stack_number: ["20", "22"]
+        stack_number: ["20", "22", "24"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
