@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.0.0.
 - Add support for heroku-24.
 
 ## [v243] - 2024-04-10
