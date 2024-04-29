@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v245] - 2024-04-29
+
 - Support [pnpm](https://pnpm.io/) ([#1224](https://github.com/heroku/heroku-buildpack-nodejs/pull/1224))
 
 ## [v244] - 2024-04-25
@@ -818,7 +821,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v244...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v245...main
+[v245]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v244...v245
 [v244]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v243...v244
 [v243]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v242...v243
 [v242]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v241...v242
