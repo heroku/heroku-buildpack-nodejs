@@ -115,31 +115,41 @@ fail_iojs_unsupported() {
 }
 
 fail_multiple_lockfiles() {
+  local build_dir="${1:-}"
   local has_modern_lockfile=false
-  if [ -f "${1:-}/yarn.lock" ] || [ -f "${1:-}/package-lock.json" ]; then
-    has_modern_lockfile=true
-  fi
 
-  if [ -f "${1:-}/yarn.lock" ] && [ -f "${1:-}/package-lock.json" ]; then
-    mcount "failures.two-lock-files"
-    meta_set "failure" "two-lock-files"
+  declare -A lockfiles=(
+    ["npm"]="package-lock.json"
+    ["pnpm"]="pnpm-lock.yaml"
+    ["Yarn"]="yarn.lock"
+  )
+
+  local detected_package_managers=()
+  for package_manager in "${!lockfiles[@]}"; do
+    lockfile="${lockfiles["$package_manager"]}"
+    if [ -f "$build_dir/$lockfile" ]; then
+      has_modern_lockfile=true
+      detected_package_managers+=("$package_manager")
+    fi
+  done
+
+  if (( "${#detected_package_managers[*]}" > 1 )); then
+    readarray -td '' package_managers_sorted < <(printf '%s\0' "${detected_package_managers[@]}" | sort -z --ignore-case)
+    mcount "failures.multiple-lock-files"
+    meta_set "failure" "multiple-lock-files"
     header "Build failed"
-    warn "Two different lockfiles found: package-lock.json and yarn.lock
+    warn "Multiple lockfiles found
 
-       Both npm and yarn have created lockfiles for this application,
-       but only one can be used to install dependencies. Installing
-       dependencies using the wrong package manager can result in missing
+       Multiple package managers ($(IFS=','; printf '%s' "${package_managers_sorted[*]}")) have created lockfiles for this application,
+       but only one can be used to install dependencies. Installing dependencies using the wrong package manager can result in missing
        packages or subtle bugs in production.
 
-       - To use npm to install your application's dependencies please delete
-         the yarn.lock file.
+       Only one of the following package manager lockfiles are supported at a time:
+       - ${lockfiles["npm"]}
+       - ${lockfiles["Yarn"]}
+       - ${lockfiles["pnpm"]}
 
-         $ git rm yarn.lock
-
-       - To use yarn to install your application's dependencies please delete
-         the package-lock.json file.
-
-         $ git rm package-lock.json
+       Please delete the lockfile(s) that should not be in use.
     " https://help.heroku.com/0KU2EM53
     fail
   fi
@@ -148,20 +158,18 @@ fail_multiple_lockfiles() {
     mcount "failures.shrinkwrap-lock-file-conflict"
     meta_set "failure" "shrinkwrap-lock-file-conflict"
     header "Build failed"
-    warn "Two different lockfiles found
+    warn "Multiple lockfiles conflicting with npm-shrinkwrap.json
 
-       Your application has two lockfiles defined, but only one can be used
+       Your application has multiple lockfiles defined which conflicts with the
+       shrinkwrap file you've been using. Only one lockfile can be used
        to install dependencies. Installing dependencies using the wrong lockfile
        can result in missing packages or subtle bugs in production.
-
-       It's most likely that you recently installed yarn which has its own
-       lockfile by default, which conflicts with the shrinkwrap file you've been
-       using.
 
        Please make sure there is only one of the following files in your
        application directory:
 
        - yarn.lock
+       - pnpm-lock.yaml
        - package-lock.json
        - npm-shrinkwrap.json
     " https://help.heroku.com/0KU2EM53
@@ -937,4 +945,53 @@ fail_corepack_install_invalid_version() {
        Update the version specified field in package.json to a published $package_manager_name version" \
     "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version"
   fail
+}
+
+warn_default_pnpm_version_used() {
+  local default_version="$1"
+  warn "Default pnpm version used
+
+       A pnpm lockfile (pnpm-lock.yaml) was detected but no specific version of pnpm was defined in package.json in either of the following fields:
+       - \"packageManager\"
+       - \"engines.pnpm\"
+
+       Without a specific version defined, this build will use \"$default_version\" by default. We highly recommend setting an explicit version
+       of pnpm to improve the reliability of your builds. You can set this with:
+
+       > corepack use pnpm@{your_preferred_version}
+
+       Then commit and push the changes to package.json."
+  mcount 'warnings.pnpm.default-version'
+}
+
+warn_multiple_pnpm_version() {
+  local package_manager="$1"
+  local pnpm_engine="$2"
+  warn "Multiple pnpm versions declared
+
+       The package.json file indicates the target version of pnpm to install in two fields:
+       - \"packageManager\": \"$package_manager\"
+       - \"engines.pnpm\": \"$pnpm_engine\"
+
+       If both fields are present, then \"packageManager\" will take precedence and \"$package_manager\" will be installed.
+
+       To ensure we install the version of pnpm you want, remove one of these fields."
+  mcount 'warnings.pnpm.multiple-version'
+}
+
+warn_skipping_unsafe_pnpm_prune() {
+  local pnpm_version="$1"
+  warn "Pruning skipped due to presence of lifecycle scripts
+
+       The version of pnpm used ($pnpm_version) will execute the following lifecycle scripts
+       declared in package.json during pruning which can cause build failures:
+       - pnpm:devPreinstall
+       - preinstall
+       - install
+       - postinstall
+       - prepare
+
+       Since pruning can't be done safely for your build, it will be skipped. To fix this you
+       must upgrade your version of pnpm to 8.15.6 or higher."
+  mcount 'warnings.pnpm.unsafe-prune'
 }

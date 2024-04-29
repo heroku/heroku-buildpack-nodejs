@@ -33,6 +33,9 @@ run_if_present() {
       if [[ -n "$script" ]]; then
         monitor "${script_name}-script" yarn run "$script_name"
       fi
+    elif $PNPM; then
+      echo "Running $script_name"
+      monitor "${script_name}-script" pnpm run --if-present "$script_name"
     else
       echo "Running $script_name"
       monitor "${script_name}-script" npm run "$script_name" --if-present
@@ -64,6 +67,14 @@ run_build_if_present() {
         else
           monitor "${script_name}-script" yarn run "$script_name"
         fi
+      fi
+    elif $PNPM; then
+      echo "Running $script_name"
+      if [[ -n $NODE_BUILD_FLAGS ]]; then
+        echo "Running with $NODE_BUILD_FLAGS flags"
+        monitor "${script_name}-script" pnpm run --if-present "$script_name" -- "$NODE_BUILD_FLAGS"
+      else
+        monitor "${script_name}-script" pnpm run --if-present "$script_name"
       fi
     else
       echo "Running $script_name"
@@ -304,4 +315,60 @@ npm_prune_devdependencies() {
     monitor "npm-prune" npm prune --userconfig "$build_dir/.npmrc" 2>&1
     meta_set "skipped-prune" "false"
   fi
+}
+
+pnpm_install() {
+  local build_dir=${1:-}
+  local cache_dir=${2:-}
+
+  echo "Running 'pnpm install' with pnpm-lock.yaml"
+  cd "$build_dir" || return
+
+  monitor "pnpm-install" pnpm install --prod=false --frozen-lockfile 2>&1
+
+  # prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
+  counter=$(load_pnpm_prune_store_counter "$cache_dir")
+  if (( counter == 0 )); then
+    echo "Cleaning up pnpm store"
+    suppress_output pnpm store prune
+  fi
+  save_pnpm_prune_store_counter "$cache_dir" "$(( counter - 1 ))"
+}
+
+pnpm_prune_devdependencies() {
+  local build_dir=${1:-}
+
+  cd "$build_dir" || return
+
+  pnpm_version=$(pnpm --version)
+  pnpm_major_version=$(echo "$pnpm_version" | cut -d "." -f 1)
+  pnpm_minor_version=$(echo "$pnpm_version" | cut -d "." -f 2)
+  pnpm_patch_version=$(echo "$pnpm_version" | cut -d "." -f 3)
+
+  pnpm_prune_args=("prune" "--prod")
+
+  # prior to 8.15.6, pnpm prune would execute lifecycle scripts such as `preinstall` and `postinstall`
+  # so we should check if we're on that version + there are lifecycle scripts registered and, if so,
+  # we'll let the user know that pruning can't be done safely so we're skipping it
+  if (( "$pnpm_major_version" < 8 )) || \
+    (( "$pnpm_major_version" == 8 && "$pnpm_minor_version" < 15 )) || \
+    (( "$pnpm_major_version" == 8 && "$pnpm_minor_version" == 15 && "$pnpm_patch_version" < 6)); then
+      # the following are lifecycle scripts that will execute on install/prune by pnpm
+      if [ -n "$(read_json "$build_dir/package.json" ".scripts.\"pnpm:devPreinstall\"")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.preinstall")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.install")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.postinstall")" ] ||
+         [ -n "$(read_json "$build_dir/package.json" ".scripts.prepare")" ]; then
+        warn_skipping_unsafe_pnpm_prune "$pnpm_version"
+        meta_set "skipped-prune" "true"
+        return
+      fi
+  else
+    # we're on a version that supports this flag (8.15.6 and higher)
+    pnpm_prune_args+=("--ignore-scripts")
+  fi
+
+  pnpm "${pnpm_prune_args[@]}" 2>&1
+
+  meta_set "skipped-prune" "false"
 }

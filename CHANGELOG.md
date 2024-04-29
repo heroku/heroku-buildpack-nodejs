@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Support [pnpm](https://pnpm.io/) ([#1224](https://github.com/heroku/heroku-buildpack-nodejs/pull/1224))
 
 ## [v244] - 2024-04-25
 

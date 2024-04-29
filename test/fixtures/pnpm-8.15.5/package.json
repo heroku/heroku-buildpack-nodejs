@@ -1,0 +1,19 @@
+{
+  "name": "pnpm-test-app",
+  "version": "0.0.1",
+  "description": "pnpm pruning test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "start": "node foo.js"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "packageManager": "pnpm@8.15.5+sha256.4b4efa12490e5055d59b9b9fc9438b7d581a6b7af3b5675eb5c5f447cee1a589"
+}
