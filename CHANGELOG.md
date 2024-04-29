@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Support [pnpm](https://pnpm.io/) ([#1224](https://github.com/heroku/heroku-buildpack-nodejs/pull/1224))
 
 ## [v244] - 2024-04-25
 
@@ -17,7 +18,6 @@
 ## [v242] - 2024-04-10
 
 - Support [Corepack](https://nodejs.org/api/corepack.html) installation of [Yarn](https://yarnpkg.com/) ([#1222](https://github.com/heroku/heroku-buildpack-nodejs/pull/1222))
-- Support [pnpm](https://pnpm.io/) ([#1224](https://github.com/heroku/heroku-buildpack-nodejs/pull/1224))
 
 ## [v241] - 2024-04-04
 
