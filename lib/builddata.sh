@@ -6,6 +6,9 @@ log_initial_state() {
   if "$YARN"; then
     meta_set "node-package-manager" "yarn"
     meta_set "has-node-lock-file" "true"
+  elif "$PNPM"; then
+    meta_set "node-package-manager" "pnpm"
+    meta_set "has-node-lock-file" "true"
   else
     meta_set "node-package-manager" "npm"
     meta_set "has-node-lock-file" "$NPM_LOCK"

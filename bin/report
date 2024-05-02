@@ -82,11 +82,15 @@ kv_pair_string "stack" "$STACK"
 has_binary_installed "node" && kv_pair_string "node_version" "$(node --version)"
 has_binary_installed "npm" && kv_pair_string "npm_version" "$(npm --version)"
 has_binary_installed "yarn" && kv_pair_string "yarn_version" "$(yarn --version)"
+has_binary_installed "pnpm" && kv_pair_string "pnpm_version" "$(pnpm --version)"
+has_binary_installed "corepack" && kv_pair_string "corepack_version" "$(corepack --version)"
 
 # what versions were requested
 kv_pair_string "node_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.node")"
 kv_pair_string "npm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.npm")"
 kv_pair_string "yarn_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.yarn")"
+kv_pair_string "pnpm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")"
+kv_pair_string "package_manager_request" "$(read_json "$BUILD_DIR/package.json" ".packageManager")"
 
 # build scripts
 kv_pair_string "start_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"start\"]")"
@@ -141,10 +145,14 @@ kv_pair "npm_install_time" "$(meta_get "npm-install-time")"
 kv_pair "npm_install_memory" "$(meta_get "npm-install-memory")"
 kv_pair "yarn_install_time" "$(meta_get "yarn-install-time")"
 kv_pair "yarn_install_memory" "$(meta_get "yarn-install-memory")"
-kv_pair "npm_prune_time" "$(meta_get "yarn-prune-time")"
-kv_pair "npm_prune_memory" "$(meta_get "yarn-prune-memory")"
+kv_pair "pnpm_install_time" "$(meta_get "pnpm-install-time")"
+kv_pair "pnpm_install_memory" "$(meta_get "pnpm-install-memory")"
+kv_pair "npm_prune_time" "$(meta_get "npm-prune-time")"
+kv_pair "npm_prune_memory" "$(meta_get "npm-prune-memory")"
 kv_pair "yarn_prune_time" "$(meta_get "yarn-prune-time")"
 kv_pair "yarn_prune_memory" "$(meta_get "yarn-prune-memory")"
+kv_pair "pnpm_prune_time" "$(meta_get "pnpm-prune-time")"
+kv_pair "pnpm_prune_memory" "$(meta_get "pnpm-prune-memory")"
 
 # testing resolve-version differences
 kv_pair "resolve_v2_node" "$(meta_get "resolve-v2-node")"
