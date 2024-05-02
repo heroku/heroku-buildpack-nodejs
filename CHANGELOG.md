@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Make [Corepack](https://nodejs.org/api/corepack.html) installed binaries available at runtime. ([#1250](https://github.com/heroku/heroku-buildpack-nodejs/pull/1250))
 
 ## [v245] - 2024-04-29
 
