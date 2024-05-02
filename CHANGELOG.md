@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v246] - 2024-05-02
+
 - Make [Corepack](https://nodejs.org/api/corepack.html) installed binaries available at runtime. ([#1250](https://github.com/heroku/heroku-buildpack-nodejs/pull/1250))
 
 ## [v245] - 2024-04-29
@@ -822,7 +825,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v245...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v246...main
+[v246]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v245...v246
 [v245]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v244...v245
 [v244]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v243...v244
 [v243]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v242...v243
