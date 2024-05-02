@@ -388,8 +388,8 @@ testYarnOnlyEngine() {
 testErrorYarnAndNpmLockfiles() {
   compile "yarn-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Two different lockfiles found: package-lock.json and yarn.lock"
-  assertCaptured "Both npm and yarn have created lockfiles"
+  assertCaptured "Multiple lockfiles found"
+  assertCaptured "Multiple package managers (npm,Yarn) have created lockfiles for this application"
   assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
@@ -397,8 +397,16 @@ testErrorYarnAndNpmLockfiles() {
 testErrorYarnAndNpmShrinkwrap() {
   compile "yarn-and-shrinkwrap-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Two different lockfiles found"
-  assertCaptured "Please make sure there is only one of the following files"
+  assertCaptured "Multiple lockfiles conflicting with npm-shrinkwrap.json"
+  assertCaptured "https://help.heroku.com/0KU2EM53"
+  assertCapturedError
+}
+
+testErrorYarnAndPnpmAndNpmLockfiles() {
+  compile "yarn-pnpm-and-npm-lockfiles"
+  assertNotCaptured "Creating runtime environment"
+  assertCaptured "Multiple lockfiles found"
+  assertCaptured "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
   assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
@@ -1776,6 +1784,197 @@ testCorepackInvalidVersion() {
   assertCaptured "Error installing yarn version 3.2.3"
   assertCaptured "The hash provided for the yarn version declared in package.json (sha224.BADSHA) is incorrect"
   assertCapturedError
+}
+
+# PNPM
+
+testPnpm7Pnp() {
+  compile "pnpm-7-pnp"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): pnpm@7.32.3"
+  assertCaptured "Installing pnpm@7.32.3 via corepack"
+  assertCaptured "Using pnpm 7.32.3"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "+ dotenv"
+  assertCaptured "- dotenv"
+  assertCaptured "heroku-prebuild"
+  assertCaptured "heroku-build"
+  assertCaptured "heroku-cleanup"
+  assertCapturedSuccess
+}
+
+testPnpm8Hoist() {
+  compile "pnpm-8-hoist"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): pnpm@8.4.0"
+  assertCaptured "Installing pnpm@8.4.0 via corepack"
+  assertCaptured "Using pnpm 8.4.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+testPnpm8Nuxt() {
+  compile "pnpm-8-nuxt"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): pnpm@8.11.0"
+  assertCaptured "Installing pnpm@8.11.0 via corepack"
+  assertCaptured "Using pnpm 8.11.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "> nuxt prepare"
+  assertCaptured "> pnpm-8-nuxt@ build"
+  assertCaptured "> nuxt build"
+  assertCapturedSuccess
+}
+
+testPnpmEngine() {
+  compile "pnpm-engine"
+  assertCaptured "engines.pnpm (package.json):   8.x"
+  assertCaptured "Installing pnpm@8.x via corepack"
+  assertCaptured "Using pnpm 8"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+testPnpmBadEngine() {
+  compile "pnpm-bad-engine"
+  assertCaptured "engines.pnpm (package.json):   999.x"
+  assertCaptured "Installing pnpm@999.x via corepack"
+  assertCaptured "Error installing pnpm version 999.x"
+  assertCaptured "Can’t find the pnpm version that matches the requested version declared in package.json (999.x)"
+  assertCapturedError
+}
+
+testPnpmWithCorepackAndEngine() {
+  compile "pnpm-with-corepack-and-engine"
+  assertCaptured "engines.pnpm (package.json):   8.x"
+  assertCaptured "packageManager (package.json): pnpm@8.4.0"
+  assertCaptured "Multiple pnpm versions declared"
+  assertCaptured "The package.json file indicates the target version of pnpm to install in two fields:"
+  assertCaptured '- "packageManager": "pnpm@8.4.0"'
+  assertCaptured '- "engines.pnpm": "8.x"'
+  assertCaptured 'If both fields are present, then "packageManager" will take precedence and "pnpm@8.4.0" will be installed.'
+  assertCaptured "To ensure we install the version of pnpm you want, remove one of these fields."
+  assertCaptured "Installing pnpm@8.4.0 via corepack"
+  assertCaptured "Using pnpm 8.4.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+testPnpmStorePruning() {
+  default_counter_value="40"
+  cache_dir=$(mktmpdir)
+
+  # initial state, no counter exists
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+
+  # set the counter to right before it triggers the store to be pruned
+  echo "1" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be 0; was <${counter}>" "0" "${counter}"
+
+  # the store should be pruned on the next build and counter reset
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $default_counter_value; was <${counter}>" "$default_counter_value" "${counter}"
+
+  # ensure the cache can't get into a bad state (negative counter) and it resets to the initial state
+  echo "-1" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+
+  # ensure the cache can't get into a bad state (non-integer counter) and it resets to the initial state
+  echo "" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+}
+
+testPnpmCacheSimple() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertNotCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+}
+
+testPnpmCacheComplex() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-8-nuxt" "$cache_dir"
+  assertNotCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+
+  compile "pnpm-8-nuxt" "$cache_dir"
+  assertCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+}
+
+testPnpmWithNoPackageManagerEntry() {
+  compile "pnpm-unknown-version"
+  assertCaptured "Installing pnpm@latest via corepack"
+  assertCaptured "Using pnpm"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Default pnpm version used"
+  assertCapturedSuccess
+}
+
+testPnpmSafePruningSupport() {
+  # no pre/post install script is safe to prune (<8.15.6)
+  compile "pnpm-8.15.5"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedSuccess
+
+  # a pre/post install script is not safe to prune (<8.15.6)
+  compile "pnpm-8.15.5-with-pre-post-install"
+  assertNotCaptured "- dotenv 16.4.5"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedTimes 1 "'pnpm:devPreinstall_0'"
+  assertCapturedTimes 1 "'preinstall_1'"
+  assertCapturedTimes 1 "'install_2'"
+  assertCapturedTimes 1 "'postinstall_3'"
+  assertCapturedTimes 0 "'prepublish_4'"
+  assertCapturedTimes 0 "'preprepare_5'"
+  assertCapturedTimes 1 "'prepare_6'"
+  assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
+
+  # a pre/post install script is safe to prune (>=8.15.6)
+  compile "pnpm-8.15.6-with-pre-post-install"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedTimes 1 "'pnpm:devPreinstall_0'"
+  assertCapturedTimes 1 "'preinstall_1'"
+  assertCapturedTimes 1 "'install_2'"
+  assertCapturedTimes 1 "'postinstall_3'"
+  assertCapturedTimes 0 "'prepublish_4'"
+  assertCapturedTimes 0 "'preprepare_5'"
+  assertCapturedTimes 1 "'prepare_6'"
+  assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
 }
 
 # Utils

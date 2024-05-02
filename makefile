@@ -10,7 +10,7 @@ build-resolver-linux: .build
 	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-unknown-linux-musl --profile release
 	mv .build/bin/resolve_version lib/vendor/resolve-version-linux
 
-test: heroku-22-build heroku-20-build
+test: heroku-22-build heroku-20-build heroku-24-build
 
 test-binary:
 	go test -v ./cmd/... -tags=integration
@@ -20,6 +20,11 @@ shellcheck:
 	@shellcheck -x lib/*.sh
 	@shellcheck -x ci-profile/**
 	@shellcheck -x etc/**
+
+heroku-24-build:
+	@echo "Running tests in docker (heroku-24-build)..."
+	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-24" heroku/heroku:24-build bash -c 'cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run;'
+	@echo ""
 
 heroku-22-build:
 	@echo "Running tests in docker (heroku-22-build)..."

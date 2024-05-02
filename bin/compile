@@ -114,6 +114,7 @@ meta_set "build-step" "init"
 [ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
+[ -f "$BUILD_DIR/pnpm-lock.yaml" ] && PNPM=true || PNPM=false
 YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 
 ### Save build info
@@ -208,14 +209,16 @@ fi
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-export YARN_CACHE_FOLDER NPM_CONFIG_CACHE
+[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(mktemp -d -t pnpmcache.XXXXX)
+export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine npm_engine yarn_engine node_version package_manager
+  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
 
   node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
   yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  pnpm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")
   package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
 
   if [[ "$YARN_2" == "true" && -n "$yarn_engine" ]]; then
@@ -231,6 +234,7 @@ install_bins() {
   meta_set "node-version-request" "$node_engine"
   meta_set "npm-version-request" "$npm_engine"
   meta_set "yarn-version-request" "$yarn_engine"
+  meta_set "pnpm-version-request" "$pnpm_engine"
   meta_set "package-manager-request" "$package_manager"
 
   echo "engines.node (package.json):   ${node_engine:-unspecified}"
@@ -240,6 +244,10 @@ install_bins() {
     echo "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
   fi
 
+  if $PNPM || [ -n "$pnpm_engine" ]; then
+    echo "engines.pnpm (package.json):   ${pnpm_engine:-unspecified (use default)}"
+  fi
+
   if [ -n "$package_manager" ]; then
     echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
@@ -247,6 +255,10 @@ install_bins() {
   echo ""
 
   warn_node_engine "$node_engine"
+
+  if [ -n "$pnpm_engine" ] && [[ "$package_manager" == pnpm* ]]; then
+    warn_multiple_pnpm_version "$package_manager" "$pnpm_engine"
+  fi
 
   if [ -n "$yarn_engine" ] && [[ "$package_manager" == yarn* ]]; then
     warn_multiple_yarn_version "$package_manager" "$yarn_engine"
@@ -279,9 +291,33 @@ install_bins() {
     fi
   fi
 
+  if $PNPM; then
+    meta_set "build-step" "install-pnpm-using-corepack"
+
+    default_pnpm_version="pnpm@latest"
+    using_default_pnpm=false
+
+    if [[ "$package_manager" == pnpm* ]]; then
+      package_manager="$package_manager"
+    elif [ -n "$pnpm_engine" ]; then
+      package_manager="pnpm@${pnpm_engine}"
+    else
+      using_default_pnpm=true
+      package_manager="$default_pnpm_version"
+    fi
+
+    monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
+    if [ "$using_default_pnpm" == true ]; then
+      warn_default_pnpm_version_used "$default_pnpm_version"
+    fi
+  fi
+
   if $YARN; then
     mcount "version.yarn.$(yarn --version)"
     meta_set "yarn-version" "$(yarn --version)"
+  elif $PNPM; then
+    mcount "version.pnpm.$(pnpm --version)"
+    meta_set "pnpm-version" "$(pnpm --version)"
   else
     mcount "version.npm.$(npm --version)"
     meta_set "npm-version" "$(npm --version)"
@@ -327,7 +363,7 @@ restore_cache() {
   elif [[ "$cache_status" == "valid" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE"
+      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
@@ -366,6 +402,8 @@ build_dependencies() {
     yarn_2_install "$BUILD_DIR"
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
+  elif $PNPM; then
+    pnpm_install "$BUILD_DIR" "$CACHE_DIR"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
@@ -398,7 +436,7 @@ cache_build() {
     :
   elif [[ "$cache_directories" == "" ]]; then
     header "Caching build"
-    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE"
+    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
   else
     header "Caching build"
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
@@ -410,6 +448,8 @@ cache_build() {
 prune_devdependencies() {
   if $YARN || $YARN_2; then
     yarn_prune_devdependencies "$BUILD_DIR" "$YARN_CACHE_FOLDER" "$BP_DIR"
+  elif $PNPM; then
+    pnpm_prune_devdependencies "$BUILD_DIR"
   else
     npm_prune_devdependencies "$BUILD_DIR"
   fi
