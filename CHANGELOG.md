@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.1.0.
 - Added Yarn version 4.2.1.
 - Added Yarn version 4.2.0.
 - Added Yarn version 3.8.2.
