@@ -49,6 +49,7 @@ restore_default_cache_directories() {
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
   local npm_cache=${4:-}
+  local pnpm_cache_dir=${5:-}
 
   if [[ "$YARN" == "true" ]]; then
     if has_yarn_cache "$build_dir"; then
@@ -66,6 +67,15 @@ restore_default_cache_directories() {
       echo "- yarn cache"
     else
       echo "- yarn cache (not cached - skipping)"
+    fi
+  elif [[ "$PNPM" == "true" ]]; then
+    if [[ -d "$cache_dir/node/cache/pnpm" ]]; then
+      rm -rf "$pnpm_cache_dir"
+      mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
+      echo "- pnpm cache"
+      meta_set "pnpm_cache" "true"
+    else
+      echo "- pnpm cache (not cached - skipping)"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$cache_dir/node/cache/npm" ]]; then
@@ -131,6 +141,7 @@ save_default_cache_directories() {
   local cache_dir=${2:-}
   local yarn_cache_dir=${3:-}
   local npm_cache=${4:-}
+  local pnpm_cache_dir=${5:-}
 
   if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then
@@ -140,6 +151,11 @@ save_default_cache_directories() {
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
       fi
       echo "- yarn cache"
+    fi
+  elif [[ "$PNPM" == "true" ]]; then
+    if [[ -d "$pnpm_cache_dir" ]]; then
+      mv "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm"
+      echo "- pnpm cache"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$npm_cache" ]]; then
@@ -193,4 +209,38 @@ save_custom_cache_directories() {
   done
 
   meta_set "node-custom-cache-dirs" "true"
+}
+
+DEFAULT_PNPM_PRUNE_COUNTER_VALUE="40"
+
+load_pnpm_prune_store_counter() {
+  local cache_dir=${1:-}
+
+  if [ -f "$cache_dir/pnpm_prune_store_counter" ]; then
+    counter=$(<"$cache_dir/pnpm_prune_store_counter")
+    if ! is_int "$counter" || (( counter < 0 )); then
+      counter="$DEFAULT_PNPM_PRUNE_COUNTER_VALUE"
+    fi
+  else
+    counter="$DEFAULT_PNPM_PRUNE_COUNTER_VALUE"
+  fi
+
+  echo "$counter"
+}
+
+save_pnpm_prune_store_counter() {
+  local cache_dir=${1:-}
+  local new_value=${2:-}
+
+  if ! is_int "$new_value" || (( new_value < 0 )); then
+    new_value="$DEFAULT_PNPM_PRUNE_COUNTER_VALUE"
+  fi
+
+  echo "$new_value" > "$cache_dir/pnpm_prune_store_counter"
+}
+
+is_int() {
+  case ${1#[-+]} in
+    '' | *[!0-9]*) return 1;;
+  esac
 }

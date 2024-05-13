@@ -18,6 +18,15 @@
 ## [Unreleased]
 
 
+## [v245] - 2024-04-29
+
+- Support [pnpm](https://pnpm.io/) ([#1224](https://github.com/heroku/heroku-buildpack-nodejs/pull/1224))
+
+## [v244] - 2024-04-25
+
+- Added Node.js version 22.0.0.
+- Add support for heroku-24.
+
 ## [v243] - 2024-04-10
 
 - Added Node.js version 21.7.3.
@@ -29,7 +38,7 @@
 - Support [Corepack](https://nodejs.org/api/corepack.html) installation of [Yarn](https://yarnpkg.com/) ([#1222](https://github.com/heroku/heroku-buildpack-nodejs/pull/1222))
 
 ## [v241] - 2024-04-04
- 
+
 - Added Node.js version 21.7.2.
 - Added Node.js version 20.12.1.
 - Added Node.js version 18.20.1.
@@ -827,7 +836,9 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v243...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v245...main
+[v245]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v244...v245
+[v244]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v243...v244
 [v243]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v242...v243
 [v242]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v241...v242
 [v241]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v240...v241
