@@ -340,6 +340,16 @@ pnpm_prune_devdependencies() {
 
   cd "$build_dir" || return
 
+    if [ "$NODE_ENV" == "test" ]; then
+    echo "Skipping because NODE_ENV is 'test'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ "$NODE_ENV" != "production" ]; then
+    echo "Skipping because NODE_ENV is not 'production'"
+    meta_set "skipped-prune" "true"
+    return 0
+  fi
+
   pnpm_version=$(pnpm --version)
   pnpm_major_version=$(echo "$pnpm_version" | cut -d "." -f 1)
   pnpm_minor_version=$(echo "$pnpm_version" | cut -d "." -f 2)
