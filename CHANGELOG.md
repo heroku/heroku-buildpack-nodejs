@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v249] - 2024-05-15
+
 - Skip pnpm pruning if `NODE_ENV` is not set to `production` or if `PNPM_SKIP_PRUNING` is set to `true` ([#1259](https://github.com/heroku/heroku-buildpack-nodejs/pull/1259))
 
 ## [v248] - 2024-05-10
@@ -839,7 +842,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v248...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v249...main
+[v249]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v248...v249
 [v248]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v247...v248
 [v247]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v246...v247
 [v246]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v245...v246
