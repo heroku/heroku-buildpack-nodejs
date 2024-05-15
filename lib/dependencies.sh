@@ -340,12 +340,16 @@ pnpm_prune_devdependencies() {
 
   cd "$build_dir" || return
 
-    if [ "$NODE_ENV" == "test" ]; then
+  if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
     meta_set "skipped-prune" "true"
     return 0
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
+    meta_set "skipped-prune" "true"
+    return 0
+  elif [ "$PNPM_SKIP_PRUNING" == "true" ]; then
+    echo "Skipping because PNPM_SKIP_PRUNING is '$PNPM_SKIP_PRUNING'"
     meta_set "skipped-prune" "true"
     return 0
   fi

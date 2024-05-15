@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Skip pnpm pruning if `NODE_ENV` is not set to `production` or if `PNPM_SKIP_PRUNING` is set to `true` ([#1259](https://github.com/heroku/heroku-buildpack-nodejs/pull/1259))
 
 ## [v248] - 2024-05-10
 
