@@ -1798,7 +1798,7 @@ testPnpm8Nuxt() {
   assertCaptured "> nuxt prepare"
   assertCaptured "> pnpm-8-nuxt@ build"
   assertCaptured "> nuxt build"
-  assertCapturedSuccess
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
 }
 
 testPnpmEngine() {
@@ -1901,12 +1901,12 @@ testPnpmCacheComplex() {
   compile "pnpm-8-nuxt" "$cache_dir"
   assertNotCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
-  assertCapturedSuccess
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
 
   compile "pnpm-8-nuxt" "$cache_dir"
   assertCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
-  assertCapturedSuccess
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
 }
 
 testPnpmWithNoPackageManagerEntry() {
