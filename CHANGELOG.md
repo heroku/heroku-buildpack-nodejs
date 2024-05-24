@@ -18,6 +18,18 @@
 ## [Unreleased]
 
 
+## [v251] - 2024-05-22
+
+- Added Node.js version 18.20.3.
+
+## [v250] - 2024-05-16
+
+- Added Node.js version 22.2.0.
+
+## [v249] - 2024-05-15
+
+- Skip pnpm pruning if `NODE_ENV` is not set to `production` or if `PNPM_SKIP_PRUNING` is set to `true` ([#1259](https://github.com/heroku/heroku-buildpack-nodejs/pull/1259))
+
 ## [v248] - 2024-05-10
 
 - Added Node.js version 20.13.1.
@@ -853,7 +865,10 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v248...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v251...main
+[v251]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v250...v251
+[v250]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v249...v250
+[v249]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v248...v249
 [v248]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v247...v248
 [v247]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v246...v247
 [v246]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v245...v246
