@@ -1823,7 +1823,7 @@ testPnpm8Nuxt() {
   assertCaptured "> nuxt prepare"
   assertCaptured "> pnpm-8-nuxt@ build"
   assertCaptured "> nuxt build"
-  assertCapturedSuccess
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
 }
 
 testPnpmEngine() {
@@ -1926,12 +1926,12 @@ testPnpmCacheComplex() {
   compile "pnpm-8-nuxt" "$cache_dir"
   assertNotCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
-  assertCapturedSuccess
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
 
   compile "pnpm-8-nuxt" "$cache_dir"
   assertCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
-  assertCapturedSuccess
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
 }
 
 testPnpmWithNoPackageManagerEntry() {
@@ -1974,6 +1974,43 @@ testPnpmSafePruningSupport() {
   assertCapturedTimes 0 "'preprepare_5'"
   assertCapturedTimes 1 "'prepare_6'"
   assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
+}
+
+testPnpmSkipPruning() {
+  cache_dir=$(mktmpdir)
+
+  # skip pruning in test environment
+  env_dir=$(mktmpdir)
+  echo "test" > "$env_dir/NODE_ENV"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "Skipping because NODE_ENV is 'test'"
+  assertCapturedSuccess
+
+  # skip pruning in non-production environment
+  env_dir=$(mktmpdir)
+  echo "development" > "$env_dir/NODE_ENV"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "Skipping because NODE_ENV is not 'production'"
+  assertCapturedSuccess
+
+  # skip pruning if explicitly configured to do so
+  env_dir=$(mktmpdir)
+  echo "true" > "$env_dir/PNPM_SKIP_PRUNING"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "Skipping because PNPM_SKIP_PRUNING is 'true'"
+  assertCapturedSuccess
+
+  # otherwise, prune away
+  env_dir=$(mktmpdir)
+  echo "production" > "$env_dir/NODE_ENV"
+  echo "false" > "$env_dir/PNPM_SKIP_PRUNING"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "- dotenv 16.4.5"
   assertCapturedSuccess
 }
 
