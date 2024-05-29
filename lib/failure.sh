@@ -588,19 +588,19 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "npm ERR! code EBADPLATFORM" "$log_file"; then
+  if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "$log_file"; then
     mcount "failures.npm-ebadplatform"
     meta_set "failure" "npm-ebadplatform"
     return 0
   fi
 
-  if grep -qi "npm ERR! code EINVALIDPACKAGENAME" "$log_file"; then
+  if grep -qiE 'npm (ERR!|error) code EINVALIDPACKAGENAME' "$log_file"; then
     mcount "failures.npm-package-name-typo"
     meta_set "failure" "npm-package-name-typo"
     return 0
   fi
 
-  if grep -qi -e "npm ERR! code E404" -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
+  if grep -qiE -e 'npm (ERR!|error) code E404' -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
     mcount "failures.module-404"
     meta_set "failure" "module-404"
 
@@ -609,7 +609,7 @@ log_other_failures() {
       meta_set "failure" "flatmap-stream-404"
       warn "The flatmap-stream module has been removed from the npm registry
 
-       On November 26th, npm was notified of a malicious package that had made its
+       On November 26th (2018), npm was notified of a malicious package that had made its
        way into event-stream, a popular npm package. After triaging the malware,
        npm responded by removing flatmap-stream and event-stream@3.3.6 from the Registry
        and taking ownership of the event-stream package to prevent further abuse.
