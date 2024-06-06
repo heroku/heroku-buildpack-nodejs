@@ -5,8 +5,8 @@ __metadata:
   version: 8
   cacheKey: 10
 
-"corepack_yarn_with_package_type_module@workspace:.":
+"yarn_with_package_type_module@workspace:.":
   version: 0.0.0-use.local
-  resolution: "corepack_yarn_with_package_type_module@workspace:."
+  resolution: "yarn_with_package_type_module@workspace:."
   languageName: unknown
   linkType: soft
