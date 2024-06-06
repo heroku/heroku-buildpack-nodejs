@@ -1989,6 +1989,16 @@ testPnpmSkipPruning() {
   assertCapturedSuccess
 }
 
+testCorepackYarnWithPackageTypeModule() {
+  compile "corepack_yarn_with_package_type_module"
+  assertCapturedSuccess
+}
+
+testCorepackPnpmWithPackageTypeModule() {
+  compile "corepack_pnpm_with_package_type_module"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

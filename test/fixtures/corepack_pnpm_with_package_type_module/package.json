@@ -1,0 +1,9 @@
+{
+  "name": "corepack_pnpm_with_package_type_module",
+  "packageManager": "pnpm@9.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.1"
+  }
+}

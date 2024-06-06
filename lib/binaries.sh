@@ -194,6 +194,13 @@ install_corepack_package_manager() {
   else
     fail_corepack_not_available "$package_manager" "$node_version"
   fi
+
+  # XXX: Because the corepack binary scripts are located in a sub-directory of the application directory,
+  #      the `type` field from application's package.json can accidentally force an incorrect module
+  #      system from being detected which influences how these binaries scripts are then loaded. Adding the
+  #      following dummy package.json with no `type` set will short-circuit that from happening when Node.js
+  #      runs it's rules for determining the module system.
+  echo '{ "name": "halt-node-module-system-determination-rules", "version": "0.0.0" }' > "$COREPACK_HOME/package.json"
 }
 
 suppress_output() {
