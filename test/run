@@ -1991,7 +1991,6 @@ testPnpmSkipPruning() {
 
 testCorepackYarnWithPackageTypeModule() {
   compile "corepack_yarn_with_package_type_module"
-  cat "$STD_OUT"
   assertCapturedSuccess
 }
 
