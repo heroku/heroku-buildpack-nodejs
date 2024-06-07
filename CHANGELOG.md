@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix to stop package.json type field from influencing corepack binaries. ([#1271](https://github.com/heroku/heroku-buildpack-nodejs/pull/1271))
 
 ## [v252] - 2024-05-29
 
