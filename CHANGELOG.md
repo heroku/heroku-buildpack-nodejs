@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v253] - 2024-06-10
+
 - Fix to stop package.json type field from influencing corepack binaries. ([#1271](https://github.com/heroku/heroku-buildpack-nodejs/pull/1271))
 
 ## [v252] - 2024-05-29
@@ -855,7 +858,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v252...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v253...main
+[v253]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v252...v253
 [v252]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v251...v252
 [v251]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v250...v251
 [v250]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v249...v250
