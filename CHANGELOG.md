@@ -18,6 +18,15 @@
 ## [Unreleased]
 
 
+## [v254] - 2024-06-13
+
+- Added Node.js version 22.3.0.
+- Added Yarn version 4.3.0.
+
+## [v253] - 2024-06-10
+
+- Fix to stop package.json type field from influencing corepack binaries. ([#1271](https://github.com/heroku/heroku-buildpack-nodejs/pull/1271))
+
 ## [v252] - 2024-05-29
 
 - Added Node.js version 20.14.0.
@@ -869,7 +878,9 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v252...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v254...main
+[v254]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v253...v254
+[v253]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v252...v253
 [v252]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v251...v252
 [v251]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v250...v251
 [v250]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v249...v250
