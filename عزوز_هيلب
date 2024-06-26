@@ -1,0 +1,523 @@
+#تم تطوير هذا الروبوت بواسطة wtf
+#قناة المطور | @zz_g7 ✓.
+#pip تثبيت pyTelegramBotAPI
+استيراد telebot
+وقت الاستيراد
+استيراد نظام التشغيل
+من استيراد gettext gTTS
+استيراد عشوائي
+من telebot.types قم باستيراد ChatMember
+من أنواع استيراد telebot
+بوت = telebot.TeleBot(الرمز المميز)
+btn = أنواع.InlineKeyboardButton(text='Dev', url = "http://t.me/zz_g7")
+@bot.message_handler(commands=["start"])
+البداية المحددة (الرسالة):
+	بروك = أنواع.InlineKeyboardMarkup()
+	بروك.إضافة(BTN)
+	bot.reply_to(message,text='''⌯︙أهلآ بك عزيزي 🙋‍♂
+⌯︙اختصاص بوت منع المجموعات 🔥
+⌯︙لتفعيل البوت عليك اتباع مايلي 👇...
+⌯︙اضف بوت الى مجموعتك
+⌯︙ارفعه ادمن {مشرف}
+⌯︙ارسل كلمة { تفعيل } تفعيل البوت في مجموعتك ''',reply_markup=brok)
+
+admin_id = "6912305851" #ايديك
+userk = [6912305851] #ايديك
+ 
+@bot.message_handler(func=lambda message: message.text == "الاوامر")
+تعريف lock_images(رسالة):
+
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    العضو = bot.get_chat_member(chat_id, user_id)
+
+    إذا كان member.status في ["المسؤول"، "المنشئ"]:
+        
+        إذا لم يكن معرف الدردشة موجودًا في مجموعات_مقفلة:
+            lock_groups.append(chat_id)
+        bot.reply_to(message, """⌁︙اهلا عزيزي الادمن 🧜🏻 .
+⌁︙ اوامر حماية ارسل ↫`M1`
+⌁︙اوامر الالعاب ارسل ↫`M2`
+⌁︙اوامر التسلية ارسل ↫`M3`
+⌁︙اوامر اخرى ارسل ↫`M4`
+ ⌁︙اضغط على الأمر لـ النسخ 👾""",parse_mode="markdown")
+    آخر:
+        bot.reply_to(message, "⌁︙انت مو ادمن ياعضو 💃🏻 !")
+                   
+@bot.message_handler(func=lambda message: message.text == "تفعيل" )
+تعريف lock_images(رسالة):
+
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    العضو = bot.get_chat_member(chat_id, user_id)
+
+    إذا كان member.status في ["المسؤول"، "المنشئ"]:
+        
+        إذا لم يكن معرف الدردشة موجودًا في مجموعات_مقفلة:
+            lock_groups.append(chat_id)
+        bot.reply_to(message, """*- تـم تفعيل البوت الفعال ✅
+
+• ارسل (*`الاوامر`*) يتعلم اوامر البوت 💯*""",parse_mode="markdown")
+    آخر:
+        bot.reply_to(message, "⌁︙انت مو ادمن ياعضو 💃🏻 !")
+        
+        
+@bot.message_handler(func=lambda message: message.text == "M1")
+تعريف lock_images(رسالة):
+
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    العضو = bot.get_chat_member(chat_id, user_id)
+
+    إذا كان member.status في ["المسؤول"، "المنشئ"]:
+        
+        إذا لم يكن معرف الدردشة موجودًا في مجموعات_مقفلة:
+            lock_groups.append(chat_id)
+        bot.reply_to(message, """*⌁︙اهلا عزيزي الادمن باوامر الحماية 🛡️ .*
+        
+⌁︙`حظر` | (بالرد )* يحظر العضو *
+⌁︙`الغااء الترويج` | (بالرد) *يلغي حظر العضو*
+⌁︙`تقييد` | (رد ) *يقييد العضو من الكتابة*
+⌁︙`الغاء سكنيد` | (رد ) *يغي بعض الشيء*
+⌁︙`تقييد وقتي` | (رد ) *يقييد العضو لمدة 10 صباحا*
+⌁︙`تحذير` | (رد ) *إذا تم تحذير الشخص ثلاث مرات يتم تعليقه*
+⌁︙`قفل الصور` | *تبدأ البوت بمسح الصور التي يرسلها الأعضاء*
+⌁︙`فتح الصور` | *يتوقف البوت عن مسح الصور التي يرسلها الاعضاء*
+⌁︙`قفل الملصقات` | *تبدأ البوت بمسح الملصقات التي يرسلها الأعضاء*
+⌁︙`فتح الملصقات` | *يتوقف البوت عن تنقية الملصقات التي يرسلها الأعضاء*
+
+*⌁︙ يمكن التحكم في هذه المديرية المشرفين بشكل مباشر في المجموعة ✅*
+⌁︙اضغط على اي أمر للنسخة 👾 .""",parse_mode="markdown")
+    آخر:
+        bot.reply_to(message, "⌁︙انت مو ادمن ياعضو 💃🏻 !")        
+        
+@bot.message_handler(func=lambda msg: msg.text ليس بلا و"M2" في msg.text)
+قم بإلغاء الرد_مرحبًا (الرسالة):
+    bot.reply_to(message, """*⌁︙اهلا عزيزي باوامر الالعاب 🎮🕹️ .*
+⌁︙`نرد` ↫يرسلك رقم من 1 الى 6 اذا طلع 6 انت فايز بس اذا طلع 5 او 4 او 3 او 2 او 1 تخسر 😔 .
+⌁︙`سلة` ↫يرسل لك لعبة كرة السلة .
+⌁︙`كرة` ↫يرسل لك لعبة كرة القدم .
+⌁︙`أسرعالا` ↫يرسل لك كلمة واسرع اصداراتها .
+- اضغط على اسم اللعبة للنسخة 👾 .""",parse_mode="markdown")
+
+@bot.message_handler(func=lambda msg: msg.text ليس بلا و"الالعاب" في msg.text)
+قم بإلغاء الرد_مرحبًا (الرسالة):
+    bot.reply_to(message, """*⌁︙اهلا عزيزي باوامر الالعاب 🎮🕹️ .*
+⌁︙`نرد` ↫يرسلك رقم من 1 الى 6 اذا طلع 6 انت فايز بس اذا طلع 5 او 4 او 3 او 2 او 1 تخسر 😔 .
+⌁︙`سلة` ↫يرسل لك لعبة كرة السلة .
+⌁︙`كرة` ↫يرسل لك لعبة كرة القدم .
+⌁︙`الاسرع` ↫يرسل لك كلمة واسرع شخص يكتبها يفوز .
+- اضغط على اسم اللعبة للنسخة 👾 .**""",parse_mode="markdown")
+        
+@bot.message_handler(func=lambda msg: msg.text ليس بلا و"M3" في msg.text)
+قم بإلغاء الرد_مرحبًا (الرسالة):
+    bot.reply_to(message, """*⌁︙اهلا عزيزي باوامر التسلية 💃🏻 .*
+⌁︙رد على الشخص من اجل استخدام الأمر
+⌁︙`رفع حلو`
+⌁︙`ذكائي`
+⌁︙`غبائي`
+⌁︙`تحبني`
+*⌁︙اضغط على اي وحدة لنسخها 👾 .
+⌁︙الاوامر يمكن يستخدمها العضو العادي 💃🏻 .*
+⌁︙قريباً اوامر اكثر 😉 .""",parse_mode="markdown")                
+
+
+
+@bot.message_handler(func=lambda msg: msg.text ليس بلا و"M4" في msg.text)
+قم بإلغاء الرد_مرحبًا (الرسالة):
+    bot.reply_to(message, """*⌁︙اهلا عزيزي باوامر أخرى 🪗 .*
+⌁︙`ايدي`
+⌁︙`مجموعة إيدي`
+⌁︙`الرابط`
+⌁︙`المالك`
+⌁︙`سورس`
+⌁︙`السورس`
+⌁︙`تفاعلي`
+⌁︙`شعر`
+⌁︙`سوره`
+*⌁︙اوامر النطق 🔊... *
+⌁︙`النطق` + الرسالة
+*⌁︙مثال* ( انطق مرحبا )
+*⌁︙اضغط على أي وحدة لنسخها 👾 .*"""،parse_mode="markdown")                                     
+@bot.message_handler(func=lambda message: message.text == 'المالك')
+تعريف get_group_owner (الرسالة):
+    إذا message.chat.type == 'supergroup' أو message.chat.type == 'group':
+        chat_id = message.chat.id
+        chat_admins = bot.get_chat_administrators(chat_id)
+
+        للمشرف في chat_admins:
+            إذا admin.status == "منشئ":
+                Owner_id = admin.user.id
+                Owner_username = admin.user.username
+                اسم المالك = admin.user.first_name
+
+                إذا كان hasattr(admin.user, 'photo'):
+                    Owner_photo_id = admin.user.photo.big_file_id
+                    bot.send_photo(message.chat.id,owner_photo_id)
+
+                الرد = f'''- 𝐆𝐑𝐎𝗨𝐏 𝐎𝐖𝐍𝐄𝐑 ✅ |
+
+• حقوق النشر :- @{owner_username}
+• 𝐍𝐀𝐌𝐄 :- {owner_name}
+• 𝐈𝐃 :- {owner_id}''
+                bot.reply_to(رسالة، رد)
+                يعود
+        bot.reply_to(message, 'لا يمكن العثور على معلومات المالك في هذه المجموعة.')
+
+    آخر:
+        bot.reply_to(message, 'هذا الأمر يمكن استخدامه في المجموعات فقط.')
+
+@bot.message_handler(func=lambda message: message.text.startswith('حظر') وmessage.reply_to_message ليس بلا)
+حظر نهائي (رسالة):
+    إذا str(message.from_user.id) != admin_id:
+        bot.send_message(message.chat.id, "أنت مو مشرف")
+    آخر:
+        سيد = message.chat.id
+        uid = message.reply_to_message.from_user.id
+        bot.kick_chat_member(cid, uid)
+        bot.send_message(cid, "تم حظر العضو الفعال")
+
+@bot.message_handler(func=lambda message: message.text.startswith('الغاء الأمريكي') و message.reply_to_message ليس لا شيء)
+def unban(الرسالة):
+    إذا str(message.from_user.id) != admin_id:
+        bot.send_message(message.chat.id, "أنت مو مشرف")
+    آخر:
+        سيد = message.chat.id
+        uid = message.reply_to_message.from_user.id
+        bot.unban_chat_member(cid, uid)
+        bot.send_message(cid, "تم إلغاء الحظر الفعال")                           
+كتم_المستخدمين = {}
+
+@bot.message_handler(func=lambda message: message.text == 'تقييد')
+تعريف Handle_mute(الرسالة):
+    chat_id = message.chat.id
+    user_id = message.reply_to_message.from_user.id
+    bot.restrict_chat_member(chat_id, user_id, can_send_messages=False)
+    bot.reply_to(message.reply_to_message, "*- تم تجميعك في المجموعة 📛 .*",parse_mode="Markdown")
+
+@bot.message_handler(func=lambda message: message.text == 'الغاء السكنيد')
+تعريف Handle_unmute(الرسالة):
+    chat_id = message.chat.id
+    user_id = message.reply_to_message.from_user.id
+    bot.restrict_chat_member(chat_id, user_id, can_send_messages=True)
+    bot.reply_to(message.reply_to_message, "*- تم إلغاء تنشيطك بفعالية ✅ .*",parse_mode="Markdown")
+
+@bot.message_handler(func=lambda message: message.reply_to_message و message.reply_to_message.from_user.id == bot.get_me().id)
+حدد Handle_user_messages(رسالة):
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    إذا كان user_id في muted_users وmuted_users[user_id] == chat_id:
+        يحاول:
+            bot.delete_message(chat_id, message.message_id)
+        باستثناء telebot.apihelper.ApiTelegramException كـ e:
+            إذا "لم يتم العثور على رسالة الحذف" في str(e):
+                bot.send_message(chat_id, "الرسالة التي طلبت حذفها غير موجودة")
+            آخر:
+                رفع ه
+
+@bot.message_handler(func=lambda message: message.reply_to_message و message.reply_to_message.from_user.id == bot.get_me().id)
+تعريف Handle_mute_unmute_confirmation(الرسالة):
+    user_id = message.reply_to_message.from_user.id
+    chat_id = message.chat.id
+    if message.text == 'تقييد':
+        muted_users[user_id] = chat_id
+        bot.reply_to(message.reply_to_message, "*- تم صنع شخص ✅ .*",parse_mode="Markdown")
+    elif message.text == ' إلغاء شيء':
+        إذا كان user_id في muted_users و muted_users[user_id] == chat_id:
+            ديل كتم_المستخدمين[user_id]
+            bot.reply_to(message.reply_to_message, "*تم إلغاء التثبيت*",parse_mode="Markdown")
+
+@bot.message_handler(func=lambda message: message.text and message.reply_to_message and message.text.startswith("تقييد وقتي"))
+تعريف تقييد_المستخدم (الرسالة):
+    إذا لم يكن message.from_user.id موجودًا في [admin.user.id للمسؤول في bot.get_chat_administrators(message.chat.id)]:
+        bot.reply_to(message, "᥀ انت مو مشرف ᥀")
+        يعود
+    user_id = message.reply_to_message.from_user.id
+    bot.restrict_chat_member(message.chat.id, user_id, until_date=int(time.time())+600)
+    bot.reply_to(message.reply_to_message, "᥀ تم تعجبك بطريقة مذهلة وقتي ᥀")
+    الوقت.النوم(600)
+    bot.restrict_chat_member(message.chat.id, user_id, can_send_messages=صحيح, can_send_media_messages=صحيح, can_send_other_messages=صحيح, can_add_web_page_previews=True)
+    bot.reply_to(message.reply_to_message, "᥀ تم انتهاء المدة لسببك هسه تدر تحجي براحتك حبيبي ᥀")
+
+مجموعات_مقفلة = []
+
+@bot.message_handler(func=lambda message: message.text == "قفل الصور")
+تعريف lock_images(رسالة):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    العضو = bot.get_chat_member(chat_id, user_id)
+
+    إذا كان member.status في ["المسؤول"، "المنشئ"]:
+        إذا لم يكن معرف الدردشة موجودًا في مجموعات_مقفلة:
+            lock_groups.append(chat_id)
+        
+        bot.reply_to(message, "*- تم قفل الصور الفعالة ✅*", parse_mode="markdown")
+    آخر:
+        bot.reply_to(message, "⌁︙انت مو ادمن ياعضو 💃🏻 !")
+
+@bot.message_handler(func=lambda message: message.text == "فتح الصور")
+تعريف unlock_images(الرسالة):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    العضو = bot.get_chat_member(chat_id, user_id)
+
+    إذا كان member.status في ["المسؤول"، "المنشئ"]:
+        إذا كان chat_id في مجموعات_مقفلة:
+            lock_groups.remove(chat_id)
+        
+        bot.reply_to(message, "*- تم فتح الصور الفعالة *✅", parse_mode="markdown")
+    آخر:
+        bot.reply_to(message, "⌁︙انت مو ادمن ياعضو 💃🏻 !")
+
+@bot.message_handler(content_types=['صورة'])
+تعريف Handle_photos(الرسالة):
+    user_id = message.from_user.id
+    chat_id = message.chat.id
+    العضو = bot.get_chat_member(chat_id, user_id)
+
+    إذا كان معرف الدردشة في المجموعات المقفلة وحالة العضو ليس في ['المسؤول'، 'المنشئ']:
+        bot.delete_message(chat_id, message.message_id)
+
+@bot.message_handler(content_types=["photo"])
+حدد حذف_الصور(الرسالة):
+    chat_id = message.chat.id
+    
+    إذا كان chat_id في مجموعات_مقفلة:
+        
+        bot.delete_message(chat_id, message.message_id)
+
+@bot.message_handler(func=lambda message: message.text.startswith('انطق'))
+تعريف text_to_speech (الرسالة):
+
+    النص = message.text.split(' ', 1)[1]
+
+
+    تحويل النص إلى كلام = gTTS(text=text, lang='ar')
+    تحويل النص إلى كلام.حفظ('audio.mp3')
+
+    الصوت = مفتوح ('audio.mp3'، 'rb')
+    bot.send_audio(chat_id=message.chat.id, audio=audio, renderer= '- @MMMMFi', title='- تم تحويل 🧜🏻 .')
+
+    os.remove('audio.mp3')
+
+@bot.message_handler(func=lambda message: message.text.lower() == 'نرد')
+def roll_dice(الرسالة):
+    النرد = عشوائي.راندنت (1، 6)
+    إذا النرد == 6:
+        bot.reply_to(message, """مبررررررررروووووك 🥹🎉 !
+اخيرا فزت على 6 👾 !
+يامحظوظ يا محظوظ 😉 .""")
+
+    آخر:
+        bot.reply_to(message, """للاسف حظك مو حلو وما حصلت 6 💔 .
+حظ اوفر اذا تريد اكتب ( `نرد` ) """,parse_mode="markdown")
+
+@bot.message_handler(func=lambda message: message.text == "ايدي المجموعة")
+بالتأكيد send_id(رسالة):
+    chat_id = message.chat.id
+    bot.reply_to(message, f"🆔 *𝐈𝐃 𝐓𝐇𝐄 𝐆𝐑𝐎𝗨𝐏 :* `{chat_id}`",parse_mode="markdown")
+
+@bot.message_handler(func=lambda message: message.text == "ايدي")
+بالتأكيد send_id(رسالة):
+    bot.reply_to(message, f"*🆔 𝐘𝐎𝗨𝐑 𝐓𝐄𝐋𝐄𝐆𝐑𝐀𝐌 𝐈𝐃 𝐈𝐒 :*`{message.from_user.id}`",parse_mode="markdown")
+    
+@bot.message_handler(func=lambda message: message.text == "اسمي")
+بالتأكيد send_name(الرسالة):
+    chat_id = message.chat.id
+    chat_info = bot.get_chat(chat_id)
+    first_name = chat_info.first_name
+    last_name = chat_info.last_name
+
+    إذا كان الاسم الأول واسم العائلة:
+        bot.reply_to(message, f"𝐘𝐎𝗨𝐑 𝐍𝐀𝐌𝐄 𝐈𝐒 : {first_name} {last_name}")
+    إليف الاسم الأول:
+        bot.reply_to(message, f"𝐘𝐎𝗨𝐑 𝐍𝐀𝐌𝐄 𝐈𝐒 : {first_name}")
+    آخر:
+        bot.reply_to(message, "*لم أتمكن من العثور على اسمك.*",parse_mode="markdown")
+
+@bot.message_handler(func=lambda message: "سلة" في message.text)
+بالتأكيد send_basketball (الرسالة):
+    bot.send_message(message.chat.id, """تبي كرة السلة !
+يلا انت اتحداك ونشوف بين ؟ 🐈""")
+    bot.send_message(message.chat.id, '🏀')
+    bot.send_message(message.chat.id, """ها ليست ضعيفة !
+انا فزت عليك يلا انقلع 😛😛 ؟
+اذا تبي تلعب مع البوت 🧜🏻
+اضغط على اي كرة تعجبك بالاسفل بين الاقواس وبعدها ارسلها 🐥 .
+(`🏀`) (`🏀`) (`🏀`) (`🏀`) (`🏀`) """,parse_mode="markdown")
+
+@bot.message_handler(func=lambda m: m.text == 'كرة' وليس m.text.startswith('/'))
+بالتأكيد send_ball(رسالة):
+    bot.reply_to(رسالة، "⚽️")
+    bot.send_message(message.chat.id,"""ياخي انت فاشل ؟
+فزت عليك بـ سلة والحين عليك فوز بـ كرة ؟
+متى تصير قوي 🤔 ؟
+اذا تبي تلعب كرة مع البوت اكتب ( كرة )
+لكن اذا تبي تشارك مع اخوياك (اصدقائك )
+انسخ وحدتك من الكرات في الاسفل 👇🏻 .
+(`⚽`) (`⚽`) (`⚽`) (`⚽`) (`⚽`) (`⚽`) (`⚽`)"""،parse_mode="markdown")
+
+@bot.message_handler(func=lambda message: message.text == "تفاعلي")
+تعريف Handle_command(رسالة):
+    zkaa = عشوائي.راندنت (1، 100)
+    Response = f"""• تفاعلي نسبة لك : {zkaa}% 🌝
+شد حيلك بعد حب 👍"""
+    bot.send_message(message.chat.id، استجابة)
+
+@bot.message_handler(func=lambda message: message.text == "ذكائي")
+تعريف Handle_command(رسالة):
+    zkaa = عشوائي.راندنت (1، 100)
+    Response = f""" نسبة ذكائك هي : {zkaa}%
+ما شاء الله 🫨 !"""
+    bot.send_message(message.chat.id، استجابة)
+
+@bot.message_handler(func=lambda message: "رفع حلو" في message.text أو "رفع حلوه" في message.text)
+بالتأكيد send_random_answer(الرسالة):
+    Answers = ["ۿﯛ حلوُ مآ يحتآج 😍😂"، "مبروڪ أصبحت حگو برو مآڪس 😭"، "صدڪني حاوبلغت بس شڪة ميساعد 😂"، "تم رفعه حلوو فعال 🥹😘"]
+    الاستجابة = اختيار عشوائي (إجابات)
+    bot.send_message(message.chat.id، استجابة)
+
+@bot.message_handler(func=lambda message: message.text == "غبائي")
+تعريف Handle_command(رسالة):
+    gbaa = عشوائي.راندنت (1، 100)
+    Response = f""" نسبة غبائك يالاثول هي : %{gbaa}
+طيح الله حظك 😂😛"""
+    bot.send_message(message.chat.id، استجابة)
+
+@bot.message_handler(func=lambda message: "تحبني" في message.text أو "تحبيني" في message.text)
+بالتأكيد send_random_answer(الرسالة):
+    Answers = ["لللاااا عيعيع"،"يعع 🤢 !"،"شوي بسس 🤏🏻🤏🏻"،"اييهه اححبكك 😉😉"،"،"كلتبن ياخفيف !!! 🤮"،'شعندِيّ ، غيࢪكَ🥵♥♥♥',' لا أحد يحبك،]
+    الاستجابة = اختيار عشوائي (إجابات)
+    bot.send_message(message.chat.id، استجابة)
+ 
+           
+@bot.message_handler(func=lambda message: "سورس" في message.text أو "السورس" في message.text)
+تعريف Handle_source_command(رسالة):
+    bot.reply_to(message, """- تم تطوير هذا الروبوت بواسطة السيد غامبال 𓅂""")
+    bot.send_message(message.chat.id,f"[المطور 🧑🏻‍💻 .](t.me/mrgumbal)"،parse_mode="markdown"،disable_web_page_preview="true")
+    bot.send_message(message.chat.id,f"[Channel ✅.](t.me/ecbspp)"،parse_mode="markdown"،disable_web_page_preview="true")
+    
+@bot.message_handler(func=lambda message: "كت" في message.text)
+الرد بالتأكيد (الرسالة):
+    options = ["كلمتك اذا احد حشرك بالنقاش ؟"،"متى تصير نفسية ؟"،"وش الي يغلب عليك دائما .. قلبك عقل ؟"،"اكثر شيء تحبه بـ تشكلك ؟"،"مع او ضد الصحابة تغني عن الحب" ؟"،"ممكن تكره احد بدون سبب ؟"،"،كم من عشرة تشوف صوتك حلو؟""،"،عشان تعيش مرتاح ؟"،"،اكثر شيء تخاف منه ؟"،"،من النوع اللي تعترف بسرعه ولا تجحد ؟"،"،كيف "أمن مع الشخص اللي يرد متأخر دايم ؟"،"متى تنام بالعادة ؟"،"شخص لا يمسك ضحكتك معاه؟""،"دائما قوة الصداقة بـ ...؟""،"مودك خسر ؟"،"،كم من عشرة تحب الصمت ؟"،"كم من عشرة تحب الهدوء ؟"" ""،"لو حظك ينباع ، بكم بيكون ؟"،"،"شيء من الماضي للحين عندك؟""،"،شخص تحب تناقشه؟"،'نهارك يصير أجمل بوجود ..؟','افضل هديه ممكن تفضلك؟','كلمة او بمعنى نصها ؟','شاركنا صورة او فيديو من تصويرك؟📸','عمرك بمسابقة وفزت ؟','اطول مدة طلبها بدون اكل ؟','اقر الناس هو من ...','اكتب ثلاث كما تحبها ؟ ','اكثر مشاكلك بسبب ...؟','لو احد قالك اكرهك وش بتقول له ؟','اذا احد سيقول لك شيء ما تعرفه يقول ما تعرف ولا تتفلسف ؟','اذا كنت شخصيًا عظيمًا هل توافق على الزواج من فتاة؟ فقيرة..؟','من اصدق في الحب الولد ولا البنت؟.','تعتقد انك انسان لك فايدة ؟']
+    الاستجابة = الخيارات[random.randint(0, len(options)-1)]
+    bot.reply_to(رسالة، استجابة)
+    
+    
+لوحة المفاتيح = أنواع.InlineKeyboardMarkup()
+A9 = types.InlineKeyboardButton(text="- قناة المطور ✓"، url='https://t.me/ecbspp')
+إضافة لوحة المفاتيح (A9)
+سودو = 1
+
+@bot.message_handler(func=lambda message: "شعر" في message.text)
+تعريف الحصول على (الرسالة):
+    يحاول:
+        Song_voice = "https://t.me/Msna_ALamir/" + str(random.randint(1, 371))
+        bot.send_voice(message.chat.id,ong_voice, """* ⌯︙تم اختيار الشعر لك 🤍. *""", parse_mode="markdown", Response_markup=keyboard, Response_to_message_id=message.message_id)
+    باستثناء الاستثناء كـ er:
+        طابعة)
+        يمر
+
+لوحة المفاتيح = أنواع.InlineKeyboardMarkup()
+A9 = types.InlineKeyboardButton(text="- قناة المطور ✓"، url='https://t.me/ecbspp')
+إضافة لوحة المفاتيح (A9)
+سودو = 1
+
+@bot.message_handler(func=lambda message: "سوره" في message.text)
+تعريف الحصول على (الرسالة):
+    يحاول:
+        Song_voice = "https://t.me/Msna_ALamir/" + str(random.randint(372, 530))
+        bot.send_voice(message.chat.id,ong_voice, """* ⌯︙اخترت لك هذه السورة 🕋❤️. *""", parse_mode="markdown", Response_markup=keyboard, Response_to_message_id=message.message_id)
+    باستثناء الاستثناء كـ er:
+        طابعة)
+        يمر
+
+@bot.message_handler(func=lambda message: message.text == 'الرابط' و message.reply_to_message لا شيء)
+بالتأكيد send_group_link (الرسالة):
+    chat_id = message.chat.id
+    group_link = bot.export_chat_invite_link(chat_id)
+    bot.reply_to(message, f"*- 𝐆𝐑𝐎𝗨𝐏 𝐋𝐈𝐍𝐊 :-* {group_link}",parse_mode="Markdown")
+
+@bot.message_handler(func=lambda message: message.text == "الاسرع")
+تعريف start_game (الرسالة):
+    words = ['محمد','فيل','دجاجه','ثلاجه','مدرسه','عطارد','العراق','مصر','السعودية','حمودي','الامير','اسد' ,'كرسي','كارتون','سجق','خوخ','برتقال','موز','عسل','ساعه','كهرباء','سياره','شمس','قمر',' نجوم','ياسمين','الجزائر','طياره','سفينه','شاحنه','شركه','ضوء','ظلام','فواكه','سمسم','شاورما','باذنجان' ,'طماطم']
+    Random_word = اختيار عشوائي (كلمات)
+    chat_id = message.chat.id
+    bot.send_message(chat_id, "- أسرع شخص يكتب:" + كلمة عشوائية)
+    bot.register_next_step_handler(الرسالة، كلمة التحقق، كلمة عشوائية)
+
+تعريف check_word (رسالة، كلمة عشوائية):
+    user_word = message.text
+    chat_id = message.chat.id
+
+    إذا كان user_word == كلمة عشوائية:
+        bot.reply_to(message, "أحسنت ، انت الفائز 🥳")
+    آخر:
+        bot.reply_to(message, "للأسف لم تكن أنت الاسرع، حظ اوفر في المره القادمة 😇")
+
+lock_stickers = خطأ
+
+@bot.message_handler(content_types=["ملصق"])
+Deflete_stickers(الرسالة):
+    إذا كانت ملصقات_مقفلة:
+        المستخدم = bot.get_chat_member(message.chat.id, message.from_user.id)
+        إذا لم يكن user.status موجودًا في ['administrator'، 'creator']:
+            bot.delete_message(message.chat.id, message.message_id)
+
+@bot.message_handler(func=lambda message: message.text == 'قفل الملصقات')
+تعريف lock_stickers (الرسالة):
+    المستخدم = bot.get_chat_member(message.chat.id, message.from_user.id)
+    إذا كان user.status في ["المسؤول"، "المنشئ"]:
+        ملصقات مقفلة عالمية
+        lock_stickers = صحيح
+        bot.reply_to(message, '*- تم إغلاق الملصقات الفعالة ✅ .*',parse_mode="markdown")
+
+@bot.message_handler(func=lambda message: message.text == 'فتح الملصقات')
+إلغاء إلغاء القفل_ملصقات(رسالة):
+    المستخدم = bot.get_chat_member(message.chat.id, message.from_user.id)
+    إذا كان user.status في ["المسؤول"، "المنشئ"]:
+        ملصقات مقفلة عالمية
+        ملصقات مقفلة = خطأ
+        bot.reply_to(message, '*- تم فتح الملصق بنجاح ✅ .*',parse_mode="markdown")
+
+@bot.message_handler(func=lambda message: message.text in ['قفل ​​الملصقات', 'فتح الملصقات'])
+تجاهل تجاهل_الأوامر (الرسالة):
+    المستخدم = bot.get_chat_member(message.chat.id, message.from_user.id)
+    إذا لم يكن user.status موجودًا في ['administrator'، 'creator']:
+        bot.delete_message(message.chat.id, message.message_id)
+                               
+تحذيرات = {}
+تقييد_المستخدمين = []
+@bot.message_handler(func=lambda message: message.chat.type == 'group' or message.chat.type == 'supergroup')
+تعريف Handle_group_message(رسالة):
+    إذا message.reply_to_message وis_admin(message.from_user.id, message.chat.id):
+        user_id = message.reply_to_message.from_user.id
+        إذا كان user_id في المقيدين_المستخدمين:
+            bot.reply_to(message, "*- تم تحذير هذا الشخص 3 مرات أولاً وتم تقييده، لـ تقييد الشخص مرة أخرى ارسل الأمر* `اتقييد` *بالرد علية 📛.*",parse_mode="Markdown")
+        آخر:
+            إذا لم يكن user_id موجودًا في التحذيرات:
+                تحذيرات [user_id] = 1
+            آخر:
+                تحذيرات[user_id] += 1
+            إذا كانت التحذيرات[user_id] == 3:
+                bot.restrict_chat_member(message.chat.id, user_id, until_date=0)
+                المقيدة_users.append(user_id)
+                bot.reply_to(message, f"*- تم تغيير المستخدم* [{message.reply_to_message.from_user.first_name}](tg://user?id={user_id}) *بنجاح بسبب مخالفة ثلاث مرات!* ✅"،parse_mode ="تخفيض السعر")
+            آخر:
+                تحذير_رسالة = "تحذير!"
+                إذا كانت التحذيرات [user_id] == 2:
+                    تحذير_message += f" لديك *تحذيرين* من اصل *ثلاث، كنذراً ⚠️.*\n\n[{message.reply_to_message.from_user.first_name}](tg://user?id={user_id})"
+                آخر:
+                    تحذير_message += f" تحذير *واحد* من اصل *ثلاث كناً ⚠️.*\n\n[{message.reply_to_message.from_user.first_name}](tg://user?id={user_id})"
+                bot.reply_to (رسالة، تحذير_رسالة، parse_mode = "Markdown")
+تعريف is_admin(user_id, chat_id):
+    المشرفين = bot.get_chat_administrators(chat_id)
+    admin_ids = [admin.user.id للمسؤول في المسؤولين]
+    إرجاع user_id في admin_ids
+
+@bot.message_handler(func=lambda message: message.chat.type == 'private',content_types=['text'])
+بالتأكيد إلى الأمام (رسالة):
+ bot.forward_message(sudo،message.chat.id،message.message_id)
+
+طباعة ("- @zz_g7")
+bot.infinity_polling()
