@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Yarn version 4.3.1.
+- Added Yarn version 3.8.3.
 
 ## [v255] - 2024-06-21
 
