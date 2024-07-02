@@ -4,6 +4,7 @@
 
 - Added Yarn version 4.3.1.
 - Added Yarn version 3.8.3.
+- Support reading container memory limits from cgroups (v1 and v2)
 
 ## [v255] - 2024-06-21
 
