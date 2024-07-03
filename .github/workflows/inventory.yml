@@ -30,16 +30,16 @@ jobs:
         run: "generate_inventory node > inventory/node.toml"
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## \[Unreleased\]\s+/## \[Unreleased\]\n\n{}/' CHANGELOG.md
-      - uses: heroku/use-app-token-action@main
+      - uses: actions/create-github-app-token@v1
         id: generate-token
         with:
-          app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-          private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       - name: Create Pull Request
         id: pr
         uses: peter-evans/create-pull-request@v6.1.0
         with:
-          token: ${{ steps.generate-token.outputs.app_token }}
+          token: ${{ steps.generate-token.outputs.token }}
           title: "Update Node.js Engine Inventory"
           commit-message: "Update Inventory for heroku/nodejs engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
           branch: update-nodejs-inventory
@@ -50,7 +50,7 @@ jobs:
         if: steps.pr.outputs.pull-request-operation == 'created'
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
         env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
           
   update-yarn-inventory:
     name: Update Node.js Yarn Inventory
@@ -78,16 +78,16 @@ jobs:
         run: "generate_inventory yarn > inventory/yarn.toml"
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## \[Unreleased\]\s+/## \[Unreleased\]\n\n{}/' CHANGELOG.md
-      - uses: heroku/use-app-token-action@main
+      - uses: actions/create-github-app-token@v1
         id: generate-token
         with:
-          app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-          private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       - name: Create Pull Request
         id: pr
         uses: peter-evans/create-pull-request@v6.1.0
         with:
-          token: ${{ steps.generate-token.outputs.app_token }}
+          token: ${{ steps.generate-token.outputs.token }}
           title: "Update Node.js Yarn Inventory"
           commit-message: "Update Inventory for heroku/nodejs yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
           branch: update-yarn-inventory
@@ -98,4 +98,4 @@ jobs:
         if: steps.pr.outputs.pull-request-operation == 'created'
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
         env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
