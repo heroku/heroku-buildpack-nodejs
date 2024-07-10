@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v258] - 2024-07-10
+
 - Export default `NODE_OPTIONS` settings to downstream buildpacks if environment variable is not already set. ([#1293](https://github.com/heroku/heroku-buildpack-nodejs/pull/1293)) 
 
 ## [v257] - 2024-07-09
@@ -880,7 +883,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v257...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v258...main
+[v258]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v257...v258
 [v257]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v256...v257
 [v256]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v255...v256
 [v255]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v254...v255
