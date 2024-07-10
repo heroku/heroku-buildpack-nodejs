@@ -1150,6 +1150,8 @@ testMultiExport() {
   assertFileContains "/node_modules/.bin" "${bp_dir}/export"
   assertFileContains "export NODE_HOME=" "${bp_dir}/export"
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
+  # shellcheck disable=SC2016
+  assertFileContains 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' "${bp_dir}/export"
   assertCapturedSuccess
 }
 

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Export default `NODE_OPTIONS` settings to downstream buildpacks if environment variable is not already set. ([#1293](https://github.com/heroku/heroku-buildpack-nodejs/pull/1293)) 
 
 ## [v257] - 2024-07-09
 
