@@ -106,5 +106,9 @@ write_export() {
   if [ -w "$bp_dir" ]; then
     echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/.heroku/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > "$bp_dir/export"
     echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> "$bp_dir/export"
+    # only export this if the user hasn't configured a NODE_OPTIONS env variable
+    if [[ -z $NODE_OPTIONS ]]; then
+      echo "export NODE_OPTIONS=\"--max_old_space_size=2560\"" >> "$bp_dir/export"
+    fi
   fi
 }

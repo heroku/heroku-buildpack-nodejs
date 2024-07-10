@@ -1150,6 +1150,20 @@ testMultiExport() {
   assertFileContains "/node_modules/.bin" "${bp_dir}/export"
   assertFileContains "export NODE_HOME=" "${bp_dir}/export"
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
+  assertFileContains "export NODE_OPTIONS=\"--max_old_space_size=2560\"" "${bp_dir}/export"
+  assertCapturedSuccess
+
+  env_dir=$(mktmpdir)
+  echo "--optimize_for_size" > "$env_dir/NODE_OPTIONS"
+
+  compile "stable-node" "$(mktmpdir)" "$env_dir"
+  assertFileContains "export PATH=" "${bp_dir}/export"
+  assertFileContains "/.heroku/node/bin" "${bp_dir}/export"
+  assertFileContains "/.heroku/yarn/bin" "${bp_dir}/export"
+  assertFileContains "/node_modules/.bin" "${bp_dir}/export"
+  assertFileContains "export NODE_HOME=" "${bp_dir}/export"
+  assertFileContains "/.heroku/node\"" "${bp_dir}/export"
+  assertFileNotContains "export NODE_OPTIONS=\"--max_old_space_size=2560\"" "${bp_dir}/export"
   assertCapturedSuccess
 }
 
