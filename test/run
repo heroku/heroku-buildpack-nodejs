@@ -2001,6 +2001,16 @@ testCorepackPnpmWithPackageTypeModule() {
   assertCapturedSuccess
 }
 
+testPnpmWorkspaceBinaries() {
+  compile "pnpm-workspace-binaries"
+  assertCaptured "pnpm -r build"
+  assertCaptured "packages/one build$ next --version"
+  assertCaptured "packages/two build$ next --version"
+  assertCaptured "Next.js v15.0.0-rc.0"
+  assertCaptured "Skipping because pruning is not supported for pnpm workspaces (https://pnpm.io/cli/prune)"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

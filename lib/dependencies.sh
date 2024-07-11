@@ -352,6 +352,10 @@ pnpm_prune_devdependencies() {
     echo "Skipping because PNPM_SKIP_PRUNING is '$PNPM_SKIP_PRUNING'"
     meta_set "skipped-prune" "true"
     return 0
+  elif [ -f "$build_dir/pnpm-workspace.yaml" ] || [ -f "$build_dir/pnpm-workspace.yml" ]; then
+    echo "Skipping because pruning is not supported for pnpm workspaces (https://pnpm.io/cli/prune)"
+    meta_set "skipped-prune" "true"
+    return 0
   fi
 
   pnpm_version=$(pnpm --version)
