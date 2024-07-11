@@ -115,5 +115,7 @@ write_export() {
     echo "export PATH=\"$build_dir/.scalingo/node/bin:$build_dir/.scalingo/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > "$bp_dir/export"
     echo "export NODE_HOME=\"$build_dir/.scalingo/node\"" >> "$bp_dir/export"
     echo "export NODE_EXTRA_CA_CERTS=\"\${NODE_EXTRA_CA_CERTS:-/usr/share/ca-certificates/Scalingo/scalingo-database.pem}\"" >> "$bp_dir/export"
+    # shellcheck disable=SC2016
+    echo 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' >> "$bp_dir/export"
   fi
 }
