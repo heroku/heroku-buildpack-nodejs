@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Skip pruning for pnpm workspace applications. ([#1295](https://github.com/heroku/heroku-buildpack-nodejs/pull/1295))
 
 ## [v258] - 2024-07-10
 
