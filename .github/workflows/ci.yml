@@ -11,7 +11,7 @@ permissions:
 jobs:
 
   unit-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: heroku/heroku:${{ matrix.stack_number }}-build
       options: --user root
@@ -27,7 +27,7 @@ jobs:
         run: test/unit
 
   functional-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container:
       image: heroku/heroku:${{ matrix.stack_number }}-build
       options: --user root
@@ -43,7 +43,7 @@ jobs:
         run: test/run
 
   hatchet-test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_API_USER: ${{ secrets.HEROKU_API_USER }}
@@ -67,7 +67,7 @@ jobs:
         # (assumes the versions between have backwards-compatible APIs)
         version: [14.10.0, latest]
     name: Test Metrics (${{ matrix.version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
