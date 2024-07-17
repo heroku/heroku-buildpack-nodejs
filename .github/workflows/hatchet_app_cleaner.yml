@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   hatchet-app-cleaner:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
       HEROKU_API_USER: ${{ secrets.HEROKU_API_USER }}

@@ -7,7 +7,7 @@ on:
 jobs:
   update-nodejs-inventory:
     name: Update Node.js Engine Inventory
-    runs-on: pub-hk-ubuntu-22.04-small
+    runs-on: pub-hk-ubuntu-24.04-ip
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
           
   update-yarn-inventory:
     name: Update Node.js Yarn Inventory
-    runs-on: pub-hk-ubuntu-22.04-small
+    runs-on: pub-hk-ubuntu-24.04-ip
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
