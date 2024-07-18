@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v259] - 2024-07-18
+
 - Added Node.js version 22.5.0.
 - Skip pruning for pnpm workspace applications. ([#1295](https://github.com/heroku/heroku-buildpack-nodejs/pull/1295))
 
@@ -885,7 +888,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v258...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v259...main
+[v259]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v258...v259
 [v258]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v257...v258
 [v257]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v256...v257
 [v256]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v255...v256
