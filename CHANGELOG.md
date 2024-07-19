@@ -2,8 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.5.1.
 - Added warning about Node v22.5.0 issues. ([#1299](https://github.com/heroku/heroku-buildpack-nodejs/pull/1299))
-
 
 ## [v259] - 2024-07-18
 
