@@ -995,3 +995,15 @@ warn_skipping_unsafe_pnpm_prune() {
        must upgrade your version of pnpm to 8.15.6 or higher."
   mcount 'warnings.pnpm.unsafe-prune'
 }
+
+warn_about_node_version_22_5_0() {
+  echo ""
+  warn "Issues with Node.js v22.5.0 
+
+       Shortly after the release of Node.js v22.5.0, users began reporting issues around broken
+       or hanging installs for npm and Yarn. To avoid experiencing these problems with your builds 
+       on Heroku, we recommend avoiding this release version until a fix has been released by 
+       pinning to an earlier version of Node.js (e.g.; 22.4.1).
+  " "https://github.com/nodejs/node/pull/53934"
+  mcount 'warnings.node.22-5-0'
+}

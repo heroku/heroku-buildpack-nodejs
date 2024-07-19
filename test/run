@@ -2011,6 +2011,13 @@ testPnpmWorkspaceBinaries() {
   assertCapturedSuccess
 }
 
+testWarningNode_22_5_0() {
+  compile "node-22.5.0-warning"
+  assertCaptured "Issues with Node.js v22.5.0"
+  cat "$STD_OUT"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
