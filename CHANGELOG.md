@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.5.1.
 
 ## [v259] - 2024-07-18
 
