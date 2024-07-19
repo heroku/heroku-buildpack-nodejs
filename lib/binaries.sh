@@ -89,6 +89,10 @@ install_nodejs() {
     fi
 
     echo "Downloading and installing node $number..."
+
+    if [[ "$number" == "22.5.0" ]]; then 
+      warn_about_node_version_22_5_0
+    fi
   fi
 
   code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o /tmp/node.tar.gz --write-out "%{http_code}")
