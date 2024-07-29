@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 20.16.0.
 
 ## [v260] - 2024-07-19
 
