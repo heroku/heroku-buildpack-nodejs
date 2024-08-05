@@ -2026,6 +2026,23 @@ testCorepackPnpmWithPackageTypeModule() {
   assertCapturedSuccess
 }
 
+testPnpmWorkspaceBinaries() {
+  compile "pnpm-workspace-binaries"
+  assertCaptured "pnpm -r build"
+  assertCaptured "packages/one build$ next --version"
+  assertCaptured "packages/two build$ next --version"
+  assertCaptured "Next.js v15.0.0-rc.0"
+  assertCaptured "Skipping because pruning is not supported for pnpm workspaces (https://pnpm.io/cli/prune)"
+  assertCapturedSuccess
+}
+
+testWarningNode_22_5_0() {
+  compile "node-22.5.0-warning"
+  assertCaptured "Issues with Node.js v22.5.0"
+  cat "$STD_OUT"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
