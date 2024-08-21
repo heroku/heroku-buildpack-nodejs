@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add support for auto-detecting `pnpm test` during Heroku CI runs. ([#1308](https://github.com/heroku/heroku-buildpack-nodejs/pull/1308))
 
 ## [v262] - 2024-08-12
 
@@ -25,7 +26,7 @@
 
 ## [v258] - 2024-07-10
 
-- Export default `NODE_OPTIONS` settings to downstream buildpacks if environment variable is not already set. ([#1293](https://github.com/heroku/heroku-buildpack-nodejs/pull/1293)) 
+- Export default `NODE_OPTIONS` settings to downstream buildpacks if environment variable is not already set. ([#1293](https://github.com/heroku/heroku-buildpack-nodejs/pull/1293))
 
 ## [v257] - 2024-07-09
 
