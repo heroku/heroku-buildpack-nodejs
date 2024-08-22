@@ -1,1 +1,2 @@
 --ignore-dir=test/fixtures
+--ignore-dir=spec/fixtures
