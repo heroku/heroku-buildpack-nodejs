@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.7.0.
+- Added Node.js version 20.17.0.
 - Add support for auto-detecting `pnpm test` during Heroku CI runs. ([#1308](https://github.com/heroku/heroku-buildpack-nodejs/pull/1308))
 
 ## [v262] - 2024-08-12
