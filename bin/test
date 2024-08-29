@@ -1,9 +1,31 @@
 #!/usr/bin/env bash
 
 BUILD_DIR=${1:-}
-if pnpm --version > /dev/null 2>&1; then
+
+read_package_json() {
+  local key="$1"
+  # shellcheck disable=SC2002
+  cat "$BUILD_DIR/package.json" | jq -c -M --raw-output "$key // \"\"" || return 1
+}
+
+which_tool() {
+  yarn_engine=$(read_package_json ".engines.yarn")
+  pnpm_engine=$(read_package_json ".engines.pnpm")
+  package_manager=$(read_package_json ".packageManager")
+  if [ -n "$pnpm_engine" ] || [[ "$package_manager" == pnpm* ]]; then
+    echo "pnpm"
+  elif [ -n "$yarn_engine" ] || [[ "$package_manager" == yarn* ]]; then
+    echo "yarn"
+  else
+    echo "npm"
+  fi
+}
+
+tool=$(which_tool)
+
+if [[ "$tool" == "pnpm" ]]; then
   cd "$BUILD_DIR" && pnpm test
-elif yarn --version > /dev/null 2>&1; then
+elif [[ "$tool" == "yarn" ]]; then
   cd "$BUILD_DIR" && yarn test
 else
   cd "$BUILD_DIR" && npm test

@@ -1,0 +1,9 @@
+{
+  "name": "test-yarn-with-corepack",
+  "scripts": {
+    "test": "echo \"yarn test run\""
+  },
+  "engines": {
+    "yarn": "4.4.1"
+  }
+}
