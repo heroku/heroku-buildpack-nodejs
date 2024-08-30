@@ -18,6 +18,14 @@
 ## [Unreleased]
 
 
+## [v263] - 2024-08-27
+
+- Added Node.js version 22.7.0.
+- Added Node.js version 20.17.0.
+- Added Yarn version 4.4.1.
+- Added Yarn version 3.8.5.
+- Add support for auto-detecting `pnpm test` during Heroku CI runs. ([#1308](https://github.com/heroku/heroku-buildpack-nodejs/pull/1308))
+
 ## [v262] - 2024-08-12
 
 - Added Node.js version 22.6.0.
@@ -40,7 +48,7 @@
 
 ## [v258] - 2024-07-10
 
-- Export default `NODE_OPTIONS` settings to downstream buildpacks if environment variable is not already set. ([#1293](https://github.com/heroku/heroku-buildpack-nodejs/pull/1293)) 
+- Export default `NODE_OPTIONS` settings to downstream buildpacks if environment variable is not already set. ([#1293](https://github.com/heroku/heroku-buildpack-nodejs/pull/1293))
 
 ## [v257] - 2024-07-09
 
@@ -918,7 +926,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v262...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v263...main
+[v263]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v262...v263
 [v262]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v261...v262
 [v261]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v260...v261
 [v260]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v259...v260
