@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Added Node.js version 22.8.0.
+- Fail on conflicting package manager metadata in package.json. ([#1317](https://github.com/heroku/heroku-buildpack-nodejs/pull/1317))
 
 ## [v263] - 2024-08-27
 
