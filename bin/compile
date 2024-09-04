@@ -62,6 +62,7 @@ source "$BP_DIR/lib/yarn-2.sh"
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
 export COREPACK_HOME="$BUILD_DIR/.heroku/corepack"
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
