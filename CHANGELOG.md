@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Added Node.js version 22.8.0.
+- Fixed issue with auto-detection during Heroku CI runs. ([#1313](https://github.com/heroku/heroku-buildpack-nodejs/pull/1313))
 
 ## [v263] - 2024-08-27
 
