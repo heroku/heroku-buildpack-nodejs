@@ -1007,3 +1007,52 @@ warn_about_node_version_22_5_0() {
   " "https://github.com/nodejs/node/pull/53934"
   mcount 'warnings.node.22-5-0'
 }
+
+fail_conflicting_package_manager_metadata() {
+  # track the package managers we see in an associative array
+  declare -A package_managers
+  declare -a fields_detected
+
+  npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
+  yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
+  pnpm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")
+  package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
+
+  if [ -n "$npm_engine" ]; then
+    package_managers["npm"]=0
+    fields_detected+=("- npm version detected in engines.npm ($npm_engine)")
+  fi
+
+  if [ -n "$yarn_engine" ]; then
+    package_managers["yarn"]=0
+    fields_detected+=("- yarn version declared in engines.yarn ($yarn_engine)")
+  fi
+
+  if [ -n "$pnpm_engine" ]; then
+    package_managers["pnpm"]=0
+    fields_detected+=("- pnpm version declared in engines.pnpm ($pnpm_engine)")
+  fi
+
+  if [[ "$package_manager" == yarn* ]]; then
+    package_managers["yarn"]=0
+    fields_detected+=("- yarn version declared in packageManager ($package_manager)")
+  elif [[ "$package_manager" == pnpm* ]]; then
+    package_managers["pnpm"]=0
+    fields_detected+=("- pnpm version declared in packageManager ($package_manager)")
+  fi
+
+  # was there more than one package manager found?
+  if (( "${#package_managers[@]}" > 1 )); then
+    mcount "failures.multiple-package-managers"
+    meta_set "failure" "multiple-package-managers"
+    header "Build failed"
+    warn "Multiple package managers declared in package.json
+
+       Installing dependencies using the wrong package manager can result in missing packages or subtle bugs
+       in production. Only one of the following fields should be used, all others should be removed:
+
+$(for item in "${fields_detected[@]}"; do echo "       $item"; done)
+    "
+    fail
+  fi
+}
