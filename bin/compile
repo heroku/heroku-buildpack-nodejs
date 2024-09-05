@@ -216,15 +216,6 @@ fi
 
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
-#echo "! cache:"
-#ls -ld "$CACHE_DIR"
-#
-#echo "! tmp:"
-#ls -ld /tmp
-#
-#echo "! pnpm store:"
-#ls -ld "$PNPM_CONFIG_CACHE"
-
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
 
@@ -407,11 +398,6 @@ build_dependencies() {
     yarn_node_modules "$BUILD_DIR"
   elif $PNPM; then
     pnpm_install "$BUILD_DIR" "$CACHE_DIR"
-    echo "! sentry-cli (after install):"
-    inode=$(ls -il "$BUILD_DIR/node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli" | awk '{print $1}')
-    find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -ld {} \;
-    find "$CACHE_DIR" -inum "$inode" -exec ls -ld {} \;
-    ls -ld "$BUILD_DIR/node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
@@ -483,11 +469,12 @@ else
   prune_devdependencies | output "$LOG_FILE"
 fi
 
-echo "! sentry-cli (after cache):"
-inode=$(ls -il "$BUILD_DIR/node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli" | awk '{print $1}')
-find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -ld {} \;
-find "$CACHE_DIR" -inum "$inode" -exec ls -ld {} \;
-ls -ld "$BUILD_DIR/node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli"
+if [ -d "$PNPM_CONFIG_CACHE" ]; then
+  echo "! pnpm store:"
+  du -hs "$PNPM_CONFIG_CACHE"
+else
+  echo "! (no cache)"
+fi
 
 meta_set "build-step" "cleanup-script"
 run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
