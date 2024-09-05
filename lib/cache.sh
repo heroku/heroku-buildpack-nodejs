@@ -70,8 +70,8 @@ restore_default_cache_directories() {
     fi
   elif [[ "$PNPM" == "true" ]]; then
     if [[ -d "$cache_dir/node/cache/pnpm" ]]; then
-      rm -rf "$pnpm_cache_dir"
-      mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
+      #rm -rf "$pnpm_cache_dir"
+      #mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
       echo "- pnpm cache"
       meta_set "pnpm_cache" "true"
     else
@@ -154,7 +154,7 @@ save_default_cache_directories() {
     fi
   elif [[ "$PNPM" == "true" ]]; then
     if [[ -d "$pnpm_cache_dir" ]]; then
-      mv "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm"
+      #mv "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm"
       echo "- pnpm cache"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
