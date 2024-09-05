@@ -357,9 +357,6 @@ restore_cache() {
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
-#    echo "! sentry-cli (before install):"
-#    inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
-#    find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
   elif [[ "$cache_status" == "new-signature" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
@@ -400,6 +397,7 @@ build_dependencies() {
     echo "! sentry-cli (after install):"
     inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
     find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
+    find "$BUILD_DIR" -inum "$inode" -exec ls -l {} \;
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
@@ -470,6 +468,12 @@ else
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
 fi
+
+echo "! sentry-cli (after cache):"
+inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
+find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
+find "$BUILD_DIR" -inum "$inode" -exec ls -l {} \;
+find "$CACHE_DIR" -inum "$inode" -exec ls -l {} \;
 
 meta_set "build-step" "cleanup-script"
 run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
