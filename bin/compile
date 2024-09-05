@@ -203,6 +203,15 @@ fi
 [ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(mktemp -d -t pnpmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
+echo "! cache:"
+ls -ld "$CACHE_DIR"
+
+echo "! tmp:"
+ls -ld /tmp
+
+echo "! pnpm store:"
+ls -ld "$PNPM_CONFIG_CACHE"
+
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
 
@@ -348,6 +357,9 @@ restore_cache() {
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
+    echo "! sentry-cli (before install):"
+    inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
+    find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
   elif [[ "$cache_status" == "new-signature" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
@@ -385,6 +397,9 @@ build_dependencies() {
     yarn_node_modules "$BUILD_DIR"
   elif $PNPM; then
     pnpm_install "$BUILD_DIR" "$CACHE_DIR"
+    echo "! sentry-cli (after install):"
+    inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
+    find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
