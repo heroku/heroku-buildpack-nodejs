@@ -357,9 +357,9 @@ restore_cache() {
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
     fi
-    echo "! sentry-cli (before install):"
-    inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
-    find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
+#    echo "! sentry-cli (before install):"
+#    inode=$(ls -il node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli | awk '{print $1}')
+#    find "$PNPM_CONFIG_CACHE" -inum "$inode" -exec ls -l {} \;
   elif [[ "$cache_status" == "new-signature" ]]; then
     header "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
