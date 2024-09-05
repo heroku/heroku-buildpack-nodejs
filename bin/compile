@@ -88,6 +88,10 @@ handle_failure() {
   warn_econnreset "$LOG_FILE"
   log_meta_data >> "$BUILDPACK_LOG_FILE"
   failure_message | output "$LOG_FILE"
+
+  if [ -f "$BUILD_DIR/install.log" ]; then
+    cat "$BUILD_DIR/install.log"
+  fi
 }
 trap 'handle_failure' ERR
 
@@ -200,21 +204,15 @@ fi
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(mktemp -d -t pnpmcache.XXXXX)
+export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
-# When following the custom tmpdir + mv caching model used by npm & yarn the pnpm cache can
-# lose executable permissions on binaries (https://github.com/heroku/heroku-buildpack-nodejs/issues/1247).
-# It also seems unnecessary to do those extra file operations when we can just set the pnpm store to a
-# directory within $CACHE_DIR and work directory from there.
-[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE="$CACHE_DIR/pnpm.0"
-
-if [ -d "$PNPM_CONFIG_CACHE" ]; then
-  echo "! pnpm store:"
-  du -hs "$PNPM_CONFIG_CACHE"
+if [ -d "$CACHE_DIR/node/cache/pnpm" ]; then
+  echo "! pnpm cache:"
+  du -hs "$CACHE_DIR/node/cache/pnpm"
 else
   echo "! (no cache)"
 fi
-
-export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
@@ -469,9 +467,15 @@ else
   prune_devdependencies | output "$LOG_FILE"
 fi
 
-if [ -d "$PNPM_CONFIG_CACHE" ]; then
+if [ -d "$CACHE_DIR/node/cache/pnpm" ]; then
+  echo "! pnpm cache:"
+  du -hs "$CACHE_DIR/node/cache/pnpm"
+
   echo "! pnpm store:"
   du -hs "$PNPM_CONFIG_CACHE"
+
+  echo "! node modules:"
+  du -hs "$BUILD_DIR/node_modules"
 else
   echo "! (no cache)"
 fi
@@ -504,3 +508,5 @@ warn_old_npm_lockfile $NPM_LOCK
 
 meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
+
+cat "$BUILD_DIR/install.log"
