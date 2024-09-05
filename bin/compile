@@ -200,7 +200,7 @@ fi
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(ln -s "$CACHE_DIR/node/cache/pnpm-v2" "/tmp/pnpm-store" && "/tmp/pnpm-store") #$(mktemp -d -t pnpmcache.XXXXX)
+[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(mkdir -p "$CACHE_DIR/node/cache/pnpm-v2" && ln -s "$CACHE_DIR/node/cache/pnpm-v2" "/tmp/pnpm-store" && "/tmp/pnpm-store") #$(mktemp -d -t pnpmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 #echo "! cache:"
