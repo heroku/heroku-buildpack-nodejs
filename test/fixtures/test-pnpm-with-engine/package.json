@@ -1,0 +1,15 @@
+{
+  "name": "test-pnpm-with-engine",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"pnpm test run\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "pnpm": "9.9.0"
+  }
+}

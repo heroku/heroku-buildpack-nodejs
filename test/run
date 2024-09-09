@@ -2039,7 +2039,30 @@ testPnpmWorkspaceBinaries() {
 testWarningNode_22_5_0() {
   compile "node-22.5.0-warning"
   assertCaptured "Issues with Node.js v22.5.0"
-  cat "$STD_OUT"
+  assertCapturedSuccess
+}
+
+testExecWithPnpmAndCorepack() {
+  compileTest "test-pnpm-with-corepack"
+  assertCaptured "pnpm test run"
+  assertCapturedSuccess
+}
+
+testExecWithPnpmAndEngine() {
+  compileTest "test-pnpm-with-engine"
+  assertCaptured "pnpm test run"
+  assertCapturedSuccess
+}
+
+testExecWithYarnAndCorepack() {
+  compileTest "test-yarn-with-corepack"
+  assertCaptured "yarn test run"
+  assertCapturedSuccess
+}
+
+testExecWithYarnAndEngine() {
+  compileTest "test-yarn-with-engine"
+  assertCaptured "yarn test run"
   assertCapturedSuccess
 }
 
