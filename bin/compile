@@ -509,4 +509,4 @@ warn_old_npm_lockfile $NPM_LOCK
 meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
 
-cat "$BUILD_DIR/install.log"
+#cat "$BUILD_DIR/install.log"
