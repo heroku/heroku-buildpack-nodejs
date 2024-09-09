@@ -69,8 +69,10 @@ restore_default_cache_directories() {
       echo "- yarn cache (not cached - skipping)"
     fi
   elif [[ "$PNPM" == "true" ]]; then
-    if [[ -d "$pnpm_cache_dir" ]]; then
-      rm -rf "$pnpm_cache_dir"
+    if [[ -d "$cache_dir/node/cache/pnpm" ]]; then
+      if [[ -d "$pnpm_cache_dir" ]]; then
+        rm -rf "$pnpm_cache_dir"
+      fi
       mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
       echo "- pnpm cache"
       meta_set "pnpm_cache" "true"
