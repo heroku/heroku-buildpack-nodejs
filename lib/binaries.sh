@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
-RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
+RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_platform)"
 
 resolve() {
   local binary="$1"
@@ -90,7 +90,7 @@ install_nodejs() {
 
     echo "Downloading and installing node $number..."
 
-    if [[ "$number" == "22.5.0" ]]; then 
+    if [[ "$number" == "22.5.0" ]]; then
       warn_about_node_version_22_5_0
     fi
   fi

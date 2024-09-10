@@ -5,11 +5,19 @@ get_os() {
 }
 
 get_cpu() {
-  if [[ "$(uname -p)" = "i686" ]]; then
-    echo "x86"
-  else
-    echo "x64"
-  fi
+  arch=$(uname -p)
+  case $arch in
+    aarch64 | arm*)
+      echo "arm"
+      ;;
+    x86_64)
+      echo "x64"
+      ;;
+    *)
+      echo "Error: Unknown architecture: ${arch}"
+      exit 1
+      ;;
+  esac
 }
 
 get_platform() {
