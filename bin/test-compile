@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # bin/test-compile <build-dir> <cache-dir> <env-dir>
 
+echo "EXPLORING CI ERRORS"
+
 ### Configure environment
 
 set -o errexit    # always exit on error
