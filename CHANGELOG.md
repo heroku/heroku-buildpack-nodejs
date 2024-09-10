@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fixed root dir used for `COREPACK_HOME` in CI env ([#1320](https://github.com/heroku/heroku-buildpack-nodejs/pull/1320)) 
 
 ## [v264] - 2024-09-05
 
