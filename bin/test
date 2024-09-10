@@ -2,6 +2,10 @@
 
 BUILD_DIR=${1:-}
 
+ls -R "$BUILD_DIR/.heroku"
+
+echo "corepack: $(which corepack)"
+
 read_package_json() {
   local key="$1"
   # shellcheck disable=SC2002
