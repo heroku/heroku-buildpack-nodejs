@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-YQ="$BP_DIR/lib/vendor/yq-$(get_os)"
+YQ="$BP_DIR/lib/vendor/yq-$(get_platform)"
 
 detect_yarn_2() {
   local uses_yarn="$1"
@@ -54,7 +54,7 @@ use_yarn_app_cache() {
 node_modules_enabled() {
   local build_dir="$1"
   local node_linker
-  
+
   node_linker=$($YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1)
 
   [[ "$node_linker" == "node-modules" ]]
