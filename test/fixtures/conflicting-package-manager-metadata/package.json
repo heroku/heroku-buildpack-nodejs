@@ -1,0 +1,11 @@
+{
+  "name": "conflicting-package-manager-metadata",
+  "version": "1.0.0",
+  "license": "ISC",
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "npm": "10.x",
+    "yarn": "4.x",
+    "pnpm": "9.x"
+  }
+}
