@@ -333,6 +333,8 @@ pnpm_install() {
     suppress_output pnpm store prune
   fi
   save_pnpm_prune_store_counter "$cache_dir" "$(( counter - 1 ))"
+
+  ls -ld node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli
 }
 
 pnpm_prune_devdependencies() {
