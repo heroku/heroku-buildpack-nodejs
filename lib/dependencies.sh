@@ -324,7 +324,7 @@ pnpm_install() {
   echo "Running 'pnpm install' with pnpm-lock.yaml"
   cd "$build_dir" || return
 
-  monitor "pnpm-install" pnpm install --prod=false --frozen-lockfile #--reporter ndjson > "$build_dir/install.log"
+  monitor "pnpm-install" pnpm install --prod=false --frozen-lockfile
 
   # prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
   counter=$(load_pnpm_prune_store_counter "$cache_dir")

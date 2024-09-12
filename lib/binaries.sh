@@ -154,7 +154,7 @@ install_pnpm_using_corepack_package_manager() {
   suppress_output pnpm --version
   echo "Using pnpm $(pnpm --version)"
   pnpm config set store-dir "$pnpm_cache" 2>&1
-  pnpm config set side-effects-cache false
+#  pnpm config set side-effects-cache false
 #  pnpm config set package-import-method copy
 }
 

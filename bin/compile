@@ -204,15 +204,8 @@ fi
 ### Configure package manager cache directories
 [ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
 [ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE="$BUILD_DIR/.heroku/pnpm-store" #$(mktemp -d -t pnpmcache.XXXXX)
+[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE="$CACHE_DIR/pnpm" #$(mktemp -d -t pnpmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
-
-if [ -d "$CACHE_DIR/node/cache/pnpm" ]; then
-  echo "! pnpm cache:"
-  du -hs "$CACHE_DIR/node/cache/pnpm"
-else
-  echo "! (no cache)"
-fi
 
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
@@ -467,19 +460,6 @@ else
   prune_devdependencies | output "$LOG_FILE"
 fi
 
-if [ -d "$CACHE_DIR/node/cache/pnpm" ]; then
-  echo "! pnpm cache:"
-  du -hs "$CACHE_DIR/node/cache/pnpm"
-
-  echo "! pnpm store:"
-  du -hs "$PNPM_CONFIG_CACHE"
-
-  echo "! node modules:"
-  du -hs "$BUILD_DIR/node_modules"
-else
-  echo "! (no cache)"
-fi
-
 meta_set "build-step" "cleanup-script"
 run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
 
@@ -509,4 +489,3 @@ warn_old_npm_lockfile $NPM_LOCK
 meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
 
-#cat "$BUILD_DIR/install.log"
