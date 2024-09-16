@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Yarn version 4.5.0.
 
 ## [v264] - 2024-09-05
 
