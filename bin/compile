@@ -496,4 +496,5 @@ meta_set "build-step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"
 
 find "$CACHE_DIR" -exec ls -ld {} \;
-
+echo "---"
+find /tmp/cache -type f -name "*.json" -exec cat {} \;

@@ -338,12 +338,12 @@ pnpm_install() {
   echo "md5sum: $md5"
   ls -ld node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/sentry-cli
   find "$cache_dir" -type f -exec md5sum {} + | grep "$md5" | head -1 | cut -d ' ' -f 3 | xargs ls -ld
-  echo '---'
-  ls -ld node_modules/.bin/sentry-cli
-  md5=$(md5sum node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/bin/sentry-cli | cut -d ' ' -f 1)
-  echo "md5sum: $md5"
-  ls -ld node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/bin/sentry-cli
-  find "$cache_dir" -type f -exec md5sum {} + | grep "$md5" | head -1 | cut -d ' ' -f 3 | xargs ls -ld
+#  echo '---'
+#  ls -ld node_modules/.bin/sentry-cli
+#  md5=$(md5sum node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/bin/sentry-cli | cut -d ' ' -f 1)
+#  echo "md5sum: $md5"
+#  ls -ld node_modules/.pnpm/@sentry+cli@1.77.3/node_modules/@sentry/cli/bin/sentry-cli
+#  find "$cache_dir" -type f -exec md5sum {} + | grep "$md5" | head -1 | cut -d ' ' -f 3 | xargs ls -ld
 }
 
 pnpm_prune_devdependencies() {
