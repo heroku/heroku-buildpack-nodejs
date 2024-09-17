@@ -207,6 +207,7 @@ fi
 [ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE="$CACHE_DIR/pnpm" #$(mktemp -d -t pnpmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
+umask
 ls -ld /tmp
 ls -ld "$BP_DIR"
 ls -ld "$BUILD_DIR"
