@@ -211,6 +211,7 @@ ls -ld /tmp
 ls -ld "$BP_DIR"
 ls -ld "$BUILD_DIR"
 ls -ld "$CACHE_DIR"
+ls -ld "$ENV_DIR"
 
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
