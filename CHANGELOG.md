@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.9.0.
 
 ## [v264] - 2024-09-05
 
