@@ -2041,6 +2041,16 @@ testExecWithYarnAndEngine() {
   assertCapturedSuccess
 }
 
+testConflictingPackageManagerMetadata() {
+  compile "conflicting-package-manager-metadata"
+  assertCaptured "Multiple package managers declared in package.json"
+  assertCaptured "- npm version detected in engines.npm (10.x)"
+  assertCaptured "- yarn version declared in engines.yarn (4.x)"
+  assertCaptured "- pnpm version declared in engines.pnpm (9.x)"
+  assertCaptured "- pnpm version declared in packageManager (pnpm@9.9.0)"
+  assertCapturedError
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

@@ -2,12 +2,15 @@
 
 ## [Unreleased]
 
+- Added Node.js version 22.9.0.
+- Added Yarn version 4.5.0.
 - Fixed application directory used for `COREPACK_HOME` in CI env ([#1320](https://github.com/heroku/heroku-buildpack-nodejs/pull/1320)) 
 
 ## [v264] - 2024-09-05
 
 - Added Node.js version 22.8.0.
 - Fixed issue with auto-detection during Heroku CI runs. ([#1313](https://github.com/heroku/heroku-buildpack-nodejs/pull/1313))
+- Fail on conflicting package manager metadata in package.json. ([#1317](https://github.com/heroku/heroku-buildpack-nodejs/pull/1317))
 
 ## [v263] - 2024-08-27
 
