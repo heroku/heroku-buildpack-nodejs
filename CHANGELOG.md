@@ -4,6 +4,7 @@
 
 - Added Node.js version 22.9.0.
 - Added Yarn version 4.5.0.
+- Fixed application directory used for `COREPACK_HOME` in CI env ([#1320](https://github.com/heroku/heroku-buildpack-nodejs/pull/1320)) 
 
 ## [v264] - 2024-09-05
 
