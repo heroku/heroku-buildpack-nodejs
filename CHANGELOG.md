@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v265] - 2024-09-20
+
 - Added Node.js version 22.9.0.
 - Added Yarn version 4.5.0.
 - Fixed application directory used for `COREPACK_HOME` in CI env ([#1320](https://github.com/heroku/heroku-buildpack-nodejs/pull/1320)) 
@@ -920,7 +923,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v264...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v265...main
+[v265]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v264...v265
 [v264]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v263...v264
 [v263]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v262...v263
 [v262]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v261...v262
