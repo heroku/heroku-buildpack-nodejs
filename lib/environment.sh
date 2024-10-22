@@ -86,7 +86,14 @@ write_profile() {
   local bp_dir="$1"
   local build_dir="$2"
   mkdir -p "$build_dir/.profile.d"
-  cp "$bp_dir"/profile/* "$build_dir/.profile.d/"
+  cp "$bp_dir"/profile/nodejs.sh "$build_dir/.profile.d/"
+  write_web_concurrency "$bp_dir" "$build_dir/.profile.d/WEB_CONCURRENCY.sh"
+}
+
+write_web_concurrency() {
+  local bp_dir="$1"
+  # concatenate these two together
+  cat "$bp_dir"/etc/cgroups.sh "$bp_dir"/profile/WEB_CONCURRENCY.sh > "$2"
 }
 
 write_ci_profile() {
