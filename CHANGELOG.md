@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Update default Node.js version to 22.x
+- Update default Node.js version to 22.x ([#1341](https://github.com/heroku/heroku-buildpack-nodejs/pull/1341))
 - Added Node.js version 22.11.0.
 
 ## [v268] - 2024-10-25
