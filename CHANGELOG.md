@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v269] - 2024-10-31
+
 - Updated default Node.js version to 22.x ([#1341](https://github.com/heroku/heroku-buildpack-nodejs/pull/1341))
 - Added Node.js version 22.11.0.
 
@@ -940,7 +943,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v268...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v269...main
+[v269]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v268...v269
 [v268]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v267...v268
 [v267]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v266...v267
 [v266]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v265...v266
