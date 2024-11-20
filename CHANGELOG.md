@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v271] - 2024-11-20
+
 - Setting `UV_USE_IO_URING=0` to disable `io_uring` use in `libuv` to prevent build timeouts. ([#1347](https://github.com/heroku/heroku-buildpack-nodejs/pull/1347))
 
 ## [v270] - 2024-11-13
@@ -949,7 +952,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v270...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v271...main
+[v271]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v270...v271
 [v270]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v269...v270
 [v269]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v268...v269
 [v268]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v267...v268
