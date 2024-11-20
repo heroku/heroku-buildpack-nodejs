@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Setting `UV_USE_IO_URING=0` to disable `io_uring` use in `libuv` to prevent build timeouts. ([#1347](https://github.com/heroku/heroku-buildpack-nodejs/pull/1347))
 
 ## [v270] - 2024-11-13
 
