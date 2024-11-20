@@ -18,7 +18,8 @@ monitor_memory_usage() {
   # set the peak memory usage to 0 to start
   peak="0"
 
-  while true; do
+  # sample memory while the process is running.
+  while test -d /proc/"$pid"; do
     sleep .1
 
     # check the memory usage
