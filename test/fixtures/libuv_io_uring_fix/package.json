@@ -1,0 +1,15 @@
+{
+  "name": "libuv-uring-fix",
+  "version": "0.0.1",
+  "description": "node buildpack integration test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "echo \"UV_USE_IO_URING is set to $UV_USE_IO_URING\""
+  }
+}
