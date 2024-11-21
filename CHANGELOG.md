@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [v272] - 2024-11-21
+
+- Export `UV_USE_IO_URING=0` for later buildpacks to prevent timeouts. ([#1351](https://github.com/heroku/heroku-buildpack-nodejs/pull/1351))
 
 ## [v271] - 2024-11-20
 
@@ -952,7 +955,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v271...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v272...main
+[v272]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v271...v272
 [v271]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v270...v271
 [v270]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v269...v270
 [v269]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v268...v269

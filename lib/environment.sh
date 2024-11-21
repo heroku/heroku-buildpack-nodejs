@@ -108,5 +108,16 @@ write_export() {
     echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> "$bp_dir/export"
     # shellcheck disable=SC2016
     echo 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' >> "$bp_dir/export"
+
+    # 2024-11-21:
+    # Set UV_USE_IO_URING for later buildpacks to prevent build timeouts when
+    # running `yarn install` on some Amazon Linux 2023 releases. This may be
+    # removed in the future when a fixed AL2023 release is available
+    # (~2024-12-09 or later).
+    #
+    # See https://github.com/npm/cli/issues/7814#issuecomment-2488626736
+    # → https://github.com/amazonlinux/amazon-linux-2023/issues/840#issuecomment-2485782075
+    # → https://lore.kernel.org/io-uring/3d913aef-8c44-4f50-9bdf-7d9051b08941@app.fastmail.com/T/#m57570b5f8f2fc00d5a17cfe18ffeeba9fc23a43d
+    echo 'export UV_USE_IO_URING=${UV_USE_IO_URING:-0}' >> "$bp_dir/export"
   fi
 }
