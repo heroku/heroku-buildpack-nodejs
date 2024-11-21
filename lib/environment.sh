@@ -104,9 +104,12 @@ write_export() {
   # this may occur in situations outside of Heroku, such as running the
   # buildpacks locally.
   if [ -w "$bp_dir" ]; then
+
     echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/.heroku/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > "$bp_dir/export"
     echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> "$bp_dir/export"
     # shellcheck disable=SC2016
     echo 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' >> "$bp_dir/export"
+
+    echo 'export UV_USE_IO_URING=${UV_USE_IO_URING:-0}' >> "$bp_dir/export"
   fi
 }

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Export `UV_USE_IO_URING=0` for later buildpacks to prevent timeouts.
 
 ## [v271] - 2024-11-20
 
