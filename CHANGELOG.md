@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Yarn version 4.5.2.
 ## [v272] - 2024-11-21
 
 - Export `UV_USE_IO_URING=0` for later buildpacks to prevent timeouts. ([#1351](https://github.com/heroku/heroku-buildpack-nodejs/pull/1351))
