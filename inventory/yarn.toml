@@ -1110,3 +1110,9 @@ channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.5.1.tar.gz"
 etag = "d731a2442124adeac8854cb2ff6dc6c2"
 
+[[releases]]
+version = "4.5.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.5.2.tar.gz"
+etag = "76a51f0f075160dd2d08757ba81a327c"
+
