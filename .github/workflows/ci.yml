@@ -73,4 +73,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.version }}
-      - run: npx mocha metrics/test/metrics.spec.cjs
+      - run: npx mocha@10.x metrics/test/metrics.spec.cjs
