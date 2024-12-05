@@ -41,8 +41,8 @@ const pluginBundle = join('..', '..', 'bundles', '@yarnpkg', 'plugin-prune-dev-d
 const testMatrix = createMatrix({
   yarnVersion: [
     '2.4.1',
-    '3.2.4',
-    '4.0.0-rc.22'
+    '3.8.6',
+    '4.5.3'
   ],
   cache: [
     Cache.LOCAL,
