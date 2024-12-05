@@ -5,7 +5,7 @@
   "main": "./src/index.ts",
   "dependencies": {
     "@yarnpkg/builder": "^4.0.0-rc.26",
-    "@yarnpkg/core": "^4.0.0-rc.26",
+    "@yarnpkg/core": "^4.1.6",
     "clipanion": "^3.2.0-rc.13"
   },
   "devDependencies": {
