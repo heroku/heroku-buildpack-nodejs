@@ -1,14 +1,24 @@
-build-resolvers: build-resolver-linux build-resolver-darwin
+build-resolvers: build-resolver-linux build-resolver-darwin build-resolver-linux-arm build-resolver-darwin-arm
 
 .build:
 	mkdir -p .build
 build-resolver-darwin: .build
 	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-apple-darwin --profile release
 	mv .build/bin/resolve_version lib/vendor/resolve-version-darwin
+	cp lib/vendor/resolve-version-darwin lib/vendor/resolve-version-darwin-x64
+
+build-resolver-darwin-arm: .build
+	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target aarch64-apple-darwin --profile release
+	mv .build/bin/resolve_version lib/vendor/resolve-version-darwin-arm
 
 build-resolver-linux: .build
 	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target x86_64-unknown-linux-musl --profile release
 	mv .build/bin/resolve_version lib/vendor/resolve-version-linux
+	cp lib/vendor/resolve-version-linux lib/vendor/resolve-version-linux-x64
+
+build-resolver-linux-arm: .build
+	cargo install heroku-nodejs-utils --root .build --bin resolve_version --git https://github.com/heroku/buildpacks-nodejs --target aarch64-unknown-linux-musl --profile release
+	mv .build/bin/resolve_version lib/vendor/resolve-version-linux-arm
 
 test: heroku-22-build heroku-20-build heroku-24-build
 
