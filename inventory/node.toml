@@ -5958,6 +5958,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "3f5d2270f0d017cfa92566c99f9ab173-7"
 
 [[releases]]
+version = "22.13.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v22.13.0-linux-x64.tar.gz"
+etag = "31b07c864ec9ef9e4fb2014259a6b73d-7"
+
+[[releases]]
 version = "22.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -6068,6 +6075,13 @@ channel = "release"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v23.5.0-linux-x64.tar.gz"
 etag = "660e7ae9efdfbb9436ffc4e8ec0be1c9-7"
+
+[[releases]]
+version = "23.6.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v23.6.0-linux-x64.tar.gz"
+etag = "e9a4b30fca52415f2ff6e33b2803a99e-7"
 
 [[releases]]
 version = "4.0.0"
