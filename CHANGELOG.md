@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Updated npm keys for Corepack versions 0.27, 0.28, 0.29, 0.30. ([#1371](https://github.com/heroku/heroku-buildpack-nodejs/pull/1371))
 
 ## [v279] - 2025-01-31
 
