@@ -1,0 +1,16 @@
+{
+  "name": "corepack-integrity-keys",
+  "version": "0.0.1",
+  "description": "corepack integrity keys test app",
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/example/example.git"
+  },
+  "engines": {
+    "node": "22.13.1"
+  },
+  "scripts": {
+    "start": "node foo.js"
+  },
+  "packageManager": "pnpm@10.1.0"
+}
