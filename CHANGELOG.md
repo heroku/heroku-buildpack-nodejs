@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Exporting `COREPACK_HOME` to downstream buildpacks to prevent Corepack shims from downloading the requested package manager again in a subsequent buildpack. ([#1374](https://github.com/heroku/heroku-buildpack-nodejs/pull/1374))
 
 ## [v280] - 2025-02-03
 
