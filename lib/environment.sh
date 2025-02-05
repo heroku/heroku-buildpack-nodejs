@@ -119,5 +119,8 @@ write_export() {
     # → https://github.com/amazonlinux/amazon-linux-2023/issues/840#issuecomment-2485782075
     # → https://lore.kernel.org/io-uring/3d913aef-8c44-4f50-9bdf-7d9051b08941@app.fastmail.com/T/#m57570b5f8f2fc00d5a17cfe18ffeeba9fc23a43d
     echo 'export UV_USE_IO_URING=${UV_USE_IO_URING:-0}' >> "$bp_dir/export"
+
+    # ensure corepack installed binaries are findable by downstream buildpacks
+    echo "export COREPACK_HOME=\"$build_dir/.heroku/corepack\"" >> "$bp_dir/export"
   fi
 }
