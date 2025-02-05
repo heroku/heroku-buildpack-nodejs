@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v281] - 2025-02-05
+
 - Exporting `COREPACK_HOME` to downstream buildpacks to prevent Corepack shims from downloading the requested package manager again in a subsequent buildpack. ([#1374](https://github.com/heroku/heroku-buildpack-nodejs/pull/1374))
 
 ## [v280] - 2025-02-03
@@ -998,7 +1001,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v280...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v281...main
+[v281]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v280...v281
 [v280]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v279...v280
 [v279]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v278...v279
 [v278]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v277...v278
