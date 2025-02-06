@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Removed `UV_USE_IO_URING` override. ([#1376](https://github.com/heroku/heroku-buildpack-nodejs/pull/1376))
 
 ## [v281] - 2025-02-05
 

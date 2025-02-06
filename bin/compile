@@ -64,19 +64,6 @@ export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 export COREPACK_HOME="$BUILD_DIR/.heroku/corepack"
 export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-# 2024-11-20:
-# We started getting reports on build timeouts on the platform that were unexpected
-# due to the specific versions on Node.js and npm which had been working fine up until
-# this date. After some extensive digging, we believe we narrowed down the cause to
-# a bug in io_uring that affects the Amazon Linux 2023 release. There is a pending fix
-# which will be released around Dec. 9th but, until then, the workaround is set disable
-# the use of io_uring in libuv.
-#
-# See https://github.com/npm/cli/issues/7814#issuecomment-2488626736
-# → https://github.com/amazonlinux/amazon-linux-2023/issues/840#issuecomment-2485782075
-# → https://lore.kernel.org/io-uring/3d913aef-8c44-4f50-9bdf-7d9051b08941@app.fastmail.com/T/#m57570b5f8f2fc00d5a17cfe18ffeeba9fc23a43d
-export UV_USE_IO_URING=${UV_USE_IO_URING:-0}
-
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
