@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v284] - 2025-02-14
+
 - Added Node.js version 23.8.0.
 
 ## [v283] - 2025-02-11
@@ -1011,7 +1014,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v283...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v284...main
+[v284]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v283...v284
 [v283]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v282...v283
 [v282]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v281...v282
 [v281]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v280...v281
