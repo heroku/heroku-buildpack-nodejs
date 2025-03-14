@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js version 23.10.0.
+- Added Node.js version 20.19.0.
 - Added Yarn version 4.7.0.
 
 ## [v286] - 2025-02-27
