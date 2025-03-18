@@ -21,3 +21,8 @@ updates:
       - "dependencies"
       - "github actions"
       - "skip changelog"
+    groups:
+      github-actions:
+        update-types:
+          - "minor"
+          - "patch"

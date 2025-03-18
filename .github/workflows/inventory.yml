@@ -11,10 +11,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-      - name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: Update Rust toolchain
+        run: rustup update
       - name: Install Rust Inventory Binaries
         run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
@@ -37,7 +35,7 @@ jobs:
           private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       - name: Create Pull Request
         id: pr
-        uses: peter-evans/create-pull-request@v7.0.7
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           token: ${{ steps.generate-token.outputs.token }}
           title: "Update Node.js Engine Inventory"
@@ -58,11 +56,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: Update Rust toolchain
+        run: rustup update
       - name: Install Rust Inventory Binaries
         run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
       - id: set-diff-msg
@@ -85,7 +80,7 @@ jobs:
           private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       - name: Create Pull Request
         id: pr
-        uses: peter-evans/create-pull-request@v7.0.7
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
         with:
           token: ${{ steps.generate-token.outputs.token }}
           title: "Update Node.js Yarn Inventory"
