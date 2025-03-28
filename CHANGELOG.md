@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Do not monitor memory usage of processes that were killed.
 
 ## [v288] - 2025-03-28
 
