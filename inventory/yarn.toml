@@ -1140,3 +1140,15 @@ channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.7.0.tar.gz"
 etag = "4a4f68e8f7bf1bcc22faf627e5516333"
 
+[[releases]]
+version = "4.8.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.8.0.tar.gz"
+etag = "b6d41361ceace5cff1df3bd1687ff2bf"
+
+[[releases]]
+version = "4.8.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v4.8.1.tar.gz"
+etag = "558b1ab6b7d29b2b953d576796b7be3d"
+
