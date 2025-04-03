@@ -1,4 +1,6 @@
 # Default to requesting pull request reviews from the Heroku Languages team.
+#ECCN:Open Source
+#GUSINFO:Languages,Heroku Node.js Platform
 * @heroku/languages
 
 # However, request review from the language owner instead for files that are updated
