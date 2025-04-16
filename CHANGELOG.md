@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Yarn version 4.9.1.
 - Added Yarn version 4.9.0.
 
 ## [v289] - 2025-04-03
