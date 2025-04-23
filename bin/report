@@ -76,6 +76,14 @@ has_binary_installed() {
   [[ -x "$(command -v "$1")" ]]
 }
 
+has_procfile_with_web_process() {
+  if [ -f "$BUILD_DIR/Procfile" ] && grep -q -e "^\s*web:" "$BUILD_DIR/Procfile"; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
 kv_pair_string "stack" "$STACK"
 
 # the version of installed binaries
@@ -91,6 +99,15 @@ kv_pair_string "npm_version_request" "$(read_json "$BUILD_DIR/package.json" ".en
 kv_pair_string "yarn_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.yarn")"
 kv_pair_string "pnpm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")"
 kv_pair_string "package_manager_request" "$(read_json "$BUILD_DIR/package.json" ".packageManager")"
+
+# is a procfile with a web process used?
+kv_pair "procfile_with_web_process" "$(has_procfile_with_web_process)"
+# is a procfile used?
+if [ -f "$BUILD_DIR/Procfile" ]; then
+  kv_pair "procfile_used" "true"
+else
+  kv_pair "procfile_used" "false"
+fi
 
 # build scripts
 kv_pair_string "start_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"start\"]")"
