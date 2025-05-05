@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Drop all support and references to the now end-of-life heroku-20.
 
 ## [v290] - 2025-04-24
 
