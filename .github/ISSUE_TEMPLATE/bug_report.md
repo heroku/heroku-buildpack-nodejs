@@ -20,7 +20,7 @@ Steps to reproduce the behavior:
 4. See error
 
 **Versions (please complete the following information):**
- - Heroku Stack: [e.g. `heroku-20`]
+ - Heroku Stack: [e.g. `heroku-22`]
  - Node Version: [e.g. `15.0.0`]
  - NPM or Yarn Version: [e.g. `Yarn 1.22.10`]
  - Buildpack Version: [e.g. `heroku/nodejs v175`] (We will try to do our best to support you, but please note that we can only provide support for the latest release of the buildpack.)
