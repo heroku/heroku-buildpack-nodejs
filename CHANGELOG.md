@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 24.0.0.
 - Drop all support and references to the now end-of-life `heroku-20` stack. ([#1408](https://github.com/heroku/heroku-buildpack-nodejs/pull/1408))
 
 ## [v290] - 2025-04-24
