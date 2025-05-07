@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v291] - 2025-05-07
+
 - Added Node.js version 24.0.0.
 - Drop all support and references to the now end-of-life `heroku-20` stack. ([#1408](https://github.com/heroku/heroku-buildpack-nodejs/pull/1408))
 
@@ -1047,7 +1050,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v290...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v291...main
+[v291]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v290...v291
 [v290]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v289...v290
 [v289]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v288...v289
 [v288]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v287...v288
