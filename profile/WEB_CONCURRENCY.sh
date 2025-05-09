@@ -31,17 +31,28 @@ log_concurrency() {
 detect_memory() {
   local default=$1
 
-  if [ -e /sys/fs/cgroup/memory/memory.limit_in_bytes ]; then
-    echo $(($(cat /sys/fs/cgroup/memory/memory.limit_in_bytes) / 1048576))
+  local memory_limit
+  memory_limit=$(cgroup_util_read_cgroup_memory_limit_with_fallback) && {
+    echo $(( memory_limit / 1024 / 1024 ))
+    return
+  }
+
+  if (($? == 99)); then
+    dne_memory
   else
     echo "$default"
-  fi
+	fi
+}
+
+dne_memory() {
+	echo "129024"
 }
 
 bound_memory() {
   local detected=$1
   # Memory is bound to the maximum memory of known dyno types: ~126 GB
-  local max_detected_memory=129024
+  local max_detected_memory
+  max_detected_memory=$(dne_memory)
   if (( detected > max_detected_memory )); then
     echo "$max_detected_memory"
   else
