@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Release script will not contribute a default process type if any `mcp` entries are present in the Procfile. ([#1404](https://github.com/heroku/heroku-buildpack-nodejs/pull/1404))
 
 ## [v292] - 2025-05-09
 
