@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
-cat << EOF
+BUILD_DIR=${1:-}
+
+if [ -f "$BUILD_DIR/Procfile" ] && grep -q -e "^\s*mcp.*:" "$BUILD_DIR/Procfile"; then
+  cat << EOF
+addons: []
+default_process_types: {}
+EOF
+else
+  cat << EOF
 addons: []
 default_process_types:
   web: npm start
 EOF
+fi
