@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v293] - 2025-05-13
+
 - Release script will not contribute a default process type if any `mcp` entries are present in the Procfile. ([#1404](https://github.com/heroku/heroku-buildpack-nodejs/pull/1404))
 
 ## [v292] - 2025-05-09
@@ -1055,7 +1058,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v292...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v293...main
+[v293]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v292...v293
 [v292]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v291...v292
 [v291]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v290...v291
 [v290]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v289...v290
