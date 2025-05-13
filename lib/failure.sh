@@ -480,7 +480,7 @@ log_other_failures() {
     meta_set "failure" "libc6-incompatibility"
     warn "This Node.js version is not compatible with the current stack.
 
-       For Node.js versions 18 and greater, heroku-20 or newer is required.
+       For Node.js versions 18 and greater, heroku-22 or newer is required.
        Consider updating to a stack that is compatible with the Node.js version
        or pinning the Node.js version to be compatible with the current
        stack." https://help.heroku.com/R7DTSTD0

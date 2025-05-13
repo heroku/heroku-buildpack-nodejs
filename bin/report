@@ -103,6 +103,13 @@ kv_pair_string "package_manager_request" "$(read_json "$BUILD_DIR/package.json" 
 # is a procfile with a web process used?
 kv_pair "procfile_with_web_process" "$(has_procfile_with_web_process)"
 
+# is a procfile used?
+if [ -f "$BUILD_DIR/Procfile" ]; then
+  kv_pair "procfile_used" "true"
+else
+  kv_pair "procfile_used" "false"
+fi
+
 # build scripts
 kv_pair_string "start_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"start\"]")"
 kv_pair_string "build_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")"
