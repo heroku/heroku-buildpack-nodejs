@@ -31,13 +31,14 @@ install_yarn() {
     echo "Downloading and installing yarn from $url"
   else
     echo "Downloading and installing yarn ($version)"
-    major_version=$(echo "$version" | cut -d "." -f 1)
+    major_version=$(echo "$version" | sed --regexp-extended 's/^[^0-9]+//' | cut -d "." -f 1)
     # Yarn 2+ (aka: "berry") is hosted under a different npm package.
     package_name=$([ "$major_version" -ge 2 ] && echo "@yarnpkg/cli-dist" || echo "yarn")
-    if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version" >/dev/null; then
+    if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version"; then
       echo "Unable to install yarn $version. " \
-        "Does npm $version exist? " \
-        "Is yarn $version compatible with this Node.js version?" && false
+        "Does yarn $version exist? (https://help.heroku.com/8MEL050H) " \
+        "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
+        "Is yarn $version compatible with this Node.js version?" \ && false
     fi
   fi
   # Verify yarn works before capturing and ensure its stderr is inspectable later

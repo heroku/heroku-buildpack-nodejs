@@ -323,15 +323,15 @@ testCacheWithPrebuild() {
 
 testYarnSemver() {
   compile "yarn-semver"
-  assertCaptured "Resolving yarn version ~0.28"
-  assertCaptured "installing yarn (0.28."
+  assertCaptured "Downloading and installing yarn (~0.28"
+  assertCaptured "Installed yarn 0.28."
   assertCapturedSuccess
 }
 
 testOldYarn() {
   compile "yarn-old-deprecated-version"
-  assertCaptured "Resolving yarn version ~0.16"
-  assertCaptured "installing yarn (0.16."
+  assertCaptured "Downloading and installing yarn (~0.16"
+  assertCaptured "Installed yarn 0.16."
   assertCaptured "error \`install\` has been replaced with \`add\`"
   assertCaptured "Outdated Yarn version"
   assertCaptured "Your application is specifying a requirement on an old version of Yarn"
@@ -348,18 +348,20 @@ testYarnV1Semver() {
 
 testYarnInvalid() {
   compile "yarn-invalid"
-  assertCaptured "Resolving yarn version 0.171"
-  assertCaptured "Could not find Yarn version corresponding to version requirement: 0.171"
-  assertCaptured "No matching version found for Yarn: 0.171"
+  assertCaptured "Downloading and installing yarn (0.171"
+  assertCaptured "npm error code ETARGET"
+  assertCaptured "Unable to install yarn 0.171"
   assertCaptured "https://help.heroku.com/8MEL050H"
+  assertCaptured "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
 
 testYarnSemverInvalid() {
   compile "yarn-invalid-semver"
-  assertCaptured "Resolving yarn version 0.17q"
-  assertCaptured "Error: Invalid semantic version \"0.17q\""
-  assertCaptured "Invalid semver requirement"
+  assertCaptured "Downloading and installing yarn (0.17q"
+  assertCaptured "npm error code ETARGET"
+  assertCaptured "Unable to install yarn 0.17q"
+  assertCaptured "https://help.heroku.com/8MEL050H"
   assertCaptured "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
@@ -1529,9 +1531,6 @@ testBuildMetaData() {
   assertFileContains "install-yarn-binary-memory=" $log_file
   assertFileContains "install-yarn-binary-time=" $log_file
   assertFileContains "node-build-success=true" $log_file
-
-  # resolve-version tests
-  assertFileContainsMatch 'resolve-v2-yarn="1.[[:digit:]]+.[[:digit:]]+ https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.[[:digit:]]+.[[:digit:]]+.tar.gz"' $log_file
 }
 
 testWorkspaceMetaData() {
