@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Remove inventory-based resolver for Yarn. ([#1420](https://github.com/heroku/heroku-buildpack-nodejs/pull/1420))
 
 ## [v295] - 2025-05-21
 
