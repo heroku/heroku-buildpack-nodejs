@@ -30,33 +30,17 @@ install_yarn() {
     url="$YARN_BINARY_URL"
     echo "Downloading and installing yarn from $url"
   else
-    echo "Resolving yarn version $version..."
-    resolve_result=$(resolve yarn "$version" || echo "failed")
-
-    if [[ "$resolve_result" == "failed" ]]; then
-      fail_bin_install yarn "$version"
+    echo "Downloading and installing yarn ($version)"
+    major_version=$(echo "$version" | sed --regexp-extended 's/^[^0-9]+//' | cut -d "." -f 1)
+    # Yarn 2+ (aka: "berry") is hosted under a different npm package.
+    package_name=$([ "$major_version" -ge 2 ] && echo "@yarnpkg/cli-dist" || echo "yarn")
+    if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version"; then
+      echo "Unable to install yarn $version. " \
+        "Does yarn $version exist? (https://help.heroku.com/8MEL050H) " \
+        "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
+        "Is yarn $version compatible with this Node.js version?" \ && false
     fi
-
-    read -r number url < <(echo "$resolve_result")
-
-    echo "Downloading and installing yarn ($number)"
   fi
-
-  code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o /tmp/yarn.tar.gz --write-out "%{http_code}")
-
-  if [ "$code" != "200" ]; then
-    echo "Unable to download yarn: $code" && false
-  fi
-  rm -rf "$dir"
-  mkdir -p "$dir"
-  # https://github.com/yarnpkg/yarn/issues/770
-  if tar --version | grep -q 'gnu'; then
-    tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1 --warning=no-unknown-keyword
-  else
-    tar xzf /tmp/yarn.tar.gz -C "$dir" --strip 1
-  fi
-  chmod +x "$dir"/bin/*
-
   # Verify yarn works before capturing and ensure its stderr is inspectable later
   suppress_output yarn --version
   if $YARN_2; then
