@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js version 24.3.0.
+- Added Node.js version 22.17.0.
 
 ## [v297] - 2025-06-23
 
