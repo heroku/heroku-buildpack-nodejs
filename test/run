@@ -4,15 +4,18 @@
 testNpmCi() {
   local log_file cache
   log_file=$(mktemp)
-  cache=$(mktmpdir)
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
 
-  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" "$cache"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" "$cache_dir" "$env_dir" "$build_dir"
 
    # make sure that build scripts are being called
   assertCaptured "heroku-prebuild script"
   assertCaptured "build script"
   assertCaptured "postinstall script"
   assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/npm"
 
    # test logging
   assertFileContains "use-npm-ci=true" "$log_file"
@@ -21,7 +24,7 @@ testNpmCi() {
 
    # test re-using the cache
   echo "" > "$log_file"
-  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" "$cache"
+  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" "$cache_dir"
   assertCapturedSuccess
 }
 
@@ -367,8 +370,12 @@ testYarnSemverInvalid() {
 }
 
 testYarnEngine() {
-  compile "yarn-engine"
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  compile "yarn-engine" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "installing yarn (1.4.0)"
+  assertFileExists "$build_dir/.heroku/node/bin/yarn"
   assertCapturedSuccess
 }
 
@@ -808,7 +815,10 @@ testYarn4() {
 }
 
 testYarn4WithCorepackEnabled() {
-  compile "yarn-4-with-corepack"
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  compile "yarn-4-with-corepack" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.yarn (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): yarn@4.1.1"
   assertCaptured "Installing yarn@4.1.1 via corepack"
@@ -818,6 +828,7 @@ testYarn4WithCorepackEnabled() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
   assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/yarn"
 }
 
 testYarn4WithCorepackAndEngine() {
@@ -1771,7 +1782,10 @@ testCorepackNpmRegistryKeyFix() {
 # PNPM
 
 testPnpm7Pnp() {
-  compile "pnpm-7-pnp"
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  compile "pnpm-7-pnp" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@7.32.3"
   assertCaptured "Installing pnpm@7.32.3 via corepack"
@@ -1783,6 +1797,7 @@ testPnpm7Pnp() {
   assertCaptured "heroku-build"
   assertCaptured "heroku-cleanup"
   assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/pnpm"
 }
 
 testPnpm8Hoist() {
@@ -1809,12 +1824,16 @@ testPnpm8Nuxt() {
 }
 
 testPnpmEngine() {
-  compile "pnpm-engine"
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  compile "pnpm-engine" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.pnpm (package.json):   8.x"
   assertCaptured "Installing pnpm@8.x via corepack"
   assertCaptured "Using pnpm 8"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/pnpm"
 }
 
 testPnpmBadEngine() {
@@ -2093,10 +2112,21 @@ detect() {
   capture ${bp_dir}/bin/detect ${compile_dir}
 }
 
+# $1 - The fixture to compile
+# $2 - The cache directory (defaults to a new temp directory)
+# $3 - The env directory (defaults to a new temp directory)
+# $4 - the compile directory (defaults to a new temp directory)
+#
+# Note - It would be nice if the compile directory wasn't the 4th arg to this function so that
+#        the expected arguments would line up with the buildpack's compile invocation of
+#        `compile "$BUILD_DIR" "$CACHE_DIR" "$ENV_DIR"` but this would require all existing tests
+#        to reorder their arguments as allowing a configurable compile directory was added last.
 compile() {
   default_process_types_cleanup
+
   bp_dir=$(mktmpdir)
-  compile_dir=$(mktmpdir)
+  compile_dir=${4:-$(mktmpdir)}
+
   cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
 
