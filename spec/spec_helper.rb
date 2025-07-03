@@ -87,7 +87,7 @@ def get_test_versions
   elsif ENV['TEST_ALL_NODE_VERSIONS'] == 'true'
     versions = resolve_all_supported_node_versions()
   else
-    versions = resolve_node_version(['20.x', '22.x', '23.x', '24.x'])
+    versions = resolve_node_version(['20.x', '22.x', '24.x'])
   end
   puts("Running tests for Node versions: #{versions.join(', ')}")
   versions
