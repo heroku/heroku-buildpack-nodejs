@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
-RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
+RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_platform)"
 
 resolve() {
   local binary="$1"
