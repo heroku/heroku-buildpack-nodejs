@@ -13,3 +13,4 @@ package.json @colincasey
 package-lock.json @colincasey
 pnpm-lock.yaml @colincasey
 yarn.lock @colincasey
+/.github/workflows/ @colincasey
