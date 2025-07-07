@@ -20,3 +20,6 @@ else
   echo  "Did not find any custom build scripts. Using default..."
   /bin/bash "$OG_COMPILE_SCRIPT" "$ROOT_BUILD_DIR" "$CACHE_DIR" "$ENV_DIR"
 fi
+
+rm -rf "${ROOT_BUILD_DIR}/frontend/node_modules"
+rf -rf "${ROOT_BUILD_DIR}/frontend-legacy/node_modules"
