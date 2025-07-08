@@ -349,6 +349,21 @@ testYarnV1Semver() {
   assertCapturedSuccess
 }
 
+testYarnV1SemverComplex() {
+  compile "yarn-v1-semver-complex"
+  assertCaptured "Downloading and installing yarn (>=1 <2)"
+  assertCaptured "Installed yarn 1."
+  assertCapturedSuccess
+}
+
+testYarnV2SemverEdgeCase() {
+  compile "yarn-v2-semver-edge-case"
+  cat "$STD_OUT"
+  assertCaptured "Downloading and installing yarn (>=2 <3)"
+  assertCaptured "Using yarn 2."
+  assertCapturedSuccess
+}
+
 testYarnInvalid() {
   compile "yarn-invalid"
   assertCaptured "Downloading and installing yarn (0.171"
