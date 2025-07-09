@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js version 24.4.0.
 - Handle complex Yarn engine requirements. ([#1433](https://github.com/heroku/heroku-buildpack-nodejs/pull/1433))
 
 ## [v298] - 2025-06-25
