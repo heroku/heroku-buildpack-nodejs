@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v299] - 2025-07-09
+
 - Added Node.js version 24.4.0.
 - Handle complex Yarn engine requirements. ([#1433](https://github.com/heroku/heroku-buildpack-nodejs/pull/1433))
 
@@ -1086,7 +1089,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v298...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v299...main
+[v299]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v298...v299
 [v298]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v297...v298
 [v297]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v296...v297
 [v296]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v295...v296
