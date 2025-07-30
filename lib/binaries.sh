@@ -77,27 +77,23 @@ install_nodejs() {
     fi
   fi
 
-  code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o /tmp/node.tar.gz --write-out "%{http_code}")
+  output_file="/tmp/node.tar.gz"
+  code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o "$output_file" --write-out "%{http_code}")
 
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false
   fi
-  
-  local checksum_command
+
   case "$checksum_name" in
     "sha256")
-      checksum_command="sha256sum"
+      if ! echo "$digest $output_file" | sha256sum --check --status; then
+        echo "Checksum mismatch: $number - $digest " && false
+      fi
       ;;
     *)
       echo "Unknown checksum type: $checksum_name" && false
       ;;
   esac
-
-  local checksum_output
-  checksum_output=$(echo "$digest" | $checksum_command -c)
-  if [ "$checksum_output" != "OK" ]; then
-    echo "Checksum mismatch: $checksum_output" && false
-  fi
 
   rm -rf "${dir:?}"/*
   tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
