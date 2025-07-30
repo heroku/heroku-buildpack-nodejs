@@ -64,7 +64,7 @@ install_nodejs() {
     echo "Resolving node version $version..."
     resolve_result=$(resolve node "$version" || echo "failed")
 
-    read -r number url < <(echo "$resolve_result")
+    read -r number url checksum_name digest < <(echo "$resolve_result")
 
     if [[ "$resolve_result" == "failed" ]]; then
       fail_bin_install node "$version"
@@ -82,6 +82,23 @@ install_nodejs() {
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false
   fi
+  
+  local checksum_command
+  case "$checksum_name" in
+    "sha256")
+      checksum_command="sha256sum"
+      ;;
+    *)
+      echo "Unknown checksum type: $checksum_name" && false
+      ;;
+  esac
+
+  local checksum_output
+  checksum_output=$(echo "$digest" | $checksum_command -c)
+  if [ "$checksum_output" != "OK" ]; then
+    echo "Checksum mismatch: $checksum_output" && false
+  fi
+
   rm -rf "${dir:?}"/*
   tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
   chmod +x "$dir"/bin/*
