@@ -87,11 +87,11 @@ install_nodejs() {
   case "$checksum_name" in
     "sha256")
       if ! echo "$digest $output_file" | sha256sum --check --status; then
-        echo "Checksum mismatch: $number - $digest " && false
+        echo "Checksum validation failed for Node.js $number - $checksum_name:$digest" && false
       fi
       ;;
     *)
-      echo "Unknown checksum type: $checksum_name" && false
+      echo "Unsupported checksum for Node.js $number - $checksum_name:$digest" && false
       ;;
   esac
 
