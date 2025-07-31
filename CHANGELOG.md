@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v301] - 2025-07-31
+
 - Source Node.js binaries from upstream instead of mirror. ([#1441](https://github.com/heroku/heroku-buildpack-nodejs/pull/1441))
 
 ## [v300] - 2025-07-16
@@ -1096,7 +1099,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v300...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v301...main
+[v301]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v300...v301
 [v300]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v299...v300
 [v299]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v298...v299
 [v298]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v297...v298
