@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Source Node.js binaries from upstream instead of mirror. ([#1441](https://github.com/heroku/heroku-buildpack-nodejs/pull/1441))
 
 ## [v300] - 2025-07-16
 
