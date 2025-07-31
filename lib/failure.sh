@@ -705,6 +705,19 @@ log_other_failures() {
     return 0
   fi
 
+  # checksum errors
+  if grep -q "Checksum validation failed" "$log_file"; then
+    mcount "failures.checksum-validation-failed"
+    meta_set "failure" "checksum-validation-failed"
+    return 0
+  fi
+
+  if grep -q "Unsupported checksum" "$log_file"; then
+    mcount "failures.unsupported-checksum"
+    meta_set "failure" "unsupported-checksum"
+    return 0
+  fi
+
   # If we've made it this far it's not an error we've added detection for yet
   meta_set "failure" "unknown"
   mcount "failures.unknown"

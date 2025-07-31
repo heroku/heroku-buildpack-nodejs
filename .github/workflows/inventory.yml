@@ -14,20 +14,16 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Install Rust Inventory Binaries
-        run: cargo install heroku-nodejs-utils --bin diff_versions --bin generate_inventory --git https://github.com/heroku/buildpacks-nodejs
-      - id: set-diff-msg
-        name: Set Diff Message
+        run: cargo install heroku-nodejs-utils --bin update_node_inventory --git https://github.com/heroku/buildpacks-nodejs
+      - name: Rebuild Inventory
+        id: rebuild-inventory
         run: |
           delimiter="$(openssl rand -hex 8)"
           {
             echo "msg<<${delimiter}"
-            diff_versions node inventory/node.toml
+            update_node_inventory ./inventory/node.toml ./CHANGELOG.md --platform linux-x64 --format classic
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
-      - name: Rebuild Inventory
-        run: "generate_inventory node > inventory/node.toml"
-      - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/## \[Unreleased\]\s+/## \[Unreleased\]\n\n{}/' CHANGELOG.md
       - uses: actions/create-github-app-token@v2
         id: generate-token
         with:
@@ -39,9 +35,9 @@ jobs:
         with:
           token: ${{ steps.generate-token.outputs.token }}
           title: "Update Node.js Engine Inventory"
-          commit-message: "Update Inventory for heroku/nodejs engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          commit-message: "Update Inventory for heroku/nodejs-engine\n\n${{ steps.rebuild-inventory.outputs.msg }}"
           branch: update-nodejs-inventory
-          body: "Automated pull-request to update heroku/nodejs engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.rebuild-inventory.outputs.msg }}"
           committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
           author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
       - name: Configure PR
