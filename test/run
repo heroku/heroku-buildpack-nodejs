@@ -203,9 +203,11 @@ testCustomNodeBinaryURL() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
 
-  echo "testurl" > $env_dir/NODE_BINARY_URL
+  echo "https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz" > $env_dir/NODE_BINARY_URL
   compile "node-14" $cache $env_dir
-  assertCaptured "from testurl"
+  assertCaptured "from https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz"
+  assertNotCaptured "Validating checksum"
+  assertCapturedSuccess
 }
 
 testDisableCache() {

@@ -84,16 +84,19 @@ install_nodejs() {
     echo "Unable to download node: $code" && false
   fi
 
-  case "$checksum_name" in
-    "sha256")
-      if ! echo "$digest $output_file" | sha256sum --check --status; then
-        echo "Checksum validation failed for Node.js $number - $checksum_name:$digest" && false
-      fi
-      ;;
-    *)
-      echo "Unsupported checksum for Node.js $number - $checksum_name:$digest" && false
-      ;;
-  esac
+  if [[ -z "$NODE_BINARY_URL" ]]; then
+    case "$checksum_name" in
+      "sha256")
+        echo "Validating checksum"
+        if ! echo "$digest $output_file" | sha256sum --check --status; then
+          echo "Checksum validation failed for Node.js $number - $checksum_name:$digest" && false
+        fi
+        ;;
+      *)
+        echo "Unsupported checksum for Node.js $number - $checksum_name:$digest" && false
+        ;;
+    esac
+  fi
 
   rm -rf "${dir:?}"/*
   tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
