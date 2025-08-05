@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v303] - 2025-08-05
+
 - Fix for checksum validation error when `NODE_BINARY_URL` is used. ([#1447](https://github.com/heroku/heroku-buildpack-nodejs/pull/1447))
 
 ## [v302] - 2025-08-01
@@ -1105,7 +1108,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v302...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v303...main
+[v303]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v302...v303
 [v302]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v301...v302
 [v301]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v300...v301
 [v300]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v299...v300
