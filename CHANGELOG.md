@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix for checksum validation error when `NODE_BINARY_URL` is used. ([#1447](https://github.com/heroku/heroku-buildpack-nodejs/pull/1447))
 
 ## [v302] - 2025-08-01
 
