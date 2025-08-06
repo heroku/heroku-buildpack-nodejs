@@ -1,10 +1,10 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    base64 (0.2.0)
+    base64 (0.3.0)
     diff-lcs (1.6.2)
     erubis (2.7.0)
-    excon (1.2.5)
+    excon (1.2.8)
       logger
     heroics (0.1.3)
       base64
@@ -13,15 +13,15 @@ GEM
       moneta
       multi_json (>= 1.9.2)
       webrick
-    heroku_hatchet (8.0.5)
+    heroku_hatchet (8.0.6)
       excon (< 2)
       platform-api (~> 3)
       rrrretry (~> 1)
       thor (~> 1)
       threaded (~> 0)
-    logger (1.6.6)
+    logger (1.7.0)
     moneta (1.0.0)
-    multi_json (1.15.0)
+    multi_json (1.17.0)
     parallel (1.21.0)
     parallel_split_test (0.10.0)
       parallel (>= 0.5.13)
