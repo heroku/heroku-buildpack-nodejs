@@ -54,7 +54,7 @@ jobs:
       - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7'
+          ruby-version: 3.1
           bundler-cache: true
       - name: Run hatchet tests
         run: make hatchet

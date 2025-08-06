@@ -24,7 +24,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-          ruby-version: "2.7"
+          ruby-version: 3.1
       - name: Run Hatchet destroy
         # Only apps older than 10 minutes are destroyed, to ensure that any
         # in progress CI runs are not interrupted.
