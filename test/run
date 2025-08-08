@@ -1696,7 +1696,7 @@ testBinReportScriptsWithQuotes() {
 
 testBinReportYarn() {
   compile_and_report "yarn"
-  assertCaptured "package_manager: \"yarn\""
+  assertCaptured "package_manager: 'yarn'"
 }
 
 testNpmCiCaching() {
