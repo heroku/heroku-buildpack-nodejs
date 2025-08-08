@@ -2135,6 +2135,16 @@ testErrorCleanupScript() {
   assertCaptured "failure: 'unknown-cleanup-script-error'"
 }
 
+testErrorNpmLockfileOutOfSync() {
+  local log_file
+  log_file=$(mktemp)
+  BUILDPACK_LOG_FILE="$log_file" compile "error-npm-lockfile-out-of-sync"
+  assertCaptured "npm lockfile is not in sync"
+  assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+  assertCapturedError
+  assertFileContains "failure=npm-lockfile-out-of-sync" "$log_file"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
