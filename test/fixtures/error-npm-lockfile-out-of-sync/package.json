@@ -1,0 +1,12 @@
+{
+  "name": "error-npm-lockfile-out-of-sync",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "false"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1"
+  }
+}
