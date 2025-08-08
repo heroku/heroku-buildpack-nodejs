@@ -63,13 +63,13 @@ kv_pair() {
 
 # use to safely quote strings
 kv_pair_string() {
-  local key value
-  key="$1"
-  value="$2"
-  if [[ -n "$value" ]]; then
-    value=$(echo $value | sed 's/"/\\"/g')
-    echo "$key: \"$value\"" >> $output
-  fi
+	local key="${1}"
+	local value="${2}"
+	if [[ -n "${value}" ]]; then
+		# Escape any existing single quotes, which for YAML means replacing `'` with `''`.
+		value="${value//\'/\'\'}"
+		echo "${key}: '${value}'"
+	fi
 }
 
 has_binary_installed() {
@@ -173,8 +173,8 @@ kv_pair "pnpm_prune_time" "$(meta_get "pnpm-prune-time")"
 kv_pair "pnpm_prune_memory" "$(meta_get "pnpm-prune-memory")"
 
 # testing resolve-version differences
-kv_pair "resolve_v2_node" "$(meta_get "resolve-v2-node")"
-kv_pair "resolve_v2_yarn" "$(meta_get "resolve-v2-yarn")"
+kv_pair_string "resolve_v2_node" "$(meta_get "resolve-v2-node")"
+kv_pair_string "resolve_v2_yarn" "$(meta_get "resolve-v2-yarn")"
 kv_pair_string "resolve_v2_error" "$(meta_get "resolve-v2-error")"
 
 # save which features were turned on or off

@@ -10,6 +10,7 @@
     "node": "14.x"
   },
   "scripts": {
+    "build": "echo \"escaping - test if it's working as expected\"",
     "start": "node foo.js"
   }
 }
