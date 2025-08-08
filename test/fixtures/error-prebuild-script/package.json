@@ -1,0 +1,9 @@
+{
+  "name": "error-prebuild-script",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "heroku-prebuild": "false"
+  }
+}

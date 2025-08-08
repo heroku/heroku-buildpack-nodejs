@@ -400,10 +400,12 @@ build_dependencies() {
   run_build_script "$BUILD_DIR"
 }
 
-meta_set "build-step" "install-dependencies"
 log_build_scripts "$BUILD_DIR"
+meta_set "build-step" "prebuild-script"
 run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
+
 header "Installing dependencies" | output "$LOG_FILE"
+meta_set "build-step" "install-dependencies"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {

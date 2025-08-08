@@ -1,0 +1,1 @@
+A fake README, to keep npm from polluting stderr.

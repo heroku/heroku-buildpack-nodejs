@@ -719,8 +719,15 @@ log_other_failures() {
   fi
 
   # If we've made it this far it's not an error we've added detection for yet
-  meta_set "failure" "unknown"
-  mcount "failures.unknown"
+  # so classify by build step (if set) or default to unknown
+  build_step=$(meta_get "build-step")
+  if [[ -n "$build_step" ]]; then
+    meta_set "failure" "unknown-$build_step-error"
+    mcount "failures.unknown-$build_step-error"
+  else
+    meta_set "failure" "unknown"
+    mcount "failures.unknown"
+  fi
 }
 
 warning() {
