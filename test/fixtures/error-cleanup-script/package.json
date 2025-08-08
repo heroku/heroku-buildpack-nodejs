@@ -1,0 +1,9 @@
+{
+  "name": "error-cleanup-script",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "heroku-cleanup": "false"
+  }
+}

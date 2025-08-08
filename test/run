@@ -2113,6 +2113,28 @@ testConflictingPackageManagerMetadata() {
   assertCapturedError
 }
 
+# Error classifications
+
+testErrorPrebuildScript() {
+  compile_and_report "error-prebuild-script"
+  assertCaptured "failure: 'unknown-prebuild-script-error'"
+}
+
+testErrorBuildScript() {
+  compile_and_report "error-build-script"
+  assertCaptured "failure: 'unknown-build-script-error'"
+}
+
+testErrorPostbuildScript() {
+  compile_and_report "error-postbuild-script"
+  assertCaptured "failure: 'unknown-build-script-error'"
+}
+
+testErrorCleanupScript() {
+  compile_and_report "error-cleanup-script"
+  assertCaptured "failure: 'unknown-cleanup-script-error'"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
