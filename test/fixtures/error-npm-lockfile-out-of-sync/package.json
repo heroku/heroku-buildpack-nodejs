@@ -1,5 +1,5 @@
 {
-  "name": "error-build-script",
+  "name": "error-npm-lockfile-out-of-sync",
   "engines": {
     "node": "22.x"
   },
