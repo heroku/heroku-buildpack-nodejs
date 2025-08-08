@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix escaping for buildpack metrics. ([#1451](https://github.com/heroku/heroku-buildpack-nodejs/pull/1451))
 
 ## [v303] - 2025-08-05
 
