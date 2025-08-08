@@ -1688,10 +1688,10 @@ testBinReportScriptsWithQuotes() {
   assertCapturedSuccess
 
   # quotes and escaped quotes are tricky, but should be escaped correctly
-  assertCaptured "start_script: \"\\\"no closing quote\""
-  assertCaptured "build_script: \"concurrently \\\"npm run build-server\\\" npm run build-client\""
-  assertCaptured "heroku_postbuild_script: \"if [ -z \\\"\${CI}\\\" ]; then yarn build-assets; fi\""
-  assertCaptured "postinstall_script: \"if [ \\\"\${NODE_ENV}\\\" = \\\"staging\\\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \\\"Skipped heroku-postbuild\\\"; fi\""
+  assertCaptured "start_script: '\"no closing quote'"
+  assertCaptured "build_script: 'concurrently \"npm run build-server\" npm run build-client'"
+  assertCaptured "heroku_postbuild_script: 'if [ -z \"\${CI}\" ]; then yarn build-assets; fi'"
+  assertCaptured "postinstall_script: 'if [ \"\${NODE_ENV}\" = \"staging\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \"Skipped heroku-postbuild\"; fi'"
 }
 
 testBinReportYarn() {
