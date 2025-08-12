@@ -1,0 +1,9 @@
+{
+  "name": "error-postbuild-script",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "heroku-postbuild": "false"
+  }
+}

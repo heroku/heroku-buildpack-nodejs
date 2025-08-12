@@ -1,0 +1,9 @@
+{
+  "name": "error-build-script",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "false"
+  }
+}
