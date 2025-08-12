@@ -460,7 +460,6 @@ summarize_build() {
     list_dependencies "$BUILD_DIR"
   fi
 
-  mmeasure 'modules.size' "$(measure_size)"
   meta_set "node-modules-size" "$(measure_size)"
 }
 
