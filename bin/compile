@@ -388,8 +388,6 @@ build_dependencies() {
     npm_node_modules "$BUILD_DIR"
   fi
 
-  mtime "modules.time.cache.$cache_status" "${start}"
-
   meta_set "build-step" "build-script"
   header "Build"
   run_build_script "$BUILD_DIR"
