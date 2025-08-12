@@ -257,7 +257,6 @@ install_bins() {
   monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
 
   node_version="$(node --version)"
-  mcount "version.node.$node_version"
   meta_set "node-version" "$node_version"
 
   if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
@@ -295,13 +294,10 @@ install_bins() {
   fi
 
   if $YARN; then
-    mcount "version.yarn.$(yarn --version)"
     meta_set "yarn-version" "$(yarn --version)"
   elif $PNPM; then
-    mcount "version.pnpm.$(pnpm --version)"
     meta_set "pnpm-version" "$(pnpm --version)"
   else
-    mcount "version.npm.$(npm --version)"
     meta_set "npm-version" "$(npm --version)"
   fi
 
@@ -367,7 +363,6 @@ restore_cache() {
     :
   fi
 
-  mcount "cache.$cache_status"
   meta_set "cache-status" "$cache_status"
   meta_time "restore-cache-time" "$restore_cache_start_time"
 }
@@ -476,7 +471,6 @@ install_plugin "$BP_DIR" "$BUILD_DIR"
 
 meta_set "build-step" "summarize"
 header "Build succeeded!" | output "$LOG_FILE"
-mcount "compile"
 summarize_build | output "$LOG_FILE"
 meta_set "node-build-success" "true"
 meta_time "build-time" "$build_start_time"

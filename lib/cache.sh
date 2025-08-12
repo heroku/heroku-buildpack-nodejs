@@ -172,14 +172,12 @@ save_default_cache_directories() {
       cp -a "$build_dir/node_modules" "$(dirname "$cache_dir/node/cache/node_modules")"
     else
       # this can happen if there are no dependencies
-      mcount "cache.no-node-modules"
       echo "- node_modules (nothing to cache)"
     fi
   fi
 
   # bower_components
   if [[ -e "$build_dir/bower_components" ]]; then
-    mcount "cache.saved-bower-components"
     meta_set "cached-bower-components" "true"
     echo "- bower_components"
     mkdir -p "$cache_dir/node/cache/bower_components"
