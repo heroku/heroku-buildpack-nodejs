@@ -56,12 +56,6 @@ list_node_config() {
     echo "npm scripts will see NODE_ENV=production (not '${NODE_ENV}')"
     echo "https://docs.npmjs.com/misc/config#production"
   fi
-
-  if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
-    mcount "npm-config-production-true"
-  elif [ "$NPM_CONFIG_PRODUCTION" == "false" ]; then
-    mcount "npm-config-production-false"
-  fi
 }
 
 export_env_dir() {
