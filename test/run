@@ -2155,6 +2155,20 @@ testErrorNpmGitDependency() {
   assertFileContains "failure=npm-install-git-dependency" "$log_file"
 }
 
+testErrorPeerDependencyConflict() {
+  log_file=$(mktemp)
+  BUILDPACK_LOG_FILE="$log_file" compile "error-npm-peer-dependency-conflict"
+  assertCaptured "Conflict detected in requested npm dependencies"
+  assertCapturedError
+  assertFileContains "failure=npm-peer-dependency-conflict" "$log_file"
+}
+
+testErrorPrune() {
+  compile_and_report "error-prune"
+  assertCaptured "failure: 'unknown-prune-dependencies-error'"
+  assertCaptured "lock_file: false"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

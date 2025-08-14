@@ -1,0 +1,13 @@
+{
+  "name": "error-prune",
+  "description": "This is a minimal reproduction of a peer dependency conflict recreated from a user build. These specific packages trigger a conflict with the jimp package and not having a package-lock.json will allow the error to trigger on prune",
+  "dependencies": {
+    "kode-scrape": "0.0.41",
+    "@fizzxydev/baileys-pro": "8.7.2",
+    "@yupra/baileys": "1.1.1"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": "10.x"
+  }
+}
