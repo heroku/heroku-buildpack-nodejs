@@ -7,7 +7,7 @@ monitor_memory_usage() {
   shift
 
   # Run the command in the background
-  "${@:-}" &
+  "${@:-}" 2>&1 &
 
   # save the PID of the running command
   pid=$!

@@ -1,0 +1,11 @@
+{
+  "name": "error-openssl-unsupported-algorithm",
+  "description": "This app creates a hashing algorithm removed from OpenSSL v3 to trigger our target error",
+  "scripts": {
+    "build": "node -e 'require(\"node:crypto\").createHash(\"md4\")'"
+  },
+  "//": "Node v17 is the point when static linking to OpenSSL v3 was introduced",
+  "engines": {
+    "node": "17.x"
+  }
+}
