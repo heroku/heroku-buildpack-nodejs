@@ -1,0 +1,9 @@
+{
+  "name": "error-npm-git-error",
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@ccasey/not-a-repository": "git+ssh://github.com/ccasey/not-a-repository.git"
+  }
+}

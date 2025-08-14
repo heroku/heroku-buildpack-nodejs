@@ -2147,6 +2147,14 @@ testErrorNpmLockfileOutOfSync() {
   assertFileContains "failure=npm-lockfile-out-of-sync" "$log_file"
 }
 
+testErrorNpmGitDependency() {
+  log_file=$(mktemp)
+  BUILDPACK_LOG_FILE="$log_file" compile "error-npm-git-error"
+  assertCaptured "npm Git dependency error (code 128)"
+  assertCapturedError
+  assertFileContains "failure=npm-install-git-dependency" "$log_file"
+}
+
 testErrorPeerDependencyConflict() {
   log_file=$(mktemp)
   BUILDPACK_LOG_FILE="$log_file" compile "error-npm-peer-dependency-conflict"

@@ -667,6 +667,19 @@ log_other_failures() {
     return 0
   fi
 
+  if grep -q "npm error code 128" "$log_file" && grep -q "An unknown git error occurred" "$log_file"; then
+    meta_set "failure" "npm-install-git-dependency"
+    warn "npm Git dependency error (code 128)
+
+       This error indicates an issue related to Git operations when attempting to install
+       an npm package specified as a Git dependency in \`package.json\`.
+
+       The error details above should contain more information about which package is causing the
+       issue during dependency installation as well as the specific problem that Git encountered.
+    "
+    fail
+  fi
+
   if grep -q "npm error code EUSAGE" "$log_file"; then
     if grep -q "Please update your lock file" "$log_file"; then
       meta_set "failure" "npm-lockfile-out-of-sync"
