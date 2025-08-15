@@ -42,7 +42,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Functional tests on heroku:${{ matrix.stack_number }}-build
-        run: test/run testErrorOpensslUnsupportedAlgorithmInWebpack
+        run: test/run -- testErrorOpensslUnsupportedAlgorithmInWebpack
 
   hatchet-test:
     runs-on: ubuntu-24.04
