@@ -2181,7 +2181,6 @@ testErrorOpensslUnsupportedAlgorithm() {
 testErrorOpensslUnsupportedAlgorithmInWebpack() {
   log_file=$(mktemp)
   BUILDPACK_LOG_FILE="$log_file" compile 'error-openssl-unsupported-algorithm-in-webpack'
-  cat "$STD_OUT"
   assertCaptured "Unsupported cryptographic algorithm used"
   assertCaptured "https://webpack.js.org/configuration/output/#outputhashfunction"
   assertCapturedError
