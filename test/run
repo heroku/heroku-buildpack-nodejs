@@ -2169,6 +2169,24 @@ testErrorPrune() {
   assertCaptured "lock_file: false"
 }
 
+testErrorOpensslUnsupportedAlgorithm() {
+  log_file=$(mktemp)
+  BUILDPACK_LOG_FILE="$log_file" compile 'error-openssl-unsupported-algorithm'
+  assertCaptured "Unsupported cryptographic algorithm used"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support"
+  assertCapturedError
+  assertFileContains "failure=openssl-unsupported-algorithm" "$log_file"
+}
+
+testErrorOpensslUnsupportedAlgorithmInWebpack() {
+  log_file=$(mktemp)
+  BUILDPACK_LOG_FILE="$log_file" compile 'error-openssl-unsupported-algorithm-in-webpack'
+  assertCaptured "Unsupported cryptographic algorithm used"
+  assertCaptured "https://webpack.js.org/configuration/output/#outputhashfunction"
+  assertCapturedError
+  assertFileContains "failure=openssl-unsupported-algorithm-webpack" "$log_file"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null

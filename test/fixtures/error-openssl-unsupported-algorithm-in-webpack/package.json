@@ -1,0 +1,18 @@
+{
+  "name": "error-openssl-unsupported-algorithm-in-webpack",
+  "description": "This app uses a webpack configuration that relies on a hashing algorithm removed from OpenSSL to trigger our target error",
+  "devDependencies": {
+    "webpack": "^5.101.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "scripts": {
+    "build": "webpack"
+  },
+  "//": "Node v17 is the point when static linking to OpenSSL v3 was introduced",
+  "engines": {
+    "node": "17.x"
+  }
+}

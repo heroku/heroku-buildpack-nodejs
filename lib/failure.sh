@@ -650,12 +650,6 @@ log_other_failures() {
     return 0
   fi
 
-  # matches the subsequent lines of a stacktrace
-  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
-    meta_set "failure" "unknown-stacktrace"
-    return 0
-  fi
-
   # checksum errors
   if grep -q "Checksum validation failed" "$log_file"; then
     meta_set "failure" "checksum-validation-failed"
@@ -713,6 +707,44 @@ log_other_failures() {
        This should be used with caution as ignoring peer dependency conflicts can lead to unexpected runtime errors.
     "
     fail
+  fi
+
+  if grep -q "ERR_OSSL_EVP_UNSUPPORTED" "$log_file"; then
+    local solution
+    local help_url
+
+    if grep -q "\[webpack-cli\] Error" "$log_file"; then
+      meta_set "failure" "openssl-unsupported-algorithm-webpack"
+      solution="If this app uses Webpack 5.54.0+, you can change the Webpack configuration to use a different
+       \`output.hashFunction\` like \`xxhash64\`. Older versions of Webpack should configure a custom
+       \`output.hashFunction\` that uses supported cryptographic algorithms."
+      help_url="https://webpack.js.org/configuration/output/#outputhashfunction"
+    else
+      meta_set "failure" "openssl-unsupported-algorithm"
+      solution="To fix this, update any dependencies that may be causing the issue and identify and update application code
+       that uses deprecated or unsupported cryptographic algorithms to use modern, secure alternatives."
+      help_url=""
+    fi
+
+    warn "Unsupported cryptographic algorithm used
+
+       This error frequently occurs in apps upgrading from older versions of Node.js (<17.x) which is statically
+       compiled against OpenSSL v1 to newer versions of Node.js (>=17.x) which is statically compiled against
+       OpenSSL v3.
+
+       $solution
+
+       If this is not possible, a temporary workaround can be done by setting a config var that re-enables support
+       for legacy algorithms using \`heroku config set NODE_OPTIONS=--openssl-legacy-provider\`. Please note, this
+       is not recommended for production environments.
+    " "$help_url"
+    fail
+  fi
+
+  # matches the subsequent lines of a stacktrace
+  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
+    meta_set "failure" "unknown-stacktrace"
+    return 0
   fi
 
   # If we've made it this far it's not an error we've added detection for yet
