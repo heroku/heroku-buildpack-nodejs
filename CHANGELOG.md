@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 24.6.0 (linux-amd64)
 - Fix escaping for buildpack metrics. ([#1451](https://github.com/heroku/heroku-buildpack-nodejs/pull/1451))
 - Remove calls to unsupported metrics format (i.e.; `mcount`, `mtime`, `mmeasure`) ([#1454](https://github.com/heroku/heroku-buildpack-nodejs/pull/1454)) 
 
