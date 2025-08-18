@@ -1,0 +1,7 @@
+{
+  "name": "error-yarn-lockfile-out-of-sync",
+  "packageManager": "yarn@4.1.1",
+  "dependencies": {
+    "echo-cli": "2.0.0"
+  }
+}

@@ -2187,6 +2187,16 @@ testErrorOpensslUnsupportedAlgorithmInWebpack() {
   assertFileContains "failure=openssl-unsupported-algorithm-webpack" "$log_file"
 }
 
+testErrorYarnLockfileOutOfSync() {
+  local log_file
+  log_file=$(mktemp)
+  BUILDPACK_LOG_FILE="$log_file" compile "error-yarn-lockfile-out-of-sync"
+  assertCaptured "Yarn lockfile is not in sync"
+  assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+  assertCapturedError
+  assertFileContains "failure=yarn-lockfile-out-of-sync" "$log_file"
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
