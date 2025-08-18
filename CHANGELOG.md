@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix control code escaping for buildpack metrics. ([#1464](https://github.com/heroku/heroku-buildpack-nodejs/pull/1464))
 
 ## [v304] - 2025-08-15
 
