@@ -741,6 +741,20 @@ log_other_failures() {
     fail
   fi
 
+  if grep -q "YN0028" "$log_file"; then
+    meta_set "failure" "yarn-lockfile-out-of-sync"
+    warn "Yarn lockfile is not in sync
+
+       This error occurs when the contents of \`package.json\` contains a different
+       set of dependencies that the contents of \`yarn.lock\`. This can happen
+       when a package is added, modified, or removed but the lockfile was not updated.
+
+       To fix this, run \`yarn install\` locally in your app directory to regenerate the
+       lockfile, commit the changes to \`yarn.lock\`, and redeploy.
+    " "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+    fail
+  fi
+
   # matches the subsequent lines of a stacktrace
   if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
     meta_set "failure" "unknown-stacktrace"
