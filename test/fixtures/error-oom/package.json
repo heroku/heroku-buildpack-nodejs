@@ -1,0 +1,6 @@
+{
+  "name": "error-oom",
+  "scripts": {
+    "build": "node oom.js"
+  }
+}

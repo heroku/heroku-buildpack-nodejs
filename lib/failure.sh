@@ -741,6 +741,29 @@ log_other_failures() {
     fail
   fi
 
+  if grep -q "JavaScript heap out of memory" "$log_file"; then
+    meta_set "failure" "node-out-of-memory"
+    warn "Node.js Out-Of-Memory (OOM)
+
+       This error can occur due to several reasons (large data handling, memory leaks, etc.) but the most
+       common reason during a build is excessive concurrent operations from asset bundlers like
+       Webpack, Vite, or Rollup. Your asset bundler configuration may include plugins to perform tasks such
+       as minification or compilation using multiple parallel processes. In containerized environments,
+       default settings for these tools may not be appropriate.
+
+       If you are getting this error during asset compilation, check which plugins you have enabled and
+       consult their documentation for configuration related to concurrent or parallel operations and
+       either disable or set lower limits.
+
+       As a temporary workaround, it's also possible to increase the memory limits of your Node.js process
+       by prepending \`NODE_OPTIONS=\"--max-old-space-size=VALUE_IN_MB\"\` to the failing script.
+       For example, \`NODE_OPTIONS=\"--max-old-space-size=4096\"\` would set a limit of 4GB. This should
+       be done with caution as it doesn't solve the underlying issue of why this build requires higher
+       memory limits.
+    "
+    fail
+  fi
+
   if grep -q "YN0028" "$log_file"; then
     meta_set "failure" "yarn-lockfile-out-of-sync"
     warn "Yarn lockfile is not in sync
