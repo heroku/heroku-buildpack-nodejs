@@ -139,9 +139,6 @@ kv_pair "heroku_postbuild_script_memory" "$(meta_get "heroku-postbuild-script-me
 # which package manager was used
 kv_pair_string "package_manager" "$(meta_get "node-package-manager")"
 
-# We have to get this info from bin/compile since a lockfile will be generated if there wasn't one
-kv_pair "lock_file" "$(meta_get "has-node-lock-file")"
-
 # pull metadata from the build
 kv_pair_string "build_step" "$(meta_get "build-step")"
 kv_pair_string "failure" "$(meta_get "failure")"

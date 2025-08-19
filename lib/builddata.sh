@@ -4,13 +4,10 @@
 log_initial_state() {
   if "$YARN"; then
     meta_set "node_package_manager" "yarn"
-    meta_set "has_node_lock_file" "true"
   elif "$PNPM"; then
     meta_set "node_package_manager" "pnpm"
-    meta_set "has_node_lock_file" "true"
   else
     meta_set "node_package_manager" "npm"
-    meta_set "has_node_lock_file" "$NPM_LOCK"
   fi
 
   # add any active features to the metadata set
