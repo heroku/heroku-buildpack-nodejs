@@ -258,6 +258,7 @@ install_bins() {
 
   node_version="$(node --version)"
   meta_set "node-version" "$node_version"
+  meta_set "node-version-major" "$(get_node_major_version)"
 
   if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
     meta_set "build-step" "install-yarn-using-corepack"

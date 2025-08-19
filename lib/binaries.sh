@@ -161,8 +161,8 @@ install_corepack_package_manager() {
   local package_manager="$1"
   local node_version="$2"
 
-  node_major_version=$(echo "$node_version" | cut -d "." -f 1 | sed 's/^v//')
-  node_minor_version=$(echo "$node_version" | cut -d "." -f 2)
+  node_major_version=$(get_node_major_version)
+  node_minor_version=$(get_node_minor_version)
 
   # Corepack is available in: v16.9.0, v14.19.0
   if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
