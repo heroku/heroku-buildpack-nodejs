@@ -254,7 +254,7 @@ install_bins() {
     # only install using yarn if there is a yarn.lock file
     if $YARN || [ -n "$yarn_engine" ]; then
       meta_set "build_step" "install-yarn"
-      monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+      monitor "install_yarn_binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
     fi
   fi
 
