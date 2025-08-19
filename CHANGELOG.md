@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Fix control code escaping for buildpack metrics. ([#1464](https://github.com/heroku/heroku-buildpack-nodejs/pull/1464))
+- Add `node_version_major` to buildpack metrics. ([#1465](https://github.com/heroku/heroku-buildpack-nodejs/pull/1465))
 
 ## [v304] - 2025-08-15
 

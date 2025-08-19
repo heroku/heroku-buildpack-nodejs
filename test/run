@@ -1648,6 +1648,7 @@ testBinReportSuccess() {
   # check for all the fields that should be included in this report
   assertCaptured "stack: '$STACK'"
   assertCaptured "node_version: 'v14.21.3'"
+  assertCaptured "node_version_major: 14"
   assertCaptured "npm_version: '6.14.18'"
   assertCaptured "corepack_version: '0.15.1'"
   assertCaptured "node_version_request: '14.x'"

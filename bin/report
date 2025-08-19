@@ -164,6 +164,7 @@ kv_pair "cached_bower_components" "$(meta_get "cached-bower-components")"
 kv_pair "custom_cache_dirs" "$(meta_get "node-custom-cache-dirs")"
 
 # pull execution data from the build
+kv_pair "node_version_major" "$(meta_get "node-version-major")"
 kv_pair "install_node_binary_time" "$(meta_get "install-node-binary-time")"
 kv_pair "install_node_binary_memory" "$(meta_get "install-node-binary-memory")"
 kv_pair "install_npm_binary_time" "$(meta_get "install-npm-binary-time")"
