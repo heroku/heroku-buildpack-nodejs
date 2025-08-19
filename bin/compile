@@ -110,7 +110,6 @@ YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
-generate_uuids
 
 ### Failures that should be caught immediately
 

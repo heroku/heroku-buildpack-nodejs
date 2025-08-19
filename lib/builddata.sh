@@ -39,15 +39,3 @@ log_project_info() {
   meta_set "num-project-files" "$(find "$build_dir" -name '*.js' -o -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
   meta_time "count-file-time" "$time"
 }
-
-generate_uuids() {
-  # generate a unique id for each build
-  meta_set "build-uuid" "$(uuid)"
-
-  # propagate an app-uuid forward unless the cache is cleared
-  if [[ -n "$(meta_prev_get "app-uuid")" ]]; then
-    meta_set "app-uuid" "$(meta_prev_get "app-uuid")"
-  else
-    meta_set "app-uuid" "$(uuid)"
-  fi
-}
