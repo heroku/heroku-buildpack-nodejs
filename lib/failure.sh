@@ -833,9 +833,6 @@ warn_prebuilt_modules() {
   local build_dir=${1:-}
   if [ -e "$build_dir/node_modules" ]; then
     warning "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
-    meta_set "checked_in_node_modules" "true"
-  else
-    meta_set "checked_in_node_modules" "false"
   fi
 }
 
