@@ -172,12 +172,6 @@ if [[ "$YARN_2" == "true" ]]; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
   fi
 
-  if node_modules_enabled "$BUILD_DIR"; then
-    meta_set "yarn2-pnp-linker" "false"
-  else
-    meta_set "yarn2-pnp-linker" "true"
-  fi
-
   ### Configure Yarn 2
   # fail for no yarnrc.yml
   fail_missing_yarnrc_yml "$BUILD_DIR"
