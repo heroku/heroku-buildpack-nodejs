@@ -186,11 +186,6 @@ kv_pair "yarn_prune_memory" "$(meta_get "yarn-prune-memory")"
 kv_pair "pnpm_prune_time" "$(meta_get "pnpm-prune-time")"
 kv_pair "pnpm_prune_memory" "$(meta_get "pnpm-prune-memory")"
 
-# testing resolve-version differences
-kv_pair_string "resolve_v2_node" "$(meta_get "resolve-v2-node")"
-kv_pair_string "resolve_v2_yarn" "$(meta_get "resolve-v2-yarn")"
-kv_pair_string "resolve_v2_error" "$(meta_get "resolve-v2-error")"
-
 # save which features were turned on or off
 features_list | tr ' ' '\n' | while read -r key; do
   if [[ -n $key ]]; then

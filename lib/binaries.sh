@@ -9,12 +9,10 @@ resolve() {
   local output
 
   if output=$($RESOLVE "$BP_DIR/inventory/$binary.toml" "$versionRequirement"); then
-    meta_set "resolve-v2-$binary" "$output"
-    meta_set "resolve-v2-error" "$STD_ERR"
     if [[ $output = "No result" ]]; then
       return 1
     else
-      echo $output
+      echo "$output"
       return 0
     fi
   fi
