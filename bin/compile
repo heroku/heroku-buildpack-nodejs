@@ -450,8 +450,6 @@ summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"
   fi
-
-  meta_set "node_modules_size" "$(measure_size)"
 }
 
 meta_set "build_step" "install-metrics-plugin"

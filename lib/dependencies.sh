@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-measure_size() {
-  (du -s node_modules 2>/dev/null || echo 0) | awk '{print $1}'
-}
-
 list_dependencies() {
   local build_dir="$1"
 
