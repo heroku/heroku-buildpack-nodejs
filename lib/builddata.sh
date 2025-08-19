@@ -2,7 +2,6 @@
 
 # Log out information about the build that we can detect without accessing package.json
 log_initial_state() {
-  meta_set "buildpack" "nodejs"
   if "$YARN"; then
     meta_set "node-package-manager" "yarn"
     meta_set "has-node-lock-file" "true"
