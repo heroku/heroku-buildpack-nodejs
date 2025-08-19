@@ -14,8 +14,6 @@ log_initial_state() {
     meta_set "has-node-lock-file" "$NPM_LOCK"
   fi
 
-  meta_set "stack" "$STACK"
-
   # add any active features to the metadata set
   # prefix the key with "feature-"
   features_list | tr ' ' '\n' | while read -r key; do

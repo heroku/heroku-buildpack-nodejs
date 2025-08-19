@@ -97,8 +97,6 @@ has_procfile_with_web_process() {
   fi
 }
 
-kv_pair_string "stack" "$STACK"
-
 # the version of installed binaries
 has_binary_installed "node" && kv_pair_string "node_version" "$(node --version)"
 has_binary_installed "npm" && kv_pair_string "npm_version" "$(npm --version)"
