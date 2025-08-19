@@ -1652,7 +1652,7 @@ testBinReportSuccess() {
   assertCaptured "corepack_version: '0.15.1'"
   assertCaptured "node_version_request: '14.x'"
   assertCaptured "start_script: 'node foo.js'"
-  assertCaptured "build_script: 'echo \"escaping - test if it''s working as expected\"'"
+  assertCaptured "build_script: 'echo \"escaping - test if it''s working as expected including control chars like �-�, �-�, and �-� which are not allowed in yaml.\"'"
   assertCaptured "package_manager: 'npm'"
   assertCaptured "build_step: 'finished'"
   assertCaptured "cache_status: 'not-found'"

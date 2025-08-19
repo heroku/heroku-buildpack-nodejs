@@ -10,7 +10,7 @@
     "node": "14.x"
   },
   "scripts": {
-    "build": "echo \"escaping - test if it's working as expected\"",
+    "build": "echo \"escaping - test if it's working as expected including control chars like \u0001-\u0008, \u000B-\u000C, and \u000E-\u001F which are not allowed in yaml.\"",
     "start": "node foo.js"
   }
 }
