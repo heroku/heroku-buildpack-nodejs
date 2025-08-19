@@ -61,7 +61,6 @@ restore_default_cache_directories() {
         # Older versions of the buildpack may have created nested yarn caches.
         # This will remove the nested cache. This correction may be removed in
         # the near future.
-        meta_set "yarn_nested_cache" "true"
         rm -rf "$yarn_cache_dir/yarn"
       fi
       echo "- yarn cache"
