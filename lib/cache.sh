@@ -177,13 +177,13 @@ save_default_cache_directories() {
 
   # bower_components
   if [[ -e "$build_dir/bower_components" ]]; then
-    meta_set "cached-bower-components" "true"
+    meta_set "cached_bower_components" "true"
     echo "- bower_components"
     mkdir -p "$cache_dir/node/cache/bower_components"
     cp -a "$build_dir/bower_components" "$(dirname "$cache_dir/node/cache/bower_components")"
   fi
 
-  meta_set "node-custom-cache-dirs" "false"
+  meta_set "node_custom_cache_dirs" "false"
 }
 
 save_custom_cache_directories() {
@@ -205,7 +205,7 @@ save_custom_cache_directories() {
     fi
   done
 
-  meta_set "node-custom-cache-dirs" "true"
+  meta_set "node_custom_cache_dirs" "true"
 }
 
 DEFAULT_PNPM_PRUNE_COUNTER_VALUE="40"
