@@ -24,7 +24,7 @@ kv_get() {
   if [[ $# -eq 2 ]]; then
     local f=$1
     if [[ -f $f ]]; then
-      grep "^$2=" "$f" | sed -e "s/^$2=//" | tail -n 1
+      grep "^$2=" "$f" | sed -e "s/^$2=//" | tail -n 1 || true
     fi
   fi
 }
