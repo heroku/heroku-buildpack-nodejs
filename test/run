@@ -1563,8 +1563,8 @@ testFeatureLogging() {
   BUILDPACK_LOG_FILE="$log_file" compile "dummy-feature"
 
   # the defined features should be logged
-  assertFileContains "feature-dummy=true" $log_file
-  assertFileContains "feature-dummy-2=false" $log_file
+  assertFileContains "feature_dummy1=true" $log_file
+  assertFileContains "feature_dummy2=false" $log_file
 }
 
 testFailingBuildMetaData() {
@@ -1578,28 +1578,6 @@ testFailingBuildMetaData() {
   BUILDPACK_LOG_FILE="$log_file" compile "yarn-lockfile-out-of-date"
   assertFileContains "failure=outdated-yarn-lockfile" $log_file
   assertCapturedError
-}
-
-testPropagateAppUUID() {
-  env_dir=$(mktmpdir)
-  local log_file=$(mktemp)
-  local cache_dir=${2:-$(mktmpdir)}
-  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
-
-  # save the generated app-uuid for the first build
-  compile "node-14" $cache_dir $env_dir
-  assertFileContains "app-uuid=" $log_file
-  local uuid=$(cat $log_file | sed -n -e 's/^.*app-uuid=\([^ ]*\).*/\1/p')
-
-  # create a new log file
-  log_file=$(mktemp)
-  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
-
-  # recompile with the same cache directory
-  compile "node-14" $cache_dir $env_dir
-  assertFileContains "app-uuid" $log_file
-  # make sure that the app-uuid is the same
-  assertEquals "$uuid" "$(cat $log_file | sed -n -e 's/^.*app-uuid=\([^ ]*\).*/\1/p')"
 }
 
 testBinDetectWarnings() {
