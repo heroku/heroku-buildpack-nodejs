@@ -18,24 +18,43 @@ run_if_present() {
   local script_name=${2:-}
   local has_script_name
   local script
+  local reported_script_name
 
   has_script_name=$(has_script "$build_dir/package.json" "$script_name")
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
+  case "$script_name" in
+    heroku-prebuild)
+      reported_script_name="heroku_prebuild_script"
+      ;;
+    heroku-postbuild)
+      # because we only ever run `heroku-postbuild` or `build`
+      reported_script_name="build_script"
+      ;;
+    heroku-cleanup)
+      reported_script_name="heroku_cleanup_script"
+      ;;
+    *)
+      reported_script_name="${script_name}_script"
+  esac
+
   if [[ "$has_script_name" == "true" ]]; then
+    meta_set "has_$reported_script_name" "true"
     if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
-        monitor "${script_name}-script" yarn run "$script_name"
+        monitor "$reported_script_name" yarn run "$script_name"
       fi
     elif $PNPM; then
       echo "Running $script_name"
-      monitor "${script_name}-script" pnpm run --if-present "$script_name"
+      monitor "$reported_script_name" pnpm run --if-present "$script_name"
     else
       echo "Running $script_name"
-      monitor "${script_name}-script" npm run "$script_name" --if-present
+      monitor "$reported_script_name" npm run "$script_name" --if-present
     fi
+  else
+    meta_set "has_$reported_script_name" "false"
   fi
 }
 
@@ -53,34 +72,37 @@ run_build_if_present() {
   fi
 
   if [[ "$has_script_name" == "true" ]]; then
+    meta_set "has_build_script" "true"
     if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
         if [[ -n $NODE_BUILD_FLAGS ]]; then
           echo "Running with $NODE_BUILD_FLAGS flags"
-          monitor "${script_name}-script" yarn run "$script_name" "$NODE_BUILD_FLAGS"
+          monitor "build_script" yarn run "$script_name" "$NODE_BUILD_FLAGS"
         else
-          monitor "${script_name}-script" yarn run "$script_name"
+          monitor "build_script" yarn run "$script_name"
         fi
       fi
     elif $PNPM; then
       echo "Running $script_name"
       if [[ -n $NODE_BUILD_FLAGS ]]; then
         echo "Running with $NODE_BUILD_FLAGS flags"
-        monitor "${script_name}-script" pnpm run --if-present "$script_name" -- "$NODE_BUILD_FLAGS"
+        monitor "build_script" pnpm run --if-present "$script_name" -- "$NODE_BUILD_FLAGS"
       else
-        monitor "${script_name}-script" pnpm run --if-present "$script_name"
+        monitor "build_script" pnpm run --if-present "$script_name"
       fi
     else
       echo "Running $script_name"
       if [[ -n $NODE_BUILD_FLAGS ]]; then
         echo "Running with $NODE_BUILD_FLAGS flags"
-        monitor "${script_name}-script" npm run "$script_name" --if-present -- "$NODE_BUILD_FLAGS"
+        monitor "build_script" npm run "$script_name" --if-present -- "$NODE_BUILD_FLAGS"
       else
-        monitor "${script_name}-script" npm run "$script_name" --if-present
+        monitor "build_script" npm run "$script_name" --if-present
       fi
     fi
+  else
+    meta_set "has_build_script" "false"
   fi
 }
 
@@ -124,22 +146,13 @@ run_cleanup_script() {
   fi
 }
 
-log_build_scripts() {
-  local build_dir=${1:-}
-
-  meta_set "build_script" "$(read_json "$build_dir/package.json" ".scripts[\"build\"]")"
-  meta_set "postinstall_script" "$(read_json "$build_dir/package.json" ".scripts[\"postinstall\"]")"
-  meta_set "heroku_prebuild_script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-prebuild\"]")"
-  meta_set "heroku_postbuild_script" "$(read_json "$build_dir/package.json" ".scripts[\"heroku-postbuild\"]")"
-}
-
 yarn_node_modules() {
   local build_dir=${1:-}
   local production=${YARN_PRODUCTION:-false}
 
   echo "Installing node modules (yarn.lock)"
   cd "$build_dir" || return
-  monitor "yarn-install" yarn install --production="$production" --frozen-lockfile --ignore-engines --prefer-offline 2>&1
+  monitor "install_dependencies" yarn install --production="$production" --frozen-lockfile --ignore-engines --prefer-offline 2>&1
 }
 
 yarn_2_install() {
@@ -148,7 +161,7 @@ yarn_2_install() {
   echo "Running 'yarn install' with yarn.lock"
   cd "$build_dir" || return
 
-  monitor "yarn-2-install" yarn install --immutable 2>&1
+  monitor "install_dependencies" yarn install --immutable 2>&1
 }
 
 yarn_prune_devdependencies() {
@@ -177,11 +190,11 @@ yarn_prune_devdependencies() {
     cd "$build_dir" || return
     echo "Running 'yarn heroku prune'"
     export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
-    monitor "yarn-prune" yarn heroku prune
+    monitor "prune_dev_dependencies" yarn heroku prune
     meta_set "skipped_prune" "false"
   else
     cd "$build_dir" || return
-    monitor "yarn-prune" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+    monitor "prune_dev_dependencies" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
     meta_set "skipped_prune" "false"
   fi
 }
@@ -223,7 +236,7 @@ npm_node_modules() {
     if [[ "$USE_NPM_INSTALL" == "false" ]]; then
       meta_set "use_npm_ci" "true"
       echo "Installing node modules"
-      monitor "npm-install" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+      monitor "install_dependencies" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
       meta_set "use_npm_ci" "false"
       if [ -e "$build_dir/package-lock.json" ]; then
@@ -233,7 +246,7 @@ npm_node_modules() {
       else
         echo "Installing node modules (package.json)"
       fi
-      monitor "npm-install" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+      monitor "install_dependencies" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     fi
   else
     echo "Skipping (no package.json)"
@@ -253,7 +266,7 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    monitor "npm-rebuild" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+    monitor "npm_rebuild" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
   else
     echo "Skipping (no package.json)"
   fi
@@ -301,7 +314,7 @@ npm_prune_devdependencies() {
     return 0
   else
     cd "$build_dir" || return
-    monitor "npm-prune" npm prune --userconfig "$build_dir/.npmrc" 2>&1
+    monitor "prune_dev_dependencies" npm prune --userconfig "$build_dir/.npmrc" 2>&1
     meta_set "skipped_prune" "false"
   fi
 }
@@ -313,7 +326,7 @@ pnpm_install() {
   echo "Running 'pnpm install' with pnpm-lock.yaml"
   cd "$build_dir" || return
 
-  monitor "pnpm-install" pnpm install --prod=false --frozen-lockfile 2>&1
+  monitor "install_dependencies" pnpm install --prod=false --frozen-lockfile 2>&1
 
   # prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
   counter=$(load_pnpm_prune_store_counter "$cache_dir")
@@ -375,7 +388,7 @@ pnpm_prune_devdependencies() {
     pnpm_prune_args+=("--ignore-scripts")
   fi
 
-  pnpm "${pnpm_prune_args[@]}" 2>&1
+  monitor "prune_dev_dependencies" pnpm "${pnpm_prune_args[@]}" 2>&1
 
   meta_set "skipped_prune" "false"
 }

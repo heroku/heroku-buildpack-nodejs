@@ -236,18 +236,18 @@ install_bins() {
   fi
 
   meta_set "build_step" "install-nodejs"
-  monitor "install-node-binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
+  monitor "install_node_binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
 
   meta_set "build_step" "install-npm"
-  monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
+  monitor "install_npm_binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
 
   node_version="$(node --version)"
   meta_set "node_version" "$node_version"
   meta_set "node_version_major" "$(get_node_major_version)"
 
   if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
-    meta_set "build_step" "install-yarn-using-corepack"
-    monitor "install-yarn-using-corepack" install_yarn_using_corepack_package_manager "$package_manager" "$node_version"
+    meta_set "build_step" "install-yarn"
+    monitor "install_yarn_binary" install_yarn_using_corepack_package_manager "$package_manager" "$node_version"
   else
     # Download yarn if there is a yarn.lock file or if the user
     # has specified a version of yarn under "engines". We'll still
@@ -273,7 +273,7 @@ install_bins() {
       package_manager="$default_pnpm_version"
     fi
 
-    monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
+    monitor "install_pnpm_binary" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
     if [ "$using_default_pnpm" == true ]; then
       warn_default_pnpm_version_used "$default_pnpm_version"
     fi
@@ -281,10 +281,13 @@ install_bins() {
 
   if $YARN; then
     meta_set "yarn_version" "$(yarn --version)"
+    meta_set "package_manager_version" "$(yarn --version)"
   elif $PNPM; then
     meta_set "pnpm_version" "$(pnpm --version)"
+    meta_set "package_manager_version" "$(pnpm --version)"
   else
     meta_set "npm_version" "$(npm --version)"
+    meta_set "package_manager_version" "$(npm --version)"
   fi
 
   warn_old_npm
@@ -379,7 +382,6 @@ build_dependencies() {
   run_build_script "$BUILD_DIR"
 }
 
-log_build_scripts "$BUILD_DIR"
 meta_set "build_step" "prebuild-script"
 run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
 
