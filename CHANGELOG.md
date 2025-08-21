@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v305] - 2025-08-21
+
 - Fix control code escaping for buildpack metrics. ([#1464](https://github.com/heroku/heroku-buildpack-nodejs/pull/1464))
 - Add `node_version_major` to buildpack metrics. ([#1465](https://github.com/heroku/heroku-buildpack-nodejs/pull/1465))
 - Cleanup of buildpack metrics and report. ([#1466](https://github.com/heroku/heroku-buildpack-nodejs/pull/1466))
@@ -1117,7 +1120,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v304...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v305...main
+[v305]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v304...v305
 [v304]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v303...v304
 [v303]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v302...v303
 [v302]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v301...v302
