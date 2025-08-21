@@ -12,44 +12,14 @@ BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 ### Load dependencies
 
-# shellcheck source=lib/vendor/stdlib_v7.sh
-source "$BP_DIR/lib/vendor/stdlib_v7.sh"
-# shellcheck source=lib/output.sh
-source "$BP_DIR/lib/output.sh"
-# shellcheck source=lib/monitor.sh
-source "$BP_DIR/lib/monitor.sh"
-# shellcheck source=lib/environment.sh
-source "$BP_DIR/lib/environment.sh"
-# shellcheck source=lib/failure.sh
-source "$BP_DIR/lib/failure.sh"
-# shellcheck source=lib/binaries.sh
-source "$BP_DIR/lib/binaries.sh"
-# shellcheck source=lib/json.sh
-source "$BP_DIR/lib/json.sh"
-# shellcheck source=lib/cache.sh
-source "$BP_DIR/lib/cache.sh"
-# shellcheck source=lib/dependencies.sh
-source "$BP_DIR/lib/dependencies.sh"
-# shellcheck source=lib/plugin.sh
-source "$BP_DIR/lib/plugin.sh"
-# shellcheck source=lib/uuid.sh
-source "$BP_DIR/lib/uuid.sh"
-# shellcheck source=lib/kvstore.sh
 source "$BP_DIR/lib/kvstore.sh"
 # shellcheck source=lib/metadata.sh
 source "$BP_DIR/lib/metadata.sh"
 # shellcheck source=lib/features.sh
 source "$BP_DIR/lib/features.sh"
-# shellcheck source=lib/builddata.sh
-source "$BP_DIR/lib/builddata.sh"
-
-export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
 meta_init "$CACHE_DIR"
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
-
-# a place to build up the output YAML structure
-output=$(mktemp -t bin-reportXXXXXX)
 
 # append the key / value pair to $output, but skip if the value is empty
 kv_pair() {
@@ -57,7 +27,7 @@ kv_pair() {
   key="$1"
   value="$2"
   if [[ -n "$value" ]]; then
-    echo "$key: $value" >> $output
+    echo "$key: $value"
   fi
 }
 
@@ -85,118 +55,93 @@ kv_pair_string() {
 	fi
 }
 
-has_binary_installed() {
-  [[ -x "$(command -v "$1")" ]]
-}
+METRICS=(
+  # node
+  node_version                     string
+  node_version_request             string
+  node_version_major               number
+  install_node_binary_time         number
+  install_node_binary_memory       number
+  # npm
+  npm_version                      string
+  npm_version_request              string
+  install_npm_binary_time          number
+  install_npm_binary_memory        number
+  # yarn
+  yarn_version                     string
+  yarn_version_request             string
+  install_yarn_binary_time         number
+  install_yarn_binary_memory       number
+  # pnpm
+  pnpm_version                     string
+  pnpm_version_request             string
+  install_pnpm_binary_time         number
+  install_pnpm_binary_memory       number
+  # corepack
+  corepack_version                 string
+  package_manager_request          string
+  # install dependencies
+  install_dependencies_time        number
+  install_dependencies_memory      number
+  # heroku-prebuild script
+  heroku_postbuild_script          string
+  has_heroku_prebuild_script       boolean
+  heroku_prebuild_script_time      number
+  heroku_prebuild_script_memory    number
+  # heroku-build or build script
+  build_script                     string
+  heroku_postbuild_script          string
+  has_build_script                 boolean
+  build_script_time                number
+  build_script_memory              number
+  # heroku-cleanup script
+  heroku_cleanup_script            string
+  has_heroku_cleanup_script        boolean
+  heroku_cleanup_script_time       number
+  heroku_cleanup_script_memory     number
+  # cache
+  cache_status                     string
+  restore_cache_time               number
+  save_cache_time                  number
+  has_cached_bower_components      boolean
+  has_custom_cache_dirs            boolean
+  # pruning
+  skipped_prune                    boolean
+  prune_dev_dependencies_time      number
+  prune_dev_dependencies_memory    number
+  # buildpack
+  build_time                       number
+  build_step                       string
+  failure                          string
+  # misc.
+  package_manager                  string
+  package_manager_version          string
+  use_npm_ci                       boolean
+  has_procfile                     boolean
+  start_script                     string
+  postinstall_script               string
+)
 
-has_procfile_with_web_process() {
-  if [ -f "$BUILD_DIR/Procfile" ] && grep -q -e "^\s*web:" "$BUILD_DIR/Procfile"; then
-    echo "true"
-  else
-    echo "false"
-  fi
-}
-
-kv_pair_string "stack" "$STACK"
-
-# the version of installed binaries
-has_binary_installed "node" && kv_pair_string "node_version" "$(node --version)"
-has_binary_installed "npm" && kv_pair_string "npm_version" "$(npm --version)"
-has_binary_installed "yarn" && kv_pair_string "yarn_version" "$(yarn --version)"
-has_binary_installed "pnpm" && kv_pair_string "pnpm_version" "$(pnpm --version)"
-has_binary_installed "corepack" && kv_pair_string "corepack_version" "$(corepack --version)"
-
-# what versions were requested
-kv_pair_string "node_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.node")"
-kv_pair_string "npm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.npm")"
-kv_pair_string "yarn_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.yarn")"
-kv_pair_string "pnpm_version_request" "$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")"
-kv_pair_string "package_manager_request" "$(read_json "$BUILD_DIR/package.json" ".packageManager")"
-
-# is a procfile with a web process used?
-kv_pair "procfile_with_web_process" "$(has_procfile_with_web_process)"
-
-# is a procfile used?
-if [ -f "$BUILD_DIR/Procfile" ]; then
-  kv_pair "procfile_used" "true"
-else
-  kv_pair "procfile_used" "false"
-fi
-
-# build scripts
-kv_pair_string "start_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"start\"]")"
-kv_pair_string "build_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"build\"]")"
-kv_pair_string "postinstall_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"postinstall\"]")"
-kv_pair_string "heroku_prebuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-prebuild\"]")"
-kv_pair_string "heroku_postbuild_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"heroku-postbuild\"]")"
-kv_pair "build_script_time" "$(meta_get "build-script-time")"
-kv_pair "build_script_memory" "$(meta_get "build-script-memory")"
-kv_pair "postinstall_script_time" "$(meta_get "postinstall-script-time")"
-kv_pair "postinstall_script_memory" "$(meta_get "postinstall-script-memory")"
-kv_pair "heroku_prebuild_script_time" "$(meta_get "heroku-prebuild-script-time")"
-kv_pair "heroku_prebuild_script_memory" "$(meta_get "heroku-prebuild-script-memory")"
-kv_pair "heroku_postbuild_script_time" "$(meta_get "heroku-postbuild-script-time")"
-kv_pair "heroku_postbuild_script_memory" "$(meta_get "heroku-postbuild-script-memory")"
-
-# which package manager was used
-kv_pair_string "package_manager" "$(meta_get "node-package-manager")"
-
-# We have to get this info from bin/compile since a lockfile will be generated if there wasn't one
-kv_pair "lock_file" "$(meta_get "has-node-lock-file")"
-
-# does this project use "workspaces"?
-kv_pair "uses_workspaces" "$(json_has_key "$BUILD_DIR/package.json" "workspaces")"
-# what workspaces are defined? Logs as: `["packages/*","a","b"]`
-kv_pair_string "workspaces" "$(read_json "$BUILD_DIR/package.json" ".workspaces")"
-# count # of js, cjs, mjs, jsx, ts, coffee, vue, and html files to approximate project size, exclude any files in node_modules
-kv_pair "num_project_files" "$(find "$BUILD_DIR" -name '*.js' -o -name '*.cjs' -o -name '*.mjs' -o  -name '*.ts' -o -name '*.jsx' -o -name '*.coffee' -o -name '*.vue' -o -name '*.html' | grep -cv node_modules | tr -d '[:space:]')"
-# measure how large node_modules is on disk
-kv_pair "node_modules_size" "$(measure_size)"
-
-# pull metadata from the build
-kv_pair_string "build_step" "$(meta_get "build-step")"
-kv_pair_string "failure" "$(meta_get "failure")"
-kv_pair_string "cache_status" "$(meta_get "cache-status")"
-kv_pair "use_npm_ci" "$(meta_get "use-npm-ci")"
-kv_pair "build_time" "$(meta_get "build-time")"
-kv_pair "skipped_prune" "$(meta_get "skipped-prune")"
-kv_pair "cached_bower_components" "$(meta_get "cached-bower-components")"
-kv_pair "custom_cache_dirs" "$(meta_get "node-custom-cache-dirs")"
-
-# pull execution data from the build
-kv_pair "node_version_major" "$(meta_get "node-version-major")"
-kv_pair "install_node_binary_time" "$(meta_get "install-node-binary-time")"
-kv_pair "install_node_binary_memory" "$(meta_get "install-node-binary-memory")"
-kv_pair "install_npm_binary_time" "$(meta_get "install-npm-binary-time")"
-kv_pair "install_npm_binary_memory" "$(meta_get "install-npm-binary-memory")"
-kv_pair "install_yarn_binary_time" "$(meta_get "install-yarn-binary-time")"
-kv_pair "install_yarn_binary_memory" "$(meta_get "install-yarn-binary-memory")"
-kv_pair "restore_cache_time" "$(meta_get "restore-cache-time")"
-kv_pair "save_cache_time" "$(meta_get "save-cache-time")"
-kv_pair "npm_install_time" "$(meta_get "npm-install-time")"
-kv_pair "npm_install_memory" "$(meta_get "npm-install-memory")"
-kv_pair "yarn_install_time" "$(meta_get "yarn-install-time")"
-kv_pair "yarn_install_memory" "$(meta_get "yarn-install-memory")"
-kv_pair "pnpm_install_time" "$(meta_get "pnpm-install-time")"
-kv_pair "pnpm_install_memory" "$(meta_get "pnpm-install-memory")"
-kv_pair "npm_prune_time" "$(meta_get "npm-prune-time")"
-kv_pair "npm_prune_memory" "$(meta_get "npm-prune-memory")"
-kv_pair "yarn_prune_time" "$(meta_get "yarn-prune-time")"
-kv_pair "yarn_prune_memory" "$(meta_get "yarn-prune-memory")"
-kv_pair "pnpm_prune_time" "$(meta_get "pnpm-prune-time")"
-kv_pair "pnpm_prune_memory" "$(meta_get "pnpm-prune-memory")"
-
-# testing resolve-version differences
-kv_pair_string "resolve_v2_node" "$(meta_get "resolve-v2-node")"
-kv_pair_string "resolve_v2_yarn" "$(meta_get "resolve-v2-yarn")"
-kv_pair_string "resolve_v2_error" "$(meta_get "resolve-v2-error")"
+for ((i=0; i<${#METRICS[@]}; i+=2)); do
+  metric_key="${METRICS[i]}"
+  metric_type="${METRICS[i+1]}"
+  metric_value=$(meta_get "$metric_key")
+  case "$metric_type" in
+    string)
+      kv_pair_string "$metric_key" "$metric_value"
+      ;;
+    boolean | number)
+      kv_pair "$metric_key" "$metric_value"
+      ;;
+    *)
+      # unknown type
+      ;;
+  esac
+done
 
 # save which features were turned on or off
 features_list | tr ' ' '\n' | while read -r key; do
   if [[ -n $key ]]; then
-    kv_pair "feature-$key" "$(features_get "$key")"
+    kv_pair "feature_$key" "$(features_get "$key")"
   fi
 done
-
-# emit the metadata on stdout
-cat $output

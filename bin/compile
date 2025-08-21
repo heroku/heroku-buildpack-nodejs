@@ -72,7 +72,6 @@ build_start_time=$(nowms)
 ### Handle errors
 
 handle_failure() {
-  meta_set "node-build-success" "false"
   header "Build failed"
   fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
   fail_yarn_outdated "$LOG_FILE"
@@ -98,7 +97,7 @@ meta_init "$CACHE_DIR"
 meta_setup
 # the "build-step" key keeps track of where we are in the execution
 # so that we can see where failed builds errored
-meta_set "build-step" "init"
+meta_set "build_step" "init"
 
 ### Check initial state
 
@@ -111,7 +110,6 @@ YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
 ### Save build info
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
-generate_uuids
 
 ### Failures that should be caught immediately
 
@@ -123,11 +121,6 @@ fail_conflicting_package_manager_metadata "$BUILD_DIR"
 fail_iojs_unsupported "$BUILD_DIR"
 warn_prebuilt_modules "$BUILD_DIR"
 warn_missing_package_json "$BUILD_DIR"
-
-### Gather more project information
-
-# we know that package.json is valid json, and can pull more data out
-log_project_info "$BUILD_DIR"
 
 ### Compile
 
@@ -173,14 +166,6 @@ if [[ "$YARN_2" == "true" ]]; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
   fi
 
-  meta_set "yarn2-immutable-cache" ${YARN_ENABLE_IMMUTABLE_CACHE:-false}
-
-  if node_modules_enabled "$BUILD_DIR"; then
-    meta_set "yarn2-pnp-linker" "false"
-  else
-    meta_set "yarn2-pnp-linker" "true"
-  fi
-
   ### Configure Yarn 2
   # fail for no yarnrc.yml
   fail_missing_yarnrc_yml "$BUILD_DIR"
@@ -213,11 +198,11 @@ install_bins() {
   pnpm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")
   package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
 
-  meta_set "node-version-request" "$node_engine"
-  meta_set "npm-version-request" "$npm_engine"
-  meta_set "yarn-version-request" "$yarn_engine"
-  meta_set "pnpm-version-request" "$pnpm_engine"
-  meta_set "package-manager-request" "$package_manager"
+  meta_set "node_version_request" "$node_engine"
+  meta_set "npm_version_request" "$npm_engine"
+  meta_set "yarn_version_request" "$yarn_engine"
+  meta_set "pnpm_version_request" "$pnpm_engine"
+  meta_set "package_manager_request" "$package_manager"
 
   echo "engines.node (package.json):   ${node_engine:-unspecified}"
   echo "engines.npm (package.json):    ${npm_engine:-unspecified (use default)}"
@@ -250,31 +235,31 @@ install_bins() {
     warn_yarn_release_script_with_package_manager "$package_manager" "$(get_yarn_path "$BUILD_DIR")"
   fi
 
-  meta_set "build-step" "install-nodejs"
-  monitor "install-node-binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
+  meta_set "build_step" "install-nodejs"
+  monitor "install_node_binary" install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
 
-  meta_set "build-step" "install-npm"
-  monitor "install-npm-binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" $NPM_LOCK
+  meta_set "build_step" "install-npm"
+  monitor "install_npm_binary" install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
 
   node_version="$(node --version)"
-  meta_set "node-version" "$node_version"
-  meta_set "node-version-major" "$(get_node_major_version)"
+  meta_set "node_version" "$node_version"
+  meta_set "node_version_major" "$(get_node_major_version)"
 
   if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
-    meta_set "build-step" "install-yarn-using-corepack"
-    monitor "install-yarn-using-corepack" install_yarn_using_corepack_package_manager "$package_manager" "$node_version"
+    meta_set "build_step" "install-yarn"
+    monitor "install_yarn_binary" install_yarn_using_corepack_package_manager "$package_manager" "$node_version"
   else
     # Download yarn if there is a yarn.lock file or if the user
     # has specified a version of yarn under "engines". We'll still
     # only install using yarn if there is a yarn.lock file
     if $YARN || [ -n "$yarn_engine" ]; then
-      meta_set "build-step" "install-yarn"
-      monitor "install-yarn-binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+      meta_set "build_step" "install-yarn"
+      monitor "install_yarn_binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
     fi
   fi
 
   if $PNPM; then
-    meta_set "build-step" "install-pnpm-using-corepack"
+    meta_set "build_step" "install-pnpm-using-corepack"
 
     default_pnpm_version="pnpm@latest"
     using_default_pnpm=false
@@ -288,18 +273,21 @@ install_bins() {
       package_manager="$default_pnpm_version"
     fi
 
-    monitor "install-pnpm-using-corepack" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
+    monitor "install_pnpm_binary" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
     if [ "$using_default_pnpm" == true ]; then
       warn_default_pnpm_version_used "$default_pnpm_version"
     fi
   fi
 
   if $YARN; then
-    meta_set "yarn-version" "$(yarn --version)"
+    meta_set "yarn_version" "$(yarn --version)"
+    meta_set "package_manager_version" "$(yarn --version)"
   elif $PNPM; then
-    meta_set "pnpm-version" "$(pnpm --version)"
+    meta_set "pnpm_version" "$(pnpm --version)"
+    meta_set "package_manager_version" "$(pnpm --version)"
   else
-    meta_set "npm-version" "$(npm --version)"
+    meta_set "npm_version" "$(npm --version)"
+    meta_set "package_manager_version" "$(npm --version)"
   fi
 
   warn_old_npm
@@ -364,11 +352,11 @@ restore_cache() {
     :
   fi
 
-  meta_set "cache-status" "$cache_status"
-  meta_time "restore-cache-time" "$restore_cache_start_time"
+  meta_set "cache_status" "$cache_status"
+  meta_time "restore_cache_time" "$restore_cache_start_time"
 }
 
-meta_set "build-step" "restore-cache"
+meta_set "build_step" "restore-cache"
 restore_cache | output "$LOG_FILE"
 
 build_dependencies() {
@@ -389,17 +377,16 @@ build_dependencies() {
     npm_node_modules "$BUILD_DIR"
   fi
 
-  meta_set "build-step" "build-script"
+  meta_set "build_step" "build-script"
   header "Build"
   run_build_script "$BUILD_DIR"
 }
 
-log_build_scripts "$BUILD_DIR"
-meta_set "build-step" "prebuild-script"
+meta_set "build_step" "prebuild-script"
 run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
 
 header "Installing dependencies" | output "$LOG_FILE"
-meta_set "build-step" "install-dependencies"
+meta_set "build_step" "install-dependencies"
 build_dependencies | output "$LOG_FILE"
 
 cache_build() {
@@ -420,7 +407,7 @@ cache_build() {
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
   fi
   save_signature "$CACHE_DIR"
-  meta_time "save-cache-time" "$cache_build_start_time"
+  meta_time "save_cache_time" "$cache_build_start_time"
 }
 
 prune_devdependencies() {
@@ -434,48 +421,45 @@ prune_devdependencies() {
 }
 
 if $YARN_2; then
-  meta_set "build-step" "save-cache"
+  meta_set "build_step" "save-cache"
   cache_build | output "$LOG_FILE"
-  meta_set "build-step" "prune-dependencies"
+  meta_set "build_step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
 elif "$YARN" && "$USE_YARN_CACHE" && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
-  meta_set "build-step" "prune-dependencies"
+  meta_set "build_step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
-  meta_set "build-step" "save-cache"
+  meta_set "build_step" "save-cache"
   cache_build | output "$LOG_FILE"
 else
-  meta_set "build-step" "save-cache"
+  meta_set "build_step" "save-cache"
   cache_build | output "$LOG_FILE"
-  meta_set "build-step" "prune-dependencies"
+  meta_set "build_step" "prune-dependencies"
   header "Pruning devDependencies" | output "$LOG_FILE"
   prune_devdependencies | output "$LOG_FILE"
 fi
 
-meta_set "build-step" "cleanup-script"
+meta_set "build_step" "cleanup-script"
 run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
 
 summarize_build() {
   if $NODE_VERBOSE; then
     list_dependencies "$BUILD_DIR"
   fi
-
-  meta_set "node-modules-size" "$(measure_size)"
 }
 
-meta_set "build-step" "install-metrics-plugin"
+meta_set "build_step" "install-metrics-plugin"
 install_plugin "$BP_DIR" "$BUILD_DIR"
 
-meta_set "build-step" "summarize"
+meta_set "build_step" "summarize"
 header "Build succeeded!" | output "$LOG_FILE"
 summarize_build | output "$LOG_FILE"
-meta_set "node-build-success" "true"
-meta_time "build-time" "$build_start_time"
+meta_time "build_time" "$build_start_time"
 
 warn_no_start "$BUILD_DIR"
 warn_unmet_dep "$LOG_FILE"
-warn_old_npm_lockfile $NPM_LOCK
+warn_old_npm_lockfile "$NPM_LOCK"
 
-meta_set "build-step" "finished"
+meta_set "build_step" "finished"
 log_meta_data >> "$BUILDPACK_LOG_FILE"

@@ -18,9 +18,9 @@ testNpmCi() {
   assertFileExists "$build_dir/.heroku/node/bin/npm"
 
    # test logging
-  assertFileContains "use-npm-ci=true" "$log_file"
-  assertFileContains "npm-install-time=" "$log_file"
-  assertFileContains "npm-install-memory=" "$log_file"
+  assertFileContains "use_npm_ci=true" "$log_file"
+  assertFileContains "install_dependencies_time=" "$log_file"
+  assertFileContains "install_dependencies_memory=" "$log_file"
 
    # test re-using the cache
   echo "" > "$log_file"
@@ -42,9 +42,9 @@ testNpmCiShrinkwrap() {
   assertCapturedSuccess
 
    # test logging
-  assertFileContains "use-npm-ci=true" "$log_file"
-  assertFileContains "npm-install-time=" "$log_file"
-  assertFileContains "npm-install-memory=" "$log_file"
+  assertFileContains "use_npm_ci=true" "$log_file"
+  assertFileContains "install_dependencies_time=" "$log_file"
+  assertFileContains "install_dependencies_memory=" "$log_file"
 
    # test re-using the cache
   echo "" > "$log_file"
@@ -62,10 +62,10 @@ testNpmCiFallback() {
   assertCapturedSuccess
 
   # detecting that we shouldn't use npm ci
-  assertFileContains "use-npm-ci=false" "$log_file"
+  assertFileContains "use_npm_ci=false" "$log_file"
   # and ran "npm install"
-  assertFileContains "npm-install-time=" "$log_file"
-  assertFileContains "npm-install-memory=" "$log_file"
+  assertFileContains "install_dependencies_time=" "$log_file"
+  assertFileContains "install_dependencies_memory=" "$log_file"
 }
 
 testNpmCiDisabled() {
@@ -78,7 +78,7 @@ testNpmCiDisabled() {
 
   BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" $cache $env_dir
 
-  assertFileContains "use-npm-ci=false" "$log_file"
+  assertFileContains "use_npm_ci=false" "$log_file"
   assertCapturedSuccess
 }
 
@@ -1477,28 +1477,28 @@ testMemoryMetrics() {
 
   compile "pre-post-build-scripts" "$(mktmpdir)" "$env_dir"
 
-  assertFileContains "install-node-binary-time=" "$metrics_log"
-  assertFileContains "install-npm-binary-time=" "$metrics_log"
-  assertFileContains "heroku-prebuild-script-time=" "$metrics_log"
-  assertFileContains "heroku-prebuild-script-memory=" "$metrics_log"
-  assertFileContains "npm-install-time=" "$metrics_log"
-  assertFileContains "npm-install-memory=" "$metrics_log"
-  assertFileContains "heroku-postbuild-script-time=" "$metrics_log"
-  assertFileContains "heroku-postbuild-script-memory=" "$metrics_log"
+  assertFileContains "install_node_binary_time=" "$metrics_log"
+  assertFileContains "install_npm_binary_time=" "$metrics_log"
+  assertFileContains "heroku_prebuild_script_time=" "$metrics_log"
+  assertFileContains "heroku_prebuild_script_memory=" "$metrics_log"
+  assertFileContains "install_dependencies_time=" "$metrics_log"
+  assertFileContains "install_dependencies_memory=" "$metrics_log"
+  assertFileContains "build_script_time=" "$metrics_log"
+  assertFileContains "build_script_memory=" "$metrics_log"
 
   # erase the metrics log
   echo "" > "$metrics_log"
   compile "yarn" "$(mktmpdir)" "$env_dir"
 
-  assertFileContains "install-node-binary-time=" "$metrics_log"
-  assertFileContains "install-yarn-binary-time=" "$metrics_log"
-  assertFileContains "yarn-install-memory=" "$metrics_log"
-  assertFileContains "yarn-install-time=" "$metrics_log"
+  assertFileContains "install_node_binary_time=" "$metrics_log"
+  assertFileContains "install_yarn_binary_time=" "$metrics_log"
+  assertFileContains "install_dependencies_memory=" "$metrics_log"
+  assertFileContains "install_dependencies_time=" "$metrics_log"
   # this fixture does not have pre or post-build scripts
-  assertFileNotContains "heroku-prebuild-script-time=" "$metrics_log"
-  assertFileNotContains "heroku-prebuild-script-memory=" "$metrics_log"
-  assertFileNotContains "heroku-postbuild-script-time=" "$metrics_log"
-  assertFileNotContains "heroku-postbuild-script-memory=" "$metrics_log"
+  assertFileNotContains "heroku_prebuild_script_time=" "$metrics_log"
+  assertFileNotContains "heroku_prebuild_script_memory=" "$metrics_log"
+  assertFileNotContains "build_script_time=" "$metrics_log"
+  assertFileNotContains "build_script_memory=" "$metrics_log"
 }
 
 testBuildMetaData() {
@@ -1507,58 +1507,44 @@ testBuildMetaData() {
   BUILDPACK_LOG_FILE="$log_file" compile "pre-post-build-scripts"
 
   # build info
-  assertFileContains "node-package-manager=npm" $log_file
-  assertFileContains "checked-in-node-modules=false" $log_file
-  assertFileContains "has-node-lock-file=false" $log_file
-  assertFileContains "cache-status=not-found" $log_file
-  assertFileContains "node-build-success=true" $log_file
-  assertFileContains "build-time=" $log_file
-  assertFileContains "app-uuid=" $log_file
-  assertFileContains "build-uuid=" $log_file
-  assertFileContains "build-step=finished" $log_file
-  assertFileContains "uses-workspaces=false" $log_file
-  assertFileContains "workspaces=" $log_file
-  assertFileContains "num-project-files=0" $log_file
+  assertFileContains "package_manager=npm" $log_file
+  assertFileContains "cache_status=not-found" $log_file
+  assertFileContains "build_time=" $log_file
+  assertFileContains "build_step=finished" $log_file
 
   # binary versions
-  assertFileContains "node-version-request=10.x" $log_file
-  assertFileContains "npm-version-request= " $log_file
+  assertFileContains "node_version_request=10.x" $log_file
+  assertFileContains "npm_version_request= " $log_file
 
   # log build scripts
-  assertFileContains "heroku-prebuild-script=\"echo heroku-prebuild hook message\"" $log_file
-  assertFileContains "heroku-postbuild-script=\"echo heroku-postbuild hook message\"" $log_file
-  assertFileContains "build-script= " $log_file
+  assertFileContains "heroku_prebuild_script=\"echo heroku-prebuild hook message\"" $log_file
+  assertFileContains "build_script=\"echo heroku-postbuild hook message\"" $log_file
 
   # monitor calls
-  assertFileContains "install-node-binary-memory=" $log_file
-  assertFileContains "install-node-binary-time=" $log_file
-  assertFileContains "install-npm-binary-time=" $log_file
-  assertFileContains "install-npm-binary-memory=" $log_file
-  assertFileContains "heroku-prebuild-script-time=" $log_file
-  assertFileContains "heroku-prebuild-script-memory=" $log_file
-  assertFileContains "npm-install-time=" $log_file
-  assertFileContains "npm-install-memory=" $log_file
-  assertFileContains "heroku-postbuild-script-time=" $log_file
-  assertFileContains "heroku-postbuild-script-memory=" $log_file
-  assertFileContains "npm-prune-memory=" $log_file
-  assertFileContains "npm-prune-time=" $log_file
-  assertFileContains "restore-cache-time=" $log_file
-  assertFileContains "save-cache-time=" $log_file
-
-  # resolve-version tests
-  assertFileContainsMatch 'resolve-v2-node="10.[[:digit:]]+.[[:digit:]]+ https://nodejs.org/download/release/v10.[[:digit:]]+.[[:digit:]]+/node-v10.[[:digit:]]+.[[:digit:]]+-linux-x64.tar.gz sha256 [[:xdigit:]]+"' $log_file
+  assertFileContains "install_node_binary_memory=" $log_file
+  assertFileContains "install_node_binary_time=" $log_file
+  assertFileContains "install_npm_binary_time=" $log_file
+  assertFileContains "install_npm_binary_memory=" $log_file
+  assertFileContains "heroku_prebuild_script_time=" $log_file
+  assertFileContains "heroku_prebuild_script_memory=" $log_file
+  assertFileContains "install_dependencies_time=" $log_file
+  assertFileContains "install_dependencies_memory=" $log_file
+  assertFileContains "build_script_time=" $log_file
+  assertFileContains "build_script_memory=" $log_file
+  assertFileContains "prune_dev_dependencies_memory=" $log_file
+  assertFileContains "prune_dev_dependencies_time=" $log_file
+  assertFileContains "restore_cache_time=" $log_file
+  assertFileContains "save_cache_time=" $log_file
 
   # erase the log file
   echo "" > $log_file
   BUILDPACK_LOG_FILE="$log_file" compile "yarn"
 
-  assertFileContains "node-package-manager=yarn" $log_file
-  assertFileContains "has-node-lock-file=true" $log_file
-  assertFileContains "yarn-version-request=1.x" $log_file
-  assertFileContains "yarn-version=1." $log_file
-  assertFileContains "install-yarn-binary-memory=" $log_file
-  assertFileContains "install-yarn-binary-time=" $log_file
-  assertFileContains "node-build-success=true" $log_file
+  assertFileContains "package_manager=yarn" $log_file
+  assertFileContains "yarn_version_request=1.x" $log_file
+  assertFileContains "yarn_version=1." $log_file
+  assertFileContains "install_yarn_binary_memory=" $log_file
+  assertFileContains "install_yarn_binary_time=" $log_file
 }
 
 testWorkspaceMetaData() {
@@ -1567,10 +1553,8 @@ testWorkspaceMetaData() {
   BUILDPACK_LOG_FILE="$log_file" compile "yarn-workspaces"
 
   # We're using yarn 1.x, workspaces could change in future yarn versions
-  assertFileContains "yarn-version-request=1.x" $log_file
-  assertFileContains "yarn-version=1." $log_file
-  assertFileContains "uses-workspaces=true" $log_file
-  assertFileContains "workspaces=[\"packages/*\"]" $log_file
+  assertFileContains "yarn_version_request=1.x" $log_file
+  assertFileContains "yarn_version=1." $log_file
 }
 
 testFeatureLogging() {
@@ -1579,8 +1563,8 @@ testFeatureLogging() {
   BUILDPACK_LOG_FILE="$log_file" compile "dummy-feature"
 
   # the defined features should be logged
-  assertFileContains "feature-dummy=true" $log_file
-  assertFileContains "feature-dummy-2=false" $log_file
+  assertFileContains "feature_dummy1=true" $log_file
+  assertFileContains "feature_dummy2=false" $log_file
 }
 
 testFailingBuildMetaData() {
@@ -1594,28 +1578,6 @@ testFailingBuildMetaData() {
   BUILDPACK_LOG_FILE="$log_file" compile "yarn-lockfile-out-of-date"
   assertFileContains "failure=outdated-yarn-lockfile" $log_file
   assertCapturedError
-}
-
-testPropagateAppUUID() {
-  env_dir=$(mktmpdir)
-  local log_file=$(mktemp)
-  local cache_dir=${2:-$(mktmpdir)}
-  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
-
-  # save the generated app-uuid for the first build
-  compile "node-14" $cache_dir $env_dir
-  assertFileContains "app-uuid=" $log_file
-  local uuid=$(cat $log_file | sed -n -e 's/^.*app-uuid=\([^ ]*\).*/\1/p')
-
-  # create a new log file
-  log_file=$(mktemp)
-  echo "$log_file" > $env_dir/BUILDPACK_LOG_FILE
-
-  # recompile with the same cache directory
-  compile "node-14" $cache_dir $env_dir
-  assertFileContains "app-uuid" $log_file
-  # make sure that the app-uuid is the same
-  assertEquals "$uuid" "$(cat $log_file | sed -n -e 's/^.*app-uuid=\([^ ]*\).*/\1/p')"
 }
 
 testBinDetectWarnings() {
@@ -1646,40 +1608,35 @@ testBinReportSuccess() {
   assertCapturedSuccess
 
   # check for all the fields that should be included in this report
-  assertCaptured "stack: '$STACK'"
   assertCaptured "node_version: 'v14.21.3'"
-  assertCaptured "node_version_major: 14"
-  assertCaptured "npm_version: '6.14.18'"
-  assertCaptured "corepack_version: '0.15.1'"
   assertCaptured "node_version_request: '14.x'"
-  assertCaptured "start_script: 'node foo.js'"
-  assertCaptured "build_script: 'echo \"escaping - test if it''s working as expected including control chars like �-�, �-�, and �-� which are not allowed in yaml.\"'"
-  assertCaptured "package_manager: 'npm'"
-  assertCaptured "build_step: 'finished'"
-  assertCaptured "cache_status: 'not-found'"
-  assertCaptured "resolve_v2_node: '14.21.3 https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz sha256 bef2685d9469058c1229cc7789e171861044fe3f70316ec744e9bf3609cd45ed'"
-  assertCaptured "procfile_with_web_process: false"
-  assertCaptured "procfile_used: false"
-  assertCaptured "build_script_time: "
-  assertCaptured "build_script_memory: "
-  assertCaptured "lock_file: false"
-  assertCaptured "uses_workspaces: false"
-  assertCaptured "num_project_files: 1"
-  assertCaptured "node_modules_size: 0"
-  assertCaptured "use_npm_ci: false"
-  assertCaptured "build_time: "
-  assertCaptured "skipped_prune: false"
-  assertCaptured "custom_cache_dirs: false"
+  assertCaptured "node_version_major: 14"
   assertCaptured "install_node_binary_time: "
   assertCaptured "install_node_binary_memory: "
+  assertCaptured "npm_version: '6.14.18'"
   assertCaptured "install_npm_binary_time: "
   assertCaptured "install_npm_binary_memory: "
+  assertCaptured "install_dependencies_time: "
+  assertCaptured "install_dependencies_memory: "
+  assertCaptured "has_build_script: true"
+  assertCaptured "build_script_time: "
+  assertCaptured "build_script_memory: "
+  assertCaptured "cache_status: 'not-found'"
   assertCaptured "restore_cache_time: "
   assertCaptured "save_cache_time: "
-  assertCaptured "npm_install_time: "
-  assertCaptured "npm_install_memory: "
-  assertCaptured "npm_prune_time: "
-  assertCaptured "npm_prune_memory: "
+  assertCaptured "has_cached_bower_components: false"
+  assertCaptured "has_custom_cache_dirs: false"
+  assertCaptured "skipped_prune: false"
+  assertCaptured "prune_dev_dependencies_time: "
+  assertCaptured "prune_dev_dependencies_memory: "
+  assertCaptured "build_time: "
+  assertCaptured "build_step: 'finished'"
+  assertCaptured "package_manager: 'npm'"
+  assertCaptured "package_manager_version: '6.14.18'"
+  assertCaptured "use_npm_ci: false"
+  assertCaptured "has_procfile" "false"
+  assertCaptured "start_script: 'node foo.js'"
+  assertCaptured "build_script: 'echo \"escaping - test if it''s working as expected including control chars like �-�, �-�, and �-� which are not allowed in yaml.\"'"
 
   # these fields are blank, so they should be excluded from the report
   assertNotCaptured "heroku_prebuild_script:"
@@ -2167,7 +2124,6 @@ testErrorPeerDependencyConflict() {
 testErrorPrune() {
   compile_and_report "error-prune"
   assertCaptured "failure: 'unknown-prune-dependencies-error'"
-  assertCaptured "lock_file: false"
 }
 
 testErrorOpensslUnsupportedAlgorithm() {

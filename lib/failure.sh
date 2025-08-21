@@ -10,7 +10,7 @@ detect_package_manager() {
 }
 
 fail() {
-  meta_time "build-time" "$build_start_time"
+  meta_time "build_time" "$build_start_time"
   log_meta_data >> "$BUILDPACK_LOG_FILE"
   exit 1
 }
@@ -692,7 +692,7 @@ log_other_failures() {
 
   # For now, only capture this error if it doesn't happen during the pruning step. This error shouldn't make
   # it past the initial `npm install` (but it can) and it would be nice to see when this type of error slips through.
-  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(meta_get "build-step")" != "prune-dependencies" ]]; then
+  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(meta_get "build_step")" != "prune-dependencies" ]]; then
     meta_set "failure" "npm-peer-dependency-conflict"
     warn "Conflict detected in requested npm dependencies
 
@@ -786,7 +786,7 @@ log_other_failures() {
 
   # If we've made it this far it's not an error we've added detection for yet
   # so classify by build step (if set) or default to unknown
-  build_step=$(meta_get "build-step")
+  build_step=$(meta_get "build_step")
   if [[ -n "$build_step" ]]; then
     meta_set "failure" "unknown-$build_step-error"
   else
@@ -833,9 +833,6 @@ warn_prebuilt_modules() {
   local build_dir=${1:-}
   if [ -e "$build_dir/node_modules" ]; then
     warning "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
-    meta_set "checked-in-node-modules" "true"
-  else
-    meta_set "checked-in-node-modules" "false"
   fi
 }
 

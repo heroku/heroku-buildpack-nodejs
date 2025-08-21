@@ -9,12 +9,10 @@ resolve() {
   local output
 
   if output=$($RESOLVE "$BP_DIR/inventory/$binary.toml" "$versionRequirement"); then
-    meta_set "resolve-v2-$binary" "$output"
-    meta_set "resolve-v2-error" "$STD_ERR"
     if [[ $output = "No result" ]]; then
       return 1
     else
-      echo $output
+      echo "$output"
       return 0
     fi
   fi
@@ -168,6 +166,7 @@ install_corepack_package_manager() {
   if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
     suppress_output corepack --version
     corepack_version=$(corepack --version)
+    meta_set "corepack_version" "$corepack_version"
     corepack enable 2>&1
 
     # The Corepack CLI interface was refactored in 0.20, before that the `install` command was called `prepare` and it
