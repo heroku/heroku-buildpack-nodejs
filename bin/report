@@ -1,147 +1,29 @@
 #!/usr/bin/env bash
-# bin/report <build-dir> <cache-dir> <env-dir>
+# Usage: bin/report <build-dir> <cache-dir> <env-dir>
 
-### Configure environment
+# Produces a build report emitted to stdout, containing metadata about the build, that's
+# consumed by the build system.
+#
+# This script is run for both successful and failing builds, so it should not assume the
+# build ran to completion (e.g. Node.js or other tools may not even have been installed).
+#
+# Failures in this script don't cause the overall build to fail (and won't appear in user
+# facing build logs) to avoid breaking builds unnecessarily / causing confusion. To debug
+# issues check the internal build system logs for `buildpack.report.failed` events, or
+# when developing run tests in this repo locally that execute `bin/report`.
+#
+# Note: The build system doesn't source the `export` script before running this script.
 
-set -o errexit    # always exit on error
-set -o pipefail   # don't ignore exit codes when piping output
+# TODO: set -u after linting errors are addressed
+set -eo pipefail
+#shopt -s inherit_errexit
 
-BUILD_DIR=${1:-}
-CACHE_DIR=${2:-}
-BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+# shellcheck disable=SC2034
+CACHE_DIR="${2}"
 
-### Load dependencies
+# The absolute path to the root of the buildpack.
+BUILDPACK_DIR=$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)
 
-source "$BP_DIR/lib/kvstore.sh"
-# shellcheck source=lib/metadata.sh
-source "$BP_DIR/lib/metadata.sh"
-# shellcheck source=lib/features.sh
-source "$BP_DIR/lib/features.sh"
+source "${BUILDPACK_DIR}/lib/builddata.sh"
 
-meta_init "$CACHE_DIR"
-features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
-
-# append the key / value pair to $output, but skip if the value is empty
-kv_pair() {
-  local key value
-  key="$1"
-  value="$2"
-  if [[ -n "$value" ]]; then
-    echo "$key: $value"
-  fi
-}
-
-# use to safely quote strings
-kv_pair_string() {
-	local key="${1}"
-	local value="${2}"
-	if [[ -n "${value}" ]]; then
-		# Escape any existing single quotes, which for YAML means replacing `'` with `''`.
-		value="${value//\'/\'\'}"
-		# allowed (✅) and disallowed (❌) hex codes for yaml parser
-		# ❌ \x00-\x08
-		# ✅ \x09
-    #	✅ \x0A
-    #	❌ \x0B
-    #	❌ \x0C
-    #	✅ \x0D
-    # ❌ \x0E-\x1F
-    #	✅ \x20-\x7E
-    # ❌ \x7F-\x84
-    #	✅ \x85
-    # ❌ \x86-\x9F
-    #	✅ \xA0-\xFF
-		echo "${key}: '${value}'" | sed 's/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F]/�/g'
-	fi
-}
-
-METRICS=(
-  # node
-  node_version                     string
-  node_version_request             string
-  node_version_major               number
-  install_node_binary_time         number
-  install_node_binary_memory       number
-  # npm
-  npm_version                      string
-  npm_version_request              string
-  install_npm_binary_time          number
-  install_npm_binary_memory        number
-  # yarn
-  yarn_version                     string
-  yarn_version_request             string
-  install_yarn_binary_time         number
-  install_yarn_binary_memory       number
-  # pnpm
-  pnpm_version                     string
-  pnpm_version_request             string
-  install_pnpm_binary_time         number
-  install_pnpm_binary_memory       number
-  # corepack
-  corepack_version                 string
-  package_manager_request          string
-  # install dependencies
-  install_dependencies_time        number
-  install_dependencies_memory      number
-  # heroku-prebuild script
-  heroku_postbuild_script          string
-  has_heroku_prebuild_script       boolean
-  heroku_prebuild_script_time      number
-  heroku_prebuild_script_memory    number
-  # heroku-build or build script
-  build_script                     string
-  heroku_postbuild_script          string
-  has_build_script                 boolean
-  build_script_time                number
-  build_script_memory              number
-  # heroku-cleanup script
-  heroku_cleanup_script            string
-  has_heroku_cleanup_script        boolean
-  heroku_cleanup_script_time       number
-  heroku_cleanup_script_memory     number
-  # cache
-  cache_status                     string
-  restore_cache_time               number
-  save_cache_time                  number
-  has_cached_bower_components      boolean
-  has_custom_cache_dirs            boolean
-  # pruning
-  skipped_prune                    boolean
-  prune_dev_dependencies_time      number
-  prune_dev_dependencies_memory    number
-  # buildpack
-  build_time                       number
-  build_step                       string
-  failure                          string
-  # misc.
-  package_manager                  string
-  package_manager_version          string
-  use_npm_ci                       boolean
-  has_procfile                     boolean
-  start_script                     string
-  postinstall_script               string
-)
-
-for ((i=0; i<${#METRICS[@]}; i+=2)); do
-  metric_key="${METRICS[i]}"
-  metric_type="${METRICS[i+1]}"
-  metric_value=$(meta_get "$metric_key")
-  case "$metric_type" in
-    string)
-      kv_pair_string "$metric_key" "$metric_value"
-      ;;
-    boolean | number)
-      kv_pair "$metric_key" "$metric_value"
-      ;;
-    *)
-      # unknown type
-      ;;
-  esac
-done
-
-# save which features were turned on or off
-features_list | tr ' ' '\n' | while read -r key; do
-  if [[ -n $key ]]; then
-    kv_pair "feature_$key" "$(features_get "$key")"
-  fi
-done
+build_data::print_bin_report_json
