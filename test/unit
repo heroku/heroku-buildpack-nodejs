@@ -297,6 +297,115 @@ testFeaturesNoInit() {
   assertEquals "running features_get without init should return false" "false" "$(features_get "test-name-3")"
 }
 
+testAssertMetricsBasicQueries() {
+  local cache_dir=$(mktemp -d)
+  local metrics_dir="${cache_dir}/build-data"
+  local metrics_file="${metrics_dir}/nodejs.json"
+  
+  # Create the metrics directory and file
+  mkdir -p "$metrics_dir"
+  
+  # Test basic jq queries
+  echo '{"package_manager": "npm", "build_time": 1.234, "cache_status": "not-found"}' > "$metrics_file"
+  assertMetrics "$cache_dir" <<-EOF
+    select(.package_manager == "npm")
+    select(.build_time | type == "number")
+    select(.cache_status == "not-found")
+EOF
+  
+  # Cleanup
+  rm -rf "$cache_dir"
+}
+
+testAssertMetricsMissingArgument() {
+  local error_output
+  error_output=$(assertMetrics <<-EOF 2>&1 || true
+EOF
+)
+  if ! echo "$error_output" | grep -q "cache_dir argument is required"; then
+    fail "assertMetrics should have failed with appropriate error message for missing argument"
+  fi
+}
+
+testAssertMetricsNonExistentFile() {
+  local cache_dir=$(mktemp -d)
+  local error_output
+  error_output=$(assertMetrics "$cache_dir" <<-EOF 2>&1 || true
+    select(.package_manager == "npm")
+EOF
+)
+  if ! echo "$error_output" | grep -q "Metrics file not found"; then
+    fail "assertMetrics should have failed with appropriate error message for non-existent file"
+  fi
+  
+  # Cleanup
+  rm -rf "$cache_dir"
+}
+
+testAssertMetricsInvalidJqQuery() {
+  local cache_dir=$(mktemp -d)
+  local metrics_dir="${cache_dir}/build-data"
+  local metrics_file="${metrics_dir}/nodejs.json"
+  
+  # Create the metrics directory and file
+  mkdir -p "$metrics_dir"
+  echo '{"package_manager": "npm"}' > "$metrics_file"
+  
+  local error_output
+  error_output=$(assertMetrics "$cache_dir" <<-EOF 2>&1 || true
+    select(.nonexistent == "value")
+EOF
+)
+  if ! echo "$error_output" | grep -q "jq query failed"; then
+    fail "assertMetrics should have failed with appropriate error message for invalid jq query"
+  fi
+  
+  # Cleanup
+  rm -rf "$cache_dir"
+}
+
+testAssertMetricsUncheckedKeys() {
+  local cache_dir=$(mktemp -d)
+  local metrics_dir="${cache_dir}/build-data"
+  local metrics_file="${metrics_dir}/nodejs.json"
+  
+  # Create the metrics directory and file
+  mkdir -p "$metrics_dir"
+  echo '{"package_manager": "npm", "build_time": 1.234, "cache_status": "not-found"}' > "$metrics_file"
+  
+  local error_output
+  error_output=$(assertMetrics "$cache_dir" <<-EOF 2>&1 || true
+    select(.package_manager == "npm")
+EOF
+)
+  if ! echo "$error_output" | grep -q "keys in the metrics file were not checked"; then
+    fail "assertMetrics should have failed with appropriate error message for unchecked keys"
+  fi
+  
+  # Cleanup
+  rm -rf "$cache_dir"
+}
+
+testAssertMetricsAllKeysChecked() {
+  local cache_dir=$(mktemp -d)
+  local metrics_dir="${cache_dir}/build-data"
+  local metrics_file="${metrics_dir}/nodejs.json"
+  
+  # Create the metrics directory and file
+  mkdir -p "$metrics_dir"
+  echo '{"package_manager": "npm", "build_time": 1.234, "cache_status": "not-found"}' > "$metrics_file"
+  
+  # Should pass when all keys are checked
+  assertMetrics "$cache_dir" <<-EOF
+    select(.package_manager == "npm")
+    select(.build_time | type == "number")
+    select(.cache_status == "not-found")
+EOF
+  
+  # Cleanup
+  rm -rf "$cache_dir"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
