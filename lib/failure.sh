@@ -10,8 +10,7 @@ detect_package_manager() {
 }
 
 fail() {
-  meta_time "build_time" "$build_start_time"
-  log_meta_data >> "$BUILDPACK_LOG_FILE"
+  build_data::set_duration "build_time" "$build_start_time"
   exit 1
 }
 

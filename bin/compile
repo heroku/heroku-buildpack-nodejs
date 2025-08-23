@@ -69,6 +69,32 @@ echo "" > "$LOG_FILE"
 
 build_start_time=$(nowms)
 
+### Initialize metrics and features
+features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
+build_data::setup
+
+### Save build info
+
+# the "build-step" key keeps track of where we are in the execution so that we can see where failed builds errored
+build_data::set_string "build_step" "init"
+
+# capture procfile usage
+build_data::set_raw "has_procfile" "$(test -f "$BUILD_DIR/Procfile" && echo "true" || echo "false")"
+
+# capture scripts from package.json
+for script in heroku-prebuild heroku-postbuild build heroku-cleanup start postinstall; do
+  if [[ "$(has_script "$BUILD_DIR/package.json" "$script")" == "true" ]]; then
+    build_data::set_string "${script//-/_}_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
+  fi
+done
+
+# add any active features to the metadata set prefixed with the key "feature_"
+features_list | tr ' ' '\n' | while read -r key; do
+  if [[ -n $key ]]; then
+    build_data::set_raw "feature_$key" "$(features_get "$key")"
+  fi
+done
+
 ### Handle errors
 
 handle_failure() {
@@ -85,19 +111,9 @@ handle_failure() {
   warn_angular_resolution "$LOG_FILE"
   warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
   warn_econnreset "$LOG_FILE"
-  log_meta_data >> "$BUILDPACK_LOG_FILE"
   failure_message | output "$LOG_FILE"
 }
 trap 'handle_failure' ERR
-
-### Initalize metadata store
-# Create the metadata store
-meta_init "$CACHE_DIR"
-# Make sure that it's empty and save any previous build's data
-meta_setup
-# the "build-step" key keeps track of where we are in the execution
-# so that we can see where failed builds errored
-meta_set "build_step" "init"
 
 ### Check initial state
 
@@ -106,10 +122,6 @@ meta_set "build_step" "init"
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 [ -f "$BUILD_DIR/pnpm-lock.yaml" ] && PNPM=true || PNPM=false
 YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
-
-### Save build info
-features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
-log_initial_state
 
 ### Failures that should be caught immediately
 

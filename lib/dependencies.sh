@@ -18,43 +18,24 @@ run_if_present() {
   local script_name=${2:-}
   local has_script_name
   local script
-  local reported_script_name
 
   has_script_name=$(has_script "$build_dir/package.json" "$script_name")
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
 
-  case "$script_name" in
-    heroku-prebuild)
-      reported_script_name="heroku_prebuild_script"
-      ;;
-    heroku-postbuild)
-      # because we only ever run `heroku-postbuild` or `build`
-      reported_script_name="build_script"
-      ;;
-    heroku-cleanup)
-      reported_script_name="heroku_cleanup_script"
-      ;;
-    *)
-      reported_script_name="${script_name}_script"
-  esac
-
   if [[ "$has_script_name" == "true" ]]; then
-    meta_set "has_$reported_script_name" "true"
     if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
-        monitor "$reported_script_name" yarn run "$script_name"
+        monitor "${script_name//-/_}_script" yarn run "$script_name"
       fi
     elif $PNPM; then
       echo "Running $script_name"
-      monitor "$reported_script_name" pnpm run --if-present "$script_name"
+      monitor "${script_name//-/_}_script" pnpm run --if-present "$script_name"
     else
       echo "Running $script_name"
-      monitor "$reported_script_name" npm run "$script_name" --if-present
+      monitor "${script_name//-/_}_script" npm run "$script_name" --if-present
     fi
-  else
-    meta_set "has_$reported_script_name" "false"
   fi
 }
 
@@ -72,7 +53,6 @@ run_build_if_present() {
   fi
 
   if [[ "$has_script_name" == "true" ]]; then
-    meta_set "has_build_script" "true"
     if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
@@ -101,8 +81,6 @@ run_build_if_present() {
         monitor "build_script" npm run "$script_name" --if-present
       fi
     fi
-  else
-    meta_set "has_build_script" "false"
   fi
 }
 
