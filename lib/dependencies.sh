@@ -149,31 +149,31 @@ yarn_prune_devdependencies() {
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ -n "$YARN_PRODUCTION" ]; then
     echo "Skipping because YARN_PRODUCTION is '$YARN_PRODUCTION'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif $YARN_2; then
     if [ "$YARN2_SKIP_PRUNING" == "true" ]; then
       echo "Skipping because YARN2_SKIP_PRUNING is '$YARN2_SKIP_PRUNING'"
-      meta_set "skipped_prune" "true"
+      build_data::set_raw "skipped_prune" "true"
       return 0
     fi
     cd "$build_dir" || return
     echo "Running 'yarn heroku prune'"
     export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
     monitor "prune_dev_dependencies" yarn heroku prune
-    meta_set "skipped_prune" "false"
+    build_data::set_raw "skipped_prune" "false"
   else
     cd "$build_dir" || return
     monitor "prune_dev_dependencies" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
-    meta_set "skipped_prune" "false"
+    build_data::set_raw "skipped_prune" "false"
   fi
 }
 
@@ -212,11 +212,11 @@ npm_node_modules() {
     cd "$build_dir" || return
 
     if [[ "$USE_NPM_INSTALL" == "false" ]]; then
-      meta_set "use_npm_ci" "true"
+      build_data::set_raw "use_npm_ci" "true"
       echo "Installing node modules"
       monitor "install_dependencies" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
     else
-      meta_set "use_npm_ci" "false"
+      build_data::set_raw "use_npm_ci" "false"
       if [ -e "$build_dir/package-lock.json" ]; then
         echo "Installing node modules (package.json + package-lock)"
       elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then
@@ -258,15 +258,15 @@ npm_prune_devdependencies() {
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ -n "$NPM_CONFIG_PRODUCTION" ]; then
     echo "Skipping because NPM_CONFIG_PRODUCTION is '$NPM_CONFIG_PRODUCTION'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ "$npm_version" == "5.3.0" ]; then
     echo "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
@@ -274,7 +274,7 @@ npm_prune_devdependencies() {
     echo ""
     echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ "$npm_version" == "5.6.0" ] ||
        [ "$npm_version" == "5.5.1" ] ||
@@ -288,12 +288,12 @@ npm_prune_devdependencies() {
     echo ""
     echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
     echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   else
     cd "$build_dir" || return
     monitor "prune_dev_dependencies" npm prune --userconfig "$build_dir/.npmrc" 2>&1
-    meta_set "skipped_prune" "false"
+    build_data::set_raw "skipped_prune" "false"
   fi
 }
 
@@ -322,19 +322,19 @@ pnpm_prune_devdependencies() {
 
   if [ "$NODE_ENV" == "test" ]; then
     echo "Skipping because NODE_ENV is 'test'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ "$NODE_ENV" != "production" ]; then
     echo "Skipping because NODE_ENV is not 'production'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ "$PNPM_SKIP_PRUNING" == "true" ]; then
     echo "Skipping because PNPM_SKIP_PRUNING is '$PNPM_SKIP_PRUNING'"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   elif [ -f "$build_dir/pnpm-workspace.yaml" ] || [ -f "$build_dir/pnpm-workspace.yml" ]; then
     echo "Skipping because pruning is not supported for pnpm workspaces (https://pnpm.io/cli/prune)"
-    meta_set "skipped_prune" "true"
+    build_data::set_raw "skipped_prune" "true"
     return 0
   fi
 
@@ -358,7 +358,7 @@ pnpm_prune_devdependencies() {
          [ -n "$(read_json "$build_dir/package.json" ".scripts.postinstall")" ] ||
          [ -n "$(read_json "$build_dir/package.json" ".scripts.prepare")" ]; then
         warn_skipping_unsafe_pnpm_prune "$pnpm_version"
-        meta_set "skipped_prune" "true"
+        build_data::set_raw "skipped_prune" "true"
         return
       fi
   else
@@ -368,5 +368,5 @@ pnpm_prune_devdependencies() {
 
   monitor "prune_dev_dependencies" pnpm "${pnpm_prune_args[@]}" 2>&1
 
-  meta_set "skipped_prune" "false"
+  build_data::set_raw "skipped_prune" "false"
 }

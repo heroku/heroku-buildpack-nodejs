@@ -55,6 +55,6 @@ monitor() {
   # execute the subcommand and save the peak memory usage
   monitor_memory_usage "$peak_mem_output" "${command[@]}"
 
-  meta_time "${command_name}_time" "$start"
-  meta_set "${command_name}_memory" "$(cat "$peak_mem_output")"
+  build_data::set_duration "${command_name}_time" "$start"
+  build_data::set_raw "${command_name}_memory" "$(cat "$peak_mem_output")"
 }

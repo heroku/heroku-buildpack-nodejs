@@ -123,7 +123,7 @@ install_npm() {
     echo "npm $npm_version already installed with node"
   else
     echo "Bootstrapping npm $version (replacing $npm_version)..."
-    if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
+    if ! monitor "install_npm_binary" npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
       echo "Unable to install npm $version. " \
         "Does npm $version exist? " \
         "Is npm $version compatible with this Node.js version?" && false
@@ -166,7 +166,7 @@ install_corepack_package_manager() {
   if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
     suppress_output corepack --version
     corepack_version=$(corepack --version)
-    meta_set "corepack_version" "$corepack_version"
+    build_data::set_string "corepack_version" "$corepack_version"
     corepack enable 2>&1
 
     # The Corepack CLI interface was refactored in 0.20, before that the `install` command was called `prepare` and it
