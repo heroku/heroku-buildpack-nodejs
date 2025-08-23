@@ -3,12 +3,11 @@
 
 testNpmCi() {
   local log_file cache
-  log_file=$(mktemp)
   build_dir=$(mktmpdir)
   cache_dir=$(mktmpdir)
   env_dir=$(mktmpdir)
 
-  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" "$cache_dir" "$env_dir" "$build_dir"
+  compile "node-14-npm-ci" "$cache_dir" "$env_dir" "$build_dir"
 
    # make sure that build scripts are being called
   assertCaptured "heroku-prebuild script"
@@ -17,23 +16,18 @@ testNpmCi() {
   assertCapturedSuccess
   assertFileExists "$build_dir/.heroku/node/bin/npm"
 
-   # test logging
-  assertFileContains "use_npm_ci=true" "$log_file"
-  assertFileContains "install_dependencies_time=" "$log_file"
-  assertFileContains "install_dependencies_memory=" "$log_file"
+   # test metrics
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "true"
 
    # test re-using the cache
-  echo "" > "$log_file"
-  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" "$cache_dir"
+  compile "node-14-npm-ci" "$cache_dir"
   assertCapturedSuccess
 }
 
 testNpmCiShrinkwrap() {
-  local log_file cache
-  log_file=$(mktemp)
-  cache=$(mktmpdir)
+  cache_dir=$(mktmpdir)
 
-  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-shrinkwrap" "$cache"
+  compile "node-10-npm-ci-shrinkwrap" "$cache_dir"
 
    # make sure that build scripts are being called
   assertCaptured "heroku-prebuild script"
@@ -41,44 +35,34 @@ testNpmCiShrinkwrap() {
   assertCaptured "postinstall script"
   assertCapturedSuccess
 
-   # test logging
-  assertFileContains "use_npm_ci=true" "$log_file"
-  assertFileContains "install_dependencies_time=" "$log_file"
-  assertFileContains "install_dependencies_memory=" "$log_file"
+   # test metrics
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "true"
 
    # test re-using the cache
-  echo "" > "$log_file"
-  BUILDPACK_LOG_FILE="$log_file" compile "node-10-npm-ci-shrinkwrap" "$cache"
+  compile "node-10-npm-ci-shrinkwrap" "$cache_dir"
   assertCapturedSuccess
 }
 
 testNpmCiFallback() {
-  local log_file cache
-  log_file=$(mktemp)
-
+  cache_dir=$(mktmpdir)
   # without a lockfile we should use "npm install" instead of "npm ci"
-  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci-no-lockfile"
+  compile "node-14-npm-ci-no-lockfile"
 
   assertCapturedSuccess
-
   # detecting that we shouldn't use npm ci
-  assertFileContains "use_npm_ci=false" "$log_file"
-  # and ran "npm install"
-  assertFileContains "install_dependencies_time=" "$log_file"
-  assertFileContains "install_dependencies_memory=" "$log_file"
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
 }
 
 testNpmCiDisabled() {
-  local cache env_dir log_file
-  cache=$(mktmpdir)
+  cache_dir=$(mktmpdir)
   env_dir=$(mktmpdir)
   log_file=$(mktemp)
 
   echo "true" > $env_dir/USE_NPM_INSTALL
 
-  BUILDPACK_LOG_FILE="$log_file" compile "node-14-npm-ci" $cache $env_dir
+  compile "node-14-npm-ci" $cache_dir $env_dir
 
-  assertFileContains "use_npm_ci=false" "$log_file"
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
   assertCapturedSuccess
 }
 
@@ -1470,113 +1454,118 @@ testPluginInstallationUnsupportedNodeRunTime() {
   cleanupStartup
 }
 
-testMemoryMetrics() {
-  env_dir=$(mktmpdir)
-  metrics_log=$(mktemp)
-  echo "$metrics_log" > "$env_dir"/BUILDPACK_LOG_FILE
-
-  compile "pre-post-build-scripts" "$(mktmpdir)" "$env_dir"
-
-  assertFileContains "install_node_binary_time=" "$metrics_log"
-  assertFileContains "install_npm_binary_time=" "$metrics_log"
-  assertFileContains "heroku_prebuild_script_time=" "$metrics_log"
-  assertFileContains "heroku_prebuild_script_memory=" "$metrics_log"
-  assertFileContains "install_dependencies_time=" "$metrics_log"
-  assertFileContains "install_dependencies_memory=" "$metrics_log"
-  assertFileContains "build_script_time=" "$metrics_log"
-  assertFileContains "build_script_memory=" "$metrics_log"
-
-  # erase the metrics log
-  echo "" > "$metrics_log"
-  compile "yarn" "$(mktmpdir)" "$env_dir"
-
-  assertFileContains "install_node_binary_time=" "$metrics_log"
-  assertFileContains "install_yarn_binary_time=" "$metrics_log"
-  assertFileContains "install_dependencies_memory=" "$metrics_log"
-  assertFileContains "install_dependencies_time=" "$metrics_log"
-  # this fixture does not have pre or post-build scripts
-  assertFileNotContains "heroku_prebuild_script_time=" "$metrics_log"
-  assertFileNotContains "heroku_prebuild_script_memory=" "$metrics_log"
-  assertFileNotContains "build_script_time=" "$metrics_log"
-  assertFileNotContains "build_script_memory=" "$metrics_log"
+testNpmBuildMetaData() {
+  cache_dir=$(mktmpdir)
+  compile "pre-post-build-scripts" "${cache_dir}"
+  assertMetrics "${cache_dir}" <<-'EOF'
+    select(.build_step == "finished")
+    select(.build_time | type == "number")
+    select(.bundled_npm_version == "6.14.12")
+    select(.cache_status == "not-found")
+    select(.has_cached_bower_components == false)
+    select(.has_custom_cache_dirs == false)
+    select(.has_procfile == false)
+    select(.heroku_postbuild_script == "echo heroku-postbuild hook message")
+    select(.heroku_postbuild_script_memory | type == "number")
+    select(.heroku_postbuild_script_time | type == "number")
+    select(.heroku_prebuild_script == "echo heroku-prebuild hook message")
+    select(.heroku_prebuild_script_memory | type == "number")
+    select(.heroku_prebuild_script_time | type == "number")
+    select(.install_dependencies_memory | type == "number")
+    select(.install_dependencies_time | type == "number")
+    select(.install_node_binary_memory | type == "number")
+    select(.install_node_binary_time | type == "number")
+    select(.node_version == "v10.24.1")
+    select(.node_version_major == 10)
+    select(.node_version_request == "10.x")
+    select(.npm_version == "6.14.12")
+    select(.package_manager == "npm")
+    select(.package_manager_version == "6.14.12")
+    select(.prune_dev_dependencies_memory | type == "number")
+    select(.prune_dev_dependencies_time | type == "number")
+    select(.restore_cache_time | type == "number")
+    select(.save_cache_time | type == "number")
+    select(.skipped_prune == false)
+    select(.use_npm_ci == false)
+EOF
 }
 
-testBuildMetaData() {
-  local log_file=$(mktemp)
-
-  BUILDPACK_LOG_FILE="$log_file" compile "pre-post-build-scripts"
-
-  # build info
-  assertFileContains "package_manager=npm" $log_file
-  assertFileContains "cache_status=not-found" $log_file
-  assertFileContains "build_time=" $log_file
-  assertFileContains "build_step=finished" $log_file
-
-  # binary versions
-  assertFileContains "node_version_request=10.x" $log_file
-  assertFileContains "npm_version_request= " $log_file
-
-  # log build scripts
-  assertFileContains "heroku_prebuild_script=\"echo heroku-prebuild hook message\"" $log_file
-  assertFileContains "build_script=\"echo heroku-postbuild hook message\"" $log_file
-
-  # monitor calls
-  assertFileContains "install_node_binary_memory=" $log_file
-  assertFileContains "install_node_binary_time=" $log_file
-  assertFileContains "install_npm_binary_time=" $log_file
-  assertFileContains "install_npm_binary_memory=" $log_file
-  assertFileContains "heroku_prebuild_script_time=" $log_file
-  assertFileContains "heroku_prebuild_script_memory=" $log_file
-  assertFileContains "install_dependencies_time=" $log_file
-  assertFileContains "install_dependencies_memory=" $log_file
-  assertFileContains "build_script_time=" $log_file
-  assertFileContains "build_script_memory=" $log_file
-  assertFileContains "prune_dev_dependencies_memory=" $log_file
-  assertFileContains "prune_dev_dependencies_time=" $log_file
-  assertFileContains "restore_cache_time=" $log_file
-  assertFileContains "save_cache_time=" $log_file
-
-  # erase the log file
-  echo "" > $log_file
-  BUILDPACK_LOG_FILE="$log_file" compile "yarn"
-
-  assertFileContains "package_manager=yarn" $log_file
-  assertFileContains "yarn_version_request=1.x" $log_file
-  assertFileContains "yarn_version=1." $log_file
-  assertFileContains "install_yarn_binary_memory=" $log_file
-  assertFileContains "install_yarn_binary_time=" $log_file
+testYarnBuildMetaData() {
+  cache_dir=$(mktmpdir)
+  compile "yarn" "${cache_dir}"
+  assertMetrics "${cache_dir}" <<-'EOF'
+    select(.build_step == "finished")
+    select(.build_time | type == "number")
+    select(.bundled_npm_version == "10.9.3")
+    select(.cache_status == "not-found")
+    select(.has_cached_bower_components == false)
+    select(.has_custom_cache_dirs == false)
+    select(.has_procfile == false)
+    select(.install_dependencies_memory | type == "number")
+    select(.install_dependencies_time | type == "number")
+    select(.install_node_binary_memory | type == "number")
+    select(.install_node_binary_time | type == "number")
+    select(.install_yarn_binary_memory | type == "number")
+    select(.install_yarn_binary_time | type == "number")
+    select(.node_version == "v22.18.0")
+    select(.node_version_major == 22)
+    select(.npm_version == "10.9.3")
+    select(.package_manager == "yarn")
+    select(.package_manager_version == "1.22.22")
+    select(.prune_dev_dependencies_memory | type == "number")
+    select(.prune_dev_dependencies_time | type == "number")
+    select(.restore_cache_time | type == "number")
+    select(.save_cache_time | type == "number")
+    select(.skipped_prune == false)
+    select(.yarn_version == "1.22.22")
+    select(.yarn_version_request == "1.x")
+EOF
 }
 
-testWorkspaceMetaData() {
-  local log_file=$(mktemp)
-
-  BUILDPACK_LOG_FILE="$log_file" compile "yarn-workspaces"
-
-  # We're using yarn 1.x, workspaces could change in future yarn versions
-  assertFileContains "yarn_version_request=1.x" $log_file
-  assertFileContains "yarn_version=1." $log_file
-}
-
-testFeatureLogging() {
-  local log_file=$(mktemp)
-
-  BUILDPACK_LOG_FILE="$log_file" compile "dummy-feature"
-
-  # the defined features should be logged
-  assertFileContains "feature_dummy1=true" $log_file
-  assertFileContains "feature_dummy2=false" $log_file
+testPnpmBuildMetaData() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-8.15.5" "${cache_dir}"
+  assertMetrics "${cache_dir}" <<-'EOF'
+    select(.build_step == "finished")
+    select(.build_time | type == "number")
+    select(.bundled_npm_version == "10.8.2")
+    select(.cache_status == "not-found")
+    select(.corepack_version == "0.32.0")
+    select(.has_cached_bower_components == false)
+    select(.has_custom_cache_dirs == false)
+    select(.has_procfile == false)
+    select(.install_dependencies_memory | type == "number")
+    select(.install_dependencies_time | type == "number")
+    select(.install_node_binary_memory | type == "number")
+    select(.install_node_binary_time | type == "number")
+    select(.install_pnpm_binary_memory | type == "number")
+    select(.install_pnpm_binary_time | type == "number")
+    select(.node_version == "v20.19.4")
+    select(.node_version_major == 20)
+    select(.node_version_request == "20.x")
+    select(.npm_version == "10.8.2")
+    select(.package_manager == "pnpm")
+    select(.package_manager_request == "pnpm@8.15.5+sha256.4b4efa12490e5055d59b9b9fc9438b7d581a6b7af3b5675eb5c5f447cee1a589")
+    select(.package_manager_version == "8.15.5")
+    select(.pnpm_version == "8.15.5")
+    select(.prune_dev_dependencies_memory | type == "number")
+    select(.prune_dev_dependencies_time | type == "number")
+    select(.restore_cache_time | type == "number")
+    select(.save_cache_time | type == "number")
+    select(.skipped_prune == false)
+    select(.start_script == "node foo.js")
+EOF
 }
 
 testFailingBuildMetaData() {
-  local log_file=$(mktemp)
+  cache_dir=$(mktmpdir)
 
-  BUILDPACK_LOG_FILE="$log_file" compile "bad-json"
-  assertFileContains "failure=invalid-package-json" $log_file
+  compile "bad-json" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "invalid-package-json"
   assertCapturedError
 
-  echo "" > $log_file
-  BUILDPACK_LOG_FILE="$log_file" compile "yarn-lockfile-out-of-date"
-  assertFileContains "failure=outdated-yarn-lockfile" $log_file
+  compile "yarn-lockfile-out-of-date" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "outdated-yarn-lockfile"
   assertCapturedError
 }
 
@@ -2082,6 +2071,7 @@ testErrorPrebuildScript() {
 
 testErrorBuildScript() {
   compile_and_report "error-build-script"
+  cat "$STD_OUT"
   assertCaptured "failure: 'unknown-build-script-error'"
 }
 
@@ -2096,71 +2086,69 @@ testErrorCleanupScript() {
 }
 
 testErrorNpmLockfileOutOfSync() {
-  local log_file
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "error-npm-lockfile-out-of-sync"
+  cache_dir=$(mktmpdir)
+  compile "error-npm-lockfile-out-of-sync" "${cache_dir}"
   assertCaptured "npm lockfile is not in sync"
   assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
   assertCapturedError
-  assertFileContains "failure=npm-lockfile-out-of-sync" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "npm-lockfile-out-of-sync"
 }
 
 testErrorNpmGitDependency() {
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "error-npm-git-error"
+  cache_dir=$(mktmpdir)
+  compile "error-npm-git-error" "${cache_dir}"
   assertCaptured "npm Git dependency error (code 128)"
   assertCapturedError
-  assertFileContains "failure=npm-install-git-dependency" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "npm-install-git-dependency"
 }
 
 testErrorPeerDependencyConflict() {
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "error-npm-peer-dependency-conflict"
+  cache_dir=$(mktmpdir)
+  compile "error-npm-peer-dependency-conflict" "${cache_dir}"
   assertCaptured "Conflict detected in requested npm dependencies"
   assertCapturedError
-  assertFileContains "failure=npm-peer-dependency-conflict" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "npm-peer-dependency-conflict"
 }
 
 testErrorPrune() {
-  compile_and_report "error-prune"
-  assertCaptured "failure: 'unknown-prune-dependencies-error'"
+  cache_dir=$(mktmpdir)
+  compile "error-prune" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-prune-dependencies-error"
 }
 
 testErrorOpensslUnsupportedAlgorithm() {
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile 'error-openssl-unsupported-algorithm'
+  cache_dir=$(mktmpdir)
+  compile 'error-openssl-unsupported-algorithm' "${cache_dir}"
   assertCaptured "Unsupported cryptographic algorithm used"
   assertCaptured "https://devcenter.heroku.com/articles/nodejs-support"
   assertCapturedError
-  assertFileContains "failure=openssl-unsupported-algorithm" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm"
 }
 
 testErrorOpensslUnsupportedAlgorithmInWebpack() {
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile 'error-openssl-unsupported-algorithm-in-webpack'
+  cache_dir=$(mktmpdir)
+  compile 'error-openssl-unsupported-algorithm-in-webpack' "${cache_dir}"
   assertCaptured "Unsupported cryptographic algorithm used"
   assertCaptured "https://webpack.js.org/configuration/output/#outputhashfunction"
   assertCapturedError
-  assertFileContains "failure=openssl-unsupported-algorithm-webpack" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm-webpack"
 }
 
 testErrorOOM() {
-  local log_file
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "error-oom"
+  cache_dir=$(mktmpdir)
+  compile "error-oom" "${cache_dir}"
   assertCaptured "Node.js Out-Of-Memory (OOM)"
   assertCapturedError
-  assertFileContains "failure=node-out-of-memory" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "node-out-of-memory"
 }
 
 testErrorYarnLockfileOutOfSync() {
-  local log_file
-  log_file=$(mktemp)
-  BUILDPACK_LOG_FILE="$log_file" compile "error-yarn-lockfile-out-of-sync"
+  cache_dir=$(mktmpdir)
+  compile "error-yarn-lockfile-out-of-sync" "${cache_dir}"
   assertCaptured "Yarn lockfile is not in sync"
   assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
   assertCapturedError
-  assertFileContains "failure=yarn-lockfile-out-of-sync" "$log_file"
+  assertMetricEqualsString "${cache_dir}" "failure" "yarn-lockfile-out-of-sync"
 }
 
 # Utils
