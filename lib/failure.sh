@@ -691,7 +691,7 @@ log_other_failures() {
 
   # For now, only capture this error if it doesn't happen during the pruning step. This error shouldn't make
   # it past the initial `npm install` (but it can) and it would be nice to see when this type of error slips through.
-  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(build_data::get_previous "build_step")" != "prune-dependencies" ]]; then
+  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(build_data::get_current "build_step")" != "prune-dependencies" ]]; then
     build_data::set_string "failure" "npm-peer-dependency-conflict"
     warn "Conflict detected in requested npm dependencies
 
