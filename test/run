@@ -46,8 +46,7 @@ testNpmCiShrinkwrap() {
 testNpmCiFallback() {
   cache_dir=$(mktmpdir)
   # without a lockfile we should use "npm install" instead of "npm ci"
-  compile "node-14-npm-ci-no-lockfile"
-
+  compile "node-14-npm-ci-no-lockfile" "${cache_dir}"
   assertCapturedSuccess
   # detecting that we shouldn't use npm ci
   assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
