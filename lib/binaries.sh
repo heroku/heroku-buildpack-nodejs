@@ -123,14 +123,19 @@ install_npm() {
     echo "npm $npm_version already installed with node"
   else
     echo "Bootstrapping npm $version (replacing $npm_version)..."
-    if ! monitor "install_npm_binary" npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
-      echo "Unable to install npm $version. " \
-        "Does npm $version exist? " \
-        "Is npm $version compatible with this Node.js version?" && false
-    fi
+    monitor "install_npm_binary" install_npm_binary "${version}"
     # Verify npm works before capturing and ensure its stderr is inspectable later
     suppress_output npm --version
     echo "npm $(npm --version) installed"
+  fi
+}
+
+install_npm_binary() {
+  local version="$1"
+  if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
+    echo "Unable to install npm $version. " \
+      "Does npm $version exist? " \
+      "Is npm $version compatible with this Node.js version?" && false
   fi
 }
 
