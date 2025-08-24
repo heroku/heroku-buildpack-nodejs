@@ -785,7 +785,7 @@ log_other_failures() {
 
   # If we've made it this far it's not an error we've added detection for yet
   # so classify by build step (if set) or default to unknown
-  build_step=$(build_data::get_previous "build_step")
+  build_step=$(build_data::get_current "build_step")
   if [[ -n "$build_step" ]]; then
     build_data::set_string "failure" "unknown-$build_step-error"
   else
