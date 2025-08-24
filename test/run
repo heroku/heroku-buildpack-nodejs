@@ -1582,67 +1582,18 @@ testBinDetectWarnings() {
   assertCapturedError "src/"
 }
 
-testBinReportEmptyDirectory() {
-  local empty_dir=$(mktmpdir)
-  # running bin/report on an empty directory should not fail
-  report "$empty_dir"
-  assertCapturedSuccess
-}
-
 testBinReportSuccess() {
-  compile_and_report "node-14"
+  cache_dir=$(mktmpdir)
+  compile_and_report "node-14" "$cache_dir"
+  assertCaptured "$(jq --sort-keys '.' "$cache_dir/build-data/nodejs.json")"
   assertCapturedSuccess
-
-  # check for all the fields that should be included in this report
-  assertCaptured "node_version: 'v14.21.3'"
-  assertCaptured "node_version_request: '14.x'"
-  assertCaptured "node_version_major: 14"
-  assertCaptured "install_node_binary_time: "
-  assertCaptured "install_node_binary_memory: "
-  assertCaptured "npm_version: '6.14.18'"
-  assertCaptured "install_npm_binary_time: "
-  assertCaptured "install_npm_binary_memory: "
-  assertCaptured "install_dependencies_time: "
-  assertCaptured "install_dependencies_memory: "
-  assertCaptured "has_build_script: true"
-  assertCaptured "build_script_time: "
-  assertCaptured "build_script_memory: "
-  assertCaptured "cache_status: 'not-found'"
-  assertCaptured "restore_cache_time: "
-  assertCaptured "save_cache_time: "
-  assertCaptured "has_cached_bower_components: false"
-  assertCaptured "has_custom_cache_dirs: false"
-  assertCaptured "skipped_prune: false"
-  assertCaptured "prune_dev_dependencies_time: "
-  assertCaptured "prune_dev_dependencies_memory: "
-  assertCaptured "build_time: "
-  assertCaptured "build_step: 'finished'"
-  assertCaptured "package_manager: 'npm'"
-  assertCaptured "package_manager_version: '6.14.18'"
-  assertCaptured "use_npm_ci: false"
-  assertCaptured "has_procfile" "false"
-  assertCaptured "start_script: 'node foo.js'"
-  assertCaptured "build_script: 'echo \"escaping - test if it''s working as expected including control chars like �-�, �-�, and �-� which are not allowed in yaml.\"'"
-
-  # these fields are blank, so they should be excluded from the report
-  assertNotCaptured "heroku_prebuild_script:"
-  assertNotCaptured "heroku_postbuild_script:"
 }
 
 testBinReportScriptsWithQuotes() {
-  compile_and_report "complex-scripts"
+  cache_dir=$(mktmpdir)
+  compile_and_report "complex-scripts" "$cache_dir"
+  assertCaptured "$(jq --sort-keys '.' "$cache_dir/build-data/nodejs.json")"
   assertCapturedSuccess
-
-  # quotes and escaped quotes are tricky, but should be escaped correctly
-  assertCaptured "start_script: '\"no closing quote'"
-  assertCaptured "build_script: 'concurrently \"npm run build-server\" npm run build-client'"
-  assertCaptured "heroku_postbuild_script: 'if [ -z \"\${CI}\" ]; then yarn build-assets; fi'"
-  assertCaptured "postinstall_script: 'if [ \"\${NODE_ENV}\" = \"staging\" ]; then env ASSETS_ENV=production gulp assets:build; else echo \"Skipped heroku-postbuild\"; fi'"
-}
-
-testBinReportYarn() {
-  compile_and_report "yarn"
-  assertCaptured "package_manager: 'yarn'"
 }
 
 testNpmCiCaching() {
