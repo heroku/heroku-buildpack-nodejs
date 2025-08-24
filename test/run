@@ -2013,24 +2013,27 @@ testConflictingPackageManagerMetadata() {
 # Error classifications
 
 testErrorPrebuildScript() {
-  compile_and_report "error-prebuild-script"
-  assertCaptured "failure: 'unknown-prebuild-script-error'"
+  cache_dir=$(mktmpdir)
+  compile "error-prebuild-script" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-prebuild-script-error"
 }
 
 testErrorBuildScript() {
-  compile_and_report "error-build-script"
-  cat "$STD_OUT"
-  assertCaptured "failure: 'unknown-build-script-error'"
+  cache_dir=$(mktmpdir)
+  compile "error-build-script" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
 }
 
 testErrorPostbuildScript() {
-  compile_and_report "error-postbuild-script"
-  assertCaptured "failure: 'unknown-build-script-error'"
+  cache_dir=$(mktmpdir)
+  compile "error-postbuild-script" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
 }
 
 testErrorCleanupScript() {
-  compile_and_report "error-cleanup-script"
-  assertCaptured "failure: 'unknown-cleanup-script-error'"
+  cache_dir=$(mktmpdir)
+  compile "error-cleanup-script" "${cache_dir}"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-cleanup-script-error"
 }
 
 testErrorNpmLockfileOutOfSync() {
