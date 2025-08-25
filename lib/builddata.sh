@@ -52,7 +52,7 @@ function build_data::set_duration() {
 	local start_time="${2}"
 	local end_time duration
 	end_time="$(build_data::current_unix_realtime)"
-	duration="$(awk -v start="${start_time}" -v end="${end_time}" 'BEGIN { printf "%.3f", (end - start)/1000 }')"
+	duration="$(awk -v start="${start_time}" -v end="${end_time}" 'BEGIN { printf "%f", (end - start) }')"
 	build_data::set_raw "${key}" "${duration}"
 }
 
