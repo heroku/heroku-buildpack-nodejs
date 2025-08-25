@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+- Switch metrics to use new JSON-based data store. ([#1470](https://github.com/heroku/heroku-buildpack-nodejs/pull/1470))
+
+## [v306] - 2025-08-21
+
+- Rollback to v304 functionality due to increase in `bin/report` failures.
 
 ## [v305] - 2025-08-21
 

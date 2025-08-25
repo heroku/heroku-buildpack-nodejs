@@ -217,3 +217,101 @@ assertCapturedTimes() {
   actual_times=$(grep --only-matching --regexp "$capture_text" "$STD_OUT" | wc -l)
   assertEquals "Expected '$capture_text' text to appear $expected_times times; it appeared <$actual_times> times" "$expected_times" "$actual_times"
 }
+
+# Asserts that the metrics JSON file contains the expected values using jq queries
+# Usage:
+#   assertMetrics "$cache_dir" <<-EOF
+#     select(.package_manager == "npm")
+#     select(.build_time | type == "number")
+#     select(.cache_status == "not-found")
+#   EOF
+assertMetrics() {
+  local cache_dir="$1"
+  local metrics_file="${cache_dir}/build-data/nodejs.json"
+  local expected_metrics=""
+  local checked_keys=()
+  
+  # Check if cache_dir is provided
+  if [ -z "$cache_dir" ]; then
+    fail "assertMetrics: cache_dir argument is required"
+  fi
+  
+  # Check if metrics file exists
+  if [ ! -f "$metrics_file" ]; then
+    fail "Metrics file not found: $metrics_file"
+  fi
+  
+  # Read expected_metrics from stdin (HEREDOC style)
+  if [ -t 0 ]; then
+    fail "assertMetrics: expected metrics must be provided via stdin (HEREDOC)"
+  fi
+  
+  expected_metrics=$(cat)
+  
+  # Process each line of expected_metrics
+  while IFS= read -r line; do
+    # Skip empty lines and lines with only whitespace
+    if [[ -z "$line" || "$line" =~ ^[[:space:]]*$ ]]; then
+      continue
+    fi
+    
+    # Execute the jq query
+    local query_result
+    query_result=$(jq -r "$line" "$metrics_file" 2>/dev/null)
+    
+    if [ $? -ne 0 ] || [ "$query_result" = "null" ] || [ "$query_result" = "" ]; then
+      fail "jq query failed: '$line' on file $metrics_file. File contents: $(jq --sort-keys '.' "${metrics_file}")"
+    fi
+    
+    # Extract the key from the jq query
+    local key=""
+    if [[ "$line" =~ select\(\.([a-zA-Z_][a-zA-Z0-9_]*)\s* ]]; then
+      key="${BASH_REMATCH[1]}"
+    else
+      fail "Unable to extract key from jq query: '$line'. Expected format: 'select(.field_name ...)'"
+    fi
+    
+    # Add key to checked_keys array if it's not already there
+    if [[ ! " ${checked_keys[@]} " =~ " ${key} " ]]; then
+      checked_keys+=("$key")
+    fi
+  done <<< "$expected_metrics"
+  
+  # Get all keys from the JSON file
+  local all_keys
+  all_keys=$(jq -r 'keys[]' "$metrics_file" 2>/dev/null | sort)
+  
+  if [ $? -ne 0 ]; then
+    fail "Failed to extract keys from metrics file: $metrics_file"
+  fi
+  
+  # Find keys that weren't checked
+  local unchecked_keys=()
+  while IFS= read -r key; do
+    if [[ ! " ${checked_keys[@]} " =~ " ${key} " ]]; then
+      unchecked_keys+=("$key")
+    fi
+  done <<< "$all_keys"
+  
+  # If there are unchecked keys, fail with details
+  if [ ${#unchecked_keys[@]} -gt 0 ]; then
+    local unchecked_list
+    mapfile -t unchecked_list < <(printf '%s\n' "${unchecked_keys[@]}" | sort)
+    fail "The following keys in the metrics file were not checked: [$(IFS=,; echo "${unchecked_list[*]}")]. File contents: $(jq --sort-keys '.' "${metrics_file}")"
+  fi
+}
+
+assertMetricEqualsString() {
+  assertMetricEqualsRaw "$1" "$2" "\"$3\""
+}
+
+assertMetricEqualsRaw() {
+  local cache_dir="$1"
+  local field="$2"
+  local value="$3"
+  local metrics_file="${cache_dir}/build-data/nodejs.json"
+  query_result=$(jq -r "select(.${field} == ${value})" "$metrics_file" 2>/dev/null)
+  if [ $? -ne 0 ] || [ "$query_result" = "null" ] || [ "$query_result" = "" ]; then
+    fail "expected metric '${field}' to equal '${value}' but was '$(jq -r ".${field}" "$metrics_file" 2>/dev/null)'"
+  fi
+}
