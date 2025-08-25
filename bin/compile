@@ -81,7 +81,7 @@ for script in heroku-prebuild heroku-postbuild build heroku-cleanup start postin
 done
 
 # add any active features to the metadata set prefixed with the key "feature_"
-features_list | tr ' ' '\n' | while read -r key; do
+features_list | while read -r key; do
   if [[ -n $key ]]; then
     build_data::set_raw "feature_$key" "$(features_get "$key")"
   fi
