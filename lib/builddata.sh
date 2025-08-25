@@ -139,17 +139,7 @@ function build_data::get_previous() {
 # ```
 function build_data::get_current() {
 	local key="${1}"
-
-	# Older versions of this buildpack used a `key=value` format file instead of JSON,
-	# so we need to support this file format/location too, so older caches can be read.
-	# We check for this file first, so that we correctly handle the case where an app
-	# downgraded and then re-upgraded buildpack version, so has both files in the cache.
-	if [[ -f "${LEGACY_BUILD_DATA_FILE}" ]]; then
-		# The legacy file contains one entry per line, of form `key=value`. Entries were written in an
-		# append-only manner so there could be duplicate entries for each key, so we return only the
-		# last matching entry in the file. The empty string is returned if the key wasn't found.
-		tac "${LEGACY_BUILD_DATA_FILE}" | { grep --perl-regexp --only-matching --max-count=1 "^${key}=\K.*$" || true; }
-	elif [[ -f "${BUILD_DATA_FILE}" ]]; then
+	if [[ -f "${BUILD_DATA_FILE}" ]]; then
 		# The `// empty` ensures we return the empty string rather than `null` if the key doesn't exist.
 		jq --raw-output ".${key} // empty" "${BUILD_DATA_FILE}"
 	fi
