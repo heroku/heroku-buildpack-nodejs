@@ -50,8 +50,6 @@ source "$BP_DIR/lib/plugin.sh"
 source "$BP_DIR/lib/uuid.sh"
 # shellcheck source=lib/kvstore.sh
 source "$BP_DIR/lib/kvstore.sh"
-# shellcheck source=lib/metadata.sh
-source "$BP_DIR/lib/metadata.sh"
 # shellcheck source=lib/features.sh
 source "$BP_DIR/lib/features.sh"
 # shellcheck source=lib/builddata.sh
