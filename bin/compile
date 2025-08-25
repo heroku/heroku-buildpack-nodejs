@@ -9,12 +9,6 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 [ "$BUILDPACK_XTRACE" ] && set -o xtrace
 
-### Constants
-
-# This is used by the buildpack stdlib for metrics
-# shellcheck disable=SC2034
-BPLOG_PREFIX="buildpack.nodejs"
-
 ### Configure directories
 
 BUILD_DIR=${1:-}
