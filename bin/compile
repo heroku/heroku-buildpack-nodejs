@@ -65,7 +65,7 @@ export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
-build_start_time=$(nowms)
+build_start_time=$(build_data::current_unix_realtime)
 
 ### Initialize metrics and features
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
@@ -323,7 +323,7 @@ fi
 
 restore_cache() {
   local cache_status cache_directories restore_cache_start_time
-  restore_cache_start_time=$(nowms)
+  restore_cache_start_time=$(build_data::current_unix_realtime)
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
   cache_directories="$(get_cache_directories "$BUILD_DIR")"
@@ -376,7 +376,7 @@ build_dependencies() {
   local cache_status start
 
   cache_status="$(get_cache_status "$CACHE_DIR")"
-  start=$(nowms)
+  start=$(build_data::current_unix_realtime)
   if [[ "$YARN_2" == "true" ]]; then
     yarn_2_install "$BUILD_DIR"
   elif $YARN; then
@@ -404,7 +404,7 @@ build_dependencies | output "$LOG_FILE"
 
 cache_build() {
   local cache_directories cache_build_start_time
-  cache_build_start_time=$(nowms)
+  cache_build_start_time=$(build_data::current_unix_realtime)
   cache_directories="$(get_cache_directories "$BUILD_DIR")"
 
   clear_cache "$CACHE_DIR"

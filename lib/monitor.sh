@@ -50,7 +50,7 @@ monitor() {
   local command=( "$@" )
 
   peak_mem_output=$(mktemp)
-  start=$(nowms)
+  start=$(build_data::current_unix_realtime)
 
   # execute the subcommand and save the peak memory usage
   monitor_memory_usage "$peak_mem_output" "${command[@]}"
