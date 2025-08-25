@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Switch metrics to use new JSON-based data store. ([#1470](https://github.com/heroku/heroku-buildpack-nodejs/pull/1470))
 
 ## [v305] - 2025-08-21
 
