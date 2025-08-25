@@ -76,7 +76,7 @@ build_data::set_raw "has_procfile" "$(test -f "$BUILD_DIR/Procfile" && echo "tru
 # capture scripts from package.json
 for script in heroku-prebuild heroku-postbuild build heroku-cleanup start postinstall; do
   if [[ "$(has_script "$BUILD_DIR/package.json" "$script")" == "true" ]]; then
-    build_data::set_string "${script//-/_}_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
+    build_data::set_string "${script//[^[:alnum:]]/_}_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
   fi
 done
 

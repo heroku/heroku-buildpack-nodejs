@@ -21,20 +21,21 @@ run_if_present() {
 
   has_script_name=$(has_script "$build_dir/package.json" "$script_name")
   script=$(read_json "$build_dir/package.json" ".scripts[\"$script_name\"]")
+  monitor_name="${script_name//[^[:alnum:]]/_}_script"
 
   if [[ "$has_script_name" == "true" ]]; then
     if $YARN || $YARN_2; then
       echo "Running $script_name (yarn)"
       # yarn will throw an error if the script is an empty string, so check for this case
       if [[ -n "$script" ]]; then
-        monitor "${script_name//-/_}_script" yarn run "$script_name"
+        monitor "${monitor_name}" yarn run "$script_name"
       fi
     elif $PNPM; then
       echo "Running $script_name"
-      monitor "${script_name//-/_}_script" pnpm run --if-present "$script_name"
+      monitor "${monitor_name}" pnpm run --if-present "$script_name"
     else
       echo "Running $script_name"
-      monitor "${script_name//-/_}_script" npm run "$script_name" --if-present
+      monitor "${monitor_name}" npm run "$script_name" --if-present
     fi
   fi
 }
