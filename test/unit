@@ -378,7 +378,7 @@ testAssertMetricsUncheckedKeys() {
     select(.package_manager == "npm")
 EOF
 )
-  if ! echo "$error_output" | grep -q "keys in the metrics file were not checked"; then
+  if ! echo "$error_output" | grep -q "keys in the metrics file were not checked: \[build_time,cache_status\]"; then
     fail "assertMetrics should have failed with appropriate error message for unchecked keys"
   fi
   
@@ -419,7 +419,6 @@ source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/features.sh
-source "$(pwd)"/lib/metadata.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils

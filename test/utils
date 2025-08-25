@@ -295,8 +295,9 @@ assertMetrics() {
   
   # If there are unchecked keys, fail with details
   if [ ${#unchecked_keys[@]} -gt 0 ]; then
-    local unchecked_list=$(printf '%s\n' "${unchecked_keys[@]}" | sort | tr '\n' ' ')
-    fail "The following keys in the metrics file were not checked: [${unchecked_list}]. File contents: $(jq --sort-keys '.' "${metrics_file}")"
+    local unchecked_list
+    mapfile -t unchecked_list < <(printf '%s\n' "${unchecked_keys[@]}" | sort)
+    fail "The following keys in the metrics file were not checked: [$(IFS=,; echo "${unchecked_list[*]}")]. File contents: $(jq --sort-keys '.' "${metrics_file}")"
   fi
 }
 
