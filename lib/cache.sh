@@ -72,7 +72,7 @@ restore_default_cache_directories() {
       rm -rf "$pnpm_cache_dir"
       mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
       echo "- pnpm cache"
-      meta_set "pnpm_cache" "true"
+      build_data::set_raw "pnpm_cache" "true"
     else
       echo "- pnpm cache (not cached - skipping)"
     fi
@@ -81,7 +81,7 @@ restore_default_cache_directories() {
       rm -rf "$npm_cache"
       mv "$cache_dir/node/cache/npm" "$npm_cache"
       echo "- npm cache"
-      meta_set "npm_cache" "true"
+      build_data::set_raw "npm_cache" "true"
     else
       echo "- npm cache (not cached - skipping)"
     fi
@@ -177,15 +177,15 @@ save_default_cache_directories() {
 
   # bower_components
   if [[ -e "$build_dir/bower_components" ]]; then
-    meta_set "has_cached_bower_components" "true"
+    build_data::set_raw "has_cached_bower_components" "true"
     echo "- bower_components"
     mkdir -p "$cache_dir/node/cache/bower_components"
     cp -a "$build_dir/bower_components" "$(dirname "$cache_dir/node/cache/bower_components")"
   else
-    meta_set "has_cached_bower_components" "false"
+    build_data::set_raw "has_cached_bower_components" "false"
   fi
 
-  meta_set "has_custom_cache_dirs" "false"
+  build_data::set_raw "has_custom_cache_dirs" "false"
 }
 
 save_custom_cache_directories() {
@@ -207,7 +207,7 @@ save_custom_cache_directories() {
     fi
   done
 
-  meta_set "has_custom_cache_dirs" "true"
+  build_data::set_raw "has_custom_cache_dirs" "true"
 }
 
 DEFAULT_PNPM_PRUNE_COUNTER_VALUE="40"

@@ -10,8 +10,7 @@ detect_package_manager() {
 }
 
 fail() {
-  meta_time "build_time" "$build_start_time"
-  log_meta_data >> "$BUILDPACK_LOG_FILE"
+  build_data::set_duration "build_time" "$build_start_time"
   exit 1
 }
 
@@ -45,7 +44,7 @@ fail_invalid_package_json() {
 
   if "$is_invalid"; then
     error "Unable to parse package.json"
-    meta_set "failure" "invalid-package-json"
+    build_data::set_string "failure" "invalid-package-json"
     header "Build failed"
     failure_message
     fail
@@ -54,7 +53,7 @@ fail_invalid_package_json() {
 
 fail_dot_heroku() {
   if [ -f "${1:-}/.heroku" ]; then
-    meta_set "failure" "dot-heroku"
+    build_data::set_string "failure" "dot-heroku"
     header "Build failed"
     warn "The directory .heroku could not be created
 
@@ -69,7 +68,7 @@ fail_dot_heroku() {
 
 fail_dot_heroku_node() {
   if [ -f "${1:-}/.heroku/node" ]; then
-    meta_set "failure" "dot-heroku-node"
+    build_data::set_string "failure" "dot-heroku-node"
     header "Build failed"
     warn "The directory .heroku/node could not be created
 
@@ -88,7 +87,7 @@ fail_iojs_unsupported() {
   iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
 
   if [ -n "$iojs_engine" ]; then
-    meta_set "failure" "iojs-unsupported"
+    build_data::set_string "failure" "iojs-unsupported"
     warn "io.js no longer supported
 
        You are specifying an io.js version in your package.json:
@@ -131,7 +130,7 @@ fail_multiple_lockfiles() {
 
   if (( "${#detected_package_managers[*]}" > 1 )); then
     readarray -td '' package_managers_sorted < <(printf '%s\0' "${detected_package_managers[@]}" | sort -z --ignore-case)
-    meta_set "failure" "multiple-lock-files"
+    build_data::set_string "failure" "multiple-lock-files"
     header "Build failed"
     warn "Multiple lockfiles found
 
@@ -150,7 +149,7 @@ fail_multiple_lockfiles() {
   fi
 
   if $has_modern_lockfile && [ -f "${1:-}/npm-shrinkwrap.json" ]; then
-    meta_set "failure" "shrinkwrap-lock-file-conflict"
+    build_data::set_string "failure" "shrinkwrap-lock-file-conflict"
     header "Build failed"
     warn "Multiple lockfiles conflicting with npm-shrinkwrap.json
 
@@ -177,7 +176,7 @@ fail_yarn_outdated() {
 
   if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
     yarn_engine=$(yarn --version)
-    meta_set "failure" "outdated-yarn"
+    build_data::set_string "failure" "outdated-yarn"
     echo ""
     warn "Outdated Yarn version: $yarn_engine
 
@@ -197,7 +196,7 @@ fail_yarn_outdated() {
 fail_yarn_lockfile_outdated() {
   local log_file="$1"
   if grep -qi 'Your lockfile needs to be updated' "$log_file"; then
-    meta_set "failure" "outdated-yarn-lockfile"
+    build_data::set_string "failure" "outdated-yarn-lockfile"
     echo ""
     warn "Outdated Yarn lockfile
 
@@ -257,7 +256,7 @@ fail_node_install() {
 
   if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
     node_engine=$(read_json "$build_dir/package.json" ".engines.node")
-    meta_set "failure" "invalid-node-version"
+    build_data::set_string "failure" "invalid-node-version"
     echo ""
     warn "No matching version found for Node: $node_engine
 
@@ -290,7 +289,7 @@ fail_yarn_install() {
 
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
     yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
-    meta_set "failure" "invalid-yarn-version"
+    build_data::set_string "failure" "invalid-yarn-version"
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
 
@@ -321,7 +320,7 @@ fail_yarn_install() {
 fail_invalid_semver() {
   local log_file="$1"
   if grep -qi 'Error: Invalid semantic version' "$log_file"; then
-    meta_set "failure" "invalid-semver-requirement"
+    build_data::set_string "failure" "invalid-semver-requirement"
     echo ""
     warn "Invalid semver requirement
 
@@ -352,7 +351,7 @@ fail_using_yarn2_with_yarn_production_environment_variable_set() {
       skip_pruning=true
     fi
 
-    meta_set "failure" "yarn2-with-yarn-production-env-set"
+    build_data::set_string "failure" "yarn2-with-yarn-production-env-set"
     echo ""
     warn "Legacy Yarn 1.x configuration present:
 
@@ -369,7 +368,7 @@ fail_missing_yarnrc_yml() {
   local build_dir="$1"
 
   if [[ ! -f "$build_dir/.yarnrc.yml" ]]; then
-    meta_set "failure" "missing-yarnrc-yml"
+    build_data::set_string "failure" "missing-yarnrc-yml"
     header "Build failed"
     warn "The 'yarnrc.yml' file is not found
 
@@ -393,7 +392,7 @@ fail_missing_yarn_path() {
   local yarn_path="$2"
 
   if [[ "$yarn_path" == "" ]]; then
-    meta_set "failure" "missing-yarn-path"
+    build_data::set_string "failure" "missing-yarn-path"
     header "Build failed"
     warn "The 'yarnPath' could not be read from the 'yarnrc.yml' file
 
@@ -417,7 +416,7 @@ fail_missing_yarn_vendor() {
   local yarn_path="$2"
 
   if [[ ! -f "$build_dir/$yarn_path" ]]; then
-    meta_set "failure" "missing-yarn-vendor"
+    build_data::set_string "failure" "missing-yarn-vendor"
     header "Build failed"
     warn "Yarn was not found
 
@@ -442,7 +441,7 @@ fail_corepack_not_available() {
   local package_manager="$1"
   local node_version="$2"
 
-  meta_set "failure" "failures.corepack-unsupported"
+  build_data::set_string "failure" "failures.corepack-unsupported"
   header "Build failed"
   warn "Corepack is not supported in Node.js $node_version
 
@@ -460,7 +459,7 @@ log_other_failures() {
   local log_file="$1"
 
   if grep -qP "version \`GLIBC_\d+\.\d+' not found" "$log_file"; then
-    meta_set "failure" "libc6-incompatibility"
+    build_data::set_string "failure" "libc6-incompatibility"
     warn "This Node.js version is not compatible with the current stack.
 
        For Node.js versions 18 and greater, heroku-22 or newer is required.
@@ -472,104 +471,104 @@ log_other_failures() {
   fi
 
   if grep -qi "sh: 1: .*: not found" "$log_file"; then
-    meta_set "failure" "dev-dependency-tool-not-installed"
+    build_data::set_string "failure" "dev-dependency-tool-not-installed"
     return 0
   fi
 
   if grep -qi "Failed at the bcrypt@\d.\d.\d install script" "$log_file"; then
-    meta_set "failure" "bcrypt-permissions-issue"
+    build_data::set_string "failure" "bcrypt-permissions-issue"
     return 0
   fi
 
   if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
-    meta_set "failure" "ng-cli-version-issue"
+    build_data::set_string "failure" "ng-cli-version-issue"
     return 0
   fi
 
   if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
-    meta_set "failure" "npm-property-zero-issue"
+    build_data::set_string "failure" "npm-property-zero-issue"
     return 0
   fi
 
   if grep -qi "npm is known not to run on Node.js v\d.\d.\d" "$log_file"; then
-    meta_set "failure" "npm-known-bad-version"
+    build_data::set_string "failure" "npm-known-bad-version"
     return 0
   fi
 
   # "notarget No matching version found for" = npm
   # "error Couldn't find any versions for" = yarn
   if grep -q -e "notarget No matching version found for" -e "error Couldn't find any versions for" "$log_file"; then
-    meta_set "failure" "bad-version-for-dependency"
+    build_data::set_string "failure" "bad-version-for-dependency"
     return 0
   fi
 
   if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
-    meta_set "failure" "node-9-npm-issue"
+    build_data::set_string "failure" "node-9-npm-issue"
     return 0
   fi
 
   if grep -qi "console.error(\`a bug known to break npm" "$log_file"; then
-    meta_set "failure" "old-node-new-npm"
+    build_data::set_string "failure" "old-node-new-npm"
     return 0
   fi
 
   if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
-    meta_set "failure" "build-out-of-memory-error"
+    build_data::set_string "failure" "build-out-of-memory-error"
     return 0
   fi
 
   if grep -qi "enoent ENOENT: no such file or directory" "$log_file"; then
-    meta_set "failure" "npm-enoent"
+    build_data::set_string "failure" "npm-enoent"
     return 0
   fi
 
   if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
-    meta_set "failure" "uglifyjs"
+    build_data::set_string "failure" "uglifyjs"
     return 0
   fi
 
   # https://github.com/angular/angular-cli/issues/4551
   if grep -qi "Module not found: Error: Can't resolve '\.\/\$\$_gendir\/app\/app\.module\.ngfactory'" "$log_file"; then
-    meta_set "failure" "ng-cli-issue-4551"
+    build_data::set_string "failure" "ng-cli-issue-4551"
     return 0
   fi
 
   if grep -qi "Host key verification failed" "$log_file"; then
-    meta_set "failure" "private-git-dependency-without-auth"
+    build_data::set_string "failure" "private-git-dependency-without-auth"
     return 0
   fi
 
   # same as the next test, but isolate bcyrpt specifically
   if grep -qi "Failed at the bcrypt@\d\.\d\.\d install" "$log_file"; then
-    meta_set "failure" "bcrypt-failed-to-build"
+    build_data::set_string "failure" "bcrypt-failed-to-build"
     return 0
   fi
 
   if grep -qi "Failed at the [^ ]* install script" "$log_file"; then
-    meta_set "failure" "dependency-failed-to-build"
+    build_data::set_string "failure" "dependency-failed-to-build"
     return 0
   fi
 
   if grep -qi "Line \d*:  '.*' is not defined" "$log_file"; then
-    meta_set "failure" "undefined-variable-lint"
+    build_data::set_string "failure" "undefined-variable-lint"
     return 0
   fi
 
   if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "$log_file"; then
-    meta_set "failure" "npm-ebadplatform"
+    build_data::set_string "failure" "npm-ebadplatform"
     return 0
   fi
 
   if grep -qiE 'npm (ERR!|error) code EINVALIDPACKAGENAME' "$log_file"; then
-    meta_set "failure" "npm-package-name-typo"
+    build_data::set_string "failure" "npm-package-name-typo"
     return 0
   fi
 
   if grep -qiE -e 'npm (ERR!|error) code E404' -e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "$log_file"; then
-    meta_set "failure" "module-404"
+    build_data::set_string "failure" "module-404"
 
     if grep -qi "flatmap-stream" "$log_file"; then
-      meta_set "failure" "flatmap-stream-404"
+      build_data::set_string "failure" "flatmap-stream-404"
       warn "The flatmap-stream module has been removed from the npm registry
 
        On November 26th (2018), npm was notified of a malicious package that had made its
@@ -584,85 +583,85 @@ log_other_failures() {
   fi
 
   if grep -qi "sh: 1: cd: can't cd to" "$log_file"; then
-    meta_set "failure" "cd-command-fail"
+    build_data::set_string "failure" "cd-command-fail"
     return 0
   fi
 
   # Webpack Errors
 
   if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
-    meta_set "failure" "webpack-module-not-found"
+    build_data::set_string "failure" "webpack-module-not-found"
     return 0
   fi
 
   if grep -qi "sass-loader/lib/loader.js:3:14" "$log_file"; then
-    meta_set "failure" "webpack-sass-loader-error"
+    build_data::set_string "failure" "webpack-sass-loader-error"
     return 0
   fi
 
   # Typescript errors
 
   if grep -qi "Property '.*' does not exist on type '.*'" "$log_file"; then
-    meta_set "failure" "typescript-missing-property"
+    build_data::set_string "failure" "typescript-missing-property"
     return 0
   fi
 
   if grep -qi "Property '.*' is private and only accessible within class '.*'" "$log_file"; then
-    meta_set "failure" "typescript-private-property"
+    build_data::set_string "failure" "typescript-private-property"
     return 0
   fi
 
   if grep -qi "error TS2307: Cannot find module '.*'" "$log_file"; then
-    meta_set "failure" "typescript-missing-module"
+    build_data::set_string "failure" "typescript-missing-module"
     return 0
   fi
 
   if grep -qi "error TS2688: Cannot find type definition file for '.*'" "$log_file"; then
-    meta_set "failure" "typescript-missing-type-definition"
+    build_data::set_string "failure" "typescript-missing-type-definition"
     return 0
   fi
 
   # [^/C] means that the error is not for a file expected to be within the project
   # Ex: Error: Cannot find module 'chalk'
   if grep -q "Error: Cannot find module '[^/C\.]" "$log_file"; then
-    meta_set "failure" "missing-module-npm"
+    build_data::set_string "failure" "missing-module-npm"
     return 0
   fi
 
   # / means that the error is for a file expected within the local project
   # Ex: Error: Cannot find module '/tmp/build_{hash}/...'
   if grep -q "Error: Cannot find module '/" "$log_file"; then
-    meta_set "failure" "missing-module-local-absolute"
+    build_data::set_string "failure" "missing-module-local-absolute"
     return 0
   fi
 
   # /. means that the error is for a file that's a relative require
   # Ex: Error: Cannot find module './lib/utils'
   if grep -q "Error: Cannot find module '\." "$log_file"; then
-    meta_set "failure" "missing-module-local-relative"
+    build_data::set_string "failure" "missing-module-local-relative"
     return 0
   fi
 
   # [^/C] means that the error is not for a file expected to be found on a C: drive
   # Ex: Error: Cannot find module 'C:\Users...'
   if grep -q "Error: Cannot find module 'C:" "$log_file"; then
-    meta_set "failure" "missing-module-local-windows"
+    build_data::set_string "failure" "missing-module-local-windows"
     return 0
   fi
 
   # checksum errors
   if grep -q "Checksum validation failed" "$log_file"; then
-    meta_set "failure" "checksum-validation-failed"
+    build_data::set_string "failure" "checksum-validation-failed"
     return 0
   fi
 
   if grep -q "Unsupported checksum" "$log_file"; then
-    meta_set "failure" "unsupported-checksum"
+    build_data::set_string "failure" "unsupported-checksum"
     return 0
   fi
 
   if grep -q "npm error code 128" "$log_file" && grep -q "An unknown git error occurred" "$log_file"; then
-    meta_set "failure" "npm-install-git-dependency"
+    build_data::set_string "failure" "npm-install-git-dependency"
     warn "npm Git dependency error (code 128)
 
        This error indicates an issue related to Git operations when attempting to install
@@ -676,7 +675,7 @@ log_other_failures() {
 
   if grep -q "npm error code EUSAGE" "$log_file"; then
     if grep -q "Please update your lock file" "$log_file"; then
-      meta_set "failure" "npm-lockfile-out-of-sync"
+      build_data::set_string "failure" "npm-lockfile-out-of-sync"
       warn "npm lockfile is not in sync
 
        This error occurs when the contents of \`package.json\` contains a different
@@ -692,8 +691,8 @@ log_other_failures() {
 
   # For now, only capture this error if it doesn't happen during the pruning step. This error shouldn't make
   # it past the initial `npm install` (but it can) and it would be nice to see when this type of error slips through.
-  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(meta_get "build_step")" != "prune-dependencies" ]]; then
-    meta_set "failure" "npm-peer-dependency-conflict"
+  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(build_data::get_current "build_step")" != "prune-dependencies" ]]; then
+    build_data::set_string "failure" "npm-peer-dependency-conflict"
     warn "Conflict detected in requested npm dependencies
 
        An \`ERESOLVE\` error during installation of npm dependencies means your app contains two or more conflicting
@@ -714,13 +713,13 @@ log_other_failures() {
     local help_url
 
     if grep -q "\[webpack-cli\] Error" "$log_file"; then
-      meta_set "failure" "openssl-unsupported-algorithm-webpack"
+      build_data::set_string "failure" "openssl-unsupported-algorithm-webpack"
       solution="If this app uses Webpack 5.54.0+, you can change the Webpack configuration to use a different
        \`output.hashFunction\` like \`xxhash64\`. Older versions of Webpack should configure a custom
        \`output.hashFunction\` that uses supported cryptographic algorithms."
       help_url="https://webpack.js.org/configuration/output/#outputhashfunction"
     else
-      meta_set "failure" "openssl-unsupported-algorithm"
+      build_data::set_string "failure" "openssl-unsupported-algorithm"
       solution="To fix this, update any dependencies that may be causing the issue and identify and update application code
        that uses deprecated or unsupported cryptographic algorithms to use modern, secure alternatives."
       help_url=""
@@ -742,7 +741,7 @@ log_other_failures() {
   fi
 
   if grep -q "JavaScript heap out of memory" "$log_file"; then
-    meta_set "failure" "node-out-of-memory"
+    build_data::set_string "failure" "node-out-of-memory"
     warn "Node.js Out-Of-Memory (OOM)
 
        This error can occur due to several reasons (large data handling, memory leaks, etc.) but the most
@@ -765,7 +764,7 @@ log_other_failures() {
   fi
 
   if grep -q "YN0028" "$log_file"; then
-    meta_set "failure" "yarn-lockfile-out-of-sync"
+    build_data::set_string "failure" "yarn-lockfile-out-of-sync"
     warn "Yarn lockfile is not in sync
 
        This error occurs when the contents of \`package.json\` contains a different
@@ -780,17 +779,17 @@ log_other_failures() {
 
   # matches the subsequent lines of a stacktrace
   if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
-    meta_set "failure" "unknown-stacktrace"
+    build_data::set_string "failure" "unknown-stacktrace"
     return 0
   fi
 
   # If we've made it this far it's not an error we've added detection for yet
   # so classify by build step (if set) or default to unknown
-  build_step=$(meta_get "build_step")
+  build_step=$(build_data::get_current "build_step")
   if [[ -n "$build_step" ]]; then
-    meta_set "failure" "unknown-$build_step-error"
+    build_data::set_string "failure" "unknown-$build_step-error"
   else
-    meta_set "failure" "unknown"
+    build_data::set_string "failure" "unknown"
   fi
 }
 
@@ -972,7 +971,7 @@ fail_corepack_install_invalid_hash() {
   package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 1)
   package_manager_hash=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 2)
 
-  meta_set "failure" "failures.corepack-install.hash"
+  build_data::set_string "failure" "failures.corepack-install.hash"
   header "Build failed"
   warn "Error installing $package_manager_name version $package_manager_version
 
@@ -992,7 +991,7 @@ fail_corepack_install_invalid_version() {
   package_manager_name=$(echo "$package_manager" | cut -d "@" -f 1)
   package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 1)
 
-  meta_set "failure" "failures.corepack-install.version"
+  build_data::set_string "failure" "failures.corepack-install.version"
   header "Build failed"
   warn "Error installing $package_manager_name version $package_manager_version
 
@@ -1100,7 +1099,7 @@ fail_conflicting_package_manager_metadata() {
 
   # was there more than one package manager found?
   if (( "${#package_managers[@]}" > 1 )); then
-    meta_set "failure" "multiple-package-managers"
+    build_data::set_string "failure" "multiple-package-managers"
     header "Build failed"
     warn "Multiple package managers declared in package.json
 
