@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v307] - 2025-08-26
+
 - Switch metrics to use new JSON-based data store. ([#1470](https://github.com/heroku/heroku-buildpack-nodejs/pull/1470))
 
 ## [v306] - 2025-08-21
@@ -1125,7 +1128,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v305...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v307...main
+[v307]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v306...v307
 [v305]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v304...v305
 [v304]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v303...v304
 [v303]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v302...v303
