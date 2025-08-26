@@ -360,7 +360,7 @@ restore_cache() {
   fi
 
   # Remove any legacy cache contents written by older buildpack versions.
-  rm -rf "${CACHE_DIR}/build-data/nodejs"
+  rm -rf "${CACHE_DIR}/build-data/nodejs" "${CACHE_DIR}/build-data/nodejs-prev"
 
   build_data::set_string "cache_status" "${cache_status}"
   build_data::set_duration "restore_cache_time" "${restore_cache_start_time}"
