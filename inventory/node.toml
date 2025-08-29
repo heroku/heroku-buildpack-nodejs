@@ -1,4 +1,11 @@
 [[artifacts]]
+version = "24.7.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v24.7.0/node-v24.7.0-linux-x64.tar.gz"
+checksum = "sha256:8cf85258402e056efa041168c9b162a4e3b229ebfad5000850b8941c974e9d5a"
+
+[[artifacts]]
 version = "24.6.0"
 os = "linux"
 arch = "amd64"
@@ -165,6 +172,13 @@ os = "linux"
 arch = "amd64"
 url = "https://nodejs.org/download/release/v23.0.0/node-v23.0.0-linux-x64.tar.gz"
 checksum = "sha256:702cbc710fcf1102cef1aced74443fee34eff8df4827de30ec970d377ce31d9e"
+
+[[artifacts]]
+version = "22.19.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v22.19.0/node-v22.19.0-linux-x64.tar.gz"
+checksum = "sha256:d36e56998220085782c0ca965f9d51b7726335aed2f5fc7321c6c0ad233aa96d"
 
 [[artifacts]]
 version = "22.18.0"

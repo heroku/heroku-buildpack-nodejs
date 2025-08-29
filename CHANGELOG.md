@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 24.7.0 (linux-amd64)
+- Added Node.js 22.19.0 (linux-amd64)
 
 ## [v307] - 2025-08-26
 
