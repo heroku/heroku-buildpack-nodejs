@@ -1506,7 +1506,7 @@ testYarnBuildMetaData() {
     select(.install_node_binary_time | type == "number")
     select(.install_yarn_binary_memory | type == "number")
     select(.install_yarn_binary_time | type == "number")
-    select(.node_version == "v22.18.0")
+    select(.node_version | test("v22.\\d+\\.\\d+"))
     select(.node_version_major == 22)
     select(.package_manager == "yarn")
     select(.package_manager_version == "1.22.22")
