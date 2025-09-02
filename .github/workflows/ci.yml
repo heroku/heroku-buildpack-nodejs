@@ -24,7 +24,7 @@ jobs:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Unit tests on heroku:${{ matrix.stack_number }}-build
         run: test/unit
 
@@ -40,7 +40,7 @@ jobs:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Functional tests on heroku:${{ matrix.stack_number }}-build
         run: test/run
 
@@ -52,7 +52,7 @@ jobs:
       HATCHET_EXPENSIVE_MODE: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
@@ -71,7 +71,7 @@ jobs:
     name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.version }}
