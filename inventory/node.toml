@@ -440,6 +440,13 @@ url = "https://nodejs.org/download/release/v21.0.0/node-v21.0.0-linux-x64.tar.gz
 checksum = "sha256:013f370f1772197cb4e22f22f2185ee26d2e5f3acdb2f252d11cd214e9a8cdb9"
 
 [[artifacts]]
+version = "20.19.5"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v20.19.5/node-v20.19.5-linux-x64.tar.gz"
+checksum = "sha256:4eba5fbe1fb10753bc06e42f001a91c5cec16798b7764a3e9257adc59af47fe1"
+
+[[artifacts]]
 version = "20.19.4"
 os = "linux"
 arch = "amd64"
