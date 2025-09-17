@@ -14,14 +14,14 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Install Rust Inventory Binaries
-        run: cargo install heroku-nodejs-utils --bin update_node_inventory --git https://github.com/heroku/buildpacks-nodejs
+        run: cargo install xtask-update-nodejs-inventory --locked --bin xtask-update-nodejs-inventory --git https://github.com/heroku/buildpacks-nodejs
       - name: Rebuild Inventory
         id: rebuild-inventory
         run: |
           delimiter="$(openssl rand -hex 8)"
           {
             echo "msg<<${delimiter}"
-            update_node_inventory ./inventory/node.toml ./CHANGELOG.md --platform linux-x64 --format classic
+            xtask-update-nodejs-inventory ./inventory/node.toml ./CHANGELOG.md --platform linux-x64 --format classic
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
       - uses: actions/create-github-app-token@v2
