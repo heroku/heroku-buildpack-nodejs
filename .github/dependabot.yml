@@ -26,3 +26,16 @@ updates:
         update-types:
           - "minor"
           - "patch"
+  - package-ecosystem: "cargo"
+    directory: "/resolve-version"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "skip changelog"
+    groups:
+      rust-dependencies:
+        update-types:
+          - "minor"
+          - "patch"
