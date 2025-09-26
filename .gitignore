@@ -3,3 +3,4 @@
 repos/*
 .idea
 .build
+resolve-version/target
