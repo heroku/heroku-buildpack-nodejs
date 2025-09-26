@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 24.9.0 (linux-amd64)
 - Moved `resolve_version` code from [Node.js CNB](https://github.com/heroku/buildpacks-nodejs) to here for easier maintenance + rebuilt the binary. ([#1482](https://github.com/heroku/heroku-buildpack-nodejs/pull/1482))
 
 ## [v311] - 2025-09-25
