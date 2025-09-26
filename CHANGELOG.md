@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v312] - 2025-09-26
+
 - Added Node.js 24.9.0 (linux-amd64)
 - Moved `resolve_version` code from [Node.js CNB](https://github.com/heroku/buildpacks-nodejs) to here for easier maintenance + rebuilt the binary. ([#1482](https://github.com/heroku/heroku-buildpack-nodejs/pull/1482))
 
@@ -1147,7 +1150,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v311...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v312...main
+[v312]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v311...v312
 [v311]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v310...v311
 [v310]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v309...v310
 [v309]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v308...v309
