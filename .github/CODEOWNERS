@@ -6,6 +6,8 @@
 # However, request review from the language owner instead for files that are updated
 # by Dependabot or inventory/release automation, to reduce team review request noise.
 CHANGELOG.md @colincasey
+Cargo.toml @colincasey
+Cargo.lock @colincasey
 Gemfile.lock @colincasey
 inventory/ @colincasey
 npm-shrinkwrap.json @colincasey
