@@ -12,5 +12,5 @@
   "scripts": {
     "start": "node foo.js"
   },
-  "packageManager": "yarn@999.999.999"
+  "packageManager": "pnpm@999.999.999"
 }

@@ -1694,10 +1694,10 @@ testCorepackNotAvailable() {
 
 testCorepackInvalidVersion() {
   compile "corepack-invalid-package-manager"
-  assertCaptured "packageManager (package.json): yarn@999.999.999"
-  assertCaptured "Installing yarn@999.999.999 via corepack 0.20.0"
-  assertCaptured "Error installing yarn version 999.999.999"
-  assertCaptured "Can’t find the yarn version that matches the requested version declared in package.json (999.999.999)"
+  assertCaptured "packageManager (package.json): pnpm@999.999.999"
+  assertCaptured "Installing pnpm@999.999.999 via corepack 0.20.0"
+  assertCaptured "Error installing pnpm version 999.999.999"
+  assertCaptured "Can’t find the pnpm version that matches the requested version declared in package.json (999.999.999)"
   assertCapturedError
 
   compile "corepack-invalid-package-manager-sha"
