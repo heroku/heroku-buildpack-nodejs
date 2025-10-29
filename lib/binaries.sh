@@ -59,18 +59,19 @@ install_nodejs() {
     download_url="$NODE_BINARY_URL"
     echo "Downloading and installing node from $download_url"
   else
-    echo "Resolving node requested_version $requested_version..."
+    echo "Resolving node version $requested_version..."
     resolve_result=$(resolve node "$requested_version" || echo "failed")
+
+    if [[ "$resolve_result" == "failed" ]]; then
+      fail_bin_install node "$requested_version"
+    fi
+
     version=$(echo "$resolve_result" | jq -r .version)
     download_url=$(echo "$resolve_result" | jq -r .url)
     checksum_type=$(echo "$resolve_result" | jq -r .checksum_type)
     checksum_value=$(echo "$resolve_result" | jq -r .checksum_value)
     uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
-
-    if [[ "$resolve_result" == "failed" ]]; then
-      fail_bin_install node "$requested_version"
-    fi
 
     if [[ "$uses_wide_range" == "true" ]]; then
       echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a major version"
