@@ -1,0 +1,6 @@
+{
+  "name": "version-bounds-explicitly-greater-than-lts",
+  "engines": {
+    "node": ">=25"
+  }
+}

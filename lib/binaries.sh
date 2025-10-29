@@ -47,51 +47,66 @@ install_yarn() {
 }
 
 install_nodejs() {
-  local version="${1:-}"
+  local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
 
-  if [[ -z "$version" ]]; then
-      version="22.x"
+  if [[ -z "$requested_version" ]]; then
+      requested_version="22.x"
   fi
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
-    url="$NODE_BINARY_URL"
-    echo "Downloading and installing node from $url"
+    download_url="$NODE_BINARY_URL"
+    echo "Downloading and installing node from $download_url"
   else
-    echo "Resolving node version $version..."
-    resolve_result=$(resolve node "$version" || echo "failed")
-
-    read -r number url checksum_name digest < <(echo "$resolve_result")
+    echo "Resolving node requested_version $requested_version..."
+    resolve_result=$(resolve node "$requested_version" || echo "failed")
+    version=$(echo "$resolve_result" | jq -r .version)
+    download_url=$(echo "$resolve_result" | jq -r .url)
+    checksum_type=$(echo "$resolve_result" | jq -r .checksum_type)
+    checksum_value=$(echo "$resolve_result" | jq -r .checksum_value)
+    uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
+    lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
 
     if [[ "$resolve_result" == "failed" ]]; then
-      fail_bin_install node "$version"
+      fail_bin_install node "$requested_version"
     fi
 
-    echo "Downloading and installing node $number..."
+    if [[ "$uses_wide_range" == "true" ]]; then
+      echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a major version"
+      echo "  you may not expect. Limiting the requested range to a major range like \`24.x\` is recommended."
+      echo "  https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+    fi
 
-    if [[ "$number" == "22.5.0" ]]; then
+    if [[ "$lts_upper_bound_enforced" == "true" ]]; then
+      echo "! The resolved Node.js version has been limited to the Active LTS of the requested range ($requested_version)."
+      echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
+    fi
+
+    echo "Downloading and installing node $version..."
+
+    if [[ "$version" == "22.5.0" ]]; then
       warn_about_node_version_22_5_0
     fi
   fi
 
   output_file="/tmp/node.tar.gz"
-  code=$(curl "$url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o "$output_file" --write-out "%{http_code}")
+  code=$(curl "$download_url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o "$output_file" --write-out "%{http_code}")
 
   if [ "$code" != "200" ]; then
     echo "Unable to download node: $code" && false
   fi
 
   if [[ -z "$NODE_BINARY_URL" ]]; then
-    case "$checksum_name" in
+    case "$checksum_type" in
       "sha256")
         echo "Validating checksum"
-        if ! echo "$digest $output_file" | sha256sum --check --status; then
-          echo "Checksum validation failed for Node.js $number - $checksum_name:$digest" && false
+        if ! echo "$checksum_value $output_file" | sha256sum --check --status; then
+          echo "Checksum validation failed for Node.js $version - $checksum_type:$checksum_value" && false
         fi
         ;;
       *)
-        echo "Unsupported checksum for Node.js $number - $checksum_name:$digest" && false
+        echo "Unsupported checksum for Node.js $version - $checksum_type:$checksum_value" && false
         ;;
     esac
   fi
