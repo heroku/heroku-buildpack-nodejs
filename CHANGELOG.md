@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Added Node.js 25.1.0 (linux-amd64)
+- Added Node.js 24.11.0 (linux-amd64)
+- Added Node.js 22.21.1 (linux-amd64)
 
 ## [v315] - 2025-10-23
 
