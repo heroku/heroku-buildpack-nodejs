@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Update Node.js version resolver binary to emit warnings about wide version ranges and enforce the LTS upper bound.
 
 ## [v315] - 2025-10-23
 
