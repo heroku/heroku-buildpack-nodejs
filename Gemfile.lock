@@ -30,7 +30,7 @@ GEM
       heroics (~> 0.1.1)
       moneta (~> 1.0.0)
       rate_throttle_client (~> 0.1.0)
-    rake (13.3.0)
+    rake (13.3.1)
     rate_throttle_client (0.1.2)
     rrrretry (1.0.0)
     rspec-core (3.13.0)
