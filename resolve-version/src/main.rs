@@ -458,6 +458,6 @@ mod tests {
             url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
             checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
         "#;
-        NodeInventory::from_str(&contents).unwrap()
+        NodeInventory::from_str(contents).unwrap()
     }
 }
