@@ -74,14 +74,21 @@ install_nodejs() {
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
 
     if [[ "$uses_wide_range" == "true" ]]; then
+      echo
       echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a major version"
       echo "  you may not expect. Limiting the requested range to a major range like \`24.x\` is recommended."
       echo "  https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
     fi
 
     if [[ "$lts_upper_bound_enforced" == "true" ]]; then
+      echo
       echo "! The resolved Node.js version has been limited to the Active LTS of the requested range ($requested_version)."
       echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
+    fi
+
+    # if either warning message was displayed, ensure we add a newline before continuing with regular output
+    if [[ "$uses_wide_range" == "true" ]] || [[ "$lts_upper_bound_enforced" == "true" ]]; then
+      echo
     fi
 
     echo "Downloading and installing node $version..."
