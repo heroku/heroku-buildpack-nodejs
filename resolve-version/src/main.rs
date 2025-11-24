@@ -94,19 +94,19 @@ fn resolve_node_artifact<'a>(
     let lts_range = Requirement::from_str(&lts_range_value)
         .unwrap_or_else(|_| panic!("Range {lts_range_value} should be valid"));
 
-    if let Some(requested_artifact) = node_inventory.resolve(os, arch, requirement)
+    if let Some(resolved_artifact) = node_inventory.resolve(os, arch, requirement)
         && let Some(highest_lts_artifact) = node_inventory.resolve(os, arch, &lts_range)
     {
         let uses_wide_range =
-            if requirement.satisfies(&Version::new(requested_artifact.version.major - 1, 0, 0))
-                || requirement.satisfies(&Version::new(requested_artifact.version.major + 1, 0, 0))
+            if requirement.satisfies(&Version::new(resolved_artifact.version.major - 1, 0, 0))
+                || requirement.satisfies(&Version::new(resolved_artifact.version.major + 1, 0, 0))
             {
                 UsesWideRange(true)
             } else {
                 UsesWideRange(false)
             };
 
-        let lts_upper_bound_enforced = if requested_artifact.version > highest_lts_artifact.version
+        let lts_upper_bound_enforced = if resolved_artifact.version > highest_lts_artifact.version
             && let Some(min_version) = requirement.deref().min_version()
             && min_version <= highest_lts_artifact.version
         {
@@ -118,7 +118,7 @@ fn resolve_node_artifact<'a>(
             if *lts_upper_bound_enforced {
                 highest_lts_artifact
             } else {
-                requested_artifact
+                resolved_artifact
             },
             uses_wide_range,
             lts_upper_bound_enforced,
