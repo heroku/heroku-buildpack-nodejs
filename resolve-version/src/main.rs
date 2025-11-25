@@ -17,6 +17,10 @@ type NodeInventory = libherokubuildpack::inventory::Inventory<Version, Sha256, O
 type NodeArtifact = libherokubuildpack::inventory::artifact::Artifact<Version, Sha256, Option<()>>;
 
 fn main() {
+    let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
+        .map(|val| val == "true")
+        .unwrap_or(false);
+
     let matches = Command::new("resolve_version")
         .arg(arg!(<inventory_path>))
         .arg(arg!(<node_version>))
@@ -75,6 +79,7 @@ fn main() {
         arch,
         &version_requirements,
         lts_major_version,
+        allow_wide_range,
     ) {
         println!(
             "{}",
@@ -98,6 +103,7 @@ fn resolve_node_artifact<'a>(
     arch: Arch,
     requirement: &Requirement,
     lts_major_version: i64,
+    allow_wide_range: bool,
 ) -> Option<(&'a NodeArtifact, UsesWideRange, LtsUpperBoundEnforced)> {
     let lts_range_value = format!("{lts_major_version}.x");
     let lts_range = Requirement::from_str(&lts_range_value)
@@ -115,7 +121,9 @@ fn resolve_node_artifact<'a>(
                 UsesWideRange(false)
             };
 
-        let lts_upper_bound_enforced = if resolved_artifact.version > highest_lts_artifact.version
+        let lts_upper_bound_enforced = if allow_wide_range {
+            LtsUpperBoundEnforced(false)
+        } else if resolved_artifact.version > highest_lts_artifact.version
             && let Some(min_version) = requirement.deref().min_version()
             && min_version <= highest_lts_artifact.version
         {
@@ -204,6 +212,8 @@ mod tests {
     use super::*;
 
     const TEST_LTS_MAJOR_VERSION: i64 = 24;
+    const ALLOW_WIDE_RANGE: bool = true;
+    const DISALLOW_WIDE_RANGE: bool = false;
 
     #[test]
     fn parse_handles_latest() {
@@ -324,6 +334,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 24);
@@ -341,6 +352,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 22);
@@ -358,6 +370,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 22);
@@ -375,6 +388,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 24);
@@ -392,6 +406,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 24);
@@ -409,6 +424,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 24);
@@ -426,6 +442,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 25);
@@ -443,6 +460,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 25);
@@ -460,6 +478,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 25);
@@ -477,6 +496,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 24);
@@ -494,6 +514,7 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 25);
@@ -511,10 +532,29 @@ mod tests {
             Arch::Amd64,
             &wide_requirement,
             TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
         )
         .unwrap();
         assert_eq!(artifact.version.major, 24);
         assert!(!*show_wide_range_warning);
+        assert!(!*show_downgrade_warning);
+    }
+
+    #[test]
+    fn resolve_version_with_wide_range_environment_override_to_prevent_downgrade() {
+        let wide_requirement = Requirement::from_str(">=22.x").unwrap();
+        let inventory = create_inventory();
+        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
+            &inventory,
+            Os::Linux,
+            Arch::Amd64,
+            &wide_requirement,
+            TEST_LTS_MAJOR_VERSION,
+            ALLOW_WIDE_RANGE,
+        )
+        .unwrap();
+        assert_eq!(artifact.version.major, 25);
+        assert!(*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
