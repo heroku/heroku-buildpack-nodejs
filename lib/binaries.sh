@@ -3,12 +3,12 @@
 # Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
 RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
 
-resolve() {
-  local binary="$1"
-  local versionRequirement="$2"
+resolve_nodejs() {
+  local node_version="$1"
+  local lts_major_version="$2"
   local output
 
-  if output=$($RESOLVE "$BP_DIR/inventory/$binary.toml" "$versionRequirement"); then
+  if output=$($RESOLVE "$BP_DIR/inventory/node.toml" "$node_version" "$lts_major_version"); then
     if [[ $output = "No result" ]]; then
       return 1
     else
@@ -50,9 +50,10 @@ install_nodejs() {
   local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
+  local lts_major_version="22"
 
   if [[ -z "$requested_version" ]]; then
-      requested_version="22.x"
+      requested_version="$lts_major_version.x"
   fi
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
@@ -60,7 +61,7 @@ install_nodejs() {
     echo "Downloading and installing node from $download_url"
   else
     echo "Resolving node version $requested_version..."
-    resolve_result=$(resolve node "$requested_version" || echo "failed")
+    resolve_result=$(resolve_nodejs "$requested_version" "$lts_major_version" || echo "failed")
 
     if [[ "$resolve_result" == "failed" ]]; then
       fail_bin_install node "$requested_version"
@@ -75,14 +76,14 @@ install_nodejs() {
 
     if [[ "$uses_wide_range" == "true" ]]; then
       echo
-      echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a major version"
-      echo "  you may not expect. Limiting the requested range to a major range like \`24.x\` is recommended."
+      echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version"
+      echo "  higher than you intended. Limiting the requested range to a major LTS range like \`$lts_major_version.x\` is recommended."
       echo "  https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
     fi
 
     if [[ "$lts_upper_bound_enforced" == "true" ]]; then
       echo
-      echo "! The resolved Node.js version has been limited to the Active LTS of the requested range ($requested_version)."
+      echo "! The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`."
       echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
     fi
 

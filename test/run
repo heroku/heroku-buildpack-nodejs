@@ -2110,7 +2110,7 @@ testErrorYarnLockfileOutOfSync() {
 testVersionBoundsWide() {
   compile "version-bounds-wide"
   assertCaptured "! The requested Node.js version is using a wide range"
-  assertCaptured "! The resolved Node.js version has been limited to the Active LTS of the requested range"
+  assertCaptured "! The resolved Node.js version has been limited to the Active LTS"
   assertCapturedSuccess
 }
 
@@ -2118,7 +2118,7 @@ testVersionBoundsWide() {
 testVersionBoundsNarrow() {
   compile "version-bounds-narrow"
   assertNotCaptured "! The requested Node.js version is using a wide range"
-  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS of the requested range"
+  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
   assertCapturedSuccess
 }
 
@@ -2126,7 +2126,7 @@ testVersionBoundsNarrow() {
 testVersionBoundsExplicitlyGreaterThanLTS() {
   compile "version-bounds-explicitly-greater-than-lts"
   assertCaptured "! The requested Node.js version is using a wide range"
-  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS of the requested range"
+  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
   assertCapturedSuccess
 }
 
