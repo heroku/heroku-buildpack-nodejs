@@ -64,7 +64,7 @@ install_nodejs() {
     resolve_result=$(resolve_nodejs "$requested_version" "$lts_major_version" || echo "failed")
 
     if [[ "$resolve_result" == "failed" ]]; then
-      fail_bin_install node "$requested_version"
+      fail_bin_install "$requested_version" "$lts_major_version"
     fi
 
     version=$(echo "$resolve_result" | jq -r .version)
