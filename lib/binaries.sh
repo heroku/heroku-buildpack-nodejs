@@ -84,7 +84,7 @@ install_nodejs() {
     if [[ "$lts_upper_bound_enforced" == "true" ]]; then
       echo
       echo "! The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`."
-      echo "! To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`"
+      echo "  To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`"
       echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
     fi
 
