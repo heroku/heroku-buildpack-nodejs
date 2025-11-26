@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 20.19.6 (linux-amd64)
 
 ## [v318] - 2025-11-18
 
