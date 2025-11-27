@@ -165,7 +165,7 @@ testYarnRun() {
 }
 
 testNoVersion() {
-  local default_version="22"
+  local default_version="24"
   compile "no-version"
   assertCaptured "engines.node (package.json):   unspecified"
   assertCaptured "Resolving node version ${default_version}.x"
@@ -1495,7 +1495,7 @@ testYarnBuildMetaData() {
   assertMetrics "${cache_dir}" <<-'EOF'
     select(.build_step == "finished")
     select(.build_time | type == "number")
-    select(.bundled_npm_version | test("10.\\d+.\\d+"))
+    select(.bundled_npm_version | test("11.\\d+.\\d+"))
     select(.cache_status == "not-found")
     select(.has_cached_bower_components == false)
     select(.has_custom_cache_dirs == false)
@@ -1506,8 +1506,8 @@ testYarnBuildMetaData() {
     select(.install_node_binary_time | type == "number")
     select(.install_yarn_binary_memory | type == "number")
     select(.install_yarn_binary_time | type == "number")
-    select(.node_version | test("v22.\\d+\\.\\d+"))
-    select(.node_version_major == 22)
+    select(.node_version | test("v24.\\d+\\.\\d+"))
+    select(.node_version_major == 24)
     select(.package_manager == "yarn")
     select(.package_manager_version == "1.22.22")
     select(.prune_dev_dependencies_memory | type == "number")
