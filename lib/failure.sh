@@ -218,32 +218,25 @@ fail_yarn_lockfile_outdated() {
 
 fail_bin_install() {
   local error
-  local bin="$1"
-  local version="$2"
+  local version="$1"
+  local lts_major_version="$2"
 
   # Allow the subcommand to fail without trapping the error so we can
   # get the failing message output
   set +e
 
   # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$BP_DIR/inventory/$bin.toml" "$version" 2>&1)
+  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" "$lts_major_version" 2>&1)
 
   # re-enable trapping
   set -e
 
   if [[ $error = "No result" ]]; then
-    case $bin in
-      node)
-        echo "Could not find Node version corresponding to version requirement: $version";;
-      iojs)
-        echo "Could not find Iojs version corresponding to version requirement: $version";;
-      yarn)
-        echo "Could not find Yarn version corresponding to version requirement: $version";;
-    esac
+    echo "Could not find Node version corresponding to version requirement: $version"
   elif [[ $error == "Could not parse"* ]] || [[ $error == "Could not get"* ]]; then
     echo "Error: Invalid semantic version \"$version\""
   else
-    echo "Error: Unknown error installing \"$version\" of $bin"
+    echo "Error: Unknown error installing \"$version\" of node"
   fi
 
   return 1

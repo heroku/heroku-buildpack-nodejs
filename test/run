@@ -2106,6 +2106,37 @@ testErrorYarnLockfileOutOfSync() {
   assertMetricEqualsString "${cache_dir}" "failure" "yarn-lockfile-out-of-sync"
 }
 
+# Node version bounds
+testOptOutOfWideVersionDowngrade() {
+  env_dir=$(mktmpdir)
+  echo "true" > "$env_dir/NODEJS_ALLOW_WIDE_RANGE"
+  compile "version-bounds-wide" "$(mktmpdir)" "$env_dir"
+  assertCaptured "! The requested Node.js version is using a wide range"
+  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccess
+}
+
+testVersionBoundsWide() {
+  compile "version-bounds-wide"
+  assertCaptured "! The requested Node.js version is using a wide range"
+  assertCaptured "! The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccess
+}
+
+testVersionBoundsNarrow() {
+  compile "version-bounds-narrow"
+  assertNotCaptured "! The requested Node.js version is using a wide range"
+  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccess
+}
+
+testVersionBoundsExplicitlyGreaterThanLTS() {
+  compile "version-bounds-explicitly-greater-than-lts"
+  assertCaptured "! The requested Node.js version is using a wide range"
+  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccess
+}
+
 # Utils
 
 pushd "$(dirname 0)" >/dev/null
