@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Updated default Node.js version to 24.x. ([#1510](https://github.com/heroku/heroku-buildpack-nodejs/pull/1510)) 
 
 ## [v319] - 2025-11-26
 
