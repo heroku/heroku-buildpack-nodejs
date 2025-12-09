@@ -50,7 +50,7 @@ install_nodejs() {
   local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
-  local lts_major_version="22"
+  local lts_major_version="24"
 
   if [[ -z "$requested_version" ]]; then
       requested_version="$lts_major_version.x"

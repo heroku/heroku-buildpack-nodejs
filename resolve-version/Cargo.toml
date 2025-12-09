@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 clap = { version = "4", features = ["cargo", "derive"] }
 hex = "0.4"
-libherokubuildpack = { version = "=0.30.0", default-features = false, features = [
+libherokubuildpack = { version = "=0.30.2", default-features = false, features = [
     "inventory",
     "inventory-sha2",
 ] }

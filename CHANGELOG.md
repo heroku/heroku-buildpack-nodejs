@@ -4,6 +4,14 @@
 
 - Update Node.js version resolver binary to emit warnings about wide version ranges and enforce the LTS upper bound. ([#1498](https://github.com/heroku/heroku-buildpack-nodejs/pull/1498))
 
+## [v320] - 2025-12-03
+
+- Updated default Node.js version to 24.x. ([#1510](https://github.com/heroku/heroku-buildpack-nodejs/pull/1510)) 
+
+## [v319] - 2025-11-26
+
+- Added Node.js 20.19.6 (linux-amd64)
+
 ## [v318] - 2025-11-18
 
 - Added Node.js 25.2.1 (linux-amd64)
@@ -1179,7 +1187,9 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v318...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v320...main
+[v320]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v319...v320
+[v319]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v318...v319
 [v318]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v317...v318
 [v317]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v316...v317
 [v316]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v315...v316
