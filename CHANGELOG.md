@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v321] - 2025-12-09
+
 - Update Node.js version resolver binary to emit warnings about wide version ranges and enforce the LTS upper bound. ([#1498](https://github.com/heroku/heroku-buildpack-nodejs/pull/1498))
 
 ## [v320] - 2025-12-03
@@ -1187,7 +1190,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v320...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v321...main
+[v321]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v320...v321
 [v320]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v319...v320
 [v319]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v318...v319
 [v318]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v317...v318
