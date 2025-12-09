@@ -4,6 +4,7 @@ build-resolvers: build-resolver-linux
 	mkdir -p .build
 
 build-resolver-linux: .build
+	@cargo test --manifest-path ./resolve-version/Cargo.toml
 	CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER="$(shell which x86_64-unknown-linux-musl-gcc)" \
 	    CC_X86_64_UNKNOWN_LINUX_MUSL="$(shell which x86_64-unknown-linux-musl-gcc)" \
 	    cargo build --manifest-path ./resolve-version/Cargo.toml --target x86_64-unknown-linux-musl --profile release

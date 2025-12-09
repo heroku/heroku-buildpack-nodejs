@@ -1,0 +1,6 @@
+{
+  "name": "version-bounds-wide",
+  "engines": {
+    "node": ">=22"
+  }
+}

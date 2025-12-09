@@ -11,5 +11,6 @@ libherokubuildpack = { version = "=0.30.2", default-features = false, features =
     "inventory-sha2",
 ] }
 node-semver = "2"
+serde_json = "1"
 sha2 = "0.10.9"
 toml = "0.9"

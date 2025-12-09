@@ -1,0 +1,6 @@
+{
+  "name": "version-bounds-narrow",
+  "engines": {
+    "node": "22.x"
+  }
+}

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Update Node.js version resolver binary to emit warnings about wide version ranges and enforce the LTS upper bound. ([#1498](https://github.com/heroku/heroku-buildpack-nodejs/pull/1498))
 
 ## [v320] - 2025-12-03
 
