@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 24.12.0 (linux-amd64)
 
 ## [v321] - 2025-12-09
 

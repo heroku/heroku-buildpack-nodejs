@@ -27,6 +27,13 @@ url = "https://nodejs.org/download/release/v25.0.0/node-v25.0.0-linux-x64.tar.gz
 checksum = "sha256:28dd46a6733192647d7c8267343f5a3f1c616f773c448e2c0d2539ae70724b40"
 
 [[artifacts]]
+version = "24.12.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v24.12.0/node-v24.12.0-linux-x64.tar.gz"
+checksum = "sha256:6159227e0af7d7c3c6bb2fa900452b04a6cb8841a702a79acc613209d70b04d0"
+
+[[artifacts]]
 version = "24.11.1"
 os = "linux"
 arch = "amd64"
