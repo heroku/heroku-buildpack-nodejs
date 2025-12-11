@@ -133,7 +133,7 @@ restore_custom_cache_directories() {
   if [[ "$PNPM" == "true" ]] && [ -e "$cache_dir/node/cache/pnpm/store" ]; then
     echo "- pnpm store (included because pnpm is used)"
     # the $pnpm_cache_dir is created at the start of the build so, now, if we want to
-    # renaming the cache directory to $pnpm_cache_dir, we have to remove it or we'll
+    # rename the cache directory to $pnpm_cache_dir, we have to remove it or we'll
     # end up with a $pnpm_cache_dir/store directory instead of $pnpm_cache_dir.
     rm -rf "$pnpm_cache_dir"
     mv "$cache_dir/node/cache/pnpm/store" "$pnpm_cache_dir"
