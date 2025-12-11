@@ -308,7 +308,15 @@ pnpm_install() {
   pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
 
   if [ -n "$PNPM_INSTALL_REPORTER" ]; then
-    pnpm_install_args+=("--reporter=$PNPM_INSTALL_REPORTER")
+    case "$PNPM_INSTALL_REPORTER" in
+      default|ndjson|append-only|silent)
+        pnpm_install_args+=("--reporter=$PNPM_INSTALL_REPORTER")
+        ;;
+      *)
+        echo "Warning: Invalid PNPM_INSTALL_REPORTER value '$PNPM_INSTALL_REPORTER'. Valid values: default, ndjson, append-only, silent"
+        echo "Proceeding with default reporter"
+        ;;
+    esac
   fi
 
   monitor "install_dependencies" pnpm "${pnpm_install_args[@]}" 2>&1
