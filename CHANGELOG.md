@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix for pnpm + custom caching. ([#1522](https://github.com/heroku/heroku-buildpack-nodejs/pull/1522))
 
 ## [v321] - 2025-12-09
 
