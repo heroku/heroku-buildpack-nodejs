@@ -1716,6 +1716,28 @@ testCorepackNpmRegistryKeyFix() {
 
 # PNPM
 
+testPnpmWithCustomCache() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "ndjson" > "$env_dir/PNPM_INSTALL_REPORTER"
+
+  compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
+  assertCaptured "pnpm:fetching-progress"
+  assertCaptured "Saving cacheDirectories (package.json):"
+  assertCaptured "- node_modules (skipping because pnpm is used)"
+  assertCaptured "- data"
+  assertCaptured "- pnpm store (included because pnpm is used)"
+  assertCapturedSuccess
+
+  compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
+  assertCaptured " Loading from cacheDirectories (package.json):"
+  assertCaptured "- node_modules (skipping because pnpm is used)"
+  assertCaptured "- data (exists - skipping)"
+  assertCaptured "- pnpm store (included because pnpm is used)"
+  assertNotCaptured "pnpm:fetching-progress"
+  assertCapturedSuccess
+}
+
 testPnpm7Pnp() {
   build_dir=$(mktmpdir)
   cache_dir=$(mktmpdir)
