@@ -115,7 +115,7 @@ restore_custom_cache_directories() {
   echo "Loading from cacheDirectories (package.json):"
 
   for cachepath in "${cache_directories[@]}"; do
-    if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules ]]; then
+    if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules(/|$) ]]; then
       echo "- $cachepath (skipping because pnpm is used)"
     elif [ -e "$build_dir/$cachepath" ]; then
       echo "- $cachepath (exists - skipping)"
@@ -211,7 +211,7 @@ save_custom_cache_directories() {
   echo "Saving cacheDirectories (package.json):"
 
   for cachepath in "${cache_directories[@]}"; do
-    if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules ]]; then
+    if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules(/|$) ]]; then
       echo "- $cachepath (skipping because pnpm is used)"
     elif [ -e "$build_dir/$cachepath" ]; then
       echo "- $cachepath"
