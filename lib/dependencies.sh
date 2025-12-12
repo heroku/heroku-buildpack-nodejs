@@ -305,7 +305,21 @@ pnpm_install() {
   echo "Running 'pnpm install' with pnpm-lock.yaml"
   cd "$build_dir" || return
 
-  monitor "install_dependencies" pnpm install --prod=false --frozen-lockfile 2>&1
+  pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
+
+  if [ -n "$PNPM_INSTALL_REPORTER" ]; then
+    case "$PNPM_INSTALL_REPORTER" in
+      default|ndjson|append-only|silent)
+        pnpm_install_args+=("--reporter=$PNPM_INSTALL_REPORTER")
+        ;;
+      *)
+        echo "Warning: Invalid PNPM_INSTALL_REPORTER value '$PNPM_INSTALL_REPORTER'. Valid values: default, ndjson, append-only, silent"
+        echo "Proceeding with default reporter"
+        ;;
+    esac
+  fi
+
+  monitor "install_dependencies" pnpm "${pnpm_install_args[@]}" 2>&1
 
   # prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
   counter=$(load_pnpm_prune_store_counter "$cache_dir")

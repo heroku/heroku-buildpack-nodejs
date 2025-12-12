@@ -108,13 +108,16 @@ restore_custom_cache_directories() {
   local cache_directories
   local build_dir=${1:-}
   local cache_dir=${2:-}
+  local pnpm_cache_dir=${3:-}
   # Parse the input string with multiple lines: "a\nb\nc" into an array
-  mapfile -t cache_directories <<< "$3"
+  mapfile -t cache_directories <<< "$4"
 
-  echo "Loading ${#cache_directories[@]} from cacheDirectories (package.json):"
+  echo "Loading from cacheDirectories (package.json):"
 
   for cachepath in "${cache_directories[@]}"; do
-    if [ -e "$build_dir/$cachepath" ]; then
+    if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules(/|$) ]]; then
+      echo "- $cachepath (skipping because pnpm is used)"
+    elif [ -e "$build_dir/$cachepath" ]; then
       echo "- $cachepath (exists - skipping)"
     else
       if [ -e "$cache_dir/node/cache/$cachepath" ]; then
@@ -126,6 +129,15 @@ restore_custom_cache_directories() {
       fi
     fi
   done
+
+  if [[ "$PNPM" == "true" ]] && [ -e "$cache_dir/node/cache/pnpm/store" ]; then
+    echo "- pnpm store (included because pnpm is used)"
+    # the $pnpm_cache_dir is created at the start of the build so, now, if we want to
+    # rename the cache directory to $pnpm_cache_dir, we have to remove it or we'll
+    # end up with a $pnpm_cache_dir/store directory instead of $pnpm_cache_dir.
+    rm -rf "$pnpm_cache_dir"
+    mv "$cache_dir/node/cache/pnpm/store" "$pnpm_cache_dir"
+  fi
 }
 
 clear_cache() {
@@ -192,13 +204,16 @@ save_custom_cache_directories() {
   local cache_directories
   local build_dir=${1:-}
   local cache_dir=${2:-}
+  local pnpm_cache_dir=${3:-}
   # Parse the input string with multiple lines: "a\nb\nc" into an array
-  mapfile -t cache_directories <<< "$3"
+  mapfile -t cache_directories <<< "$4"
 
-  echo "Saving ${#cache_directories[@]} cacheDirectories (package.json):"
+  echo "Saving cacheDirectories (package.json):"
 
   for cachepath in "${cache_directories[@]}"; do
-    if [ -e "$build_dir/$cachepath" ]; then
+    if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules(/|$) ]]; then
+      echo "- $cachepath (skipping because pnpm is used)"
+    elif [ -e "$build_dir/$cachepath" ]; then
       echo "- $cachepath"
       mkdir -p "$cache_dir/node/cache/$cachepath"
       cp -a "$build_dir/$cachepath" "$(dirname "$cache_dir/node/cache/$cachepath")"
@@ -206,6 +221,12 @@ save_custom_cache_directories() {
       echo "- $cachepath (nothing to cache)"
     fi
   done
+
+  if [[ "$PNPM" == "true" ]] && [ -e "$pnpm_cache_dir" ]; then
+    echo "- pnpm store (included because pnpm is used)"
+    mkdir -p "$cache_dir/node/cache/pnpm"
+    cp -a "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm/store"
+  fi
 
   build_data::set_raw "has_custom_cache_dirs" "true"
 }

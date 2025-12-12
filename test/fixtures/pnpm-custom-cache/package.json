@@ -1,0 +1,11 @@
+{
+  "name": "pnpm-custom-cache",
+  "packageManager": "pnpm@10.12.4",
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  },
+  "cacheDirectories": [
+    "node_modules",
+    "data"
+  ]
+}
