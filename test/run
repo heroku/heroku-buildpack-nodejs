@@ -1992,6 +1992,13 @@ testPnpmWorkspaceBinaries() {
   assertCapturedSuccess
 }
 
+testPnpmWorkspaceFileExistsButNotConfiguredAsWorkspace() {
+  compile "pnpm-workspace-file-exists-but-not-configured-as-workspace"
+  assertCaptured "+ dotenv"
+  assertCaptured "- dotenv"
+  assertCapturedSuccess
+}
+
 testWarningNode_22_5_0() {
   compile "node-22.5.0-warning"
   assertCaptured "Issues with Node.js v22.5.0"

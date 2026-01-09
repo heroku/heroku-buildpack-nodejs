@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix pnpm workspace detection. ([#1528](https://github.com/heroku/heroku-buildpack-nodejs/pull/1528))
 
 ## [v323] - 2026-01-09
 
