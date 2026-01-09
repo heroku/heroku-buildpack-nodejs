@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- The corepack tool will no longer be used to install pnpm and Yarn. Usage of the `packageManager` field in `package.json` to declare pnpm as the package manager is still supported. ([#1527](https://github.com/heroku/heroku-buildpack-nodejs/pull/1527))
 - Fix for pnpm + custom caching. ([#1522](https://github.com/heroku/heroku-buildpack-nodejs/pull/1522))
 
 ## [v322] - 2025-12-11
