@@ -557,7 +557,7 @@ testBuildWithUserCacheDirectoriesCamel() {
   assertCapturedSuccess
 
   compile "cache-directories-camel" $cache
-  assertCaptured "Loading 3 from cacheDirectories"
+  assertCaptured "Loading from cacheDirectories"
   assertCaptured "- server/node_modules"
   assertCaptured "- client/node_modules"
   assertCaptured "- non/existent (not cached - skipping)"
@@ -963,13 +963,13 @@ testBuildWithUserCacheDirectories() {
   cache=$(mktmpdir)
 
   compile "cache-directories" $cache
-  assertCaptured "Saving 2 cacheDirectories"
+  assertCaptured "Saving cacheDirectories"
   assertEquals "1" "$(ls -1 $cache/node/cache | grep -c bower_components | tr -d ' ')"
   assertEquals "1" "$(ls -1 $cache/node/cache | grep -c node_modules | tr -d ' ')"
   assertCapturedSuccess
 
   compile "cache-directories" $cache
-  assertCaptured "Loading 2 from cacheDirectories"
+  assertCaptured "Loading from cacheDirectories"
   assertCaptured "- node_modules"
   assertCaptured "- bower_components"
   assertCapturedSuccess
@@ -1715,6 +1715,28 @@ testCorepackNpmRegistryKeyFix() {
 }
 
 # PNPM
+
+testPnpmWithCustomCache() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "ndjson" > "$env_dir/PNPM_INSTALL_REPORTER"
+
+  compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
+  assertCaptured "pnpm:fetching-progress"
+  assertCaptured "Saving cacheDirectories (package.json):"
+  assertCaptured "- node_modules (skipping because pnpm is used)"
+  assertCaptured "- data"
+  assertCaptured "- pnpm store (included because pnpm is used)"
+  assertCapturedSuccess
+
+  compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
+  assertCaptured " Loading from cacheDirectories (package.json):"
+  assertCaptured "- node_modules (skipping because pnpm is used)"
+  assertCaptured "- data (exists - skipping)"
+  assertCaptured "- pnpm store (included because pnpm is used)"
+  assertNotCaptured "pnpm:fetching-progress"
+  assertCapturedSuccess
+}
 
 testPnpm7Pnp() {
   build_dir=$(mktmpdir)

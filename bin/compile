@@ -339,7 +339,7 @@ restore_cache() {
     if [[ "$cache_directories" == "" ]]; then
       restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
     else
-      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
+      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
     fi
   elif [[ "$cache_status" == "new-signature" ]]; then
     header "Restoring cache"
@@ -414,7 +414,7 @@ cache_build() {
     save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
   else
     header "Caching build"
-    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$cache_directories"
+    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
   fi
   save_signature "$CACHE_DIR"
   build_data::set_duration "save_cache_time" "$cache_build_start_time"
