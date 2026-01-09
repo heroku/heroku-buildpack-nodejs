@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v323] - 2026-01-09
+
 - Fix for pnpm + custom caching. ([#1522](https://github.com/heroku/heroku-buildpack-nodejs/pull/1522))
 
 ## [v322] - 2025-12-11
@@ -1195,7 +1198,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v322...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v323...main
+[v323]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v322...v323
 [v322]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v321...v322
 [v321]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v320...v321
 [v320]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v319...v320
