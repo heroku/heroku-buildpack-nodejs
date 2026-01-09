@@ -394,7 +394,7 @@ pnpm_workspace_configured() {
 
   yq="$BP_DIR/lib/vendor/yq-$(get_os)"
 
-  if [[ -n "$workspace_file" ]]; then
+  if [[ -f "$workspace_file" ]]; then
     # prior to pnpm 10.5.0, the `packages` key was mandatory, but now, you can store
     # other pnpm-related config settings in `pnpm-workspace.yaml`.
     result=$($yq r "$workspace_file" 'packages' 2>&1)
