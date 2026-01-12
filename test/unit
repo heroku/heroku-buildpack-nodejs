@@ -130,18 +130,22 @@ testKeyValueNoFile() {
 
 testWebConcurrencyDoesNotOverrideManualValue() {
   WEB_CONCURRENCY=123
+  unset WEB_CONCURRENCY_SET_BY
 
   source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
   assertEquals 123 "$WEB_CONCURRENCY"
+  assertNull "WEB_CONCURRENCY_SET_BY is not null" "$WEB_CONCURRENCY_SET_BY"
 }
 
 testWebConcurrencySetsAValueWhenUnset() {
   unset WEB_CONCURRENCY
+  unset WEB_CONCURRENCY_SET_BY
 
   source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
   assertNotNull "WEB_CONCURRENCY is null" "$WEB_CONCURRENCY"
+  assertEquals "heroku/nodejs" "$WEB_CONCURRENCY_SET_BY"
 }
 
 testWebConcurrencyProfileScript() {
