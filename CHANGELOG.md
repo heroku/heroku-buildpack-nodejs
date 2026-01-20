@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 25.4.0 (linux-amd64)
 
 ## [v324] - 2026-01-14
 
