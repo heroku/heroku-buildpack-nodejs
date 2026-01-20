@@ -4,7 +4,7 @@
 testNpmCi() {
   local log_file cache
   build_dir=$(mktmpdir)
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   compile "node-14-npm-ci" "$cache_dir" "$env_dir" "$build_dir"
@@ -25,7 +25,7 @@ testNpmCi() {
 }
 
 testNpmCiShrinkwrap() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
 
   compile "node-10-npm-ci-shrinkwrap" "$cache_dir"
 
@@ -44,7 +44,7 @@ testNpmCiShrinkwrap() {
 }
 
 testNpmCiFallback() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   # without a lockfile we should use "npm install" instead of "npm ci"
   compile "node-14-npm-ci-no-lockfile" "${cache_dir}"
   assertCapturedSuccess
@@ -53,7 +53,7 @@ testNpmCiFallback() {
 }
 
 testNpmCiDisabled() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   log_file=$(mktemp)
 
@@ -69,6 +69,17 @@ testFlatmapStream() {
   compile "flatmap-stream"
   assertCaptured "flatmap-stream module has been removed from the npm registry"
   assertCapturedError
+}
+
+testCacheOnSeparateFilesystem() {
+  cache_dir=$(mktmpdir cache)
+  build_dir=$(mktmpdir)
+
+  # Verify they're on different filesystems
+  cache_dev=$(df "$cache_dir" | tail -1 | awk '{print $1}')
+  build_dev=$(df "$build_dir" | tail -1 | awk '{print $1}')
+
+  assertNotEquals "Cache and build should be on different filesystems" "$cache_dev" "$build_dev"
 }
 
 testBuildScriptBehavior() {
@@ -97,7 +108,7 @@ testBuildScriptYarn() {
 }
 
 testBuildFlags() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAGS
@@ -109,7 +120,7 @@ testBuildFlags() {
 }
 
 testBuildFlagsWithYarn() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAGS
@@ -174,7 +185,7 @@ testNoVersion() {
 }
 
 testCustomYarnBinaryURL() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   echo "testurl" > $env_dir/YARN_BINARY_URL
@@ -183,7 +194,7 @@ testCustomYarnBinaryURL() {
 }
 
 testCustomNodeBinaryURL() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   echo "https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz" > $env_dir/NODE_BINARY_URL
@@ -194,7 +205,7 @@ testCustomNodeBinaryURL() {
 }
 
 testDisableCache() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   echo "true" > $env_dir/NODE_VERBOSE
@@ -214,7 +225,7 @@ testDisableCache() {
 }
 
 testNodeModulesCached() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
 
   compile "caching" $cache
   assertCaptured "- node_modules"
@@ -223,7 +234,7 @@ testNodeModulesCached() {
 }
 
 testSetBuildEnv() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   compile "print-node-options"
@@ -243,7 +254,7 @@ testYarn() {
 }
 
 testYarnCache() {
-  local cache=$(mktmpdir)
+  local cache=$(mktmpdir cache)
 
   compile "yarn" $cache
 
@@ -254,7 +265,7 @@ testYarnCache() {
 }
 
 testYarnNativeCache() {
-  local cache=$(mktmpdir)
+  local cache=$(mktmpdir cache)
 
   compile "yarn-native-cache" $cache
   # These will be created if yarn is using the directory for its cache
@@ -266,19 +277,19 @@ testYarnNativeCache() {
 }
 
 testNpm5CacheDirectory() {
-  local cache=$(mktmpdir)
+  local cache_dir=$(mktmpdir cache)
   local env_dir=$(mktmpdir)
-  local cache_dir=$(mktmpdir)
-  echo "${cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
-  compile "npm5" $cache $env_dir
+  local npm_cache_dir=$(mktmpdir)
+  echo "${npm_cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
+  compile "npm5" $cache_dir $env_dir
   # These will be created if npm is using the directory for its cache
-  assertDirectoryExists ${cache_dir}/npm
-  assertDirectoryExists ${cache_dir}/npm/_cacache
+  assertDirectoryExists ${npm_cache_dir}/npm
+  assertDirectoryExists ${npm_cache_dir}/npm/_cacache
   assertCapturedSuccess
 }
 
 testBuildWithCache() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
 
   compile "stable-node" $cache
   assertNotCaptured "Restoring cache"
@@ -297,7 +308,7 @@ testBuildWithCache() {
 }
 
 testCacheWithPrebuild() {
-  local cache=$(mktmpdir)
+  local cache=$(mktmpdir cache)
   local env_dir=$(mktmpdir)
   echo 'true' > "$env_dir"/PREBUILD
 
@@ -370,7 +381,7 @@ testYarnSemverInvalid() {
 
 testYarnEngine() {
   build_dir=$(mktmpdir)
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   compile "yarn-engine" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "installing yarn (1.4.0)"
@@ -483,7 +494,7 @@ testWarnDevDeps() {
 }
 
 testEnvBlacklist() {
-  local cache=$(mktmpdir)
+  local cache=$(mktmpdir cache)
   local env_dir=$(mktmpdir)
   echo 'tr_TR.UTF-8' > "$env_dir"/LANG
   echo 'safeVar' > "$env_dir"/SAFE
@@ -524,7 +535,7 @@ testDotHerokuNodeCollision() {
 
 testMultipleRuns() {
   local compileDir=$(mktmpdir)
-  local cacheDir=$(mktmpdir)
+  local cacheDir=$(mktmpdir cache)
 
   cp -a test/fixtures/stable-node/. ${compileDir}
   compileDir "$compileDir" "$cacheDir"
@@ -548,7 +559,7 @@ testBadJson() {
 }
 
 testBuildWithUserCacheDirectoriesCamel() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
 
   compile "cache-directories-camel" $cache
   assertCaptured "- non/existent (nothing to cache)"
@@ -626,7 +637,7 @@ testInvalidNodeSemver() {
 }
 
 testSignatureInvalidation() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   env_dir=$(mktmpdir)
 
   compile "node-0.12.6" $cache
@@ -640,7 +651,7 @@ testSignatureInvalidation() {
 }
 
 testModulesCheckedIn() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
   compile "modules-checked-in" $cache
   assertCapturedSuccess
 
@@ -815,7 +826,7 @@ testYarn4() {
 
 testYarn4WithCorepackEnabled() {
   build_dir=$(mktmpdir)
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   compile "yarn-4-with-corepack" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.yarn (package.json):   unspecified (use default)"
@@ -960,7 +971,7 @@ testInvalidDependency() {
 }
 
 testBuildWithUserCacheDirectories() {
-  cache=$(mktmpdir)
+  cache=$(mktmpdir cache)
 
   compile "cache-directories" $cache
   assertCaptured "Saving cacheDirectories"
@@ -1454,7 +1465,7 @@ testPluginInstallationUnsupportedNodeRunTime() {
 }
 
 testNpmBuildMetaData() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "pre-post-build-scripts" "${cache_dir}"
   assertMetrics "${cache_dir}" <<-'EOF'
     select(.build_step == "finished")
@@ -1490,7 +1501,7 @@ EOF
 }
 
 testYarnBuildMetaData() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "yarn" "${cache_dir}"
   assertMetrics "${cache_dir}" <<-'EOF'
     select(.build_step == "finished")
@@ -1521,7 +1532,7 @@ EOF
 }
 
 testPnpmBuildMetaData() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "pnpm-8.15.5" "${cache_dir}"
   assertMetrics "${cache_dir}" <<-'EOF'
     select(.build_step == "finished")
@@ -1555,7 +1566,7 @@ EOF
 }
 
 testFailingBuildMetaData() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
 
   compile "bad-json" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "invalid-package-json"
@@ -1583,21 +1594,21 @@ testBinDetectWarnings() {
 }
 
 testBinReportSuccess() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile_and_report "node-14" "$cache_dir"
   assertCaptured "$(jq --sort-keys '.' "$cache_dir/build-data/nodejs.json")"
   assertCapturedSuccess
 }
 
 testBinReportScriptsWithQuotes() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile_and_report "complex-scripts" "$cache_dir"
   assertCaptured "$(jq --sort-keys '.' "$cache_dir/build-data/nodejs.json")"
   assertCapturedSuccess
 }
 
 testNpmCiCaching() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
 
@@ -1617,7 +1628,7 @@ testNpmCiCaching() {
 }
 
 testNpmCiCachingWhenUseNpmInstallIsTrue() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/USE_NPM_INSTALL
 
@@ -1637,7 +1648,7 @@ testNpmCiCachingWhenUseNpmInstallIsTrue() {
 }
 
 testNpmCiCachingWhenUseNpmInstallIsFalse() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
   echo "false" > $env_dir/USE_NPM_INSTALL
@@ -1717,7 +1728,7 @@ testCorepackNpmRegistryKeyFix() {
 # PNPM
 
 testPnpmWithCustomCache() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   echo "ndjson" > "$env_dir/PNPM_INSTALL_REPORTER"
 
@@ -1740,7 +1751,7 @@ testPnpmWithCustomCache() {
 
 testPnpm7Pnp() {
   build_dir=$(mktmpdir)
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   compile "pnpm-7-pnp" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
@@ -1782,7 +1793,7 @@ testPnpm8Nuxt() {
 
 testPnpmEngine() {
   build_dir=$(mktmpdir)
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   env_dir=$(mktmpdir)
   compile "pnpm-engine" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.pnpm (package.json):   8.x"
@@ -1820,7 +1831,7 @@ testPnpmWithCorepackAndEngine() {
 
 testPnpmStorePruning() {
   default_counter_value="40"
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
 
   # initial state, no counter exists
   compile "pnpm-7-pnp" "$cache_dir"
@@ -1867,7 +1878,7 @@ testPnpmStorePruning() {
 }
 
 testPnpmCacheSimple() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "pnpm-7-pnp" "$cache_dir"
   assertNotCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
@@ -1880,7 +1891,7 @@ testPnpmCacheSimple() {
 }
 
 testPnpmCacheComplex() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "pnpm-8-nuxt" "$cache_dir"
   assertNotCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
@@ -1936,7 +1947,7 @@ testPnpmSafePruningSupport() {
 }
 
 testPnpmSkipPruning() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
 
   # skip pruning in test environment
   env_dir=$(mktmpdir)
@@ -2042,31 +2053,31 @@ testConflictingPackageManagerMetadata() {
 # Error classifications
 
 testErrorPrebuildScript() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-prebuild-script" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "unknown-prebuild-script-error"
 }
 
 testErrorBuildScript() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-build-script" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
 }
 
 testErrorPostbuildScript() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-postbuild-script" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
 }
 
 testErrorCleanupScript() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-cleanup-script" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "unknown-cleanup-script-error"
 }
 
 testErrorNpmLockfileOutOfSync() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-npm-lockfile-out-of-sync" "${cache_dir}"
   assertCaptured "npm lockfile is not in sync"
   assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
@@ -2075,7 +2086,7 @@ testErrorNpmLockfileOutOfSync() {
 }
 
 testErrorNpmGitDependency() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-npm-git-error" "${cache_dir}"
   assertCaptured "npm Git dependency error (code 128)"
   assertCapturedError
@@ -2083,7 +2094,7 @@ testErrorNpmGitDependency() {
 }
 
 testErrorPeerDependencyConflict() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-npm-peer-dependency-conflict" "${cache_dir}"
   assertCaptured "Conflict detected in requested npm dependencies"
   assertCapturedError
@@ -2095,13 +2106,13 @@ testErrorPeerDependencyConflict() {
 #       of dependencies with peer dependencies that would produce a valid install when
 #       no `package.json` was present then fail on prune.
 # testErrorPrune() {
-#   cache_dir=$(mktmpdir)
+#   cache_dir=$(mktmpdir cache)
 #   compile "error-prune" "${cache_dir}"
 #   assertMetricEqualsString "${cache_dir}" "failure" "unknown-prune-dependencies-error"
 # }
 
 testErrorOpensslUnsupportedAlgorithm() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile 'error-openssl-unsupported-algorithm' "${cache_dir}"
   assertCaptured "Unsupported cryptographic algorithm used"
   assertCaptured "https://devcenter.heroku.com/articles/nodejs-support"
@@ -2110,7 +2121,7 @@ testErrorOpensslUnsupportedAlgorithm() {
 }
 
 testErrorOpensslUnsupportedAlgorithmInWebpack() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile 'error-openssl-unsupported-algorithm-in-webpack' "${cache_dir}"
   assertCaptured "Unsupported cryptographic algorithm used"
   assertCaptured "https://webpack.js.org/configuration/output/#outputhashfunction"
@@ -2119,7 +2130,7 @@ testErrorOpensslUnsupportedAlgorithmInWebpack() {
 }
 
 testErrorOOM() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-oom" "${cache_dir}"
   assertCaptured "Node.js Out-Of-Memory (OOM)"
   assertCapturedError
@@ -2127,7 +2138,7 @@ testErrorOOM() {
 }
 
 testErrorYarnLockfileOutOfSync() {
-  cache_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   compile "error-yarn-lockfile-out-of-sync" "${cache_dir}"
   assertCaptured "Yarn lockfile is not in sync"
   assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
@@ -2175,9 +2186,18 @@ source "$(pwd)"/test/utils
 source "$(pwd)"/lib/environment.sh
 
 mktmpdir() {
-  dir=$(mktemp -t testXXXXX)
-  rm -rf $dir
-  mkdir $dir
+  local type=${1:-build}
+
+  if [[ "$type" == "cache" ]]; then
+    # Cache on separate filesystem (matches production)
+    dir=$(mktemp -d -p /tmp/cache testXXXXX)
+  else
+    # Build/env/other dirs on main filesystem
+    dir=$(mktemp -t testXXXXX)
+    rm -rf $dir
+    mkdir $dir
+  fi
+
   echo $dir
 }
 
@@ -2216,6 +2236,7 @@ compile() {
   default_process_types_cleanup
 
   bp_dir=$(mktmpdir)
+  cache_dir=${2:-$(mktmpdir cache)}
   compile_dir=${4:-$(mktmpdir)}
 
   cp -a "$(pwd)"/* ${bp_dir}
@@ -2228,7 +2249,7 @@ compile() {
     touch "${compile_dir}/heroku-buildpack-features"
   fi
 
-  capture ${bp_dir}/bin/compile ${compile_dir} ${2:-$(mktmpdir)} $3
+  capture ${bp_dir}/bin/compile ${compile_dir} ${cache_dir} $3
 }
 
 # run compile on a fixture and then capture the output of bin/report
@@ -2236,7 +2257,7 @@ compile() {
 # that the output of bin/compile will not be captured
 compile_and_report() {
   default_process_types_cleanup
-  cache_dir=${2:-$(mktmpdir)}
+  cache_dir=${2:-$(mktmpdir cache)}
   env_dir=${3:-$(mktmpdir)}
 
   bp_dir=$(mktmpdir)
@@ -2264,7 +2285,7 @@ report() {
   default_process_types_cleanup
 
   compile_dir=${1:-$(mktmpdir)}
-  cache_dir=${2:-$(mktmpdir)}
+  cache_dir=${2:-$(mktmpdir cache)}
   env_dir=${3:-$(mktmpdir)}
 
   bp_dir=$(mktmpdir)
@@ -2277,9 +2298,10 @@ testCompile() {
   default_process_types_cleanup
   bp_dir=$(mktmpdir)
   compile_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir cache)
   cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
-  capture ${bp_dir}/bin/test-compile ${compile_dir} ${2:-$(mktmpdir)} $3
+  capture ${bp_dir}/bin/test-compile ${compile_dir} ${cache_dir} $3
 }
 
 # This is meant to be run after `compile`. `cleanupStartup` must be run
@@ -2313,12 +2335,12 @@ compileTest() {
 
   local bp_dir=$(mktmpdir)
   local compile_dir=$(mktmpdir)
-  local cache_dir=${2:-$(mktmpdir)}
+  local cache_dir=${2:-$(mktmpdir cache)}
   local env_dir=$3
 
   cp -a "$(pwd)"/* ${bp_dir}
   cp -a ${bp_dir}/test/fixtures/$1/. ${compile_dir}
-  capture ${bp_dir}/bin/test-compile ${compile_dir} ${2:-$(mktmpdir)} $3
+  capture ${bp_dir}/bin/test-compile ${compile_dir} ${cache_dir} ${env_dir}
 
   # On Heroku, $HOME is the /app dir, so we need to set it to
   # the compile_dir here
@@ -2368,6 +2390,29 @@ tearDown() {
       rm -rf $dir
     fi
   done
+}
+
+oneTimeSetUp() {
+  # Host directory is bind-mounted at /tmp/cache by the Makefile
+  # This simulates production's external cache volume on a separate filesystem
+  if [[ ! -d /tmp/cache ]]; then
+    echo "ERROR: /tmp/cache does not exist. Bind mount may have failed."
+    echo ""
+    echo "The test suite requires /tmp/cache to be bind-mounted from the host to simulate"
+    echo "production's external cache volume. This ensures pnpm's linking behavior in tests"
+    echo "matches production (where hard links fail across filesystem boundaries)."
+    echo ""
+    echo "If running tests manually, ensure the Docker container is started with:"
+    echo "  -v /tmp/heroku-buildpack-nodejs-test-cache:/tmp/cache"
+    echo ""
+    echo "Or use the 'make heroku-{XX}-build' targets which handle this automatically."
+    return 1
+  fi
+}
+
+oneTimeTearDown() {
+  # Makefile handles cleanup of host directory
+  :
 }
 
 source "$(pwd)"/test/shunit2

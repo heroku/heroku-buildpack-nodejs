@@ -20,12 +20,27 @@ shellcheck:
 
 heroku-24-build:
 	@echo "Running tests in docker (heroku-24-build)..."
-	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-24" heroku/heroku:24-build bash -c 'cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run;'
+	@mkdir -p /tmp/heroku-buildpack-nodejs-test-cache
+	@docker run \
+	    --platform "linux/amd64" \
+	    -v $(shell pwd):/buildpack:ro \
+	    -v /tmp/heroku-buildpack-nodejs-test-cache:/tmp/cache \
+	    --rm -it \
+	    -e "STACK=heroku-24" \
+	    heroku/heroku:24-build bash -c 'cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run -- testNpm5CacheDirectory;'
+	@rm -rf /tmp/heroku-buildpack-nodejs-test-cache
 	@echo ""
 
 heroku-22-build:
 	@echo "Running tests in docker (heroku-22-build)..."
-	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-22" heroku/heroku:22-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@mkdir -p /tmp/heroku-buildpack-nodejs-test-cache
+	@docker run \
+	    -v $(shell pwd):/buildpack:ro \
+	    -v /tmp/heroku-buildpack-nodejs-test-cache:/tmp/cache \
+	    --rm -it \
+	    -e "STACK=heroku-22" \
+	    heroku/heroku:22-build bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/run;'
+	@rm -rf /tmp/heroku-buildpack-nodejs-test-cache
 	@echo ""
 
 hatchet:
