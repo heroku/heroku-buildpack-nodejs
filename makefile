@@ -27,7 +27,7 @@ heroku-24-build:
 	    -v /tmp/heroku-buildpack-nodejs-test-cache:/tmp/cache \
 	    --rm -it \
 	    -e "STACK=heroku-24" \
-	    heroku/heroku:24-build bash -c 'cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run -- testNpm5CacheDirectory;'
+	    heroku/heroku:24-build bash -c 'cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run;'
 	@rm -rf /tmp/heroku-buildpack-nodejs-test-cache
 	@echo ""
 
