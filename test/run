@@ -1918,7 +1918,9 @@ testPnpmWorkspaceBinaries() {
   assertCaptured "packages/one build$ next --version"
   assertCaptured "packages/two build$ next --version"
   assertCaptured "Next.js v15.0.0-rc.0"
-  assertCaptured "Skipping because pruning is not supported for pnpm workspaces (https://pnpm.io/cli/prune)"
+  assertCaptured "Scope: all 3 workspace projects"
+  assertCaptured "devDependencies: skipped because NODE_ENV is set to production"
+  assertNotCaptured "Skipping because pruning is not supported for pnpm workspaces"
   assertCapturedSuccess
 }
 
