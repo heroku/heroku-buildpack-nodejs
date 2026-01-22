@@ -7,7 +7,7 @@ describe "pnpm support" do
       expect(app.output).to include("Using pnpm")
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
       expect(app.output).to include("Pruning devDependencies")
-      expect(app.output).to include("Removing node_modules from workspace projects")
+      expect(app.output).to include("devDependencies: skipped because NODE_ENV is set to production ")
       expect(successful_body(app).strip).to eq("Hello from pnpm workspace")
     end
   end
