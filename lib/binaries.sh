@@ -164,101 +164,18 @@ install_npm_binary() {
   fi
 }
 
-install_yarn_using_corepack_package_manager() {
-  local package_manager="$1"
-  local node_version="$2"
-  install_corepack_package_manager "$package_manager" "$node_version"
-  suppress_output yarn --version
-  echo "Using yarn $(yarn --version)"
-}
-
-install_pnpm_using_corepack_package_manager() {
-  local package_manager="$1"
-  local node_version="$2"
-  local pnpm_cache="$3"
-  install_corepack_package_manager "$package_manager" "$node_version"
+install_pnpm() {
+  local version="$1"
+  echo "Downloading and installing pnpm ($version)"
+  if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "pnpm@$version"; then
+    echo "Unable to install pnpm $version. " \
+      "Does pnpm $version exist? (https://help.heroku.com/8MEL050H) " \
+      "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
+      "Is yarn $version compatible with this Node.js version?" \ && false
+  fi
+  # Verify pnpm works before capturing and ensure its stderr is inspectable later
   suppress_output pnpm --version
   echo "Using pnpm $(pnpm --version)"
-  pnpm config set store-dir "$pnpm_cache" 2>&1
-}
-
-install_corepack_package_manager() {
-  local node_major_version
-  local node_minor_version
-
-  local package_manager="$1"
-  local node_version="$2"
-
-  node_major_version=$(get_node_major_version)
-  node_minor_version=$(get_node_minor_version)
-
-  # Corepack is available in: v16.9.0, v14.19.0
-  if (( node_major_version >= 17 )) || (( node_major_version == 14 && node_minor_version >= 19 )) || (( node_major_version >= 16 && node_minor_version >= 9 )); then
-    suppress_output corepack --version
-    corepack_version=$(corepack --version)
-    build_data::set_string "corepack_version" "$corepack_version"
-    corepack enable 2>&1
-
-    # The Corepack CLI interface was refactored in 0.20, before that the `install` command was called `prepare` and it
-    # doesn't support the --global argument - https://github.com/nodejs/corepack/blob/main/CHANGELOG.md#0200-2023-08-29
-    corepack_major_version=$(echo "$corepack_version" | cut -d "." -f 1)
-    corepack_minor_version=$(echo "$corepack_version" | cut -d "." -f 2)
-    if (( corepack_major_version == 0 )) && (( corepack_minor_version < 20 )); then
-      corepack_install_command="prepare"
-      corepack_install_args=()
-    else
-      corepack_install_command="install"
-      corepack_install_args=("--global")
-    fi
-
-    # This is a workaround for Node versions that bundle a version of Corepack that is affected by
-    # recent changes to npm's public signing keys:
-    # * Corepack versions before 0.27.0 don't verify the integrity signatures from npm
-    # * Corepack versions after 0.31.0 have the correct npm keys
-    if (( corepack_major_version == 0 )); then
-      if (( corepack_minor_version >= 27 )) || (( corepack_minor_version < 31 )); then
-        export COREPACK_INTEGRITY_KEYS='{
-  "npm": [
-    {
-      "expires": "2025-01-29T00:00:00.000Z",
-      "keyid": "SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA",
-      "keytype": "ecdsa-sha2-nistp256",
-      "scheme": "ecdsa-sha2-nistp256",
-      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp+IhuteBJbuHcA5UogKo0EWtlWwW6KSaKoTNEYL7JlCQiVnkhBktUgg=="
-    },
-    {
-      "expires": null,
-      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
-      "keytype": "ecdsa-sha2-nistp256",
-      "scheme": "ecdsa-sha2-nistp256",
-      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g=="
-    }
-  ]
-}'
-      fi
-    fi
-
-    echo "Installing $(echo "$package_manager" | cut -d "+" -f 1) via corepack ${corepack_version}"
-    install_output=$(mktemp)
-    if ! corepack "${corepack_install_args[@]}" "$corepack_install_command" "$package_manager" > "$install_output" 2>&1; then
-      # always show the output on error
-      cat "$install_output"
-      if grep --ignore-case "mismatch hashes" "$install_output"; then
-        fail_corepack_install_invalid_hash "$package_manager"
-      else
-        fail_corepack_install_invalid_version "$package_manager"
-      fi
-    fi
-  else
-    fail_corepack_not_available "$package_manager" "$node_version"
-  fi
-
-  # XXX: Because the corepack binary scripts are located in a sub-directory of the application directory,
-  #      the `type` field from application's package.json can accidentally force an incorrect module
-  #      system from being detected which influences how these binaries scripts are then loaded. Adding the
-  #      following dummy package.json with no `type` set will short-circuit that from happening when Node.js
-  #      runs it's rules for determining the module system.
-  echo '{ "name": "halt-node-module-system-determination-rules", "version": "0.0.0" }' > "$COREPACK_HOME/package.json"
 }
 
 suppress_output() {

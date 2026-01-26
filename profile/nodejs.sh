@@ -1,8 +1,6 @@
 export PATH="$HOME/.heroku/node/bin:$HOME/.heroku/yarn/bin:$PATH:$HOME/bin:$HOME/node_modules/.bin"
 export NODE_HOME="$HOME/.heroku/node"
 export NODE_ENV=${NODE_ENV:-production}
-export COREPACK_HOME="$HOME/.heroku/corepack"
-export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
 # If the user has opted into the feature
 if [[ -n "$HEROKU_METRICS_URL" ]] && \
