@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v327] - 2026-01-27
+
 - Added Node.js 25.5.0 (linux-amd64)
 - Export `WEB_CONCURRENCY_SET_BY=heroku/nodejs` if we calculated set `WEB_CONCURRENCY` on dyno startup ([#932](https://github.com/heroku/heroku-buildpack-nodejs/pull/932))
 
@@ -1215,7 +1218,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v326...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v327...main
+[v327]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v326...v327
 [v326]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v325...v326
 [v325]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v324...v325
 [v324]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v323...v324
