@@ -80,6 +80,7 @@ if [ -z "${WEB_CONCURRENCY}" ]; then
         warn_web_concurrency "$validated_concurrency"
     fi
     export WEB_CONCURRENCY=$validated_concurrency
+    export WEB_CONCURRENCY_SET_BY="heroku/nodejs"
 fi
 
 if [[ "${LOG_CONCURRENCY+isset}" && "$LOG_CONCURRENCY" == "true" ]]; then

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Added Node.js 25.5.0 (linux-amd64)
+- Export `WEB_CONCURRENCY_SET_BY=heroku/nodejs` if we calculated set `WEB_CONCURRENCY` on dyno startup ([#932](https://github.com/heroku/heroku-buildpack-nodejs/pull/932))
 
 ## [v326] - 2026-01-26
 
