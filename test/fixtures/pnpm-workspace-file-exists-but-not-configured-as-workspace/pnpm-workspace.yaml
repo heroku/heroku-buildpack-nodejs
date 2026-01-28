@@ -1,0 +1,2 @@
+# just a random config setting that shouldn't affect anything, the important thing is there's no `packages` field
+peersSuffixMaxLength: 1001
