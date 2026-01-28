@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Support pnpm workspace pruning. ([#1535](https://github.com/heroku/heroku-buildpack-nodejs/pull/1535)) 
 
 ## [v327] - 2026-01-27
 

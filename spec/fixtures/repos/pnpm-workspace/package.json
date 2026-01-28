@@ -1,0 +1,12 @@
+{
+  "name": "pnpm-workspace-test",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.5.0",
+  "scripts": {
+    "start": "node packages/server/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
