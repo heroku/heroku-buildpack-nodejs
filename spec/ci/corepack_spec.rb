@@ -7,7 +7,7 @@ describe "corepack support" do
       expect(successful_body(app).strip).to eq("Hello from corepack-pnpm")
       expect(app.run("pnpm --version")).to match(/\d+\.\d+\.\d+/)
       expect(app.run("echo $PATH")).to eq(<<~OUTPUT)
-        PATH=blah
+        PATH=/app/.heroku/node/bin:/app/.heroku/yarn/bin:/usr/local/bin:/usr/bin:/bin:/app/bin:/app/node_modules/.bin
       OUTPUT
     end
   end
