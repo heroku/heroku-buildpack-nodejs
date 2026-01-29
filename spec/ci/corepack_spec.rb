@@ -5,9 +5,9 @@ describe "corepack support" do
     app = Hatchet::Runner.new("spec/fixtures/repos/corepack-pnpm")
     app.deploy do |app|
       expect(successful_body(app).strip).to eq("Hello from corepack-pnpm")
-      expect(app.run("pnpm --version")).to match("???")
+      expect(app.run("pnpm --version")).to match("blah")
       expect(app.run("echo $PATH")).to eq(<<~OUTPUT)
-        PATH=???
+        PATH=blah
       OUTPUT
     end
   end
