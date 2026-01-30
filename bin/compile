@@ -266,7 +266,7 @@ install_bins() {
     using_default_pnpm=false
     pnpm_version="latest"
     if [[ "$package_manager" == pnpm* ]]; then
-      pnpm_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "#" -f 1)"
+      pnpm_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "+" -f 1)"
     elif [ -n "$pnpm_engine" ]; then
       pnpm_version="${pnpm_engine}"
     else
