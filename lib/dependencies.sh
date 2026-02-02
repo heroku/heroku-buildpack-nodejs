@@ -348,8 +348,17 @@ pnpm_prune_devdependencies() {
     build_data::set_raw "skipped_prune" "true"
     return 0
   elif [[ "$(pnpm_workspace_configured "$build_dir")" == "true" ]]; then
-    echo "Skipping because pruning is not supported for pnpm workspaces (https://pnpm.io/cli/prune)"
-    build_data::set_raw "skipped_prune" "true"
+    # Get list of workspace directories from pnpm and remove their node_modules
+    pnpm list --recursive --json --depth -1 2>/dev/null | \
+      jq -r '.[].path' | \
+      while IFS= read -r project_path; do
+        if [[ -d "$project_path/node_modules" ]]; then
+          rm -rf "$project_path/node_modules"
+        fi
+      done
+    # Reinstall with production-only dependencies
+    monitor "prune_dev_dependencies" pnpm install --prod --frozen-lockfile 2>&1
+    build_data::set_raw "skipped_prune" "false"
     return 0
   fi
 
