@@ -430,24 +430,6 @@ fail_missing_yarn_vendor() {
   fi
 }
 
-fail_corepack_not_available() {
-  local package_manager="$1"
-  local node_version="$2"
-
-  build_data::set_string "failure" "failures.corepack-unsupported"
-  header "Build failed"
-  warn "Corepack is not supported in Node.js $node_version
-
-    Your application indicated that $package_manager should be installed using Corepack. This feature
-    is included with all Node.js releases starting from Node.js 14.19.0 / 16.9.0. The version
-    of Node.js used in this build is $node_version which does not support Corepack.
-
-    To use Corepack, update your Node.js version:
-    https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version
-  "
-  fail
-}
-
 log_other_failures() {
   local log_file="$1"
 
@@ -958,48 +940,6 @@ warn_yarn_release_script_with_package_manager() {
        - Remove the \"yarnPath\" configuration from .yarnrc.yml and delete the vendored release at \"$release_script\""
 }
 
-fail_corepack_install_invalid_hash() {
-  local package_manager="$1"
-  package_manager_name=$(echo "$package_manager" | cut -d "@" -f 1)
-  package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 1)
-  package_manager_hash=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 2)
-
-  build_data::set_string "failure" "failures.corepack-install.hash"
-  header "Build failed"
-  warn "Error installing $package_manager_name version $package_manager_version
-
-       The hash provided for the $package_manager_name version declared in package.json ($package_manager_hash) is incorrect.
-
-       To correct this, run the following command:
-
-       > corepack use $package_manager_name@$package_manager_version
-
-       Then commit and push the changes to package.json." \
-    "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version"
-  fail
-}
-
-fail_corepack_install_invalid_version() {
-  local package_manager="$1"
-  package_manager_name=$(echo "$package_manager" | cut -d "@" -f 1)
-  package_manager_version=$(echo "$package_manager" | cut -d "@" -f 2 | cut -d "+" -f 1)
-
-  build_data::set_string "failure" "failures.corepack-install.version"
-  header "Build failed"
-  warn "Error installing $package_manager_name version $package_manager_version
-
-       Can’t find the $package_manager_name version that matches the requested version declared in package.json ($package_manager_version).
-
-       Verify that the requested version range matches a published version of $package_manager_name by checking
-       https://www.npmjs.com/package/$package_manager_name?activeTab=versions or trying the following command:
-
-       > npm show '$package_manager' versions
-
-       Update the version specified field in package.json to a published $package_manager_name version" \
-    "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-$package_manager_name-version"
-  fail
-}
-
 warn_default_pnpm_version_used() {
   local default_version="$1"
   warn "Default pnpm version used
@@ -1009,11 +949,7 @@ warn_default_pnpm_version_used() {
        - \"engines.pnpm\"
 
        Without a specific version defined, this build will use \"$default_version\" by default. We highly recommend setting an explicit version
-       of pnpm to improve the reliability of your builds. You can set this with:
-
-       > corepack use pnpm@{your_preferred_version}
-
-       Then commit and push the changes to package.json."
+       of pnpm to improve the reliability of your builds."
 }
 
 warn_multiple_pnpm_version() {

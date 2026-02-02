@@ -820,7 +820,7 @@ testYarn4WithCorepackEnabled() {
   compile "yarn-4-with-corepack" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.yarn (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): yarn@4.1.1"
-  assertCaptured "Installing yarn@4.1.1 via corepack"
+  assertCaptured "Downloading and installing yarn (4.1.1)"
   assertCaptured "Using yarn 4.1.1"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
@@ -840,7 +840,7 @@ testYarn4WithCorepackAndEngine() {
   assertCaptured '- "engines.yarn": "4.1.1"'
   assertCaptured 'If both fields are present, then "packageManager" will take precedence and "yarn@4.1.1" will be installed.'
   assertCaptured "To ensure we install the version of Yarn you want, remove one of these fields."
-  assertCaptured "Installing yarn@4.1.1 via corepack"
+  assertCaptured "Downloading and installing yarn (4.1.1)"
   assertCaptured "Using yarn 4.1.1"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
@@ -1528,7 +1528,6 @@ testPnpmBuildMetaData() {
     select(.build_time | type == "number")
     select(.bundled_npm_version == "10.8.2")
     select(.cache_status == "not-found")
-    select(.corepack_version | test("\\d+\\.\\d+\\.\\d+"))
     select(.has_cached_bower_components == false)
     select(.has_custom_cache_dirs == false)
     select(.has_procfile == false)
@@ -1664,56 +1663,6 @@ testUseNpm10() {
   assertCapturedSuccess
 }
 
-testCorepackAvailable() {
-  compile "corepack-node-14.19"
-  assertCaptured "Installing yarn@2.2.2 via corepack 0.10.0"
-  assertCapturedSuccess
-
-  compile "corepack-node-16.9"
-  assertCaptured "Installing yarn@2.2.2 via corepack 0.9.0"
-  assertCapturedSuccess
-
-  compile "corepack-node-20.12"
-  assertCaptured "Installing yarn@3.6.3 via corepack 0.25.2"
-  assertCapturedSuccess
-}
-
-testCorepackNotAvailable() {
-  compile "corepack-node-14.18"
-  assertCaptured "Corepack is not supported in Node.js v14.18.0"
-  assertCapturedError
-
-  compile "corepack-node-15"
-  assertCaptured "Corepack is not supported in Node.js v15"
-  assertCapturedError
-
-  compile "corepack-node-16.8"
-  assertCaptured "Corepack is not supported in Node.js v16.8.0"
-  assertCapturedError
-}
-
-testCorepackInvalidVersion() {
-  compile "corepack-invalid-package-manager"
-  assertCaptured "packageManager (package.json): pnpm@999.999.999"
-  assertCaptured "Installing pnpm@999.999.999 via corepack 0.20.0"
-  assertCaptured "Error installing pnpm version 999.999.999"
-  assertCaptured "Can’t find the pnpm version that matches the requested version declared in package.json (999.999.999)"
-  assertCapturedError
-
-  compile "corepack-invalid-package-manager-sha"
-  assertCaptured "packageManager (package.json): yarn@3.2.3"
-  assertCaptured "Installing yarn@3.2.3 via corepack 0.20.0"
-  assertCaptured "Error installing yarn version 3.2.3"
-  assertCaptured "The hash provided for the yarn version declared in package.json (sha224.BADSHA) is incorrect"
-  assertCapturedError
-}
-
-testCorepackNpmRegistryKeyFix() {
-  compile "corepack-integrity-keys"
-  assertCaptured "Installing pnpm@10.1.0 via corepack 0.30.0"
-  assertCapturedSuccess
-}
-
 # PNPM
 
 testPnpmWithCustomCache() {
@@ -1745,7 +1694,7 @@ testPnpm7Pnp() {
   compile "pnpm-7-pnp" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@7.32.3"
-  assertCaptured "Installing pnpm@7.32.3 via corepack"
+  assertCaptured "Downloading and installing pnpm (7.32.3)"
   assertCaptured "Using pnpm 7.32.3"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCaptured "+ dotenv"
@@ -1761,7 +1710,7 @@ testPnpm8Hoist() {
   compile "pnpm-8-hoist"
   assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@8.4.0"
-  assertCaptured "Installing pnpm@8.4.0 via corepack"
+  assertCaptured "Downloading and installing pnpm (8.4.0)"
   assertCaptured "Using pnpm 8.4.0"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCapturedSuccess
@@ -1771,7 +1720,7 @@ testPnpm8Nuxt() {
   compile "pnpm-8-nuxt"
   assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): pnpm@8.11.0"
-  assertCaptured "Installing pnpm@8.11.0 via corepack"
+  assertCaptured "Downloading and installing pnpm (8.11.0)"
   assertCaptured "Using pnpm 8.11.0"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCaptured "> nuxt prepare"
@@ -1786,20 +1735,11 @@ testPnpmEngine() {
   env_dir=$(mktmpdir)
   compile "pnpm-engine" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "engines.pnpm (package.json):   8.x"
-  assertCaptured "Installing pnpm@8.x via corepack"
+  assertCaptured "Downloading and installing pnpm (8.x)"
   assertCaptured "Using pnpm 8"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCapturedSuccess
   assertFileExists "$build_dir/.heroku/node/bin/pnpm"
-}
-
-testPnpmBadEngine() {
-  compile "pnpm-bad-engine"
-  assertCaptured "engines.pnpm (package.json):   999.x"
-  assertCaptured "Installing pnpm@999.x via corepack"
-  assertCaptured "Error installing pnpm version 999.x"
-  assertCaptured "Can’t find the pnpm version that matches the requested version declared in package.json (999.x)"
-  assertCapturedError
 }
 
 testPnpmWithCorepackAndEngine() {
@@ -1812,7 +1752,7 @@ testPnpmWithCorepackAndEngine() {
   assertCaptured '- "engines.pnpm": "8.x"'
   assertCaptured 'If both fields are present, then "packageManager" will take precedence and "pnpm@8.4.0" will be installed.'
   assertCaptured "To ensure we install the version of pnpm you want, remove one of these fields."
-  assertCaptured "Installing pnpm@8.4.0 via corepack"
+  assertCaptured "Downloading and installing pnpm (8.4.0)"
   assertCaptured "Using pnpm 8.4.0"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCapturedSuccess
@@ -1894,7 +1834,7 @@ testPnpmCacheComplex() {
 
 testPnpmWithNoPackageManagerEntry() {
   compile "pnpm-unknown-version"
-  assertCaptured "Installing pnpm@latest via corepack"
+  assertCaptured "Downloading and installing pnpm (latest)"
   assertCaptured "Using pnpm"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCaptured "Default pnpm version used"
@@ -1969,16 +1909,6 @@ testPnpmSkipPruning() {
   compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
   assertCaptured "Pruning devDependencies"
   assertCaptured "- dotenv 16.4.5"
-  assertCapturedSuccess
-}
-
-testCorepackYarnWithPackageTypeModule() {
-  compile "corepack_yarn_with_package_type_module"
-  assertCapturedSuccess
-}
-
-testCorepackPnpmWithPackageTypeModule() {
-  compile "corepack_pnpm_with_package_type_module"
   assertCapturedSuccess
 }
 

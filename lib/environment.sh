@@ -102,7 +102,5 @@ write_export() {
     echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> "$bp_dir/export"
     # shellcheck disable=SC2016
     echo 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' >> "$bp_dir/export"
-    # ensure corepack installed binaries are findable by downstream buildpacks
-    echo "export COREPACK_HOME=\"$build_dir/.heroku/corepack\"" >> "$bp_dir/export"
   fi
 }

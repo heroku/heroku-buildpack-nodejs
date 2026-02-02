@@ -3,6 +3,27 @@
 ## [Unreleased]
 
 - Fix pnpm workspace detection. ([#1528](https://github.com/heroku/heroku-buildpack-nodejs/pull/1528))
+- Fixed issue with parsing pnpm version from the `packageManager` field when an integrity check is present. ([#1540](https://github.com/heroku/heroku-buildpack-nodejs/pull/1540))
+
+## [v327] - 2026-01-27
+
+- Added Node.js 25.5.0 (linux-amd64)
+- Export `WEB_CONCURRENCY_SET_BY=heroku/nodejs` if we calculated set `WEB_CONCURRENCY` on dyno startup ([#932](https://github.com/heroku/heroku-buildpack-nodejs/pull/932))
+
+## [v326] - 2026-01-26
+
+- The corepack tool will no longer be used to install pnpm and Yarn. Usage of the `packageManager` field in `package.json` to declare pnpm as the package manager is still supported. ([#1527](https://github.com/heroku/heroku-buildpack-nodejs/pull/1527))
+
+## [v325] - 2026-01-20
+
+- Added Node.js 25.4.0 (linux-amd64)
+
+## [v324] - 2026-01-14
+
+- Added Node.js 25.3.0 (linux-amd64)
+- Added Node.js 24.13.0 (linux-amd64)
+- Added Node.js 22.22.0 (linux-amd64)
+- Added Node.js 20.20.0 (linux-amd64)
 
 ## [v323] - 2026-01-09
 
@@ -1199,7 +1220,11 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v323...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v327...main
+[v327]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v326...v327
+[v326]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v325...v326
+[v325]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v324...v325
+[v324]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v323...v324
 [v323]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v322...v323
 [v322]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v321...v322
 [v321]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v320...v321

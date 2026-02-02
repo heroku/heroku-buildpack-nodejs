@@ -53,9 +53,6 @@ source "$BP_DIR/lib/yarn-2.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
-export COREPACK_HOME="$BUILD_DIR/.heroku/corepack"
-export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
@@ -177,7 +174,7 @@ if [[ "$YARN_2" == "true" ]]; then
   # get yarn_path
   VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
 
-  # if we're installing yarn via corepack we don't need to fail
+  # if we're installing yarn via packageManager we don't need to fail
   # on the yarn path configuration or vendored script
   if [[ "$(read_json "$BUILD_DIR/package.json" ".packageManager")" != yarn* ]]; then
     # fail for no yarnPath in rc
@@ -244,14 +241,14 @@ install_bins() {
   build_data::set_string "node_version" "$(node --version)"
   build_data::set_raw "node_version_major" "$(get_node_major_version)"
   build_data::set_string "bundled_npm_version" "$(npm --version)"
-  node_version="$(node --version)"
 
   build_data::set_string "build_step" "install-npm"
   install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
 
   if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
     build_data::set_string "build_step" "install-yarn"
-    monitor "install_yarn_binary" install_yarn_using_corepack_package_manager "$package_manager" "$node_version"
+    yarn_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "#" -f 1)"
+    monitor "install_yarn_binary" install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_version"
   else
     # Download yarn if there is a yarn.lock file or if the user
     # has specified a version of yarn under "engines". We'll still
@@ -267,17 +264,17 @@ install_bins() {
 
     default_pnpm_version="pnpm@latest"
     using_default_pnpm=false
-
+    pnpm_version="latest"
     if [[ "$package_manager" == pnpm* ]]; then
-      package_manager="$package_manager"
+      pnpm_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "+" -f 1)"
     elif [ -n "$pnpm_engine" ]; then
-      package_manager="pnpm@${pnpm_engine}"
+      pnpm_version="${pnpm_engine}"
     else
       using_default_pnpm=true
-      package_manager="$default_pnpm_version"
     fi
 
-    monitor "install_pnpm_binary" install_pnpm_using_corepack_package_manager "$package_manager" "$node_version" "$PNPM_CONFIG_CACHE"
+    monitor "install_pnpm_binary" install_pnpm "$pnpm_version"
+    pnpm config set store-dir "$PNPM_CONFIG_CACHE" 2>&1
     if [ "$using_default_pnpm" == true ]; then
       warn_default_pnpm_version_used "$default_pnpm_version"
     fi
