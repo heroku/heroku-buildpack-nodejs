@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v328] - 2026-02-02
+
 - Support pnpm workspace pruning. ([#1535](https://github.com/heroku/heroku-buildpack-nodejs/pull/1535)) 
 - Fix pnpm workspace detection. ([#1528](https://github.com/heroku/heroku-buildpack-nodejs/pull/1528))
 - Fixed issue with parsing pnpm version from the `packageManager` field when an integrity check is present. ([#1540](https://github.com/heroku/heroku-buildpack-nodejs/pull/1540))
@@ -1221,7 +1224,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v327...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v328...main
+[v328]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v327...v328
 [v327]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v326...v327
 [v326]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v325...v326
 [v325]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v324...v325
