@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix pnpm workspace detection. ([#1528](https://github.com/heroku/heroku-buildpack-nodejs/pull/1528))
 - Fixed issue with parsing pnpm version from the `packageManager` field when an integrity check is present. ([#1540](https://github.com/heroku/heroku-buildpack-nodejs/pull/1540))
 
 ## [v327] - 2026-01-27
