@@ -1,4 +1,11 @@
 [[artifacts]]
+version = "25.6.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v25.6.0/node-v25.6.0-linux-x64.tar.gz"
+checksum = "sha256:a218fdaee14cb399f6b33925d4615a4046ba8db144f6e883c3b81e78937429eb"
+
+[[artifacts]]
 version = "25.5.0"
 os = "linux"
 arch = "amd64"
