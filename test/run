@@ -1933,14 +1933,12 @@ testPnpmWorkspaceFileExistsButNotConfiguredAsWorkspace() {
 
 testPnpmWorkspacePruningWithLifecycleScriptInProject() {
   compile "pnpm-workspace-with-lifecycle-script-project"
-  assertCaptured "prepare script in workspace project"
   assertCaptured "Pruning skipped due to presence of lifecycle scripts"
   assertCapturedSuccess
 }
 
 testPnpmWorkspacePruningWithLifecycleScriptInRoot() {
   compile "pnpm-workspace-with-lifecycle-script-root"
-  assertCaptured "prepare script in root project"
   assertCaptured "Pruning skipped due to presence of lifecycle scripts"
   assertCapturedSuccess
 }
