@@ -982,6 +982,23 @@ warn_skipping_unsafe_pnpm_prune() {
        must upgrade your version of pnpm to 8.15.6 or higher."
 }
 
+warn_skipping_unsafe_pnpm_workspace_prune() {
+  local project_path="$1"
+  echo "
+! Pruning skipped due to presence of lifecycle scripts
+
+Lifecycle scripts were detected in the \`package.json\` file at \`$project_path\`. Due to how
+workspace pruning in pnpm operates, it will execute the following lifecycle scripts declared
+in package.json during reinstallation of prod dependencies which can cause build failures:
+- pnpm:devPreinstall
+- preinstall
+- install
+- postinstall
+- prepare
+
+Since pruning can't be done safely for your build, it will be skipped."
+}
+
 warn_about_node_version_22_5_0() {
   echo ""
   warn "Issues with Node.js v22.5.0 

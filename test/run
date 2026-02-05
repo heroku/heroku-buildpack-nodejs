@@ -1931,6 +1931,20 @@ testPnpmWorkspaceFileExistsButNotConfiguredAsWorkspace() {
   assertCapturedSuccess
 }
 
+testPnpmWorkspacePruningWithLifecycleScriptInProject() {
+  compile "pnpm-workspace-with-lifecycle-script-project"
+  assertCaptured "prepare script in workspace project"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedSuccess
+}
+
+testPnpmWorkspacePruningWithLifecycleScriptInRoot() {
+  compile "pnpm-workspace-with-lifecycle-script-root"
+  assertCaptured "prepare script in root project"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedSuccess
+}
+
 testWarningNode_22_5_0() {
   compile "node-22.5.0-warning"
   assertCaptured "Issues with Node.js v22.5.0"
