@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Skip pnpm workspace pruning when lifecycle scripts are present. ([#1546](https://github.com/heroku/heroku-buildpack-nodejs/pull/1546))
 
 ## [v329] - 2026-02-04
 

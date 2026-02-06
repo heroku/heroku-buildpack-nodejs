@@ -1,0 +1,6 @@
+{
+  "name": "one",
+  "scripts": {
+    "prepare": "echo 'prepare script in workspace project'"
+  }
+}

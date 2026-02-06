@@ -348,14 +348,20 @@ pnpm_prune_devdependencies() {
     build_data::set_raw "skipped_prune" "true"
     return 0
   elif [[ "$(pnpm_workspace_configured "$build_dir")" == "true" ]]; then
-    # Get list of workspace directories from pnpm and remove their node_modules
-    pnpm list --recursive --json --depth -1 2>/dev/null | \
-      jq -r '.[].path' | \
-      while IFS= read -r project_path; do
-        if [[ -d "$project_path/node_modules" ]]; then
-          rm -rf "$project_path/node_modules"
-        fi
-      done
+    # Get pnpm projects
+    mapfile -t project_paths < <(list_pnpm_workspace_projects)
+    # Check if any projects contain lifecycle scripts, and skip pruning if true
+    for project_path in "${project_paths[@]}"; do
+      if has_pnpm_lifecycle_script "$project_path/package.json"; then
+        warn_skipping_unsafe_pnpm_workspace_prune "$project_path"
+        build_data::set_raw "skipped_prune" "true"
+        return 0
+      fi
+    done
+    # Remove node_modules from each project
+    for project_path in "${project_paths[@]}"; do
+      rm -rf "$project_path/node_modules"
+    done
     # Reinstall with production-only dependencies
     monitor "prune_dev_dependencies" pnpm install --prod --frozen-lockfile 2>&1
     build_data::set_raw "skipped_prune" "false"
@@ -375,12 +381,7 @@ pnpm_prune_devdependencies() {
   if (( "$pnpm_major_version" < 8 )) || \
     (( "$pnpm_major_version" == 8 && "$pnpm_minor_version" < 15 )) || \
     (( "$pnpm_major_version" == 8 && "$pnpm_minor_version" == 15 && "$pnpm_patch_version" < 6)); then
-      # the following are lifecycle scripts that will execute on install/prune by pnpm
-      if [ -n "$(read_json "$build_dir/package.json" ".scripts.\"pnpm:devPreinstall\"")" ] ||
-         [ -n "$(read_json "$build_dir/package.json" ".scripts.preinstall")" ] ||
-         [ -n "$(read_json "$build_dir/package.json" ".scripts.install")" ] ||
-         [ -n "$(read_json "$build_dir/package.json" ".scripts.postinstall")" ] ||
-         [ -n "$(read_json "$build_dir/package.json" ".scripts.prepare")" ]; then
+      if has_pnpm_lifecycle_script "$build_dir/package.json"; then
         warn_skipping_unsafe_pnpm_prune "$pnpm_version"
         build_data::set_raw "skipped_prune" "true"
         return
@@ -415,4 +416,16 @@ pnpm_workspace_configured() {
   fi
 
   echo "false"
+}
+
+has_pnpm_lifecycle_script() {
+  local package_json=$1
+  # the following are lifecycle scripts that will execute on install/prune by pnpm
+  [[ -f "$package_json" ]] && \
+    jq -e '.scripts | (has("pnpm:devPreinstall") or has("preinstall") or has("install") or has("postinstall") or has("prepare"))' \
+    "$package_json" > /dev/null 2>&1
+}
+
+list_pnpm_workspace_projects() {
+  pnpm list --recursive --json --depth -1 2>/dev/null | jq -r '.[].path'
 }
