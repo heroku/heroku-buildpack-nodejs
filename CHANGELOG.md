@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Remove outdated ECONNRESET warning. ([#1550](https://github.com/heroku/heroku-buildpack-nodejs/pull/1550))
 
 ## [v331] - 2026-02-10
 
