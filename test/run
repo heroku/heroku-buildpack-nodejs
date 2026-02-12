@@ -457,14 +457,6 @@ testWarnAwsProxyHttps() {
   assertCapturedError
 }
 
-testWarnEconnreset() {
-  compile "econnreset-mock"
-  assertCaptured "may be related to npm versions"
-  assertCapturedError
-  compile "no-version"
-  assertNotCaptured "may be related to npm versions"
-  assertCapturedSuccess
-}
 
 testWarnNoStart() {
   compile "no-start"

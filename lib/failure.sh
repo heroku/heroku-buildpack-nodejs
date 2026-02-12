@@ -635,6 +635,11 @@ log_other_failures() {
     return 0
   fi
 
+  if grep -qi "econnreset" "$log_file"; then
+    build_data::set_string "failure" "econnreset"
+    return 0
+  fi
+
   if grep -q "npm error code 128" "$log_file" && grep -q "An unknown git error occurred" "$log_file"; then
     build_data::set_string "failure" "npm-install-git-dependency"
     warn "npm Git dependency error (code 128)
@@ -889,12 +894,6 @@ warn_no_start() {
   fi
 }
 
-warn_econnreset() {
-  local log_file="$1"
-  if grep -qi 'econnreset' "$log_file"; then
-    warning "ECONNRESET issues may be related to npm versions" "https://github.com/npm/registry/issues/10#issuecomment-217141066"
-  fi
-}
 
 warn_unmet_dep() {
   local package_manager
