@@ -167,19 +167,30 @@ if [[ "$YARN_2" == "true" ]]; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
   fi
 
-  ### Configure Yarn 2
-  # fail for no yarnrc.yml
-  fail_missing_yarnrc_yml "$BUILD_DIR"
+  ### Configure Yarn 2+
+  YARN_MAJOR_VERSION=$(get_yarn_major_version "$BUILD_DIR")
 
-  # get yarn_path
-  VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
+  case "$YARN_MAJOR_VERSION" in
+    1)
+      # Do nothing for Yarn 1. Technically this branch shouldn't be possible since we only
+      # execute this code if YARN_2 is true but it's better to be safe than sorry.
+      ;;
+    2|3|"")
+      # This ensures behavior prior to Yarn 4 is retained
+      fail_missing_yarnrc_yml "$BUILD_DIR"
+      VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
+      fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
+      ;;
+    *)
+      # Yarn 4+: the .yarnrc.yml file is optional, as is the vendored 'yarnPath'
+      if [[ -f "$BUILD_DIR/.yarnrc.yml" ]]; then
+        VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
+      fi
+      ;;
+  esac
 
-  # if we're installing yarn via packageManager we don't need to fail
-  # on the yarn path configuration or vendored script
-  if [[ "$(read_json "$BUILD_DIR/package.json" ".packageManager")" != yarn* ]]; then
-    # fail for no yarnPath in rc
-    fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
-    # fail for missing yarn in .yarn/releases
+  # Always validate vendored script exists if yarnPath is defined
+  if [[ -n "$VENDOR_PATH" ]]; then
     fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
   fi
 fi

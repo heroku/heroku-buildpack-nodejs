@@ -410,6 +410,82 @@ EOF
   rm -rf "$cache_dir"
 }
 
+testGetYarnMajorVersionFromPackageManager() {
+  local build_dir=$(mktemp -d)
+
+  # Test Yarn 4 with packageManager
+  echo '{"packageManager": "yarn@4.11.0"}' > "$build_dir/package.json"
+  assertEquals "4" "$(get_yarn_major_version "$build_dir")"
+
+  # Test Yarn 3 with packageManager
+  echo '{"packageManager": "yarn@3.6.3"}' > "$build_dir/package.json"
+  assertEquals "3" "$(get_yarn_major_version "$build_dir")"
+
+  # Test Yarn 2 with packageManager
+  echo '{"packageManager": "yarn@2.0.0"}' > "$build_dir/package.json"
+  assertEquals "2" "$(get_yarn_major_version "$build_dir")"
+
+  # Test Yarn 1 with packageManager
+  echo '{"packageManager": "yarn@1.22.22"}' > "$build_dir/package.json"
+  assertEquals "1" "$(get_yarn_major_version "$build_dir")"
+
+  # Test with hash suffix
+  echo '{"packageManager": "yarn@4.11.0+sha512.abc123"}' > "$build_dir/package.json"
+  assertEquals "4" "$(get_yarn_major_version "$build_dir")"
+
+  # Cleanup
+  rm -rf "$build_dir"
+}
+
+testGetYarnMajorVersionFromEngines() {
+  local build_dir=$(mktemp -d)
+
+  # Test with engines.yarn using caret
+  echo '{"engines": {"yarn": "^4.0.0"}}' > "$build_dir/package.json"
+  assertEquals "4" "$(get_yarn_major_version "$build_dir")"
+
+  # Test with engines.yarn using x notation
+  echo '{"engines": {"yarn": "4.x"}}' > "$build_dir/package.json"
+  assertEquals "4" "$(get_yarn_major_version "$build_dir")"
+
+  # Test with engines.yarn using >=
+  echo '{"engines": {"yarn": ">=4.5.0"}}' > "$build_dir/package.json"
+  assertEquals "4" "$(get_yarn_major_version "$build_dir")"
+
+  # Test with engines.yarn using tilde
+  echo '{"engines": {"yarn": "~3.6.0"}}' > "$build_dir/package.json"
+  assertEquals "3" "$(get_yarn_major_version "$build_dir")"
+
+  # Cleanup
+  rm -rf "$build_dir"
+}
+
+testGetYarnMajorVersionPrecedence() {
+  local build_dir=$(mktemp -d)
+
+  # packageManager should take precedence over engines.yarn
+  echo '{"packageManager": "yarn@4.0.0", "engines": {"yarn": "3.x"}}' > "$build_dir/package.json"
+  assertEquals "4" "$(get_yarn_major_version "$build_dir")"
+
+  # Cleanup
+  rm -rf "$build_dir"
+}
+
+testGetYarnMajorVersionNoVersion() {
+  local build_dir=$(mktemp -d)
+
+  # No version specified
+  echo '{}' > "$build_dir/package.json"
+  assertEquals "" "$(get_yarn_major_version "$build_dir")"
+
+  # Only npm specified
+  echo '{"packageManager": "npm@10.0.0"}' > "$build_dir/package.json"
+  assertEquals "" "$(get_yarn_major_version "$build_dir")"
+
+  # Cleanup
+  rm -rf "$build_dir"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
@@ -423,6 +499,7 @@ source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/features.sh
+source "$(pwd)"/lib/yarn-2.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
