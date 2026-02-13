@@ -171,11 +171,10 @@ if [[ "$YARN_2" == "true" ]]; then
   YARN_MAJOR_VERSION=$(get_yarn_major_version "$BUILD_DIR")
 
   case "$YARN_MAJOR_VERSION" in
-    1)
-      # Do nothing for Yarn 1. Technically this branch shouldn't be possible since we only
-      # execute this code if YARN_2 is true but it's better to be safe than sorry.
-      ;;
-    2|3|"")
+    # You may be wondering why 1 is in this list when the check above ensures that
+    # YARN_2 is true. This is because, when no yarn version is specified, we default
+    # to Yarn 1 which is then used to bootstrap Yarn 2.
+    1|2|3|"")
       # This ensures behavior prior to Yarn 4 is retained
       fail_missing_yarnrc_yml "$BUILD_DIR"
       VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
