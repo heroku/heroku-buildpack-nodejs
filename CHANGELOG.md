@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Update `.yarnrc.yml` and `yarnPath` validations to be optional for Yarn 4. ([#1551](https://github.com/heroku/heroku-buildpack-nodejs/pull/1551))
+- Remove outdated ECONNRESET warning. ([#1550](https://github.com/heroku/heroku-buildpack-nodejs/pull/1550))
 
 ## [v331] - 2026-02-10
 
