@@ -4,7 +4,9 @@
     "target": "ES2019",
     "lib": ["ES2019"],
     "strict": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*.ts",
