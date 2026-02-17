@@ -1,7 +1,7 @@
 import type { SpawnOptions } from 'node:child_process'
 import { spawn } from 'node:child_process'
 import { join, relative, resolve } from 'node:path'
-import { copy, emptyDir, ensureDir, ensureFile, readJSON, readdir, remove, writeJSON } from 'fs-extra'
+import { copy, emptyDir, ensureDir, ensureFile, readdir, readJSON, remove, writeJSON } from 'fs-extra'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 enum Cache {
@@ -200,7 +200,7 @@ async function readProjectInfo(yarnProject: YarnProject): Promise<ProjectInfo> {
         nodeModules.push(dir)
       }
     }
-  } catch (e) {
+  } catch {
     // ignore since this should only fail if there are no node_modules
   }
 
