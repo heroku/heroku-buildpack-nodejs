@@ -12,9 +12,8 @@ var plugin = (() => {
   var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
     get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
   }) : x)(function(x) {
-    if (typeof require !== "undefined")
-      return require.apply(this, arguments);
-    throw new Error('Dynamic require of "' + x + '" is not supported');
+    if (typeof require !== "undefined") return require.apply(this, arguments);
+    throw Error('Dynamic require of "' + x + '" is not supported');
   });
   var __export = (target, all) => {
     for (var name in all)
@@ -36,8 +35,8 @@ var plugin = (() => {
     default: () => src_default
   });
   var import_core = __require("@yarnpkg/core");
-  var { Command } = __require("clipanion");
-  var HerokuPruneDevDependenciesCommand = class extends Command {
+  var import_clipanion = __require("clipanion");
+  var HerokuPruneDevDependenciesCommand = class extends import_clipanion.Command {
     async execute() {
       const configuration = await import_core.Configuration.find(this.context.cwd, this.context.plugins);
       const { project } = await import_core.Project.find(configuration, this.context.cwd);
@@ -48,26 +47,31 @@ var plugin = (() => {
       for (const workspace of project.workspaces) {
         workspace.manifest.devDependencies.clear();
       }
-      const report = await import_core.StreamReport.start({
-        configuration,
-        json: false,
-        stdout: this.context.stdout,
-        includeLogs: true
-      }, async (report2) => {
-        try {
-          await project.install({ cache, report: report2, persistProject: false });
-          await project.cacheCleanup({ cache, report: report2 });
-          await project.persistInstallStateFile();
-        } catch (e) {
-          console.warn("[yarn heroku prune] An error occurred while pruning development dependencies from the application!");
-          console.error(e);
+      const report = await import_core.StreamReport.start(
+        {
+          configuration,
+          json: false,
+          stdout: this.context.stdout,
+          includeLogs: true
+        },
+        async (report2) => {
+          try {
+            await project.install({ cache, report: report2, persistProject: false });
+            await project.cacheCleanup({ cache, report: report2 });
+            await project.persistInstallStateFile();
+          } catch (e) {
+            console.warn(
+              "[yarn heroku prune] An error occurred while pruning development dependencies from the application!"
+            );
+            console.error(e);
+          }
         }
-      });
+      );
       return report.exitCode();
     }
   };
   try {
-    Command.Path("heroku", "prune")(HerokuPruneDevDependenciesCommand.prototype, "execute");
+    import_clipanion.Command.Path("heroku", "prune")(HerokuPruneDevDependenciesCommand.prototype, "execute");
   } catch {
     try {
       HerokuPruneDevDependenciesCommand.paths = [["heroku", "prune"]];
@@ -77,9 +81,8 @@ var plugin = (() => {
     }
   }
   var plugin = {
-    commands: [
-      HerokuPruneDevDependenciesCommand
-    ]
+    // @ts-expect-error - Command class has required properties that are initialized at runtime by Clipanion
+    commands: [HerokuPruneDevDependenciesCommand]
   };
   var src_default = plugin;
   return __toCommonJS(src_exports);
