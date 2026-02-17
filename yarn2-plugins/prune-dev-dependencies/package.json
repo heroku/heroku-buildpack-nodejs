@@ -17,7 +17,7 @@
     "vitest": "^2.1.8"
   },
   "scripts": {
-    "build": "npm run lint && builder build plugin --no-minify",
+    "build": "npm run lint && npm run format && builder build plugin --no-minify",
     "lint": "biome check --write .",
     "lint:check": "biome check .",
     "format": "biome format --write .",
