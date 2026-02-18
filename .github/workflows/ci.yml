@@ -107,7 +107,7 @@ jobs:
         run: npm ci
       - name: Run tests
         working-directory: yarn2-plugins/prune-dev-dependencies
-        run: YARN_ENABLE_HARDENED_MODE=false npm test
+        run: npm test
       - name: Verify bundle is up-to-date
         working-directory: yarn2-plugins/prune-dev-dependencies
         run: git diff --exit-code bundles/@yarnpkg/plugin-prune-dev-dependencies.js
