@@ -104,10 +104,10 @@ jobs:
           node-version: lts/*
       - name: Install dependencies
         working-directory: yarn2-plugins/prune-dev-dependencies
-        run: npm install
+        run: npm ci
       - name: Run tests
         working-directory: yarn2-plugins/prune-dev-dependencies
-        run: npm test
+        run: CI=false npm test
       - name: Verify bundle is up-to-date
         working-directory: yarn2-plugins/prune-dev-dependencies
         run: git diff --exit-code bundles/@yarnpkg/plugin-prune-dev-dependencies.js
