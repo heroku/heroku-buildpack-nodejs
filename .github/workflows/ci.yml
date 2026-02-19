@@ -91,3 +91,23 @@ jobs:
         run: cargo test --manifest-path ./resolve-version/Cargo.toml --locked
       - name: Clippy
         run: cargo clippy --manifest-path ./resolve-version/Cargo.toml --all-targets --locked -- --deny warnings
+
+  yarn-plugin-test:
+    name: Yarn Plugin Tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: lts/*
+      - name: Install dependencies
+        working-directory: yarn2-plugins/prune-dev-dependencies
+        run: npm ci
+      - name: Run tests
+        working-directory: yarn2-plugins/prune-dev-dependencies
+        run: npm test
+      - name: Verify bundle is up-to-date
+        working-directory: yarn2-plugins/prune-dev-dependencies
+        run: git diff --exit-code bundles/@yarnpkg/plugin-prune-dev-dependencies.js

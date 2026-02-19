@@ -4,30 +4,31 @@
   "packageManager": "npm@8.15.0",
   "main": "./src/index.ts",
   "dependencies": {
-    "@yarnpkg/builder": "^4.0.0-rc.26",
-    "@yarnpkg/core": "^4.1.6",
-    "clipanion": "^3.2.0-rc.13"
+    "@yarnpkg/builder": "^4.2.3",
+    "@yarnpkg/core": "^4.5.0",
+    "clipanion": "^3.2.1"
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.13",
-    "@types/jest": "^27.4.1",
-    "@types/node": "^16.0.0",
-    "fs-extra": "^10.0.1",
-    "jest": "^27.5.1",
-    "ts-jest": "^27.1.4",
-    "ts-standard": "^11.0.0",
-    "typescript": "4.4.4"
+    "@biomejs/biome": "^2.4.2",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.0.0",
+    "fs-extra": "^11.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "scripts": {
-    "build": "npm run lint && builder build plugin --no-minify",
-    "lint": "ts-standard --fix",
-    "test": "npm run build && jest"
+    "build": "npm run lint && npm run format && builder build plugin --no-minify",
+    "lint": "biome check --write .",
+    "lint:check": "biome check .",
+    "format": "biome format --write .",
+    "test": "npm run build && vitest run"
   },
   "engines": {
-    "node": ">=16.9"
+    "node": ">=18.0.0"
   },
   "overrides": {
     "parse-path": "^5.0.0",
-    "parse-url": "^8.1.0"
+    "parse-url": "^8.1.0",
+    "tar": "^7.5.9"
   }
 }

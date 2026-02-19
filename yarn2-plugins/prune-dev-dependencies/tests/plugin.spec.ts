@@ -1,8 +1,8 @@
+import type { SpawnOptions } from 'node:child_process'
 import { spawn } from 'node:child_process'
-import { resolve, join } from 'node:path'
-import { SpawnOptions } from 'child_process'
-import { emptyDir, copy, remove, readdir, readJSON, writeJSON, ensureDir, ensureFile } from 'fs-extra'
-import * as path from 'path'
+import { join, relative, resolve } from 'node:path'
+import { copy, emptyDir, ensureDir, ensureFile, readdir, readJSON, remove, writeJSON } from 'fs-extra'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 enum Cache {
   LOCAL = 'local',
@@ -26,7 +26,11 @@ interface SpawnResult {
   stderr: string
 }
 
-interface TestConfiguration { yarnVersion: string, cache: Cache, nodeLinker: NodeLinker }
+interface TestConfiguration {
+  yarnVersion: string
+  cache: Cache
+  nodeLinker: NodeLinker
+}
 
 interface ProjectInfo {
   cacheFiles: string[]
@@ -39,23 +43,10 @@ const tmpDir = join(rootDir, 'tmp')
 const fixturesDir = join(__dirname, 'fixtures')
 const pluginBundle = join('..', '..', 'bundles', '@yarnpkg', 'plugin-prune-dev-dependencies.js')
 const testMatrix = createMatrix({
-  yarnVersion: [
-    '2.4.1',
-    '3.8.6',
-    '4.5.3'
-  ],
-  cache: [
-    Cache.LOCAL,
-    Cache.GLOBAL
-  ],
-  nodeLinker: [
-    NodeLinker.NODE_MODULES,
-    NodeLinker.PNP
-  ]
+  yarnVersion: ['2.4.1', '3.8.6', '4.5.3'],
+  cache: [Cache.LOCAL, Cache.GLOBAL],
+  nodeLinker: [NodeLinker.NODE_MODULES, NodeLinker.PNP]
 })
-
-// set jest timeout to 30s
-jest.setTimeout(60 * 1000)
 
 describe('yarn-plugin-production-install', () => {
   beforeAll(async () => await emptyDir(tmpDir))
@@ -73,21 +64,11 @@ describe('yarn-plugin-production-install', () => {
         expect.stringMatching(/^unescape-js.*.zip$/),
         expect.stringMatching(/^uuid.*.zip$/)
       ]),
-      nodeModules: testConfiguration.nodeLinker === NodeLinker.NODE_MODULES
-        ? [
-            '@types/node',
-            'echo-cli',
-            'string.fromcodepoint',
-            'unescape-js',
-            'uuid'
-          ]
-        : [],
-      binFiles: testConfiguration.nodeLinker === NodeLinker.NODE_MODULES
-        ? [
-            'echo-cli',
-            'uuid'
-          ]
-        : []
+      nodeModules:
+        testConfiguration.nodeLinker === NodeLinker.NODE_MODULES
+          ? ['@types/node', 'echo-cli', 'string.fromcodepoint', 'unescape-js', 'uuid']
+          : [],
+      binFiles: testConfiguration.nodeLinker === NodeLinker.NODE_MODULES ? ['echo-cli', 'uuid'] : []
     })
 
     await yarnProject.yarnBin('heroku', 'prune')
@@ -98,18 +79,11 @@ describe('yarn-plugin-production-install', () => {
         expect.stringMatching(/^string.fromcodepoint.*.zip$/),
         expect.stringMatching(/^unescape-js.*.zip$/)
       ]),
-      nodeModules: testConfiguration.nodeLinker === NodeLinker.NODE_MODULES
-        ? [
-            'echo-cli',
-            'string.fromcodepoint',
-            'unescape-js'
-          ]
-        : [],
-      binFiles: testConfiguration.nodeLinker === NodeLinker.NODE_MODULES
-        ? [
-            'echo-cli'
-          ]
-        : []
+      nodeModules:
+        testConfiguration.nodeLinker === NodeLinker.NODE_MODULES
+          ? ['echo-cli', 'string.fromcodepoint', 'unescape-js']
+          : [],
+      binFiles: testConfiguration.nodeLinker === NodeLinker.NODE_MODULES ? ['echo-cli'] : []
     })
 
     const { stdout } = await yarnProject.yarnBin('run', 'echo-cli', 'are binary scripts available?')
@@ -117,7 +91,7 @@ describe('yarn-plugin-production-install', () => {
   })
 })
 
-async function createYarnProject (options: TestConfiguration): Promise<YarnProject> {
+async function createYarnProject(options: TestConfiguration): Promise<YarnProject> {
   const fixtureDir = join(fixturesDir, 'basic-yarn-project')
   const projectDir = join(tmpDir, `yarn-v${options.yarnVersion}-${options.cache}-${options.nodeLinker}`)
   const globalFolder = join(projectDir, '.yarn', 'global')
@@ -135,13 +109,14 @@ async function createYarnProject (options: TestConfiguration): Promise<YarnProje
   await writeJSON(join(projectDir, 'package.json'), packageJson, { spaces: 2 })
 
   // define helper for running yarn from test directory
-  const yarnBin = async (...args: string[]): Promise<SpawnResult> => await promiseSpawn('corepack', ['yarn', ...args], {
-    cwd: projectDir,
-    env: {
-      ...process.env,
-      YARN_PLUGINS: pluginBundle
-    }
-  })
+  const yarnBin = async (...args: string[]): Promise<SpawnResult> =>
+    await promiseSpawn('corepack', ['yarn', ...args], {
+      cwd: projectDir,
+      env: {
+        ...process.env,
+        YARN_PLUGINS: pluginBundle
+      }
+    })
 
   await promiseSpawn('corepack', ['yarn', 'set', 'version', options.yarnVersion], { cwd: projectDir })
 
@@ -162,16 +137,19 @@ async function createYarnProject (options: TestConfiguration): Promise<YarnProje
   return {
     projectDir,
     yarnBin,
-    cacheDir: path.relative(projectDir, cacheDir)
+    cacheDir: relative(projectDir, cacheDir)
   }
 }
 
-async function promiseSpawn (command: string, args: string[], options: SpawnOptions): Promise<SpawnResult> {
+async function promiseSpawn(command: string, args: string[], options: SpawnOptions): Promise<SpawnResult> {
   // this is borrowed from https://github.com/chalk/ansi-regex but jest won't let me import that module
-  const ansiRegex = new RegExp([
-    '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
-    '(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'
-  ].join('|'), 'g')
+  const ansiRegex = new RegExp(
+    [
+      '[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)',
+      '(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PR-TZcf-nq-uy=><~]))'
+    ].join('|'),
+    'g'
+  )
 
   const childProcess = spawn(command, args, options)
 
@@ -195,14 +173,14 @@ async function promiseSpawn (command: string, args: string[], options: SpawnOpti
 
   return await new Promise((resolve) => {
     childProcess.on('close', (exitCode) => {
-      exitCode = exitCode ?? -1
+      const finalExitCode = exitCode ?? -1
       process.stdout.write('\n')
-      resolve({ exitCode, stdout, stderr })
+      resolve({ exitCode: finalExitCode, stdout, stderr })
     })
   })
 }
 
-async function readProjectInfo (yarnProject: YarnProject): Promise<ProjectInfo> {
+async function readProjectInfo(yarnProject: YarnProject): Promise<ProjectInfo> {
   const cacheFiles = await readdir(join(yarnProject.projectDir, yarnProject.cacheDir))
   const nodeModules: string[] = []
   const binFiles: string[] = []
@@ -222,7 +200,7 @@ async function readProjectInfo (yarnProject: YarnProject): Promise<ProjectInfo> 
         nodeModules.push(dir)
       }
     }
-  } catch (e) {
+  } catch {
     // ignore since this should only fail if there are no node_modules
   }
 
@@ -235,7 +213,11 @@ async function readProjectInfo (yarnProject: YarnProject): Promise<ProjectInfo> 
   }
 }
 
-function createMatrix (options: { yarnVersion: string[], cache: Cache[], nodeLinker: NodeLinker[] }): TestConfiguration[] {
+function createMatrix(options: {
+  yarnVersion: string[]
+  cache: Cache[]
+  nodeLinker: NodeLinker[]
+}): TestConfiguration[] {
   const matrix: TestConfiguration[] = []
   for (const yarnVersion of options.yarnVersion) {
     for (const cache of options.cache) {

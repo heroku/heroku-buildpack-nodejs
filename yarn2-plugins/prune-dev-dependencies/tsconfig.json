@@ -1,13 +1,13 @@
 {
+  "//": "The target/lib setting of ES2019 is IMPORTANT. This plugin needs to run against a minimum version of Node.js 12 which TypeScript should produce code for using this given target.",
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2019",
     "lib": ["ES2019"],
     "strict": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
-  "include": [
-    "src/**/*.ts",
-    "tests/*.ts"
-  ]
+  "include": ["src/**/*.ts", "tests/*.ts"]
 }
