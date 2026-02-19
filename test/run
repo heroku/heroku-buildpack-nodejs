@@ -695,6 +695,16 @@ testYarn2WithPackageManager() {
   assertCapturedSuccess
 }
 
+testYarn2Engine() {
+  compile "yarn-2-engine"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
 testYarn2WithYarn2SkipPruningFalse() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/YARN2_SKIP_PRUNING
@@ -803,6 +813,16 @@ testYarn3WithPackageManager() {
   assertCapturedSuccess
 }
 
+testYarn3WithEngine() {
+  compile "yarn-3-engine"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
 testYarn4() {
   compile "yarn-4"
   assertCaptured "engines.yarn (package.json):   unspecified (use default)"
@@ -818,6 +838,18 @@ testYarn4() {
   assertCaptured '- Remove the "packageManager" field from package.json'
   assertCaptured '- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at ".yarn/releases/yarn-4.0.0.cjs"'
   assertCaptured "Using yarn 4.0.0"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
+  assertCapturedSuccess
+}
+
+testYarn4WithEngine() {
+  compile "yarn-4-engine"
+  assertCaptured "engines.yarn (package.json):   4.1.1"
+  assertCaptured "Downloading and installing yarn (4.1.1)"
+  assertCaptured "Using yarn 4.1.1"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
