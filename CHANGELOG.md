@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v333] - 2026-02-19
+
 - Fix to skip `.yarnrc.yml` and `yarnPath` validations if Yarn is installed using the `packageManager` field. ([#1556](https://github.com/heroku/heroku-buildpack-nodejs/pull/1556))
 
 ## [v332] - 2026-02-19
@@ -1244,7 +1247,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v332...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v333...main
+[v333]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v332...v333
 [v332]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v331...v332
 [v331]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v330...v331
 [v330]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v329...v330
