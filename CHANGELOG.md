@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix to skip `.yarnrc.yml` and `yarnPath` validations if Yarn is installed using the `packageManager` field. ([#1556](https://github.com/heroku/heroku-buildpack-nodejs/pull/1556))
 
 ## [v332] - 2026-02-19
 
