@@ -169,23 +169,27 @@ if [[ "$YARN_2" == "true" ]]; then
   ### Configure Yarn 2+
   YARN_MAJOR_VERSION=$(get_yarn_major_version "$BUILD_DIR")
 
-  case "$YARN_MAJOR_VERSION" in
-    # You may be wondering why 1 is in this list when the check above ensures that
-    # YARN_2 is true. This is because, when no yarn version is specified, we default
-    # to Yarn 1 which is then used to bootstrap Yarn 2.
-    1|2|3|"")
-      # This ensures behavior prior to Yarn 4 is retained
-      fail_missing_yarnrc_yml "$BUILD_DIR"
-      VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
-      fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
-      ;;
-    *)
-      # Yarn 4+: the .yarnrc.yml file is optional, as is the vendored 'yarnPath'
-      if [[ -f "$BUILD_DIR/.yarnrc.yml" ]]; then
+  # if we're installing yarn via packageManager we don't need to fail
+  # on the yarn path configuration or vendored script
+  if [[ "$(read_json "$BUILD_DIR/package.json" ".packageManager")" != yarn* ]]; then
+    case "$YARN_MAJOR_VERSION" in
+      # You may be wondering why 1 is in this list when the check above ensures that
+      # YARN_2 is true. This is because, when no yarn version is specified, we default
+      # to Yarn 1 which is then used to bootstrap Yarn 2.
+      1|2|3|"")
+        # This ensures behavior prior to Yarn 4 is retained
+        fail_missing_yarnrc_yml "$BUILD_DIR"
         VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
-      fi
-      ;;
-  esac
+        fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
+        ;;
+      *)
+        # Yarn 4+: the .yarnrc.yml file is optional, as is the vendored 'yarnPath'
+        if [[ -f "$BUILD_DIR/.yarnrc.yml" ]]; then
+          VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
+        fi
+        ;;
+    esac
+  fi
 
   # Always validate vendored script exists if yarnPath is defined
   if [[ -n "$VENDOR_PATH" ]]; then

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix to skip `.yarnrc.yml` and `yarnPath` validations if Yarn is installed using the `packageManager` field. ()
 
 ## [v332] - 2026-02-19
 

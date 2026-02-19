@@ -685,6 +685,16 @@ testYarn2() {
   assertCapturedSuccess
 }
 
+testYarn2WithPackageManager() {
+  compile "yarn-2-package-manager"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
 testYarn2WithYarn2SkipPruningFalse() {
   env_dir=$(mktmpdir)
   echo "false" > $env_dir/YARN2_SKIP_PRUNING
@@ -775,6 +785,16 @@ testYarn2WithoutYarnRelease() {
 # Yarn 3 & 4 pruning plugin validation
 testYarn3() {
   compile "yarn-3"
+  assertCaptured "Running 'yarn install' with yarn.lock"
+  assertCaptured "Build script check"
+  assertCaptured "Running 'yarn heroku prune'"
+  assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
+  assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
+  assertCapturedSuccess
+}
+
+testYarn3WithPackageManager() {
+  compile "yarn-3-package-manager"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
