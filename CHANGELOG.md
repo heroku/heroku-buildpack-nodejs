@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v332] - 2026-02-19
+
 - Updates to Yarn prune plugin. ([#1553](https://github.com/heroku/heroku-buildpack-nodejs/pull/1553))
 - Update `.yarnrc.yml` and `yarnPath` validations to be optional for Yarn 4. ([#1551](https://github.com/heroku/heroku-buildpack-nodejs/pull/1551))
 - Remove outdated ECONNRESET warning. ([#1550](https://github.com/heroku/heroku-buildpack-nodejs/pull/1550))
@@ -1240,7 +1243,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v331...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v332...main
+[v332]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v331...v332
 [v331]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v330...v331
 [v330]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v329...v330
 [v329]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v328...v329
