@@ -30,7 +30,7 @@ has_release_script() {
 has_yarn_cache() {
   local build_dir="$1"
   local yarn_cache="$build_dir/.yarn/cache"
-  [[ -d "$yarn_cache" ]] && [[ -n '$(ls -A "$yarn_cache")' ]]
+  [[ -d "$yarn_cache" ]] && [[ -n "$(ls -A "$yarn_cache")" ]]
 }
 
 has_yarn_workspace_plugin_installed() {
