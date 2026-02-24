@@ -67,7 +67,11 @@ jobs:
       matrix:
         # check the minimum node version supported by the metrics script and the latest node version
         # (assumes the versions between have backwards-compatible APIs)
-        version: [14.10.0, latest]
+        include:
+          - version: 14.10.0
+            mocha: 10.x
+          - version: latest
+            mocha: 11.x
     name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-24.04
     steps:
@@ -75,7 +79,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.version }}
-      - run: npx mocha@10.x metrics/test/metrics.spec.cjs
+      - run: npx mocha@${{ matrix.mocha }} metrics/test/metrics.spec.cjs
 
   rust-test:
     name: Rust Tests and Linting
