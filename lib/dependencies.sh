@@ -170,6 +170,10 @@ yarn_prune_devdependencies() {
     echo "Running 'yarn heroku prune'"
     export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
     monitor "prune_dev_dependencies" yarn heroku prune
+    if node_modules_enabled "$build_dir"; then
+      echo "Removing local yarn cache to reduce slug size"
+      rm -rf "$build_dir/.yarn/cache"
+    fi
     build_data::set_raw "skipped_prune" "false"
   else
     cd "$build_dir" || return

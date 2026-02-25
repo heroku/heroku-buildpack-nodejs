@@ -164,6 +164,7 @@ if [[ "$YARN_2" == "true" ]]; then
   # is pristine. Cache mutation is expected in nonzero installs.
   if has_yarn_cache "$BUILD_DIR"; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
+    YARN_ZERO_INSTALL=true
   fi
 
   ### Configure Yarn 2+

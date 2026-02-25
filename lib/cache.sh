@@ -52,10 +52,11 @@ restore_default_cache_directories() {
   local pnpm_cache_dir=${5:-}
 
   if [[ "$YARN" == "true" ]]; then
-    if has_yarn_cache "$build_dir"; then
+    if [[ "$YARN_ZERO_INSTALL" == "true" ]]; then
       echo "- yarn cache is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
       rm -rf "$yarn_cache_dir"
+      mkdir -p "$(dirname "$yarn_cache_dir")"
       mv "$cache_dir/node/cache/yarn" "$yarn_cache_dir"
       if [[ -d "$yarn_cache_dir/yarn" ]]; then
         # Older versions of the buildpack may have created nested yarn caches.
@@ -156,12 +157,15 @@ save_default_cache_directories() {
 
   if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then
-      if [[ "$YARN_2" == "true" ]] && ! node_modules_enabled "$BUILD_DIR"; then
+      if [[ "$YARN_ZERO_INSTALL" == "true" ]]; then
+        echo "- yarn cache is checked into source control and cannot be cached"
+      elif [[ "$YARN_2" == "true" ]]; then
         cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+        echo "- yarn cache"
       else
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+        echo "- yarn cache"
       fi
-      echo "- yarn cache"
     fi
   elif [[ "$PNPM" == "true" ]]; then
     if [[ -d "$pnpm_cache_dir" ]]; then

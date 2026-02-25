@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix Yarn 2+ cache being re-downloaded during dev dependency pruning. ([#1558](https://github.com/heroku/heroku-buildpack-nodejs/pull/1558))
 
 ## [v334] - 2026-02-25
 
