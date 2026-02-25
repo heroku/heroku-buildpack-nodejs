@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v335] - 2026-02-25
+
 - Fix Yarn 2+ cache being re-downloaded during dev dependency pruning. ([#1558](https://github.com/heroku/heroku-buildpack-nodejs/pull/1558))
 
 ## [v334] - 2026-02-25
@@ -1253,7 +1256,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v334...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v335...main
+[v335]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v334...v335
 [v334]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v333...v334
 [v333]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v332...v333
 [v332]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v331...v332
