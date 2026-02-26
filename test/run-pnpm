@@ -1,0 +1,347 @@
+#!/usr/bin/env bash
+
+source "$(pwd)"/test/run-helpers
+
+testPnpmBuildMetaData() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-8.15.5" "${cache_dir}"
+  assertMetrics "${cache_dir}" <<-'EOF'
+    select(.build_step == "finished")
+    select(.build_time | type == "number")
+    select(.bundled_npm_version == "10.8.2")
+    select(.cache_status == "not-found")
+    select(.has_cached_bower_components == false)
+    select(.has_custom_cache_dirs == false)
+    select(.has_procfile == false)
+    select(.install_dependencies_memory | type == "number")
+    select(.install_dependencies_time | type == "number")
+    select(.install_node_binary_memory | type == "number")
+    select(.install_node_binary_time | type == "number")
+    select(.install_pnpm_binary_memory | type == "number")
+    select(.install_pnpm_binary_time | type == "number")
+    select(.node_version | test("v20.\\d+\\.\\d+"))
+    select(.node_version_major == 20)
+    select(.node_version_request == "20.x")
+    select(.package_manager == "pnpm")
+    select(.package_manager_request == "pnpm@8.15.5+sha256.4b4efa12490e5055d59b9b9fc9438b7d581a6b7af3b5675eb5c5f447cee1a589")
+    select(.package_manager_version == "8.15.5")
+    select(.pnpm_version == "8.15.5")
+    select(.prune_dev_dependencies_memory | type == "number")
+    select(.prune_dev_dependencies_time | type == "number")
+    select(.restore_cache_time | type == "number")
+    select(.save_cache_time | type == "number")
+    select(.skipped_prune == false)
+    select(.start_script == "node foo.js")
+EOF
+}
+
+
+testPnpmWithCustomCache() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "ndjson" > "$env_dir/PNPM_INSTALL_REPORTER"
+
+  compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
+  assertCaptured "pnpm:fetching-progress"
+  assertCaptured "Saving cacheDirectories (package.json):"
+  assertCaptured "- node_modules (skipping because pnpm is used)"
+  assertCaptured "- data"
+  assertCaptured "- pnpm store (included because pnpm is used)"
+  assertCapturedSuccess
+
+  compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
+  assertCaptured " Loading from cacheDirectories (package.json):"
+  assertCaptured "- node_modules (skipping because pnpm is used)"
+  assertCaptured "- data (exists - skipping)"
+  assertCaptured "- pnpm store (included because pnpm is used)"
+  assertNotCaptured "pnpm:fetching-progress"
+  assertCapturedSuccess
+}
+
+
+testPnpm7Pnp() {
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  compile "pnpm-7-pnp" "$cache_dir" "$env_dir" "$build_dir"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): pnpm@7.32.3"
+  assertCaptured "Downloading and installing pnpm (7.32.3)"
+  assertCaptured "Using pnpm 7.32.3"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "+ dotenv"
+  assertCaptured "- dotenv"
+  assertCaptured "heroku-prebuild"
+  assertCaptured "heroku-build"
+  assertCaptured "heroku-cleanup"
+  assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/pnpm"
+}
+
+
+testPnpm8Hoist() {
+  compile "pnpm-8-hoist"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): pnpm@8.4.0"
+  assertCaptured "Downloading and installing pnpm (8.4.0)"
+  assertCaptured "Using pnpm 8.4.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+
+testPnpm8Nuxt() {
+  compile "pnpm-8-nuxt"
+  assertCaptured "engines.pnpm (package.json):   unspecified (use default)"
+  assertCaptured "packageManager (package.json): pnpm@8.11.0"
+  assertCaptured "Downloading and installing pnpm (8.11.0)"
+  assertCaptured "Using pnpm 8.11.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "> nuxt prepare"
+  assertCaptured "> pnpm-8-nuxt@ build"
+  assertCaptured "> nuxt build"
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+}
+
+
+testPnpmEngine() {
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  compile "pnpm-engine" "$cache_dir" "$env_dir" "$build_dir"
+  assertCaptured "engines.pnpm (package.json):   8.x"
+  assertCaptured "Downloading and installing pnpm (8.x)"
+  assertCaptured "Using pnpm 8"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/pnpm"
+}
+
+
+testPnpmWithCorepackAndEngine() {
+  compile "pnpm-with-corepack-and-engine"
+  assertCaptured "engines.pnpm (package.json):   8.x"
+  assertCaptured "packageManager (package.json): pnpm@8.4.0"
+  assertCaptured "Multiple pnpm versions declared"
+  assertCaptured "The package.json file indicates the target version of pnpm to install in two fields:"
+  assertCaptured '- "packageManager": "pnpm@8.4.0"'
+  assertCaptured '- "engines.pnpm": "8.x"'
+  assertCaptured 'If both fields are present, then "packageManager" will take precedence and "pnpm@8.4.0" will be installed.'
+  assertCaptured "To ensure we install the version of pnpm you want, remove one of these fields."
+  assertCaptured "Downloading and installing pnpm (8.4.0)"
+  assertCaptured "Using pnpm 8.4.0"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCapturedSuccess
+}
+
+
+testPnpmStorePruning() {
+  default_counter_value="40"
+  cache_dir=$(mktmpdir)
+
+  # initial state, no counter exists
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+
+  # set the counter to right before it triggers the store to be pruned
+  echo "1" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be 0; was <${counter}>" "0" "${counter}"
+
+  # the store should be pruned on the next build and counter reset
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $default_counter_value; was <${counter}>" "$default_counter_value" "${counter}"
+
+  # ensure the cache can't get into a bad state (negative counter) and it resets to the initial state
+  echo "-1" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+
+  # ensure the cache can't get into a bad state (non-integer counter) and it resets to the initial state
+  echo "" > "$cache_dir/pnpm_prune_store_counter"
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertNotCaptured "Cleaning up pnpm store"
+  assertCapturedSuccess
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
+}
+
+
+testPnpmCacheSimple() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertNotCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+
+  compile "pnpm-7-pnp" "$cache_dir"
+  assertCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertCapturedSuccess
+}
+
+
+testPnpmCacheComplex() {
+  cache_dir=$(mktmpdir)
+  compile "pnpm-8-nuxt" "$cache_dir"
+  assertNotCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+
+  compile "pnpm-8-nuxt" "$cache_dir"
+  assertCaptured "Restoring cache"
+  assertCaptured "- pnpm cache"
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+}
+
+
+testPnpmWithNoPackageManagerEntry() {
+  compile "pnpm-unknown-version"
+  assertCaptured "Downloading and installing pnpm (latest)"
+  assertCaptured "Using pnpm"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Default pnpm version used"
+  assertCapturedSuccess
+}
+
+
+testPnpmSafePruningSupport() {
+  # no pre/post install script is safe to prune (<8.15.6)
+  compile "pnpm-8.15.5"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedSuccess
+
+  # a pre/post install script is not safe to prune (<8.15.6)
+  compile "pnpm-8.15.5-with-pre-post-install"
+  assertNotCaptured "- dotenv 16.4.5"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedTimes 1 "'pnpm:devPreinstall_0'"
+  assertCapturedTimes 1 "'preinstall_1'"
+  assertCapturedTimes 1 "'install_2'"
+  assertCapturedTimes 1 "'postinstall_3'"
+  assertCapturedTimes 0 "'prepublish_4'"
+  assertCapturedTimes 0 "'preprepare_5'"
+  assertCapturedTimes 1 "'prepare_6'"
+  assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
+
+  # a pre/post install script is safe to prune (>=8.15.6)
+  compile "pnpm-8.15.6-with-pre-post-install"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedTimes 1 "'pnpm:devPreinstall_0'"
+  assertCapturedTimes 1 "'preinstall_1'"
+  assertCapturedTimes 1 "'install_2'"
+  assertCapturedTimes 1 "'postinstall_3'"
+  assertCapturedTimes 0 "'prepublish_4'"
+  assertCapturedTimes 0 "'preprepare_5'"
+  assertCapturedTimes 1 "'prepare_6'"
+  assertCapturedTimes 0 "'postprepare_7'"
+  assertCapturedSuccess
+}
+
+
+testPnpmSkipPruning() {
+  cache_dir=$(mktmpdir)
+
+  # skip pruning in test environment
+  env_dir=$(mktmpdir)
+  echo "test" > "$env_dir/NODE_ENV"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "Skipping because NODE_ENV is 'test'"
+  assertCapturedSuccess
+
+  # skip pruning in non-production environment
+  env_dir=$(mktmpdir)
+  echo "development" > "$env_dir/NODE_ENV"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "Skipping because NODE_ENV is not 'production'"
+  assertCapturedSuccess
+
+  # skip pruning if explicitly configured to do so
+  env_dir=$(mktmpdir)
+  echo "true" > "$env_dir/PNPM_SKIP_PRUNING"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "Skipping because PNPM_SKIP_PRUNING is 'true'"
+  assertCapturedSuccess
+
+  # otherwise, prune away
+  env_dir=$(mktmpdir)
+  echo "production" > "$env_dir/NODE_ENV"
+  echo "false" > "$env_dir/PNPM_SKIP_PRUNING"
+  compile "pnpm-8.15.5" "$cache_dir" "$env_dir"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "- dotenv 16.4.5"
+  assertCapturedSuccess
+}
+
+
+testPnpmWorkspaceBinaries() {
+  compile "pnpm-workspace-binaries"
+  assertCaptured "pnpm -r build"
+  assertCaptured "packages/one build$ next --version"
+  assertCaptured "packages/two build$ next --version"
+  assertCaptured "Next.js v15.0.0-rc.0"
+  assertCaptured "Scope: all 3 workspace projects"
+  assertCaptured "devDependencies: skipped because NODE_ENV is set to production"
+  assertNotCaptured "Skipping because pruning is not supported for pnpm workspaces"
+  assertCapturedSuccess
+}
+
+
+testPnpmWorkspaceFileExistsButNotConfiguredAsWorkspace() {
+  compile "pnpm-workspace-file-exists-but-not-configured-as-workspace"
+  assertCaptured "+ dotenv"
+  assertCaptured "- dotenv"
+  assertCapturedSuccess
+}
+
+
+testPnpmWorkspacePruningWithLifecycleScriptInProject() {
+  compile "pnpm-workspace-with-lifecycle-script-project"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedSuccess
+}
+
+
+testPnpmWorkspacePruningWithLifecycleScriptInRoot() {
+  compile "pnpm-workspace-with-lifecycle-script-root"
+  assertCaptured "Pruning skipped due to presence of lifecycle scripts"
+  assertCapturedSuccess
+}
+
+
+testExecWithPnpmAndCorepack() {
+  compileTest "test-pnpm-with-corepack"
+  assertCaptured "pnpm test run"
+  assertCapturedSuccess
+}
+
+
+testExecWithPnpmAndEngine() {
+  compileTest "test-pnpm-with-engine"
+  assertCaptured "pnpm test run"
+  assertCapturedSuccess
+}
+
+
+source "$(pwd)"/test/shunit2
