@@ -36,13 +36,14 @@ jobs:
     strategy:
       matrix:
         stack_number: ["22", "24"]
+        test_suite: ["npm", "yarn", "pnpm", "general"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Functional tests on heroku:${{ matrix.stack_number }}-build
-        run: test/run
+      - name: Functional tests (${{ matrix.test_suite }}) on heroku:${{ matrix.stack_number }}-build
+        run: test/run-${{ matrix.test_suite }}
 
   hatchet-test:
     runs-on: ubuntu-24.04

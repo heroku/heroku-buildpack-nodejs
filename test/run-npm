@@ -1,0 +1,436 @@
+#!/usr/bin/env bash
+
+source "$(pwd)"/test/run-helpers
+
+testNpmCi() {
+  local log_file cache
+  build_dir=$(mktmpdir)
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+
+  compile "node-14-npm-ci" "$cache_dir" "$env_dir" "$build_dir"
+
+   # make sure that build scripts are being called
+  assertCaptured "heroku-prebuild script"
+  assertCaptured "build script"
+  assertCaptured "postinstall script"
+  assertCapturedSuccess
+  assertFileExists "$build_dir/.heroku/node/bin/npm"
+
+   # test metrics
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "true"
+
+   # test re-using the cache
+  compile "node-14-npm-ci" "$cache_dir"
+  assertCapturedSuccess
+}
+
+
+testNpmCiShrinkwrap() {
+  cache_dir=$(mktmpdir)
+
+  compile "node-10-npm-ci-shrinkwrap" "$cache_dir"
+
+   # make sure that build scripts are being called
+  assertCaptured "heroku-prebuild script"
+  assertCaptured "build script"
+  assertCaptured "postinstall script"
+  assertCapturedSuccess
+
+   # test metrics
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "true"
+
+   # test re-using the cache
+  compile "node-10-npm-ci-shrinkwrap" "$cache_dir"
+  assertCapturedSuccess
+}
+
+
+testNpmCiFallback() {
+  cache_dir=$(mktmpdir)
+  # without a lockfile we should use "npm install" instead of "npm ci"
+  compile "node-14-npm-ci-no-lockfile" "${cache_dir}"
+  assertCapturedSuccess
+  # detecting that we shouldn't use npm ci
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
+}
+
+
+testNpmCiDisabled() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  log_file=$(mktemp)
+
+  echo "true" > $env_dir/USE_NPM_INSTALL
+
+  compile "node-14-npm-ci" $cache_dir $env_dir
+
+  assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
+  assertCapturedSuccess
+}
+
+
+testNpm5CacheDirectory() {
+  local cache=$(mktmpdir)
+  local env_dir=$(mktmpdir)
+  local cache_dir=$(mktmpdir)
+  echo "${cache_dir}/npm"> "$env_dir"/NPM_CONFIG_CACHE
+  compile "npm5" $cache $env_dir
+  # These will be created if npm is using the directory for its cache
+  assertDirectoryExists ${cache_dir}/npm
+  assertDirectoryExists ${cache_dir}/npm/_cacache
+  assertCapturedSuccess
+}
+
+
+testDefaultToNpm5() {
+  compile "npm-lockfile-no-version"
+  assertCaptured "Using default npm version"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+
+testDefaultToNpm5WithNode6() {
+  compile "npm-lockfile-node-6-no-version"
+  assertCaptured "Detected package-lock.json"
+  assertCaptured "Bootstrapping npm 5"
+  assertCaptured "Installing node modules (package.json + package-lock)"
+  assertCapturedSuccess
+}
+
+
+testOldNpmWithLockfile() {
+  compile "npm-lockfile-old-version"
+  assertCaptured "This version of npm"
+  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+  assertCapturedSuccess
+}
+
+
+testOldNpm() {
+  compile "old-npm"
+  assertCaptured "This version of npm (1.2.8000) has several known issues. Please update your npm version in package.json."
+  assertNotCaptured "integer expression expected"
+  assertCapturedError
+}
+
+
+testNonexistentNpm() {
+  compile "nonexistent-npm"
+  assertCaptured "Unable to install npm 1.1.65"
+  assertCapturedError 1 ""
+}
+
+
+testSameNpm() {
+  compile "same-npm"
+  assertCaptured "npm 1.4.28 already installed"
+  assertCapturedSuccess
+}
+
+
+testNpmVersionRange() {
+  compile "npm-version-range"
+  assertCaptured "Bootstrapping npm 5.7.x"
+  assertCapturedSuccess
+}
+
+
+testNpmVersionSpecific() {
+  compile "npm-version-specific"
+  assertCaptured "Bootstrapping npm 2.1.11"
+  assertNotCaptured "WARNING"
+  assertCapturedSuccess
+}
+
+
+testNpmVersionIncompatible() {
+  compile "npm-version-incompat"
+  assertCaptured "Unable to install npm 10.x"
+  assertCaptured "Is npm 10.x compatible with this Node.js version?"
+  assertCapturedError
+}
+
+
+testUserConfig() {
+  compile "userconfig"
+  assertCaptured "www.google.com"
+  assertCaptured "registry error"
+  assertCapturedError 1 ""
+}
+
+
+testDevDependenciesInstalled() {
+  compile "dependencies"
+  assertCaptured "lodash"
+  assertCaptured "Pruning devDependencies"
+  assertCaptured "removed 1 package"
+  assertCapturedSuccess
+}
+
+# Default behavior: install devDependencies then prunes them away with Yarn
+
+testDevDepenenciesWithNoPruning() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
+  compile "dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is 'false'"
+  assertCapturedSuccess
+
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
+  compile "dependencies" "$(mktmpdir)" $env_dir
+  assertNotCaptured "lodash"
+  assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is 'true'"
+  assertCapturedSuccess
+}
+
+# When NPM_CONFIG_PRODUCTION = false we should not prune the devDependencies with Yarn
+
+testNodeEnvTestDepenencies() {
+  env_dir=$(mktmpdir)
+  echo "not-production" > $env_dir/NODE_ENV
+  compile "dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "lodash"
+  assertCaptured "Skipping because NODE_ENV is not 'production'"
+  assertCapturedSuccess
+}
+
+# When NODE_ENV != production we should not prune the devDependencies with Yarn
+
+testOptionalDependencies() {
+  env_dir=$(mktmpdir)
+  compile "optional-dependencies" "$(mktmpdir)" $env_dir
+  assertNotCaptured "NPM_CONFIG_OPTIONAL"
+  assertCaptured "less"
+  assertCaptured "mime"
+  assertCaptured "mkdirp"
+  assertCaptured "clean-css"
+  assertCaptured "request"
+  assertCapturedSuccess
+}
+
+
+testNoOptionalDependencies() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NPM_CONFIG_OPTIONAL
+  compile "optional-dependencies" "$(mktmpdir)" $env_dir
+  assertCaptured "NPM_CONFIG_OPTIONAL=false"
+  assertCaptured "less"
+  assertNotCaptured "mime"
+  assertNotCaptured "mkdirp"
+  assertNotCaptured "clean-css"
+  assertNotCaptured "request"
+  assertCapturedSuccess
+}
+
+
+testNpmrc() {
+  compile "dev-dependencies-npmrc"
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
+
+testShrinkwrap() {
+  compile "shrinkwrap"
+  assertCaptured "express@4.10.4"
+  assertCaptured "lodash@2.4.0"
+  assertCaptured "mocha@2.0.1"
+  assertCapturedSuccess
+}
+
+
+testCIDependencies() {
+  compileTest "ci-dependencies"
+  assertCaptured "lodash"
+  assertCapturedSuccess
+}
+
+
+testNodeEnvNpmConfigProductionFalse() {
+  env_dir=$(mktmpdir)
+  echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
+  compile "node-env-consistency" "$(mktmpdir)" $env_dir
+  assertCaptured "heroku-prebuild: production"
+  assertCaptured "preinstall: production"
+  assertCaptured "postinstall: production"
+  assertCaptured "heroku-postbuild: production"
+  assertEquals "Expected successful exit code" "0" "${RETURN}"
+}
+
+# Avoid this issue
+# https://github.com/npm/npm/issues/17781
+
+testNpmPrune53Issue() {
+  compile "npm-prune-5-3-issue"
+  assertCaptured "npm 5.3.0 installed"
+  assertCaptured "Skipping because npm 5.3.0 fails"
+  assertCaptured "https://github.com/npm/npm/issues/17781"
+  assertCapturedSuccess
+}
+
+# Avoid this issue for users with git dependencies
+# https://github.com/npm/npm/issues/19356
+
+testNpmPrune56Issue() {
+  compile "npm-prune-5-6-issue"
+  assertCaptured "npm 5.6.0"
+  assertCaptured "Skipping because npm 5.6.0 sometimes fails"
+  assertCaptured "https://github.com/npm/npm/issues/19356"
+  assertCapturedSuccess
+}
+
+
+testNpmBuildMetaData() {
+  cache_dir=$(mktmpdir)
+  compile "pre-post-build-scripts" "${cache_dir}"
+  assertMetrics "${cache_dir}" <<-'EOF'
+    select(.build_step == "finished")
+    select(.build_time | type == "number")
+    select(.bundled_npm_version == "6.14.12")
+    select(.cache_status == "not-found")
+    select(.has_cached_bower_components == false)
+    select(.has_custom_cache_dirs == false)
+    select(.has_procfile == false)
+    select(.heroku_postbuild_script == "echo heroku-postbuild hook message")
+    select(.heroku_postbuild_script_memory | type == "number")
+    select(.heroku_postbuild_script_time | type == "number")
+    select(.heroku_prebuild_script == "echo heroku-prebuild hook message")
+    select(.heroku_prebuild_script_memory | type == "number")
+    select(.heroku_prebuild_script_time | type == "number")
+    select(.install_dependencies_memory | type == "number")
+    select(.install_dependencies_time | type == "number")
+    select(.install_node_binary_memory | type == "number")
+    select(.install_node_binary_time | type == "number")
+    select(.node_version == "v10.24.1")
+    select(.node_version_major == 10)
+    select(.node_version_request == "10.x")
+    select(.npm_version == "6.14.12")
+    select(.package_manager == "npm")
+    select(.package_manager_version == "6.14.12")
+    select(.prune_dev_dependencies_memory | type == "number")
+    select(.prune_dev_dependencies_time | type == "number")
+    select(.restore_cache_time | type == "number")
+    select(.save_cache_time | type == "number")
+    select(.skipped_prune == false)
+    select(.use_npm_ci == false)
+EOF
+}
+
+
+testNpmCiCaching() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertCaptured "npm http fetch GET"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertNotCaptured "npm http fetch GET"
+  assertCapturedSuccess
+}
+
+
+testNpmCiCachingWhenUseNpmInstallIsTrue() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "true" > $env_dir/USE_NPM_INSTALL
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertNotCaptured "- npm cache"
+  assertCaptured "- node_modules"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- node_modules"
+  assertNotCaptured "- npm cache"
+  assertCapturedSuccess
+}
+
+
+testNpmCiCachingWhenUseNpmInstallIsFalse() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  echo "http" > $env_dir/NPM_CONFIG_LOGLEVEL
+  echo "false" > $env_dir/USE_NPM_INSTALL
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertNotCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertCaptured "npm http fetch GET"
+  assertCapturedSuccess
+
+  compile "ci-caching" $cache_dir $env_dir
+  assertCaptured "Restoring cache"
+  assertCaptured "Caching build"
+  assertCaptured "- npm cache"
+  assertNotCaptured "npm http fetch GET"
+  assertCapturedSuccess
+}
+
+
+testUseNpm10() {
+  compile "use-npm-v10"
+  assertNotCaptured "Detected package-lock.json: defaulting npm to version 5.x.x"
+  assertCaptured "Using default npm version: 10"
+  assertCapturedSuccess
+}
+
+# PNPM
+
+
+testErrorNpmLockfileOutOfSync() {
+  cache_dir=$(mktmpdir)
+  compile "error-npm-lockfile-out-of-sync" "${cache_dir}"
+  assertCaptured "npm lockfile is not in sync"
+  assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+  assertCapturedError
+  assertMetricEqualsString "${cache_dir}" "failure" "npm-lockfile-out-of-sync"
+}
+
+
+testErrorNpmGitDependency() {
+  cache_dir=$(mktmpdir)
+  compile "error-npm-git-error" "${cache_dir}"
+  assertCaptured "npm Git dependency error (code 128)"
+  assertCapturedError
+  assertMetricEqualsString "${cache_dir}" "failure" "npm-install-git-dependency"
+}
+
+
+testErrorPeerDependencyConflict() {
+  cache_dir=$(mktmpdir)
+  compile "error-npm-peer-dependency-conflict" "${cache_dir}"
+  assertCaptured "Conflict detected in requested npm dependencies"
+  assertCapturedError
+  assertMetricEqualsString "${cache_dir}" "failure" "npm-peer-dependency-conflict"
+}
+
+# TODO: Investigate this recently failing test. The error state was difficult to model
+#       and it appears to no longer be valid since it depended on certain configuration
+#       of dependencies with peer dependencies that would produce a valid install when
+#       no `package.json` was present then fail on prune.
+# testErrorPrune() {
+#   cache_dir=$(mktmpdir)
+#   compile "error-prune" "${cache_dir}"
+#   assertMetricEqualsString "${cache_dir}" "failure" "unknown-prune-dependencies-error"
+# }
+
+
+source "$(pwd)"/test/shunit2
