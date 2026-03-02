@@ -39,3 +39,16 @@ updates:
         update-types:
           - "minor"
           - "patch"
+  - package-ecosystem: "npm"
+    directory: "/yarn2-plugins/prune-dev-dependencies"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "skip changelog"
+    groups:
+      javascript-dependencies:
+        update-types:
+          - "minor"
+          - "patch"
