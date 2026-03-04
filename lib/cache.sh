@@ -160,7 +160,14 @@ save_default_cache_directories() {
       if [[ "$YARN_ZERO_INSTALL" == "true" ]]; then
         echo "- yarn cache is checked into source control and cannot be cached"
       elif [[ "$YARN_2" == "true" ]]; then
-        cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+        local yarn_cache_fs cache_fs
+        yarn_cache_fs=$(df --output=source "$yarn_cache_dir" 2>/dev/null | tail -n1)
+        cache_fs=$(df --output=source "$cache_dir" 2>/dev/null | tail -n1)
+        if [[ "${yarn_cache_fs}" == "${cache_fs}" && -n "${yarn_cache_fs}" ]]; then
+          cp -RTf --link "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+        else
+          cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+        fi
         echo "- yarn cache"
       else
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
