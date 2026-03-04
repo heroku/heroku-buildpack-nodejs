@@ -160,6 +160,10 @@ save_default_cache_directories() {
       if [[ "$YARN_ZERO_INSTALL" == "true" ]]; then
         echo "- yarn cache is checked into source control and cannot be cached"
       elif [[ "$YARN_2" == "true" ]]; then
+        # For improved performance, we copy using hard links if possible. This
+        # requires that the yarn cache and build cache directories are on the
+        # same filesystem mount — which is the case for standard builds but not
+        # Heroku CI or build-in-app-dir.
         local yarn_cache_fs cache_fs
         yarn_cache_fs=$(df --output=source "$yarn_cache_dir" 2>/dev/null | tail -n1)
         cache_fs=$(df --output=source "$cache_dir" 2>/dev/null | tail -n1)
