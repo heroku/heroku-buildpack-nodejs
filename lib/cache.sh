@@ -165,10 +165,10 @@ save_default_cache_directories() {
         # same filesystem mount — which is the case for standard builds but not
         # Heroku CI or build-in-app-dir.
         local yarn_cache_fs cache_fs
-        yarn_cache_fs=$(df --output=source "$yarn_cache_dir" 2>/dev/null | tail -n1)
-        cache_fs=$(df --output=source "$cache_dir" 2>/dev/null | tail -n1)
+        yarn_cache_fs=$(df --output=target "$yarn_cache_dir" 2>/dev/null | tail -n1)
+        cache_fs=$(df --output=target "$cache_dir" 2>/dev/null | tail -n1)
         if [[ "${yarn_cache_fs}" == "${cache_fs}" && -n "${yarn_cache_fs}" ]]; then
-          cp -RTf --link "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
+          cp -RTf --no-dereference --link "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
         else
           cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
         fi
