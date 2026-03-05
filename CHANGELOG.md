@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Use hard links when saving Yarn 2+ cache to improve build performance. ([#1572](https://github.com/heroku/heroku-buildpack-nodejs/pull/1572))
+
 
 ## [v336] - 2026-03-05
 
