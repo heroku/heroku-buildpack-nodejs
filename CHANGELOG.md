@@ -2,8 +2,10 @@
 
 ## [Unreleased]
 
-- Use hard links when saving Yarn 2+ cache to improve build performance. ([#1572](https://github.com/heroku/heroku-buildpack-nodejs/pull/1572))
 
+## [v337] - 2026-03-05
+
+- Use hard links when saving Yarn 2+ cache to improve build performance. ([#1572](https://github.com/heroku/heroku-buildpack-nodejs/pull/1572))
 
 ## [v336] - 2026-03-05
 
@@ -1264,7 +1266,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v336...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v337...main
+[v337]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v336...v337
 [v336]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v335...v336
 [v335]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v334...v335
 [v334]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v333...v334
