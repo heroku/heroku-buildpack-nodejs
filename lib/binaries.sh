@@ -124,6 +124,10 @@ install_nodejs() {
   rm -rf "${dir:?}"/*
   tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
   chmod +x "$dir"/bin/*
+
+  local node_major_version
+  node_major_version=$("$dir"/bin/node --version | cut -d "." -f 1 | sed 's/^v//')
+  check_nodejs_support_status "$node_major_version"
 }
 
 install_npm() {

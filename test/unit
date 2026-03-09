@@ -500,10 +500,103 @@ source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/features.sh
 source "$(pwd)"/lib/yarn-2.sh
+source "$(pwd)"/lib/support_status.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
 source "$(pwd)"/test/utils
+
+# Helper for support_status tests
+capture_support_status_check() {
+  local major_version="$1"
+  local ignore_eol_error="${2:-true}"
+  IGNORE_EOL_ERROR_NODEJS="$ignore_eol_error" check_nodejs_support_status "$major_version" 2>&1
+}
+
+testSupportedCurrentVersionNoWarning() {
+  local output
+  output=$(capture_support_status_check 25)
+  assertEquals "exit code should be 0" 0 $?
+  assertFalse "should not contain end-of-life" '[[ "$output" == *"end-of-life"* ]]'
+}
+
+testSupportedActiveLtsVersionNoWarning() {
+  local output
+  output=$(capture_support_status_check 24)
+  assertEquals "exit code should be 0" 0 $?
+  assertFalse "should not contain end-of-life" '[[ "$output" == *"end-of-life"* ]]'
+}
+
+testSupportedMaintenanceLtsVersionNoWarning() {
+  local output
+  output=$(capture_support_status_check 22)
+  assertEquals "exit code should be 0" 0 $?
+  assertFalse "should not contain end-of-life" '[[ "$output" == *"end-of-life"* ]]'
+}
+
+testUnknownVersionNoWarning() {
+  local output
+  output=$(capture_support_status_check 99)
+  assertEquals "exit code should be 0" 0 $?
+  assertFalse "should not contain end-of-life" '[[ "$output" == *"end-of-life"* ]]'
+}
+
+testEolVersionEmitsWarning() {
+  local output
+  output=$(capture_support_status_check 18)
+  assertEquals "exit code should be 0 when ignore is true" 0 $?
+  assertTrue "should mention end-of-life" '[[ "$output" == *"end-of-life"* ]]'
+  assertTrue "should mention version 18" '[[ "$output" == *"Node.js 18.x"* ]]'
+  assertTrue "should mention April 30, 2025" '[[ "$output" == *"April 30, 2025"* ]]'
+  assertTrue "should mention supported versions" '[[ "$output" == *"Supported versions:"* ]]'
+  assertTrue "should mention future build error" '[[ "$output" == *"this warning will become a build error"* ]]'
+  assertTrue "should include support URL" '[[ "$output" == *"devcenter.heroku.com"* ]]'
+  assertFalse "should not contain error message" '[[ "$output" == *"Node.js version not supported"* ]]'
+}
+
+testEolVersionEmitsWarningForOddVersion() {
+  local output
+  output=$(capture_support_status_check 21)
+  assertEquals "exit code should be 0 when ignore is true" 0 $?
+  assertTrue "should mention end-of-life" '[[ "$output" == *"end-of-life"* ]]'
+  assertTrue "should mention version 21" '[[ "$output" == *"Node.js 21.x"* ]]'
+}
+
+testEolVersionIgnoredByDefault() {
+  local output
+  output=$(capture_support_status_check 18)
+  assertEquals "exit code should be 0 when ignore defaults to true" 0 $?
+  assertTrue "warning should still be present" '[[ "$output" == *"end-of-life"* ]]'
+}
+
+testEolVersionFailsWhenNotIgnored() {
+  local output exit_code
+  output=$(capture_support_status_check 18 "false")
+  exit_code=$?
+  assertNotEquals "exit code should be non-zero" 0 "$exit_code"
+  assertTrue "should mention not supported" '[[ "$output" == *"Node.js version not supported"* ]]'
+  assertTrue "should suggest upgrading" '[[ "$output" == *"Upgrade to a supported LTS version"* ]]'
+  assertTrue "should mention config var bypass" '[[ "$output" == *"IGNORE_EOL_ERROR_NODEJS=true"* ]]'
+  assertFalse "should not contain warning message" '[[ "$output" == *"this warning will become a build error"* ]]'
+}
+
+testSupportedVersionsListFormat() {
+  local output
+  output=$(capture_support_status_check 18)
+  # Should list supported versions in ascending order with status labels
+  assertTrue "should contain 20.x (LTS)" '[[ "$output" == *"20.x (LTS)"* ]]'
+  assertTrue "should contain 22.x (LTS)" '[[ "$output" == *"22.x (LTS)"* ]]'
+  assertTrue "should contain 24.x (LTS)" '[[ "$output" == *"24.x (LTS)"* ]]'
+  assertTrue "should contain 25.x (Current)" '[[ "$output" == *"25.x (Current)"* ]]'
+}
+
+testErrorMessageLtsVersionsOnly() {
+  local output
+  output=$(capture_support_status_check 18 "false") || true
+  # The error suggestions should only list LTS versions (not Current)
+  assertTrue "should list LTS versions in suggestion" '[[ "$output" == *"20.x, 22.x, 24.x"* ]]'
+  assertFalse "should not list Current version in error suggestion" '[[ "$output" == *"25.x"* ]]'
+}
 
 # import the testing framework
 source "$(pwd)"/test/shunit2
