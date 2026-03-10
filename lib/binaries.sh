@@ -74,6 +74,10 @@ install_nodejs() {
     uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
 
+    local resolved_major_version
+    resolved_major_version=$(echo "$version" | cut -d "." -f 1)
+    check_nodejs_support_status "$resolved_major_version"
+
     if [[ "$uses_wide_range" == "true" ]]; then
       echo
       echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version"
@@ -125,9 +129,12 @@ install_nodejs() {
   tar xzf /tmp/node.tar.gz --strip-components 1 -C "$dir"
   chmod +x "$dir"/bin/*
 
-  local node_major_version
-  node_major_version=$("$dir"/bin/node --version | cut -d "." -f 1 | sed 's/^v//')
-  check_nodejs_support_status "$node_major_version"
+  # When using NODE_BINARY_URL, the version isn't known until after install
+  if [[ -n "$NODE_BINARY_URL" ]]; then
+    local node_major_version
+    node_major_version=$("$dir"/bin/node --version | cut -d "." -f 1 | sed 's/^v//')
+    check_nodejs_support_status "$node_major_version"
+  fi
 }
 
 install_npm() {
