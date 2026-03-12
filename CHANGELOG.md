@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 25.8.1 (linux-amd64)
 
 ## [v337] - 2026-03-05
 
