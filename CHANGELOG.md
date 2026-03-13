@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add warning when deploying with end-of-life Node.js versions. ([#1578](https://github.com/heroku/heroku-buildpack-nodejs/pull/1578))
 
 ## [v338] - 2026-03-12
 

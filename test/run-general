@@ -84,6 +84,12 @@ testNoVersion() {
 }
 
 
+testEolVersionWarning() {
+  compile "node-eol-warning"
+  assertCaptured "Node.js 18.x reached end-of-life"
+  assertCapturedSuccess
+}
+
 testCustomNodeBinaryURL() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)

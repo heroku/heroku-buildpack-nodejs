@@ -50,6 +50,8 @@ source "$BP_DIR/lib/features.sh"
 source "$BP_DIR/lib/builddata.sh"
 # shellcheck source=lib/yarn-2.sh
 source "$BP_DIR/lib/yarn-2.sh"
+# shellcheck source=lib/support_status.sh
+source "$BP_DIR/lib/support_status.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
