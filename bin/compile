@@ -34,6 +34,8 @@ source "$BP_DIR/lib/failure.sh"
 source "$BP_DIR/lib/binaries.sh"
 # shellcheck source=lib/json.sh
 source "$BP_DIR/lib/json.sh"
+# shellcheck source=lib/yaml.sh
+source "$BP_DIR/lib/yaml.sh"
 # shellcheck source=lib/cache.sh
 source "$BP_DIR/lib/cache.sh"
 # shellcheck source=lib/dependencies.sh
