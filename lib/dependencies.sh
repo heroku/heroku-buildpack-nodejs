@@ -403,15 +403,12 @@ pnpm_prune_devdependencies() {
 pnpm_workspace_configured() {
   local build_dir=${1:-}
   local workspace_file="$build_dir/pnpm-workspace.yaml"
-  local yq
   local result
-
-  yq="$BP_DIR/lib/vendor/yq-$(get_os)"
 
   if [[ -f "$workspace_file" ]]; then
     # prior to pnpm 10.5.0, the `packages` key was mandatory, but now, you can store
     # other pnpm-related config settings in `pnpm-workspace.yaml`.
-    result=$($yq r "$workspace_file" 'packages' 2>&1)
+    result=$(read_yaml "$workspace_file" '.packages')
 
     if [[ -n "$result" && "$result" != "null" ]]; then
       echo "true"

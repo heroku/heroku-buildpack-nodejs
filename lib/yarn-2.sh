@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-YQ="$BP_DIR/lib/vendor/yq-$(get_os)"
-
 detect_yarn_2() {
   local uses_yarn="$1"
   local build_dir="$2"
   local yml_metadata
   local version
 
-  yml_metadata=$($YQ r "$build_dir/yarn.lock" __metadata 2>&1)
+  yml_metadata=$(read_yaml "$build_dir/yarn.lock" '.__metadata' 2>/dev/null)
 
   # grep for version in case the output is a parsing error
   version=$(echo "$yml_metadata" | grep version)
@@ -23,8 +21,8 @@ detect_yarn_2() {
 has_release_script() {
   local build_dir="$1"
   local yarn_path
-  yarn_path=$($YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1)
-  [[ -n "$yarn_path" ]] && [ -f "$build_dir/$yarn_path" ]
+  yarn_path=$(read_yaml "$build_dir/.yarnrc.yml" '.yarnPath' 2>/dev/null)
+  [[ -n "$yarn_path" && "$yarn_path" != "null" ]] && [ -f "$build_dir/$yarn_path" ]
 }
 
 has_yarn_cache() {
@@ -40,7 +38,11 @@ has_yarn_workspace_plugin_installed() {
 
 get_yarn_path() {
   local build_dir="$1"
-  $YQ r "$build_dir/.yarnrc.yml" yarnPath 2>&1
+  local yarn_path
+  yarn_path=$(read_yaml "$build_dir/.yarnrc.yml" '.yarnPath' 2>/dev/null)
+  if [[ -n "$yarn_path" && "$yarn_path" != "null" ]]; then
+    echo "$yarn_path"
+  fi
 }
 
 use_yarn_app_cache() {
@@ -55,7 +57,7 @@ node_modules_enabled() {
   local build_dir="$1"
   local node_linker
 
-  node_linker=$($YQ r "$build_dir/.yarnrc.yml" nodeLinker 2>&1)
+  node_linker=$(read_yaml "$build_dir/.yarnrc.yml" '.nodeLinker' 2>/dev/null)
 
   [[ "$node_linker" == "node-modules" ]]
 }

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Upgrade vendored yq from v3 to v4.52.4. ([#1581](https://github.com/heroku/heroku-buildpack-nodejs/pull/1581))
 
 ## [v338] - 2026-03-12
 
