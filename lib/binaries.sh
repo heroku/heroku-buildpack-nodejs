@@ -101,10 +101,43 @@ install_nodejs() {
   fi
 
   output_file="/tmp/node.tar.gz"
-  code=$(curl "$download_url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o "$output_file" --write-out "%{http_code}")
 
-  if [ "$code" != "200" ]; then
-    echo "Unable to download node: $code" && false
+  local curl_write_out
+  read -r -d '' curl_write_out <<'CURL_FORMAT' || true
+
+--- Download Diagnostics ---
+  HTTP Status:   %{http_code}
+  DNS Lookup:    %{time_namelookup}s
+  TCP Connect:   %{time_connect}s
+  TLS Handshake: %{time_appconnect}s
+  First Byte:    %{time_starttransfer}s
+  Total Time:    %{time_total}s
+  Speed:         %{speed_download} bytes/sec
+  Downloaded:    %{size_download} bytes
+  Remote IP:     %{remote_ip}
+  Final URL:     %{url_effective}
+  Connections:   %{num_connects}
+CURL_FORMAT
+
+  local curl_output curl_exit
+  curl_output=$(curl "$download_url" -L --silent --show-error --fail \
+    --retry 5 --retry-max-time 15 --retry-connrefused \
+    --connect-timeout 5 \
+    -o "$output_file" \
+    --write-out "$curl_write_out" \
+    2>&1) && curl_exit=0 || curl_exit=$?
+
+  if [[ $curl_exit -ne 0 ]]; then
+    echo "Unable to download node from $download_url"
+    echo "$curl_output"
+    case $curl_exit in
+      6)  echo "  -> DNS resolution failed" ;;
+      7)  echo "  -> Failed to connect to host" ;;
+      22) echo "  -> HTTP error (server returned >= 400)" ;;
+      28) echo "  -> Operation timed out" ;;
+      35) echo "  -> TLS/SSL handshake failed" ;;
+    esac
+    false
   fi
 
   if [[ -z "$NODE_BINARY_URL" ]]; then
