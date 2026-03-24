@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Upgrade vendored yq from v3 to v4.52.4. ([#1581](https://github.com/heroku/heroku-buildpack-nodejs/pull/1581))
+- Improved curl error handling for Node.js downloads to prevent silent failures and add per-attempt timeouts. ([#1584](https://github.com/heroku/heroku-buildpack-nodejs/pull/1584))
 
 ## [v338] - 2026-03-12
 
