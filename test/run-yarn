@@ -526,6 +526,15 @@ testErrorYarnLockfileOutOfSync() {
   assertMetricEqualsString "${cache_dir}" "failure" "yarn-lockfile-out-of-sync"
 }
 
+testDetermineYarnPackageNameFailure() {
+  env_dir=$(mktmpdir)
+  # using a bad registry to force `npm info` calls to fail
+  echo "https://registry.invalid" > "$env_dir/NPM_CONFIG_REGISTRY"
+  compile "yarn-registry-failure" "$(mktmpdir)" "$env_dir"
+  assertCaptured "Unable to resolve yarn version '1.22.x' via npm info"
+  assertCapturedError
+}
+
 # Node version bounds
 
 source "$(pwd)"/test/shunit2

@@ -29,12 +29,16 @@ install_yarn() {
     echo "Downloading and installing yarn from $url"
   else
     echo "Downloading and installing yarn ($version)"
-    package_name=$(determine_yarn_package_name "$version")
+    if ! package_name=$(determine_yarn_package_name "$version"); then
+      echo "Unable to resolve yarn version '$version' via npm info" >&2
+      false
+    fi
     if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version"; then
       echo "Unable to install yarn $version. " \
         "Does yarn $version exist? (https://help.heroku.com/8MEL050H) " \
         "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
-        "Is yarn $version compatible with this Node.js version?" \ && false
+        "Is yarn $version compatible with this Node.js version?"
+      false
     fi
   fi
   # Verify yarn works before capturing and ensure its stderr is inspectable later
@@ -207,6 +211,7 @@ suppress_output() {
 # Yarn 2+ (aka: "berry") is hosted under a different npm package so we need to do some
 # extra checking to determine the correct package name.
 determine_yarn_package_name() {
+  local version="$1"
   local NPM_INFO_OUTPUT
   NPM_INFO_OUTPUT=$(mktemp)
 
@@ -224,13 +229,12 @@ determine_yarn_package_name() {
   fi
 
   # If nothing is returned for the yarn package list for the given version, it must be @yarnpkg/cli-dist
-  if cat "$NPM_INFO_OUTPUT" | grep -q "E404"; then
+  if grep -q "E404" "$NPM_INFO_OUTPUT"; then
     echo "@yarnpkg/cli-dist"
     return 0
   fi
 
-  # Handle unexpected output
-  echo "Unable to resolve yarn version '$version' via npm info"
-  cat "$NPM_INFO_OUTPUT"
+  # Handle unexpected output on stderr so it's not captured by command substitution
+  cat "$NPM_INFO_OUTPUT" >&2
   return "$exit_code"
 }
