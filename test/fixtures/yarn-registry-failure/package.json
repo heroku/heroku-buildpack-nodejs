@@ -1,6 +1,6 @@
 {
   "name": "yarn-registry-failure",
   "engines": {
-    "node": "16.20.2"
+    "node": "22.x"
   }
 }

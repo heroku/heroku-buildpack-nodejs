@@ -188,7 +188,8 @@ install_pnpm() {
     echo "Unable to install pnpm $version. " \
       "Does pnpm $version exist? (https://help.heroku.com/8MEL050H) " \
       "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
-      "Is yarn $version compatible with this Node.js version?" \ && false
+      "Is pnpm $version compatible with this Node.js version?"
+    false
   fi
   # Verify pnpm works before capturing and ensure its stderr is inspectable later
   suppress_output pnpm --version
@@ -212,7 +213,7 @@ suppress_output() {
 # extra checking to determine the correct package name.
 determine_yarn_package_name() {
   local version="$1"
-  local NPM_INFO_OUTPUT
+  local NPM_INFO_OUTPUT exit_code
   NPM_INFO_OUTPUT=$(mktemp)
 
   trap "rm -rf '$NPM_INFO_OUTPUT' >/dev/null" RETURN
