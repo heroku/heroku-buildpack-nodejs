@@ -1,0 +1,6 @@
+{
+  "name": "yarn-registry-failure",
+  "engines": {
+    "node": "22.x"
+  }
+}
