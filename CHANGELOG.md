@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Added Node.js 25.8.2 (linux-amd64)
+- Added Node.js 24.14.1 (linux-amd64)
+- Added Node.js 22.22.2 (linux-amd64)
+- Added Node.js 20.20.2 (linux-amd64)
 - Upgrade vendored yq from v3 to v4.52.4. ([#1581](https://github.com/heroku/heroku-buildpack-nodejs/pull/1581))
 - Improved curl error handling for Node.js downloads to prevent silent failures and add per-attempt timeouts. ([#1584](https://github.com/heroku/heroku-buildpack-nodejs/pull/1584))
 - Fixed silent yarn install failures when `determine_yarn_package_name` fails. ([#1585](https://github.com/heroku/heroku-buildpack-nodejs/pull/1585))
