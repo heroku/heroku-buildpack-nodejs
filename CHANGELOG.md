@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Added Node.js 25.8.2 (linux-amd64)
+- Added Node.js 24.14.1 (linux-amd64)
+- Added Node.js 22.22.2 (linux-amd64)
+- Added Node.js 20.20.2 (linux-amd64)
 - Upgrade vendored yq from v3 to v4.52.4. ([#1581](https://github.com/heroku/heroku-buildpack-nodejs/pull/1581))
 
 ## [v338] - 2026-03-12
