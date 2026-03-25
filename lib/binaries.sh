@@ -101,11 +101,24 @@ install_nodejs() {
   fi
 
   output_file="/tmp/node.tar.gz"
-  code=$(curl "$download_url" -L --silent --fail --retry 5 --retry-max-time 15 --retry-connrefused --connect-timeout 5 -o "$output_file" --write-out "%{http_code}")
+	if ! curl "$download_url" --no-progress-meter --location --fail --max-time 30 --retry 5 --retry-connrefused --connect-timeout 5 -o "$output_file"; then
+		output::error <<-EOF
+			Error: Unable to download Node.js.
 
-  if [ "$code" != "200" ]; then
-    echo "Unable to download node: $code" && false
-  fi
+			Failed to download Node.js from:
+			${download_url}
+
+			In some cases, this happens due to a temporary network
+			issue or an outage with the Node.js distribution server.
+
+			Confirm the download url ({url}) works then try building again
+			to see if the error resolves itself.
+
+			If that doesn't help, check the Node.js status page:
+			https://status.nodejs.org/
+		EOF
+		false
+	fi
 
   if [[ -z "$NODE_BINARY_URL" ]]; then
     case "$checksum_type" in

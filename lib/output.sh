@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
-# TODO: Merge these with the output helpers in buildpack-stdlib:
-# https://github.com/heroku/buildpack-stdlib
+ANSI_RED=$'\e[1;31m'
+ANSI_RESET=$'\e[0m'
+
+# TODO: deprecated these in favor of https://github.com/heroku/heroku-buildpack-python/blob/main/lib/output.sh
 
 info() {
   echo "       $*" || true
@@ -40,4 +42,20 @@ header_skip_newline() {
 error() {
   echo " !     $*" >&2 || true
   echo "" || true
+}
+
+# Output a styled multi-line error message to stderr.
+#
+# Usage:
+# ```
+# output_error <<-EOF
+# 	Error: The error summary.
+#
+# 	Detailed description.
+# EOF
+# ```
+output::error() {
+  echo >&2
+  sed --unbuffered "s/^/${ANSI_RED} !     /" | sed --unbuffered "s/$/${ANSI_RESET}/" >&2
+  echo >&2
 }

@@ -96,6 +96,16 @@ testCustomNodeBinaryURL() {
 }
 
 
+testNodeDownloadFailure() {
+  env_dir=$(mktmpdir)
+  echo "https://registry.invalid/node.tar.gz" > "$env_dir/NODE_BINARY_URL"
+  compile "no-version" "$(mktmpdir)" "$env_dir"
+  assertCaptured "Unable to download Node.js"
+  assertCaptured "https://registry.invalid/node.tar.gz"
+  assertCaptured "https://status.nodejs.org/"
+  assertCapturedError
+}
+
 testDisableCache() {
   cache=$(mktmpdir)
   env_dir=$(mktmpdir)
