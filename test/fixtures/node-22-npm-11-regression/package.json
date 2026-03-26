@@ -1,0 +1,9 @@
+{
+  "name": "node-22-npm-11-regression",
+  "version": "1.0.0",
+  "description": "Reproduces npm 11.x bootstrap failure on Node 22.22.2 (heroku/heroku-buildpack-nodejs#1590)",
+  "engines": {
+    "node": "22.22.2",
+    "npm": "11.x"
+  }
+}

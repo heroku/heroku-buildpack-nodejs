@@ -152,6 +152,16 @@ testNpmVersionIncompatible() {
   assertCapturedError
 }
 
+# https://github.com/heroku/heroku-buildpack-nodejs/issues/1590
+# Node 22.22.2 ships npm 10.9.7 which fails to bootstrap npm 11.x
+# due to a missing `promise-retry` module in @npmcli/arborist
+testNode22Npm11BootstrapRegressionWorkaround() {
+  compile "node-22-npm-11-regression"
+  assertCaptured "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression"
+  assertCaptured "Bootstrapping npm 11."
+  assertCaptured "npm 11."
+  assertCapturedSuccess
+}
 
 testUserConfig() {
   compile "userconfig"

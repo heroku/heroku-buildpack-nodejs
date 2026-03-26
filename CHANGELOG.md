@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Workaround for npm 11 regression with Node.js 22.22.2 caused by missing `promise-retry` module. ([#1591](https://github.com/heroku/heroku-buildpack-nodejs/pull/1591))
 
 ## [v339] - 2026-03-25
 

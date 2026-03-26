@@ -174,10 +174,34 @@ install_npm() {
 
 install_npm_binary() {
   local version="$1"
+
+  # XXX: Workaround for https://github.com/heroku/heroku-buildpack-nodejs/issues/1590
+  # Node 22.22.2 fails to install npm >= 11.11.0 with a MODULE_NOT_FOUND error for `promise-retry`.
+  # Installing an intermediate npm version (~11.10.0) first avoids the issue.
+  if [[ "$(node --version)" == "v22.22.2" ]]; then
+    local resolved_version
+    resolved_version=$(npm info "npm@${version}" version --json 2>/dev/null | jq -r 'if type == "array" then .[-1] else . end' 2>/dev/null) || true
+    local major minor
+    major=$(echo "$resolved_version" | cut -d. -f1)
+    minor=$(echo "$resolved_version" | cut -d. -f2)
+    if [[ -z "$resolved_version" ]] || [[ "$resolved_version" == "null" ]] || [[ -z "$major" ]] || [[ -z "$minor" ]]; then
+      echo "Failed to resolve npm version from range '$version'. Unable to perform Node.js 22.22.2 regression workaround (https://github.com/npm/cli/issues/9151)." && false
+      return
+    fi
+    if [[ "$major" == "11" ]] && [[ "$minor" -ge 11 ]]; then
+      echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
+      if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0" >/dev/null; then
+        echo "Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround. Consider pinning npm to an exact version that works with Node.js 22.22.2." && false
+        return
+      fi
+    fi
+  fi
+
   if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
     echo "Unable to install npm $version. " \
       "Does npm $version exist? " \
-      "Is npm $version compatible with this Node.js version?" && false
+      "Is npm $version compatible with this Node.js version?"
+    false
   fi
 }
 
