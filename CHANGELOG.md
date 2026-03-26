@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v340] - 2026-03-26
+
 - Workaround for npm 11 regression with Node.js 22.22.2 caused by missing `promise-retry` module. ([#1591](https://github.com/heroku/heroku-buildpack-nodejs/pull/1591))
 
 ## [v339] - 2026-03-25
@@ -1281,7 +1284,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v339...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v340...main
+[v340]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v339...v340
 [v339]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v338...v339
 [v338]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v337...v338
 [v337]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v336...v337
