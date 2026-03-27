@@ -791,6 +791,54 @@ warn() {
   echo ""
 }
 
+warn_or_fail_eol_version() {
+  local version="${1}"
+  local eol_date="${2}"
+  local fail_build="${3}"
+  local major_version
+  major_version=$(echo "$version" | cut -d. -f1)
+  local support_url="https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
+
+  # Build sorted list of supported LTS versions (maintenance + active) from inventory metadata.
+  # Using grep instead of yq because yq doesn't yet support TOML v1.1.0 date types.
+  # https://github.com/pelletier/go-toml/pull/1031
+  local supported_lts_versions
+  local active_lts maintenance_lts all_lts
+  active_lts=$(grep '^active_lts_version' "$BP_DIR/inventory/node.toml" | sed 's/[^0-9]//g')
+  maintenance_lts=$(sed -n '/^maintenance_lts_versions/,/]/p' "$BP_DIR/inventory/node.toml" | grep -o '[0-9]\+')
+  all_lts=$(echo -e "${maintenance_lts}\n${active_lts}" | sort -n | sed 's/$/.x/' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
+  supported_lts_versions="${all_lts}"
+
+  if [[ "$fail_build" == "true" ]]; then
+		output::error <<-EOF
+			Support for Node.js v${major_version} has ended
+
+			Node.js v${major_version} reached its official End-of-Life (EOL) on ${eol_date}. It no longer receives security
+			updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
+
+			Suggestions:
+			- Upgrade to a supported LTS version (${supported_lts_versions})
+
+			${support_url}
+		EOF
+    fail
+  else
+    output::error <<-EOF
+			Support for Node.js v${major_version} has ended
+
+			Node.js v${major_version} reached its official End-of-Life (EOL) on ${eol_date}. It no longer receives security
+			updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
+
+			In a future buildpack release, this warning will become a build error. Please upgrade to a
+			supported version as soon as possible to avoid build failures.
+
+			Supported versions: ${supported_lts_versions}
+
+			${support_url}
+		EOF
+  fi
+}
+
 warn_aws_proxy() {
   if { [[ -n "$HTTP_PROXY" ]] || [[ -n "$HTTPS_PROXY" ]]; } && [[ "$NO_PROXY" != "amazonaws.com" ]]; then
     warn "Your build may fail if NO_PROXY is not set to amazonaws.com" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#aws-proxy-error"

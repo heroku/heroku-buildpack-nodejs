@@ -54,7 +54,10 @@ install_nodejs() {
   local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
-  local lts_major_version="24"
+  # Using grep instead of yq because yq doesn't yet support TOML v1.1.0 date types
+  # https://github.com/pelletier/go-toml/pull/1031
+  local lts_major_version
+  lts_major_version=$(grep '^active_lts_version' "$BP_DIR/inventory/node.toml" | sed 's/[^0-9]//g')
 
   if [[ -z "$requested_version" ]]; then
       requested_version="$lts_major_version.x"
@@ -77,6 +80,8 @@ install_nodejs() {
     checksum_value=$(echo "$resolve_result" | jq -r .checksum_value)
     uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
+    eol_date=$(echo "$resolve_result" | jq -r .eol_date)
+    fail_build=$(echo "$resolve_result" | jq -r .fail_build)
 
     if [[ "$uses_wide_range" == "true" ]]; then
       echo
@@ -95,6 +100,15 @@ install_nodejs() {
     # if either warning message was displayed, ensure we add a newline before continuing with regular output
     if [[ "$uses_wide_range" == "true" ]] || [[ "$lts_upper_bound_enforced" == "true" ]]; then
       echo
+    fi
+
+    local today
+    today=$(date +%Y-%m-%d)
+
+    # Both dates are in YYYY-MM-DD (ISO 8601) format, so lexicographic
+    # comparison correctly determines chronological order.
+    if [[ "$today" > "$eol_date" ]]; then
+      warn_or_fail_eol_version "$version" "$eol_date" "$fail_build"
     fi
 
     echo "Downloading and installing node $version..."
