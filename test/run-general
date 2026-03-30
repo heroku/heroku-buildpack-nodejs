@@ -1048,7 +1048,6 @@ testVersionBoundsNarrow() {
 
 testVersionBoundsExplicitlyGreaterThanLTS() {
   compile "version-bounds-explicitly-greater-than-lts"
-  cat "$STD_OUT"
   assertCaptured "! The requested Node.js version is using a wide range"
   assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
   assertCapturedSuccess

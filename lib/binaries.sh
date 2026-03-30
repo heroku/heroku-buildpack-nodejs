@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-# Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
-RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
+NODEJS_DATA_QUERY="$BP_DIR/lib/vendor/nodejs-data-query-$(get_os)"
 
 resolve_nodejs() {
   local node_version="$1"
-  local lts_major_version="$2"
   local output
 
-  if output=$($RESOLVE "$BP_DIR/inventory/node.toml" "$node_version" "$lts_major_version"); then
+  if output=$($NODEJS_DATA_QUERY resolve-version "$BP_DIR/inventory/node.toml" "$node_version"); then
     if [[ $output = "No result" ]]; then
       return 1
     else
@@ -54,10 +52,11 @@ install_nodejs() {
   local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
-  # Using grep instead of yq because yq doesn't yet support TOML v1.1.0 date types
-  # https://github.com/pelletier/go-toml/pull/1031
+
+  local supported_json
+  supported_json=$($NODEJS_DATA_QUERY supported-versions "$BP_DIR/inventory/node.toml")
   local lts_major_version
-  lts_major_version=$(grep '^active_lts_version' "$BP_DIR/inventory/node.toml" | sed 's/[^0-9]//g')
+  lts_major_version=$(echo "$supported_json" | jq -r '.active_lts')
 
   if [[ -z "$requested_version" ]]; then
       requested_version="$lts_major_version.x"
@@ -68,10 +67,10 @@ install_nodejs() {
     echo "Downloading and installing node from $download_url"
   else
     echo "Resolving node version $requested_version..."
-    resolve_result=$(resolve_nodejs "$requested_version" "$lts_major_version" || echo "failed")
+    resolve_result=$(resolve_nodejs "$requested_version" || echo "failed")
 
     if [[ "$resolve_result" == "failed" ]]; then
-      fail_bin_install "$requested_version" "$lts_major_version"
+      fail_bin_install "$requested_version"
     fi
 
     version=$(echo "$resolve_result" | jq -r .version)

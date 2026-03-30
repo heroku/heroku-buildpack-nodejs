@@ -219,14 +219,13 @@ fail_yarn_lockfile_outdated() {
 fail_bin_install() {
   local error
   local version="$1"
-  local lts_major_version="$2"
 
   # Allow the subcommand to fail without trapping the error so we can
   # get the failing message output
   set +e
 
   # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" "$lts_major_version" 2>&1)
+  error=$($NODEJS_DATA_QUERY resolve-version "$BP_DIR/inventory/node.toml" "$version" 2>&1)
 
   # re-enable trapping
   set -e
@@ -799,15 +798,11 @@ warn_or_fail_eol_version() {
   major_version=$(echo "$version" | cut -d. -f1)
   local support_url="https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
 
-  # Build sorted list of supported LTS versions (maintenance + active) from inventory metadata.
-  # Using grep instead of yq because yq doesn't yet support TOML v1.1.0 date types.
-  # https://github.com/pelletier/go-toml/pull/1031
+  local supported_json
+  supported_json=$($NODEJS_DATA_QUERY supported-versions "$BP_DIR/inventory/node.toml")
   local supported_lts_versions
-  local active_lts maintenance_lts all_lts
-  active_lts=$(grep '^active_lts_version' "$BP_DIR/inventory/node.toml" | sed 's/[^0-9]//g')
-  maintenance_lts=$(sed -n '/^maintenance_lts_versions/,/]/p' "$BP_DIR/inventory/node.toml" | grep -o '[0-9]\+')
-  all_lts=$(echo -e "${maintenance_lts}\n${active_lts}" | sort -n | sed 's/$/.x/' | tr '\n' ',' | sed 's/,$//' | sed 's/,/, /g')
-  supported_lts_versions="${all_lts}"
+  supported_lts_versions=$(echo "$supported_json" | jq -r \
+    '[.maintenance_lts[], .active_lts] | sort | map(tostring + ".x") | join(", ")')
 
   if [[ "$fail_build" == "true" ]]; then
 		output::error <<-EOF
