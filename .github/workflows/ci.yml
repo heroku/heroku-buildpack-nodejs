@@ -93,9 +93,9 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
       - name: Run tests
-        run: cargo test --manifest-path ./resolve-version/Cargo.toml --locked
+        run: cargo test --manifest-path ./nodejs-data-query/Cargo.toml --locked
       - name: Clippy
-        run: cargo clippy --manifest-path ./resolve-version/Cargo.toml --all-targets --locked -- --deny warnings
+        run: cargo clippy --manifest-path ./nodejs-data-query/Cargo.toml --all-targets --locked -- --deny warnings
 
   yarn-plugin-test:
     name: Yarn Plugin Tests

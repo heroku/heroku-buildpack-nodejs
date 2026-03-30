@@ -27,7 +27,7 @@ updates:
           - "minor"
           - "patch"
   - package-ecosystem: "cargo"
-    directory: "/resolve-version"
+    directory: "/nodejs-data-query"
     schedule:
       interval: "monthly"
     labels:
