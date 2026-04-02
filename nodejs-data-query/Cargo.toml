@@ -1,0 +1,16 @@
+[package]
+name = "nodejs-data-query"
+rust-version = "1.89"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4", features = ["cargo", "derive"] }
+hex = "0.4"
+libherokubuildpack = { version = "=0.30.3", default-features = false, features = [
+    "inventory",
+    "inventory-sha2",
+] }
+nodejs-data = { git = "https://github.com/heroku/buildpacks-nodejs", branch = "ccasey/eol-support" }
+serde_json = "1"
+sha2 = "0.10"
+toml = "1.0"

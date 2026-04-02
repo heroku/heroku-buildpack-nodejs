@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 25.9.0 (linux-amd64)
+- Added end-of-life warnings for unsupported Node.js versions. ([#1593](https://github.com/heroku/heroku-buildpack-nodejs/pull/1593))
 
 ## [v341] - 2026-04-02
 

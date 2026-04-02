@@ -1,3 +1,142 @@
+[schedule.v26]
+start = 2026-04-22
+end = 2029-04-30
+lts = 2026-10-28
+maintenance = 2027-10-20
+
+[schedule.v25]
+start = 2025-10-15
+end = 2026-06-01
+maintenance = 2026-04-01
+
+[schedule.v24]
+start = 2025-05-06
+end = 2028-04-30
+lts = 2025-10-28
+maintenance = 2026-10-20
+
+[schedule.v23]
+start = 2024-10-16
+end = 2025-06-01
+maintenance = 2025-04-01
+
+[schedule.v22]
+start = 2024-04-24
+end = 2027-04-30
+lts = 2024-10-29
+maintenance = 2025-10-21
+
+[schedule.v21]
+start = 2023-10-17
+end = 2024-06-01
+maintenance = 2024-04-01
+
+[schedule.v20]
+start = 2023-04-18
+end = 2026-04-30
+lts = 2023-10-24
+maintenance = 2024-10-22
+
+[schedule.v19]
+start = 2022-10-18
+end = 2023-06-01
+maintenance = 2023-04-01
+
+[schedule.v18]
+start = 2022-04-19
+end = 2025-04-30
+lts = 2022-10-25
+maintenance = 2023-10-18
+
+[schedule.v17]
+start = 2021-10-19
+end = 2022-06-01
+maintenance = 2022-04-01
+
+[schedule.v16]
+start = 2021-04-20
+end = 2023-09-11
+lts = 2021-10-26
+maintenance = 2022-10-18
+
+[schedule.v15]
+start = 2020-10-20
+end = 2021-06-01
+maintenance = 2021-04-01
+
+[schedule.v14]
+start = 2020-04-21
+end = 2023-04-30
+lts = 2020-10-27
+maintenance = 2021-10-19
+
+[schedule.v13]
+start = 2019-10-22
+end = 2020-06-01
+maintenance = 2020-04-01
+
+[schedule.v12]
+start = 2019-04-23
+end = 2022-04-30
+lts = 2019-10-21
+maintenance = 2020-11-30
+
+[schedule.v11]
+start = 2018-10-23
+end = 2019-06-01
+maintenance = 2019-04-22
+
+[schedule.v10]
+start = 2018-04-24
+end = 2021-04-30
+lts = 2018-10-30
+maintenance = 2020-05-19
+
+[schedule.v9]
+start = 2017-10-01
+end = 2018-06-30
+maintenance = 2018-04-01
+
+[schedule.v8]
+start = 2017-05-30
+end = 2019-12-31
+lts = 2017-10-31
+maintenance = 2019-01-01
+
+[schedule.v7]
+start = 2016-10-25
+end = 2017-06-30
+maintenance = 2017-04-30
+
+[schedule.v6]
+start = 2016-04-26
+end = 2019-04-30
+lts = 2016-10-18
+maintenance = 2018-04-30
+
+[schedule.v5]
+start = 2015-10-29
+end = 2016-06-30
+maintenance = 2016-04-30
+
+[schedule.v4]
+start = 2015-09-08
+end = 2018-04-30
+lts = 2015-10-12
+maintenance = 2017-04-01
+
+[schedule."v0.12"]
+start = 2015-02-06
+end = 2016-12-31
+
+[schedule."v0.10"]
+start = 2013-03-11
+end = 2016-10-31
+
+[schedule."v0.8"]
+start = 2012-06-25
+end = 2014-07-31
+
 [[artifacts]]
 version = "25.9.0"
 os = "linux"

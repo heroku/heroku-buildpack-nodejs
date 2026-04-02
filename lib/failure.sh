@@ -219,14 +219,13 @@ fail_yarn_lockfile_outdated() {
 fail_bin_install() {
   local error
   local version="$1"
-  local lts_major_version="$2"
 
   # Allow the subcommand to fail without trapping the error so we can
   # get the failing message output
   set +e
 
   # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" "$lts_major_version" 2>&1)
+  error=$($NODEJS_DATA_QUERY resolve-version "$BP_DIR/inventory/node.toml" "$version" 2>&1)
 
   # re-enable trapping
   set -e
@@ -789,6 +788,50 @@ warn() {
   echo " !     $tip" || true
   echo "       $url" || true
   echo ""
+}
+
+warn_or_fail_eol_version() {
+  local version="${1}"
+  local eol_date="${2}"
+  local fail_build="${3}"
+  local major_version
+  major_version=$(echo "$version" | cut -d. -f1)
+  local support_url="https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
+
+  local supported_json
+  supported_json=$($NODEJS_DATA_QUERY supported-versions "$BP_DIR/inventory/node.toml")
+  local supported_lts_versions
+  supported_lts_versions=$(echo "$supported_json" | jq -r \
+    '[.maintenance_lts[], .active_lts] | sort | map(tostring + ".x") | join(", ")')
+
+  if [[ "$fail_build" == "true" ]]; then
+		output::error <<-EOF
+			Support for Node.js v${major_version} has ended
+
+			Node.js v${major_version} reached its official End-of-Life (EOL) on ${eol_date}. It no longer receives security
+			updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
+
+			Suggestions:
+			- Upgrade to a supported LTS version (${supported_lts_versions})
+
+			${support_url}
+		EOF
+    fail
+  else
+    output::error <<-EOF
+			Support for Node.js v${major_version} has ended
+
+			Node.js v${major_version} reached its official End-of-Life (EOL) on ${eol_date}. It no longer receives security
+			updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
+
+			In a future buildpack release, this warning will become a build error. Please upgrade to a
+			supported version as soon as possible to avoid build failures.
+
+			Supported versions: ${supported_lts_versions}
+
+			${support_url}
+		EOF
+  fi
 }
 
 warn_aws_proxy() {

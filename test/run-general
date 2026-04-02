@@ -1053,4 +1053,12 @@ testVersionBoundsExplicitlyGreaterThanLTS() {
   assertCapturedSuccess
 }
 
+testEolVersionWarning() {
+  compile "node-14"
+  assertCaptured "Support for Node.js v14 has ended"
+  assertCaptured "reached its official End-of-Life (EOL)"
+  assertCaptured "Supported versions:"
+  assertCapturedSuccess
+}
+
 source "$(pwd)"/test/shunit2
