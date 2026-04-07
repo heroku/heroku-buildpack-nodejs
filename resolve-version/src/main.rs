@@ -1,20 +1,14 @@
 use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use libherokubuildpack::inventory::version::VersionRequirement;
-use node_semver::{Range, SemverError, Version};
-use sha2::Sha256;
+use node_semver::{Range, Version as SemverVersion};
+use nodejs_data::{NodejsArtifact, NodejsInventory, VersionRange};
 use std::env::consts;
 use std::ops::Deref;
-use std::str::FromStr;
 
 const VERSION_REQS_EXIT_CODE: i32 = 1;
 const INVENTORY_EXIT_CODE: i32 = 2;
 const UNSUPPORTED_OS_EXIT_CODE: i32 = 3;
 const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
-
-type NodeInventory = libherokubuildpack::inventory::Inventory<Version, Sha256, Option<()>>;
-
-type NodeArtifact = libherokubuildpack::inventory::artifact::Artifact<Version, Sha256, Option<()>>;
 
 fn main() {
     let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
@@ -58,7 +52,7 @@ fn main() {
         }),
     };
 
-    let version_requirements = Requirement::from_str(node_version.as_str()).unwrap_or_else(|e| {
+    let version_requirements = VersionRange::parse(node_version.as_str()).unwrap_or_else(|e| {
         eprintln!("Could not parse Version Requirements '{node_version}': {e}");
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
@@ -68,7 +62,7 @@ fn main() {
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
-    let node_inventory: NodeInventory = toml::from_str(&inventory_contents).unwrap_or_else(|e| {
+    let node_inventory: NodejsInventory = toml::from_str(&inventory_contents).unwrap_or_else(|e| {
         eprintln!("Error parsing '{inventory_path}': {e}");
         std::process::exit(INVENTORY_EXIT_CODE);
     });
@@ -98,34 +92,58 @@ fn main() {
 }
 
 fn resolve_node_artifact<'a>(
-    node_inventory: &'a NodeInventory,
+    node_inventory: &'a NodejsInventory,
     os: Os,
     arch: Arch,
-    requirement: &Requirement,
+    requirement: &VersionRange,
     lts_major_version: i64,
     allow_wide_range: bool,
-) -> Option<(&'a NodeArtifact, UsesWideRange, LtsUpperBoundEnforced)> {
+) -> Option<(&'a NodejsArtifact, UsesWideRange, LtsUpperBoundEnforced)> {
     let lts_range_value = format!("{lts_major_version}.x");
-    let lts_range = Requirement::from_str(&lts_range_value)
+    let lts_range = VersionRange::parse(&lts_range_value)
         .unwrap_or_else(|_| panic!("Range {lts_range_value} should be valid"));
 
     if let Some(resolved_artifact) = node_inventory.resolve(os, arch, requirement)
         && let Some(highest_lts_artifact) = node_inventory.resolve(os, arch, &lts_range)
     {
-        let uses_wide_range =
-            if requirement.satisfies(&Version::new(resolved_artifact.version.major - 1, 0, 0))
-                || requirement.satisfies(&Version::new(resolved_artifact.version.major + 1, 0, 0))
-            {
-                UsesWideRange(true)
-            } else {
-                UsesWideRange(false)
-            };
+        // The wide-range/LTS logic below needs node_semver::Range for min_version()
+        // which nodejs-data's VersionRange doesn't expose. We bridge by parsing a local
+        // Range from VersionRange's Display output, replicating the transformations
+        // nodejs-data applies for syntax node_semver doesn't understand ("latest", "~=").
+        // This can be removed once the logic moves into the shared crate.
+        let requirement_str = requirement.to_string();
+        let raw_range = if requirement_str == "latest" {
+            Range::any()
+        } else if requirement_str.starts_with("~=") {
+            Range::parse(requirement_str.replacen('=', "", 1))
+                .expect("VersionRange should produce a valid Range string")
+        } else {
+            Range::parse(&requirement_str)
+                .expect("VersionRange should produce a valid Range string")
+        };
+
+        let uses_wide_range = if raw_range.satisfies(&SemverVersion::new(
+            resolved_artifact.version.major() - 1,
+            0,
+            0,
+        )) || raw_range.satisfies(&SemverVersion::new(
+            resolved_artifact.version.major() + 1,
+            0,
+            0,
+        )) {
+            UsesWideRange(true)
+        } else {
+            UsesWideRange(false)
+        };
+
+        let resolved_semver = SemverVersion::parse(resolved_artifact.version.to_string()).unwrap();
+        let lts_semver = SemverVersion::parse(highest_lts_artifact.version.to_string()).unwrap();
 
         let lts_upper_bound_enforced = if allow_wide_range {
             LtsUpperBoundEnforced(false)
-        } else if resolved_artifact.version > highest_lts_artifact.version
-            && let Some(min_version) = requirement.deref().min_version()
-            && min_version <= highest_lts_artifact.version
+        } else if resolved_semver > lts_semver
+            && let Some(min_version) = raw_range.min_version()
+            && min_version <= lts_semver
         {
             LtsUpperBoundEnforced(true)
         } else {
@@ -142,48 +160,6 @@ fn resolve_node_artifact<'a>(
         ))
     } else {
         None
-    }
-}
-
-pub struct Requirement(Range);
-
-impl FromStr for Requirement {
-    type Err = SemverError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let value = value.trim();
-
-        let value = if value.starts_with("~=") {
-            value.replacen('=', "", 1)
-        } else {
-            value.to_string()
-        };
-
-        if value == "latest" {
-            Ok(Requirement(Range::any()))
-        } else {
-            Range::parse(value).map(Self)
-        }
-    }
-}
-
-impl std::fmt::Display for Requirement {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl VersionRequirement<Version> for Requirement {
-    fn satisfies(&self, version: &Version) -> bool {
-        self.0.satisfies(version)
-    }
-}
-
-impl Deref for Requirement {
-    type Target = Range;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
@@ -210,6 +186,7 @@ impl Deref for LtsUpperBoundEnforced {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     const TEST_LTS_MAJOR_VERSION: i64 = 24;
     const ALLOW_WIDE_RANGE: bool = true;
@@ -217,17 +194,17 @@ mod tests {
 
     #[test]
     fn parse_handles_latest() {
-        let result = Requirement::from_str("latest");
+        let result = VersionRange::parse("latest");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("*", reqs.to_string());
+            assert_eq!("latest", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_exact_versions() {
-        let result = Requirement::from_str("14.0.0");
+        let result = VersionRange::parse("14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -237,96 +214,93 @@ mod tests {
 
     #[test]
     fn parse_handles_starts_with_v() {
-        let result = Requirement::from_str("v14.0.0");
+        let result = VersionRange::parse("v14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("14.0.0", reqs.to_string());
+            assert_eq!("v14.0.0", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_semver_semantics() {
-        let result = Requirement::from_str(">= 12.0.0");
+        let result = VersionRange::parse(">= 12.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=12.0.0", reqs.to_string());
+            assert_eq!(">= 12.0.0", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_pipe_statements() {
-        let result = Requirement::from_str("^12 || ^13 || ^14");
+        let result = VersionRange::parse("^12 || ^13 || ^14");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(
-                ">=12.0.0 <13.0.0-0||>=13.0.0 <14.0.0-0||>=14.0.0 <15.0.0-0",
-                reqs.to_string()
-            );
+            assert_eq!("^12 || ^13 || ^14", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_tilde_with_equals() {
-        let result = Requirement::from_str("~=14.4");
+        let result = VersionRange::parse("~=14.4");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=14.4.0 <14.5.0-0", reqs.to_string());
+            assert_eq!("~=14.4", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_tilde_with_equals_and_patch() {
-        let result = Requirement::from_str("~=14.4.3");
+        let result = VersionRange::parse("~=14.4.3");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=14.4.3 <14.5.0-0", reqs.to_string());
+            assert_eq!("~=14.4.3", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_v_within_string() {
-        let result = Requirement::from_str(">v15.5.0");
+        let result = VersionRange::parse(">v15.5.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">15.5.0", reqs.to_string());
+            assert_eq!(">v15.5.0", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_v_with_space() {
-        let result = Requirement::from_str(">= v10.0.0");
+        let result = VersionRange::parse(">= v10.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=10.0.0", reqs.to_string());
+            assert_eq!(">= v10.0.0", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_handles_equal_with_v() {
-        let result = Requirement::from_str("=v10.22.0");
+        let result = VersionRange::parse("=v10.22.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("10.22.0", reqs.to_string());
+            assert_eq!("=v10.22.0", reqs.to_string());
         }
     }
 
     #[test]
     fn parse_returns_error_for_invalid_reqs() {
-        let result = Requirement::from_str("12.%");
+        let result = VersionRange::parse("12.%");
         assert!(result.is_err());
     }
 
     #[test]
     fn resolve_version_when_wide_range_used_and_version_is_downgraded_to_lts() {
-        let wide_requirement = Requirement::from_str(">= 22").unwrap();
+        let wide_requirement = VersionRange::parse(">= 22").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -337,14 +311,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 24);
+        assert_eq!(artifact.version.major(), 24);
         assert!(*show_wide_range_warning);
         assert!(*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_narrow_range_used_and_version_is_not_downgraded_to_lts() {
-        let wide_requirement = Requirement::from_str("22.x").unwrap();
+        let wide_requirement = VersionRange::parse("22.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -355,14 +329,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 22);
+        assert_eq!(artifact.version.major(), 22);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_exact_range_used_and_version_is_not_downgraded_to_lts() {
-        let wide_requirement = Requirement::from_str("22.21.0").unwrap();
+        let wide_requirement = VersionRange::parse("22.21.0").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -373,14 +347,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 22);
+        assert_eq!(artifact.version.major(), 22);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_wide_range_used_and_version_is_lts() {
-        let wide_requirement = Requirement::from_str(">= 24").unwrap();
+        let wide_requirement = VersionRange::parse(">= 24").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -391,14 +365,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 24);
+        assert_eq!(artifact.version.major(), 24);
         assert!(*show_wide_range_warning);
         assert!(*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_narrow_range_used_and_version_is_lts() {
-        let wide_requirement = Requirement::from_str("24.x").unwrap();
+        let wide_requirement = VersionRange::parse("24.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -409,14 +383,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 24);
+        assert_eq!(artifact.version.major(), 24);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_exact_lts_range_used() {
-        let wide_requirement = Requirement::from_str("24.10.0").unwrap();
+        let wide_requirement = VersionRange::parse("24.10.0").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -427,14 +401,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 24);
+        assert_eq!(artifact.version.major(), 24);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_wide_range_is_used_and_explicitly_requesting_range_beyond_lts() {
-        let wide_requirement = Requirement::from_str(">=25.x").unwrap();
+        let wide_requirement = VersionRange::parse(">=25.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -445,14 +419,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 25);
+        assert_eq!(artifact.version.major(), 25);
         assert!(*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_narrow_range_is_used_and_explicitly_requesting_range_beyond_lts() {
-        let wide_requirement = Requirement::from_str("25.x").unwrap();
+        let wide_requirement = VersionRange::parse("25.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -463,14 +437,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 25);
+        assert_eq!(artifact.version.major(), 25);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_when_exact_range_is_used_and_explicitly_requesting_range_beyond_lts() {
-        let wide_requirement = Requirement::from_str("25.0.0").unwrap();
+        let wide_requirement = VersionRange::parse("25.0.0").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -481,14 +455,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 25);
+        assert_eq!(artifact.version.major(), 25);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_with_complex_range_with_upper_bound_within_lts() {
-        let wide_requirement = Requirement::from_str(">=22.x <25.x").unwrap();
+        let wide_requirement = VersionRange::parse(">=22.x <25.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -499,14 +473,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 24);
+        assert_eq!(artifact.version.major(), 24);
         assert!(*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_with_complex_range_with_upper_bound_beyond_lts() {
-        let wide_requirement = Requirement::from_str(">=25.x <27.x").unwrap();
+        let wide_requirement = VersionRange::parse(">=25.x <27.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -517,14 +491,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 25);
+        assert_eq!(artifact.version.major(), 25);
         assert!(*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_with_complex_range_with_lower_and_upper_bounds_within_lts() {
-        let wide_requirement = Requirement::from_str(">=24.x <25.x").unwrap();
+        let wide_requirement = VersionRange::parse(">=24.x <25.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -535,14 +509,14 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 24);
+        assert_eq!(artifact.version.major(), 24);
         assert!(!*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
     #[test]
     fn resolve_version_with_wide_range_environment_override_to_prevent_downgrade() {
-        let wide_requirement = Requirement::from_str(">=22.x").unwrap();
+        let wide_requirement = VersionRange::parse(">=22.x").unwrap();
         let inventory = create_inventory();
         let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
             &inventory,
@@ -553,12 +527,12 @@ mod tests {
             ALLOW_WIDE_RANGE,
         )
         .unwrap();
-        assert_eq!(artifact.version.major, 25);
+        assert_eq!(artifact.version.major(), 25);
         assert!(*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
     }
 
-    fn create_inventory() -> NodeInventory {
+    fn create_inventory() -> NodejsInventory {
         let contents = r#"
             [[artifacts]]
             version = "25.0.0"
@@ -581,6 +555,6 @@ mod tests {
             url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
             checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
         "#;
-        NodeInventory::from_str(contents).unwrap()
+        NodejsInventory::from_str(contents).unwrap()
     }
 }
