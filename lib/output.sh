@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ANSI_RED=$'\e[1;31m'
+ANSI_YELLOW=$'\e[1;33m'
 ANSI_RESET=$'\e[0m'
 
 # TODO: deprecated these in favor of https://github.com/heroku/heroku-buildpack-python/blob/main/lib/output.sh
@@ -42,6 +43,22 @@ header_skip_newline() {
 error() {
   echo " !     $*" >&2 || true
   echo "" || true
+}
+
+# Output a styled multi-line warning message to stderr.
+#
+# Usage:
+# ```
+# output::warning <<-EOF
+# 	Warning: The warning summary.
+#
+# 	Detailed description.
+# EOF
+# ```
+output::warning() {
+  echo >&2
+  sed --unbuffered "s/^/${ANSI_YELLOW} !     /" | sed --unbuffered "s/$/${ANSI_RESET}/" >&2
+  echo >&2
 }
 
 # Output a styled multi-line error message to stderr.

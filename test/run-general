@@ -75,10 +75,11 @@ testCleanupScript() {
 
 
 testNoVersion() {
+  # Keep for now to verify the same default version is resolved
   local default_version="24"
   compile "no-version"
   assertCaptured "engines.node (package.json):   unspecified"
-  assertCaptured "Resolving node version ${default_version}.x"
+  assertCaptured "Resolving default node version"
   assertCaptured "Downloading and installing node ${default_version}."
   assertCapturedSuccess
 }

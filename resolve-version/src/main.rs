@@ -1,7 +1,8 @@
+use chrono::Utc;
 use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use node_semver::{Range, Version as SemverVersion};
-use nodejs_data::{NodejsArtifact, NodejsInventory, VersionRange};
+use nodejs_data::{NodeReleaseSchedule, NodejsArtifact, NodejsInventory, Version, VersionRange};
 use std::env::consts;
 use std::ops::Deref;
 
@@ -9,6 +10,7 @@ const VERSION_REQS_EXIT_CODE: i32 = 1;
 const INVENTORY_EXIT_CODE: i32 = 2;
 const UNSUPPORTED_OS_EXIT_CODE: i32 = 3;
 const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
+const SCHEDULE_EXIT_CODE: i32 = 5;
 
 fn main() {
     let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
@@ -17,8 +19,8 @@ fn main() {
 
     let matches = Command::new("resolve_version")
         .arg(arg!(<inventory_path>))
-        .arg(arg!(<node_version>))
-        .arg(arg!(<lts_major_version>))
+        .arg(arg!(<schedule_path>))
+        .arg(arg!([node_version]))
         .arg(arg!(--os <os>).value_parser(value_parser!(Os)))
         .arg(arg!(--arch <arch>).value_parser(value_parser!(Arch)))
         .get_matches();
@@ -27,13 +29,8 @@ fn main() {
         .get_one::<String>("inventory_path")
         .expect("required argument");
 
-    let node_version = matches
-        .get_one::<String>("node_version")
-        .expect("required argument");
-
-    let lts_major_version = matches
-        .get_one::<String>("lts_major_version")
-        .map(|v| v.parse::<i64>().expect("must be a positive number"))
+    let schedule_path = matches
+        .get_one::<String>("schedule_path")
         .expect("required argument");
 
     let os = match matches.get_one::<Os>("os") {
@@ -52,10 +49,35 @@ fn main() {
         }),
     };
 
-    let version_requirements = VersionRange::parse(node_version.as_str()).unwrap_or_else(|e| {
-        eprintln!("Could not parse Version Requirements '{node_version}': {e}");
-        std::process::exit(VERSION_REQS_EXIT_CODE);
+    let schedule_contents = std::fs::read_to_string(schedule_path).unwrap_or_else(|e| {
+        eprintln!("Error reading '{schedule_path}': {e}");
+        std::process::exit(SCHEDULE_EXIT_CODE);
     });
+
+    let schedule = NodeReleaseSchedule::from_json(&schedule_contents).unwrap_or_else(|e| {
+        eprintln!("Error parsing '{schedule_path}': {e}");
+        std::process::exit(SCHEDULE_EXIT_CODE);
+    });
+
+    let now = Utc::now();
+
+    let newest_lts = schedule
+        .newest_supported_lts(now)
+        .expect("Release schedule should contain at least one supported LTS version");
+
+    let lts_major_version = newest_lts.requirement.to_string();
+    let lts_major_version = lts_major_version
+        .trim_start_matches('v')
+        .parse::<i64>()
+        .expect("LTS requirement should be a major version like 'v24'");
+
+    let version_requirements = match matches.get_one::<String>("node_version") {
+        Some(node_version) => VersionRange::parse(node_version.as_str()).unwrap_or_else(|e| {
+            eprintln!("Could not parse Version Requirements '{node_version}': {e}");
+            std::process::exit(VERSION_REQS_EXIT_CODE);
+        }),
+        None => newest_lts.requirement.clone(),
+    };
 
     let inventory_contents = std::fs::read_to_string(inventory_path).unwrap_or_else(|e| {
         eprintln!("Error reading '{inventory_path}': {e}");
@@ -75,20 +97,54 @@ fn main() {
         lts_major_version,
         allow_wide_range,
     ) {
-        println!(
-            "{}",
-            serde_json::json!({
-                "version": artifact.version,
-                "url": artifact.url,
-                "checksum_type": artifact.checksum.name,
-                "checksum_value": hex::encode(&artifact.checksum.value),
-                "uses_wide_range": *uses_wide_range,
-                "lts_upper_bound_enforced": *lts_upper_bound_enforced,
-            })
-        );
+        let warning = eol_warning(&schedule, &artifact.version, now);
+
+        let mut json = serde_json::json!({
+            "version": artifact.version,
+            "url": artifact.url,
+            "checksum_type": artifact.checksum.name,
+            "checksum_value": hex::encode(&artifact.checksum.value),
+            "uses_wide_range": *uses_wide_range,
+            "lts_upper_bound_enforced": *lts_upper_bound_enforced,
+        });
+
+        if let Some(warning) = warning {
+            json["warning"] = serde_json::Value::String(warning);
+        }
+
+        println!("{json}");
     } else {
         println!("No result");
     }
+}
+
+fn eol_warning(
+    schedule: &NodeReleaseSchedule,
+    version: &Version,
+    now: chrono::DateTime<Utc>,
+) -> Option<String> {
+    let release = schedule.resolve(version)?;
+    if !release.is_eol(now) {
+        return None;
+    }
+    let supported_lts = schedule.supported_lts_labels(now).join(", ");
+    Some(format!(
+        "Node.js {} reached its official End-of-Life (EOL) on {}.\n\
+         It no longer receives security updates, bug fixes, or support from the\n\
+         Node.js project and is no longer supported on Heroku.\n\
+         \n\
+         In a future buildpack release, this warning will become a build error.\n\
+         Please upgrade to a supported version as soon as possible to avoid\n\
+         build failures.\n\
+         \n\
+         Supported LTS releases: {}\n\
+         \n\
+         For more information, see:\n\
+         https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions",
+        release.requirement,
+        release.end_of_life.format("%B %e, %Y"),
+        supported_lts,
+    ))
 }
 
 fn resolve_node_artifact<'a>(
@@ -136,6 +192,8 @@ fn resolve_node_artifact<'a>(
             UsesWideRange(false)
         };
 
+        // raw_range.min_version() returns a node_semver::Version, so we need to
+        // convert the nodejs-data versions for comparison.
         let resolved_semver = SemverVersion::parse(resolved_artifact.version.to_string()).unwrap();
         let lts_semver = SemverVersion::parse(highest_lts_artifact.version.to_string()).unwrap();
 
@@ -530,6 +588,48 @@ mod tests {
         assert_eq!(artifact.version.major(), 25);
         assert!(*show_wide_range_warning);
         assert!(!*show_downgrade_warning);
+    }
+
+    #[test]
+    fn eol_warning_returns_warning_for_eol_version() {
+        let schedule = test_schedule();
+        let now = chrono::TimeZone::with_ymd_and_hms(&Utc, 2025, 6, 1, 0, 0, 0).unwrap();
+        let version = Version::parse("18.20.8").unwrap();
+        let warning = eol_warning(&schedule, &version, now);
+        assert!(warning.is_some());
+        let text = warning.unwrap();
+        assert!(text.contains("v18"));
+        assert!(text.contains("End-of-Life"));
+        assert!(text.contains("v20"));
+    }
+
+    #[test]
+    fn eol_warning_returns_none_for_supported_version() {
+        let schedule = test_schedule();
+        let now = chrono::TimeZone::with_ymd_and_hms(&Utc, 2025, 6, 1, 0, 0, 0).unwrap();
+        let version = Version::parse("20.11.0").unwrap();
+        let warning = eol_warning(&schedule, &version, now);
+        assert!(warning.is_none());
+    }
+
+    #[test]
+    fn eol_warning_returns_none_for_unknown_version() {
+        let schedule = test_schedule();
+        let now = chrono::TimeZone::with_ymd_and_hms(&Utc, 2025, 6, 1, 0, 0, 0).unwrap();
+        let version = Version::parse("99.0.0").unwrap();
+        let warning = eol_warning(&schedule, &version, now);
+        assert!(warning.is_none());
+    }
+
+    fn test_schedule() -> NodeReleaseSchedule {
+        NodeReleaseSchedule::from_json(
+            r#"{
+                "v18": { "lts": "2022-10-25", "end": "2025-04-30" },
+                "v20": { "lts": "2023-10-24", "end": "2026-04-30" },
+                "v21": { "end": "2024-06-01" }
+            }"#,
+        )
+        .unwrap()
     }
 
     fn create_inventory() -> NodejsInventory {
