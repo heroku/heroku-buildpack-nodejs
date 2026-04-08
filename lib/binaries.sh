@@ -4,11 +4,15 @@
 RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
 
 resolve_nodejs() {
-  local node_version="$1"
-  local lts_major_version="$2"
+  local node_version="${1:-}"
   local output
+  local resolve_args=("$BP_DIR/inventory/node.toml" "$BP_DIR/inventory/schedule.json")
 
-  if output=$($RESOLVE "$BP_DIR/inventory/node.toml" "$node_version" "$lts_major_version"); then
+  if [[ -n "$node_version" ]]; then
+    resolve_args+=("$node_version")
+  fi
+
+  if output=$($RESOLVE "${resolve_args[@]}"); then
     if [[ $output = "No result" ]]; then
       return 1
     else
@@ -54,21 +58,20 @@ install_nodejs() {
   local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
-  local lts_major_version="24"
-
-  if [[ -z "$requested_version" ]]; then
-      requested_version="$lts_major_version.x"
-  fi
 
   if [[ -n "$NODE_BINARY_URL" ]]; then
     download_url="$NODE_BINARY_URL"
     echo "Downloading and installing node from $download_url"
   else
-    echo "Resolving node version $requested_version..."
-    resolve_result=$(resolve_nodejs "$requested_version" "$lts_major_version" || echo "failed")
+    if [[ -n "$requested_version" ]]; then
+      echo "Resolving node version $requested_version..."
+    else
+      echo "Resolving default node version..."
+    fi
+    resolve_result=$(resolve_nodejs "$requested_version" || echo "failed")
 
     if [[ "$resolve_result" == "failed" ]]; then
-      fail_bin_install "$requested_version" "$lts_major_version"
+      fail_bin_install "$requested_version"
     fi
 
     version=$(echo "$resolve_result" | jq -r .version)
@@ -77,11 +80,12 @@ install_nodejs() {
     checksum_value=$(echo "$resolve_result" | jq -r .checksum_value)
     uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
+    warning=$(echo "$resolve_result" | jq -r '.warning // empty')
 
     if [[ "$uses_wide_range" == "true" ]]; then
       echo
       echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version"
-      echo "  higher than you intended. Limiting the requested range to a major LTS range like \`$lts_major_version.x\` is recommended."
+      echo "  higher than you intended. Limiting the requested range to a major LTS range is recommended."
       echo "  https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
     fi
 
@@ -90,6 +94,10 @@ install_nodejs() {
       echo "! The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`."
       echo "  To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`"
       echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
+    fi
+
+    if [[ -n "$warning" ]]; then
+      output::warning <<< "$warning"
     fi
 
     # if either warning message was displayed, ensure we add a newline before continuing with regular output
