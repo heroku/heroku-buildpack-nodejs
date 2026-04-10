@@ -39,7 +39,7 @@ function build_data::set_string() {
 }
 
 # Sets a build data value for the elapsed time in seconds between the provided start time and the
-# current time, represented as a float with milliseconds precision.
+# current time, represented as a float with microseconds precision.
 #
 # Usage:
 # ```
@@ -125,8 +125,9 @@ function build_data::get_previous() {
 		# last matching entry in the file. The empty string is returned if the key wasn't found.
 		tac "${LEGACY_BUILD_DATA_FILE}" | { grep --perl-regexp --only-matching --max-count=1 "^${key}=\K.*$" || true; }
 	elif [[ -f "${PREVIOUS_BUILD_DATA_FILE}" ]]; then
-		# The `// empty` ensures we return the empty string rather than `null` if the key doesn't exist.
-		jq --raw-output ".${key} // empty" "${PREVIOUS_BUILD_DATA_FILE}"
+		# By default jq will return `null` if the key isn't found, so we must handle this explicitly.
+		# We don't use `--exit-status` since `false` is a valid value for us to retrieve.
+		jq --raw-output --arg key "${key}" 'if has($key) then .[$key] else empty end' "${PREVIOUS_BUILD_DATA_FILE}"
 	fi
 }
 
@@ -140,12 +141,13 @@ function build_data::get_previous() {
 function build_data::get_current() {
 	local key="${1}"
 	if [[ -f "${BUILD_DATA_FILE}" ]]; then
-		# The `// empty` ensures we return the empty string rather than `null` if the key doesn't exist.
-		jq --raw-output ".${key} // empty" "${BUILD_DATA_FILE}"
+		# By default jq will return `null` if the key isn't found, so we must handle this explicitly.
+		# We don't use `--exit-status` since `false` is a valid value for us to retrieve.
+		jq --raw-output --arg key "${key}" 'if has($key) then .[$key] else empty end' "${BUILD_DATA_FILE}"
 	fi
 }
 
-# Returns the current time since the UNIX Epoch, as a float with microseconds precision
+# Returns the current time since the UNIX Epoch, as a float with microseconds precision.
 #
 # Usage:
 # ```
