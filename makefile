@@ -18,14 +18,6 @@ shellcheck:
 	@shellcheck -x ci-profile/**
 	@shellcheck -x etc/**
 
-# Use `make -j4 heroku-24-build` to run all suites in parallel.
-# Ctrl-C cleanly terminates all parallel jobs when using make -j.
-heroku-24-build: heroku-24-npm heroku-24-yarn heroku-24-pnpm heroku-24-general
-	@true
-
-heroku-24-%:
-	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -e "STACK=heroku-24" heroku/heroku:24-build bash -c "cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run-$* $(if $(TEST),-- $(TEST),);" 2>&1 | sed "s/^/[heroku-24:$*] /"
-
 # Use `make -j4 heroku-26-build` to run all suites in parallel.
 # Ctrl-C cleanly terminates all parallel jobs when using make -j.
 heroku-26-build: heroku-26-npm heroku-26-yarn heroku-26-pnpm heroku-26-general
@@ -33,6 +25,14 @@ heroku-26-build: heroku-26-npm heroku-26-yarn heroku-26-pnpm heroku-26-general
 
 heroku-26-%:
 	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -e "STACK=heroku-26" heroku/heroku:26-build bash -c "cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run-$* $(if $(TEST),-- $(TEST),);" 2>&1 | sed "s/^/[heroku-26:$*] /"
+
+# Use `make -j4 heroku-24-build` to run all suites in parallel.
+# Ctrl-C cleanly terminates all parallel jobs when using make -j.
+heroku-24-build: heroku-24-npm heroku-24-yarn heroku-24-pnpm heroku-24-general
+	@true
+
+heroku-24-%:
+	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -e "STACK=heroku-24" heroku/heroku:24-build bash -c "cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run-$* $(if $(TEST),-- $(TEST),);" 2>&1 | sed "s/^/[heroku-24:$*] /"
 
 heroku-22-build: heroku-22-npm heroku-22-yarn heroku-22-pnpm heroku-22-general
 	@true
