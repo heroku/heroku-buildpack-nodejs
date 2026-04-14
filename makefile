@@ -10,7 +10,7 @@ build-resolver-linux: .build
 	    cargo build --manifest-path ./resolve-version/Cargo.toml --target x86_64-unknown-linux-musl --profile release
 	mv ./resolve-version/target/x86_64-unknown-linux-musl/release/resolve-version lib/vendor/resolve-version-linux
 
-test: heroku-22-build heroku-24-build
+test: heroku-22-build heroku-24-build heroku-26-build
 
 shellcheck:
 	@shellcheck -x bin/compile bin/detect bin/release bin/test bin/test-compile
@@ -25,6 +25,14 @@ heroku-24-build: heroku-24-npm heroku-24-yarn heroku-24-pnpm heroku-24-general
 
 heroku-24-%:
 	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -e "STACK=heroku-24" heroku/heroku:24-build bash -c "cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run-$* $(if $(TEST),-- $(TEST),);" 2>&1 | sed "s/^/[heroku-24:$*] /"
+
+# Use `make -j4 heroku-26-build` to run all suites in parallel.
+# Ctrl-C cleanly terminates all parallel jobs when using make -j.
+heroku-26-build: heroku-26-npm heroku-26-yarn heroku-26-pnpm heroku-26-general
+	@true
+
+heroku-26-%:
+	@docker run --platform "linux/amd64" -v $(shell pwd):/buildpack:ro --rm -e "STACK=heroku-26" heroku/heroku:26-build bash -c "cp -r /buildpack ~/buildpack_test; cd ~/buildpack_test/; test/run-$* $(if $(TEST),-- $(TEST),);" 2>&1 | sed "s/^/[heroku-26:$*] /"
 
 heroku-22-build: heroku-22-npm heroku-22-yarn heroku-22-pnpm heroku-22-general
 	@true
