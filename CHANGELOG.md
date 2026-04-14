@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Add support for heroku-26. ([#1607](https://github.com/heroku/heroku-buildpack-nodejs/pull/1607))
 
 ## [v341] - 2026-04-02
 
