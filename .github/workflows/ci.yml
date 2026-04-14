@@ -19,7 +19,7 @@ jobs:
       options: --user root
     strategy:
       matrix:
-        stack_number: ["22", "24"]
+        stack_number: ["22", "24", "26"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
@@ -35,7 +35,7 @@ jobs:
       options: --user root
     strategy:
       matrix:
-        stack_number: ["22", "24"]
+        stack_number: ["22", "24", "26"]
         test_suite: ["npm", "yarn", "pnpm", "general"]
     env:
       STACK: heroku-${{ matrix.stack_number }}
