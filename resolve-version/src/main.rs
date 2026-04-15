@@ -1,20 +1,61 @@
 use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use libherokubuildpack::inventory::version::VersionRequirement;
-use node_semver::{Range, SemverError, Version};
-use sha2::Sha256;
+use nodejs_data::{NodejsArtifact, NodejsInventory, Version, VersionRange};
+use std::collections::HashSet;
 use std::env::consts;
-use std::ops::Deref;
-use std::str::FromStr;
 
 const VERSION_REQS_EXIT_CODE: i32 = 1;
 const INVENTORY_EXIT_CODE: i32 = 2;
 const UNSUPPORTED_OS_EXIT_CODE: i32 = 3;
 const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
 
-type NodeInventory = libherokubuildpack::inventory::Inventory<Version, Sha256, Option<()>>;
+fn is_wide_range(requirement: &VersionRange, inventory: &NodejsInventory) -> bool {
+    let mut majors = HashSet::new();
+    for artifact in &inventory.artifacts {
+        if requirement.satisfies(&artifact.version) {
+            majors.insert(artifact.version.major());
+        }
+    }
+    if majors.len() > 1 {
+        return true;
+    }
+    if let Some(&highest) = majors.iter().max()
+        && let Ok(next_major) = Version::parse(&format!("{}.0.0", highest + 1))
+    {
+        return requirement.satisfies(&next_major);
+    }
+    false
+}
 
-type NodeArtifact = libherokubuildpack::inventory::artifact::Artifact<Version, Sha256, Option<()>>;
+fn lts_upper_bound(
+    requirement: &VersionRange,
+    inventory: &NodejsInventory,
+    lts_major_version: u64,
+) -> Option<Version> {
+    inventory
+        .artifacts
+        .iter()
+        .filter(|a| a.version.major() == lts_major_version && requirement.satisfies(&a.version))
+        .map(|a| &a.version)
+        .max()
+        .cloned()
+}
+
+fn should_enforce_lts_upper_bound(
+    requirement: &VersionRange,
+    inventory: &NodejsInventory,
+    os: Os,
+    arch: Arch,
+    lts_major_version: u64,
+) -> bool {
+    if let Some(lts_version) = lts_upper_bound(requirement, inventory, lts_major_version) {
+        inventory
+            .resolve(os, arch, requirement)
+            .is_some_and(|resolved| resolved.version > lts_version)
+    } else {
+        false
+    }
+}
 
 fn main() {
     let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
@@ -39,7 +80,7 @@ fn main() {
 
     let lts_major_version = matches
         .get_one::<String>("lts_major_version")
-        .map(|v| v.parse::<i64>().expect("must be a positive number"))
+        .map(|v| v.parse::<u64>().expect("must be a positive number"))
         .expect("required argument");
 
     let os = match matches.get_one::<Os>("os") {
@@ -58,7 +99,7 @@ fn main() {
         }),
     };
 
-    let version_requirements = Requirement::from_str(node_version.as_str()).unwrap_or_else(|e| {
+    let requirement = VersionRange::parse(node_version.as_str()).unwrap_or_else(|e| {
         eprintln!("Could not parse Version Requirements '{node_version}': {e}");
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
@@ -68,19 +109,29 @@ fn main() {
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
-    let node_inventory: NodeInventory = toml::from_str(&inventory_contents).unwrap_or_else(|e| {
+    let node_inventory: NodejsInventory = toml::from_str(&inventory_contents).unwrap_or_else(|e| {
         eprintln!("Error parsing '{inventory_path}': {e}");
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
-    if let Some((artifact, uses_wide_range, lts_upper_bound_enforced)) = resolve_node_artifact(
-        &node_inventory,
-        os,
-        arch,
-        &version_requirements,
-        lts_major_version,
-        allow_wide_range,
-    ) {
+    let uses_wide_range = is_wide_range(&requirement, &node_inventory);
+
+    let lts_upper_bound_enforced = !allow_wide_range
+        && should_enforce_lts_upper_bound(
+            &requirement,
+            &node_inventory,
+            os,
+            arch,
+            lts_major_version,
+        );
+
+    let requirement = if lts_upper_bound_enforced {
+        VersionRange::parse(&format!("{lts_major_version}.x")).expect("LTS range should be valid")
+    } else {
+        requirement
+    };
+
+    if let Some(artifact) = node_inventory.resolve(os, arch, &requirement) {
         println!(
             "{}",
             serde_json::json!({
@@ -88,122 +139,12 @@ fn main() {
                 "url": artifact.url,
                 "checksum_type": artifact.checksum.name,
                 "checksum_value": hex::encode(&artifact.checksum.value),
-                "uses_wide_range": *uses_wide_range,
-                "lts_upper_bound_enforced": *lts_upper_bound_enforced,
+                "uses_wide_range": uses_wide_range,
+                "lts_upper_bound_enforced": lts_upper_bound_enforced,
             })
         );
     } else {
         println!("No result");
-    }
-}
-
-fn resolve_node_artifact<'a>(
-    node_inventory: &'a NodeInventory,
-    os: Os,
-    arch: Arch,
-    requirement: &Requirement,
-    lts_major_version: i64,
-    allow_wide_range: bool,
-) -> Option<(&'a NodeArtifact, UsesWideRange, LtsUpperBoundEnforced)> {
-    let lts_range_value = format!("{lts_major_version}.x");
-    let lts_range = Requirement::from_str(&lts_range_value)
-        .unwrap_or_else(|_| panic!("Range {lts_range_value} should be valid"));
-
-    if let Some(resolved_artifact) = node_inventory.resolve(os, arch, requirement)
-        && let Some(highest_lts_artifact) = node_inventory.resolve(os, arch, &lts_range)
-    {
-        let uses_wide_range =
-            if requirement.satisfies(&Version::new(resolved_artifact.version.major - 1, 0, 0))
-                || requirement.satisfies(&Version::new(resolved_artifact.version.major + 1, 0, 0))
-            {
-                UsesWideRange(true)
-            } else {
-                UsesWideRange(false)
-            };
-
-        let lts_upper_bound_enforced = if allow_wide_range {
-            LtsUpperBoundEnforced(false)
-        } else if resolved_artifact.version > highest_lts_artifact.version
-            && let Some(min_version) = requirement.deref().min_version()
-            && min_version <= highest_lts_artifact.version
-        {
-            LtsUpperBoundEnforced(true)
-        } else {
-            LtsUpperBoundEnforced(false)
-        };
-        Some((
-            if *lts_upper_bound_enforced {
-                highest_lts_artifact
-            } else {
-                resolved_artifact
-            },
-            uses_wide_range,
-            lts_upper_bound_enforced,
-        ))
-    } else {
-        None
-    }
-}
-
-pub struct Requirement(Range);
-
-impl FromStr for Requirement {
-    type Err = SemverError;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        let value = value.trim();
-
-        let value = if value.starts_with("~=") {
-            value.replacen('=', "", 1)
-        } else {
-            value.to_string()
-        };
-
-        if value == "latest" {
-            Ok(Requirement(Range::any()))
-        } else {
-            Range::parse(value).map(Self)
-        }
-    }
-}
-
-impl std::fmt::Display for Requirement {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl VersionRequirement<Version> for Requirement {
-    fn satisfies(&self, version: &Version) -> bool {
-        self.0.satisfies(version)
-    }
-}
-
-impl Deref for Requirement {
-    type Target = Range;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-struct UsesWideRange(bool);
-
-impl Deref for UsesWideRange {
-    type Target = bool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-struct LtsUpperBoundEnforced(bool);
-
-impl Deref for LtsUpperBoundEnforced {
-    type Target = bool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
 
