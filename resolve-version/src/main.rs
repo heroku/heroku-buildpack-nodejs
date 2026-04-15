@@ -1,7 +1,6 @@
 use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use nodejs_data::{NodejsInventory, Version, VersionRange};
-use std::collections::HashSet;
+use nodejs_data::{NodejsArtifact, NodejsInventory, Version, VersionRange};
 use std::env::consts;
 
 const VERSION_REQS_EXIT_CODE: i32 = 1;
@@ -9,52 +8,66 @@ const INVENTORY_EXIT_CODE: i32 = 2;
 const UNSUPPORTED_OS_EXIT_CODE: i32 = 3;
 const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
 
-fn is_wide_range(requirement: &VersionRange, inventory: &NodejsInventory) -> bool {
-    let mut majors = HashSet::new();
-    for artifact in &inventory.artifacts {
-        if requirement.satisfies(&artifact.version) {
-            majors.insert(artifact.version.major());
-        }
-    }
-    if majors.len() > 1 {
-        return true;
-    }
-    if let Some(&highest) = majors.iter().max()
-        && let Ok(next_major) = Version::parse(&format!("{}.0.0", highest + 1))
-    {
-        return requirement.satisfies(&next_major);
-    }
-    false
+struct Resolution<'a> {
+    artifact: &'a NodejsArtifact,
+    uses_wide_range: bool,
+    lts_upper_bound_enforced: bool,
 }
 
-fn lts_upper_bound(
+fn is_wide_range(requirement: &VersionRange, resolved_major: u64) -> bool {
+    [resolved_major.checked_sub(1), resolved_major.checked_add(1)]
+        .iter()
+        .filter_map(|m| m.and_then(|v| Version::parse(&format!("{v}.0.0")).ok()))
+        .any(|v| requirement.satisfies(&v))
+}
+
+fn should_enforce_lts_upper_bound(
     requirement: &VersionRange,
+    resolved_version: &Version,
     inventory: &NodejsInventory,
     lts_major_version: u64,
-) -> Option<Version> {
+) -> bool {
     inventory
         .artifacts
         .iter()
         .filter(|a| a.version.major() == lts_major_version && requirement.satisfies(&a.version))
         .map(|a| &a.version)
         .max()
-        .cloned()
+        .is_some_and(|lts_version| resolved_version > lts_version)
 }
 
-fn should_enforce_lts_upper_bound(
-    requirement: &VersionRange,
-    inventory: &NodejsInventory,
+fn resolve_node_artifact<'a>(
+    inventory: &'a NodejsInventory,
     os: Os,
     arch: Arch,
+    requirement: &VersionRange,
     lts_major_version: u64,
-) -> bool {
-    if let Some(lts_version) = lts_upper_bound(requirement, inventory, lts_major_version) {
-        inventory
-            .resolve(os, arch, requirement)
-            .is_some_and(|resolved| resolved.version > lts_version)
+    allow_wide_range: bool,
+) -> Option<Resolution<'a>> {
+    let artifact = inventory.resolve(os, arch, requirement)?;
+    let uses_wide_range = is_wide_range(requirement, artifact.version.major());
+
+    let lts_upper_bound_enforced = !allow_wide_range
+        && should_enforce_lts_upper_bound(
+            requirement,
+            &artifact.version,
+            inventory,
+            lts_major_version,
+        );
+
+    let artifact = if lts_upper_bound_enforced {
+        let lts_range = VersionRange::parse(&format!("{lts_major_version}.x"))
+            .expect("LTS range should be valid");
+        inventory.resolve(os, arch, &lts_range).unwrap_or(artifact)
     } else {
-        false
-    }
+        artifact
+    };
+
+    Some(Resolution {
+        artifact,
+        uses_wide_range,
+        lts_upper_bound_enforced,
+    })
 }
 
 fn main() {
@@ -114,33 +127,23 @@ fn main() {
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
-    let uses_wide_range = is_wide_range(&requirement, &node_inventory);
-
-    let lts_upper_bound_enforced = !allow_wide_range
-        && should_enforce_lts_upper_bound(
-            &requirement,
-            &node_inventory,
-            os,
-            arch,
-            lts_major_version,
-        );
-
-    let requirement = if lts_upper_bound_enforced {
-        VersionRange::parse(&format!("{lts_major_version}.x")).expect("LTS range should be valid")
-    } else {
-        requirement
-    };
-
-    if let Some(artifact) = node_inventory.resolve(os, arch, &requirement) {
+    if let Some(resolution) = resolve_node_artifact(
+        &node_inventory,
+        os,
+        arch,
+        &requirement,
+        lts_major_version,
+        allow_wide_range,
+    ) {
         println!(
             "{}",
             serde_json::json!({
-                "version": artifact.version,
-                "url": artifact.url,
-                "checksum_type": artifact.checksum.name,
-                "checksum_value": hex::encode(&artifact.checksum.value),
-                "uses_wide_range": uses_wide_range,
-                "lts_upper_bound_enforced": lts_upper_bound_enforced,
+                "version": resolution.artifact.version,
+                "url": resolution.artifact.url,
+                "checksum_type": resolution.artifact.checksum.name,
+                "checksum_value": hex::encode(&resolution.artifact.checksum.value),
+                "uses_wide_range": resolution.uses_wide_range,
+                "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
             })
         );
     } else {
@@ -184,282 +187,219 @@ mod tests {
 
     #[test]
     fn wide_range_detected_for_open_ended_range() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse(">= 22").unwrap();
-        assert!(is_wide_range(&requirement, &inventory));
+        assert!(is_wide_range(&requirement, 25));
     }
 
     #[test]
     fn wide_range_not_detected_for_single_major() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse("22.x").unwrap();
-        assert!(!is_wide_range(&requirement, &inventory));
+        assert!(!is_wide_range(&requirement, 22));
     }
 
     #[test]
     fn wide_range_not_detected_for_exact_version() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse("22.21.0").unwrap();
-        assert!(!is_wide_range(&requirement, &inventory));
+        assert!(!is_wide_range(&requirement, 22));
     }
 
     #[test]
     fn wide_range_detected_for_range_starting_at_highest_major() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse(">= 24").unwrap();
-        assert!(is_wide_range(&requirement, &inventory));
+        assert!(is_wide_range(&requirement, 25));
     }
 
     #[test]
     fn wide_range_detected_for_range_starting_above_highest_major() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse(">=25.x").unwrap();
-        assert!(is_wide_range(&requirement, &inventory));
+        assert!(is_wide_range(&requirement, 25));
     }
 
     #[test]
     fn wide_range_not_detected_for_narrow_lts_range() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse("24.x").unwrap();
-        assert!(!is_wide_range(&requirement, &inventory));
+        assert!(!is_wide_range(&requirement, 24));
     }
 
     #[test]
     fn wide_range_detected_for_complex_range_spanning_majors() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse(">=22.x <25.x").unwrap();
-        assert!(is_wide_range(&requirement, &inventory));
+        assert!(is_wide_range(&requirement, 24));
     }
 
     #[test]
     fn wide_range_detected_for_complex_range_above_lts() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse(">=25.x <27.x").unwrap();
-        assert!(is_wide_range(&requirement, &inventory));
+        assert!(is_wide_range(&requirement, 25));
     }
 
     #[test]
     fn wide_range_not_detected_for_complex_range_within_single_major() {
-        let inventory = create_inventory();
         let requirement = VersionRange::parse(">=24.x <25.x").unwrap();
-        assert!(!is_wide_range(&requirement, &inventory));
+        assert!(!is_wide_range(&requirement, 24));
+    }
+
+    #[test]
+    fn wide_range_not_detected_for_major_zero() {
+        let requirement = VersionRange::parse("0.x").unwrap();
+        assert!(!is_wide_range(&requirement, 0));
+    }
+
+    #[test]
+    fn wide_range_detected_for_star_range_at_major_zero() {
+        let requirement = VersionRange::parse("*").unwrap();
+        assert!(is_wide_range(&requirement, 0));
     }
 
     // --- LTS enforcement tests ---
 
+    fn assert_lts_enforcement(range: &str, expected: bool) {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse(range).unwrap();
+        let resolved_version = inventory
+            .resolve(Os::Linux, Arch::Amd64, &requirement)
+            .unwrap_or_else(|| panic!("expected resolution to succeed for range '{range}'"))
+            .version
+            .clone();
+        assert_eq!(
+            should_enforce_lts_upper_bound(
+                &requirement,
+                &resolved_version,
+                &inventory,
+                TEST_LTS_MAJOR_VERSION,
+            ),
+            expected,
+            "wrong lts enforcement for range '{range}'"
+        );
+    }
+
     #[test]
     fn lts_enforced_when_wide_range_resolves_above_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">= 22").unwrap();
-        assert!(should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement(">= 22", true);
     }
 
     #[test]
     fn lts_not_enforced_for_narrow_range_below_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse("22.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement("22.x", false);
     }
 
     #[test]
     fn lts_not_enforced_for_exact_version_below_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse("22.21.0").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement("22.21.0", false);
     }
 
     #[test]
     fn lts_enforced_when_range_starts_at_lts_and_resolves_above() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">= 24").unwrap();
-        assert!(should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement(">= 24", true);
     }
 
     #[test]
     fn lts_not_enforced_for_narrow_lts_range() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse("24.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement("24.x", false);
     }
 
     #[test]
     fn lts_not_enforced_for_exact_lts_version() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse("24.10.0").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement("24.10.0", false);
     }
 
     #[test]
     fn lts_not_enforced_when_range_starts_above_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">=25.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement(">=25.x", false);
     }
 
     #[test]
     fn lts_not_enforced_for_narrow_range_above_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse("25.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement("25.x", false);
     }
 
     #[test]
     fn lts_not_enforced_for_exact_version_above_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse("25.0.0").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement("25.0.0", false);
     }
 
     #[test]
     fn lts_not_enforced_for_complex_range_with_upper_bound_within_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">=22.x <25.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement(">=22.x <25.x", false);
     }
 
     #[test]
     fn lts_not_enforced_for_complex_range_above_lts() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">=25.x <27.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement(">=25.x <27.x", false);
     }
 
     #[test]
     fn lts_not_enforced_for_complex_range_within_single_lts_major() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">=24.x <25.x").unwrap();
-        assert!(!should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
-        ));
+        assert_lts_enforcement(">=24.x <25.x", false);
     }
 
     // --- End-to-end resolution tests ---
 
-    #[test]
-    fn e2e_wide_range_downgraded_to_lts() {
+    const ALLOW_WIDE_RANGE: bool = true;
+    const DISALLOW_WIDE_RANGE: bool = false;
+
+    fn assert_resolution(
+        range: &str,
+        allow_wide_range: bool,
+        expected_major: u64,
+        expected_wide: bool,
+        expected_lts_enforced: bool,
+    ) {
         let inventory = create_inventory();
-        let requirement = VersionRange::parse(">= 22").unwrap();
-        let uses_wide_range = is_wide_range(&requirement, &inventory);
-        let lts_enforced = should_enforce_lts_upper_bound(
-            &requirement,
+        let requirement = VersionRange::parse(range).unwrap();
+        let resolution = resolve_node_artifact(
             &inventory,
             Os::Linux,
             Arch::Amd64,
+            &requirement,
             TEST_LTS_MAJOR_VERSION,
+            allow_wide_range,
+        )
+        .unwrap_or_else(|| panic!("expected resolution to succeed for range '{range}'"));
+        assert_eq!(
+            resolution.artifact.version.major(),
+            expected_major,
+            "wrong major for range '{range}'"
         );
-        let requirement = if lts_enforced {
-            VersionRange::parse(&format!("{TEST_LTS_MAJOR_VERSION}.x")).unwrap()
-        } else {
-            requirement
-        };
-        let artifact = inventory
-            .resolve(Os::Linux, Arch::Amd64, &requirement)
-            .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(uses_wide_range);
-        assert!(lts_enforced);
+        assert_eq!(
+            resolution.uses_wide_range, expected_wide,
+            "wrong uses_wide_range for range '{range}'"
+        );
+        assert_eq!(
+            resolution.lts_upper_bound_enforced, expected_lts_enforced,
+            "wrong lts_enforced for range '{range}'"
+        );
+    }
+
+    #[test]
+    fn e2e_wide_range_downgraded_to_lts() {
+        assert_resolution(">= 22", DISALLOW_WIDE_RANGE, 24, true, true);
     }
 
     #[test]
     fn e2e_wide_range_not_downgraded_when_allowed() {
-        let inventory = create_inventory();
-        let requirement = VersionRange::parse(">=22.x").unwrap();
-        let uses_wide_range = is_wide_range(&requirement, &inventory);
-        // allow_wide_range = true, so skip enforcement
-        let artifact = inventory
-            .resolve(Os::Linux, Arch::Amd64, &requirement)
-            .unwrap();
-        assert_eq!(artifact.version.major(), 25);
-        assert!(uses_wide_range);
+        assert_resolution(">=22.x", ALLOW_WIDE_RANGE, 25, true, false);
     }
 
     #[test]
     fn e2e_narrow_range_resolves_without_downgrade() {
+        assert_resolution("22.x", DISALLOW_WIDE_RANGE, 22, false, false);
+    }
+
+    #[test]
+    fn e2e_no_matching_version_returns_none() {
         let inventory = create_inventory();
-        let requirement = VersionRange::parse("22.x").unwrap();
-        let uses_wide_range = is_wide_range(&requirement, &inventory);
-        let lts_enforced = should_enforce_lts_upper_bound(
-            &requirement,
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            TEST_LTS_MAJOR_VERSION,
+        let requirement = VersionRange::parse("99.x").unwrap();
+        assert!(
+            resolve_node_artifact(
+                &inventory,
+                Os::Linux,
+                Arch::Amd64,
+                &requirement,
+                TEST_LTS_MAJOR_VERSION,
+                DISALLOW_WIDE_RANGE,
+            )
+            .is_none()
         );
-        let artifact = inventory
-            .resolve(Os::Linux, Arch::Amd64, &requirement)
-            .unwrap();
-        assert_eq!(artifact.version.major(), 22);
-        assert!(!uses_wide_range);
-        assert!(!lts_enforced);
     }
 }
