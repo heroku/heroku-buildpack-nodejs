@@ -35,6 +35,11 @@ updates:
       - "rust"
       - "skip changelog"
     groups:
+      libcnb:
+        patterns:
+          - "libcnb*"
+          - "libherokubuildpack"
+          - "sha2"
       rust-dependencies:
         update-types:
           - "minor"
