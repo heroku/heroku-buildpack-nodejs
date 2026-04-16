@@ -1,5 +1,5 @@
 [package]
-name = "resolve-version"
+name = "nodejs-data-query"
 rust-version = "1.89"
 edition = "2024"
 
