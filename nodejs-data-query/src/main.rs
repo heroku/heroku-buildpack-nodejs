@@ -1,7 +1,33 @@
-use clap::{Command, arg, value_parser};
+use clap::{Parser, Subcommand, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use nodejs_data::{NodejsArtifact, NodejsInventory, Version, VersionRange};
+use nodejs_data::{
+    NodejsArtifact, NodejsInventory, RECOMMENDED_LTS_VERSION, SUPPORTED_NODEJS_VERSIONS, Version,
+    VersionRange,
+};
 use std::env::consts;
+
+#[derive(Parser)]
+#[command(name = "nodejs-data-query")]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Resolve a Node.js version from inventory
+    ResolveVersion {
+        inventory_path: String,
+        node_version: String,
+        lts_major_version: String,
+        #[arg(long, value_parser = value_parser!(Os))]
+        os: Option<Os>,
+        #[arg(long, value_parser = value_parser!(Arch))]
+        arch: Option<Arch>,
+    },
+    /// Output supported Node.js version info
+    SupportedVersions,
+}
 
 const VERSION_REQS_EXIT_CODE: i32 = 1;
 const INVENTORY_EXIT_CODE: i32 = 2;
@@ -83,41 +109,45 @@ fn resolve_node_artifact<'a>(
 }
 
 fn main() {
+    let cli = Cli::parse();
+
+    match cli.command {
+        Commands::ResolveVersion {
+            inventory_path,
+            node_version,
+            lts_major_version,
+            os,
+            arch,
+        } => cmd_resolve_version(inventory_path, node_version, lts_major_version, os, arch),
+        Commands::SupportedVersions => cmd_supported_versions(),
+    }
+}
+
+fn cmd_resolve_version(
+    inventory_path: String,
+    node_version: String,
+    lts_major_version_str: String,
+    os_arg: Option<Os>,
+    arch_arg: Option<Arch>,
+) {
     let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
         .map(|val| val == "true")
         .unwrap_or(false);
 
-    let matches = Command::new("resolve_version")
-        .arg(arg!(<inventory_path>))
-        .arg(arg!(<node_version>))
-        .arg(arg!(<lts_major_version>))
-        .arg(arg!(--os <os>).value_parser(value_parser!(Os)))
-        .arg(arg!(--arch <arch>).value_parser(value_parser!(Arch)))
-        .get_matches();
+    let lts_major_version = lts_major_version_str
+        .parse::<u64>()
+        .expect("must be a positive number");
 
-    let inventory_path = matches
-        .get_one::<String>("inventory_path")
-        .expect("required argument");
-
-    let node_version = matches
-        .get_one::<String>("node_version")
-        .expect("required argument");
-
-    let lts_major_version = matches
-        .get_one::<String>("lts_major_version")
-        .map(|v| v.parse::<u64>().expect("must be a positive number"))
-        .expect("required argument");
-
-    let os = match matches.get_one::<Os>("os") {
-        Some(os) => *os,
+    let os = match os_arg {
+        Some(os) => os,
         None => consts::OS.parse::<Os>().unwrap_or_else(|e| {
             eprintln!("Unsupported OS '{}': {e}", consts::OS);
             std::process::exit(UNSUPPORTED_OS_EXIT_CODE);
         }),
     };
 
-    let arch = match matches.get_one::<Arch>("arch") {
-        Some(arch) => *arch,
+    let arch = match arch_arg {
+        Some(arch) => arch,
         None => consts::ARCH.parse::<Arch>().unwrap_or_else(|e| {
             eprintln!("Unsupported Architecture '{}': {e}", consts::ARCH);
             std::process::exit(UNSUPPORTED_ARCH_EXIT_CODE);
@@ -129,7 +159,7 @@ fn main() {
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
 
-    let inventory_contents = std::fs::read_to_string(inventory_path).unwrap_or_else(|e| {
+    let inventory_contents = std::fs::read_to_string(&inventory_path).unwrap_or_else(|e| {
         eprintln!("Error reading '{inventory_path}': {e}");
         std::process::exit(INVENTORY_EXIT_CODE);
     });
@@ -161,6 +191,24 @@ fn main() {
     } else {
         println!("No result");
     }
+}
+
+fn cmd_supported_versions() {
+    let lts: u64 = RECOMMENDED_LTS_VERSION
+        .to_string()
+        .split('.')
+        .next()
+        .expect("RECOMMENDED_LTS_VERSION should have a major component")
+        .parse()
+        .expect("RECOMMENDED_LTS_VERSION major should be a number");
+
+    println!(
+        "{}",
+        serde_json::json!({
+            "lts": lts,
+            "supported": SUPPORTED_NODEJS_VERSIONS,
+        })
+    );
 }
 
 #[cfg(test)]
