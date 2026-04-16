@@ -4,6 +4,7 @@
 
 - Updated resolve-version binary to use shared `nodejs-data` crate. ([#1611](https://github.com/heroku/heroku-buildpack-nodejs/pull/1611))
 - Renamed resolve-version binary to nodejs-data-query with subcommands. Default Node.js version is now derived from the `nodejs-data` crate instead of being hardcoded in shell scripts. ([#1613](https://github.com/heroku/heroku-buildpack-nodejs/pull/1613))
+- Warn when deploying with End-of-Life Node.js versions. ([#1616](https://github.com/heroku/heroku-buildpack-nodejs/pull/1616))
 
 ## [v341] - 2026-04-02
 
