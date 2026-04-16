@@ -296,7 +296,7 @@ dependencies = [
 [[package]]
 name = "nodejs-data"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-nodejs#12c35642fccec4c464b00d3b10af3ee8b65e0e65"
+source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#12c35642fccec4c464b00d3b10af3ee8b65e0e65"
 dependencies = [
  "fun_run",
  "libherokubuildpack",

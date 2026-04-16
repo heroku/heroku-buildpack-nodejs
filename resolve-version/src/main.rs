@@ -15,22 +15,38 @@ struct Resolution<'a> {
 }
 
 fn is_wide_range(requirement: &VersionRange, resolved_major: u64) -> bool {
-    [resolved_major.checked_sub(1), resolved_major.checked_add(1)]
-        .iter()
-        .filter_map(|m| m.and_then(|v| Version::parse(&format!("{v}.0.0")).ok()))
-        .any(|v| requirement.satisfies(&v))
+    if let Some(next) = resolved_major.checked_add(1)
+        && let Ok(v) = Version::parse(&format!("{next}.0.0"))
+        && requirement.satisfies(&v)
+    {
+        return true;
+    }
+    if let Some(prev) = resolved_major.checked_sub(1)
+        && let Ok(v) = Version::parse(&format!("{prev}.0.0"))
+        && requirement.satisfies(&v)
+    {
+        return true;
+    }
+    false
 }
 
 fn should_enforce_lts_upper_bound(
     requirement: &VersionRange,
     resolved_version: &Version,
     inventory: &NodejsInventory,
+    os: Os,
+    arch: Arch,
     lts_major_version: u64,
 ) -> bool {
     inventory
         .artifacts
         .iter()
-        .filter(|a| a.version.major() == lts_major_version && requirement.satisfies(&a.version))
+        .filter(|a| {
+            a.os == os
+                && a.arch == arch
+                && a.version.major() == lts_major_version
+                && requirement.satisfies(&a.version)
+        })
         .map(|a| &a.version)
         .max()
         .is_some_and(|lts_version| resolved_version > lts_version)
@@ -52,15 +68,20 @@ fn resolve_node_artifact<'a>(
             requirement,
             &artifact.version,
             inventory,
+            os,
+            arch,
             lts_major_version,
         );
 
-    let artifact = if lts_upper_bound_enforced {
+    let (artifact, lts_upper_bound_enforced) = if lts_upper_bound_enforced {
         let lts_range = VersionRange::parse(&format!("{lts_major_version}.x"))
             .expect("LTS range should be valid");
-        inventory.resolve(os, arch, &lts_range).unwrap_or(artifact)
+        match inventory.resolve(os, arch, &lts_range) {
+            Some(lts_artifact) => (lts_artifact, true),
+            None => (artifact, false),
+        }
     } else {
-        artifact
+        (artifact, false)
     };
 
     Some(Resolution {
@@ -266,6 +287,8 @@ mod tests {
                 &requirement,
                 &resolved_version,
                 &inventory,
+                Os::Linux,
+                Arch::Amd64,
                 TEST_LTS_MAJOR_VERSION,
             ),
             expected,
@@ -384,6 +407,25 @@ mod tests {
     #[test]
     fn e2e_narrow_range_resolves_without_downgrade() {
         assert_resolution("22.x", DISALLOW_WIDE_RANGE, 22, false, false);
+    }
+
+    #[test]
+    fn e2e_lts_not_enforced_when_no_lts_artifact_exists() {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse(">= 22").unwrap();
+        let non_existent_lts: u64 = 23;
+        let resolution = resolve_node_artifact(
+            &inventory,
+            Os::Linux,
+            Arch::Amd64,
+            &requirement,
+            non_existent_lts,
+            DISALLOW_WIDE_RANGE,
+        )
+        .expect("expected resolution to succeed");
+        assert_eq!(resolution.artifact.version.major(), 25);
+        assert!(resolution.uses_wide_range);
+        assert!(!resolution.lts_upper_bound_enforced);
     }
 
     #[test]
