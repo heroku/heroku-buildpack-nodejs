@@ -226,7 +226,7 @@ fail_bin_install() {
   set +e
 
   # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" "$lts_major_version" 2>&1)
+  error=$($RESOLVE resolve-version "$BP_DIR/inventory/node.toml" "$version" "$lts_major_version" 2>&1)
 
   # re-enable trapping
   set -e

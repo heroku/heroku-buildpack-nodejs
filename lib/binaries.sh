@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# Compiled from: https://github.com/heroku/buildpacks-nodejs/blob/main/common/nodejs-utils/src/bin/resolve_version.rs
-RESOLVE="$BP_DIR/lib/vendor/resolve-version-$(get_os)"
+# Compiled from: https://github.com/heroku/buildpacks-nodejs/tree/main/crates/nodejs-data
+RESOLVE="$BP_DIR/lib/vendor/nodejs-data-query-$(get_os)"
 
 resolve_nodejs() {
   local node_version="$1"
   local lts_major_version="$2"
   local output
 
-  if output=$($RESOLVE "$BP_DIR/inventory/node.toml" "$node_version" "$lts_major_version"); then
+  if output=$($RESOLVE resolve-version "$BP_DIR/inventory/node.toml" "$node_version" "$lts_major_version"); then
     if [[ $output = "No result" ]]; then
       return 1
     else
@@ -54,7 +54,9 @@ install_nodejs() {
   local requested_version="${1:-}"
   local dir="${2:?}"
   local code resolve_result
-  local lts_major_version="24"
+  local supported_info lts_major_version
+  supported_info=$($RESOLVE supported-versions)
+  lts_major_version=$(echo "$supported_info" | jq -r .lts)
 
   if [[ -z "$requested_version" ]]; then
       requested_version="$lts_major_version.x"

@@ -4,11 +4,11 @@ build-resolvers: build-resolver-linux
 	mkdir -p .build
 
 build-resolver-linux: .build
-	@cargo test --manifest-path ./resolve-version/Cargo.toml
+	@cargo test --manifest-path ./nodejs-data-query/Cargo.toml
 	CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER="$(shell which x86_64-unknown-linux-musl-gcc)" \
 	    CC_X86_64_UNKNOWN_LINUX_MUSL="$(shell which x86_64-unknown-linux-musl-gcc)" \
-	    cargo build --manifest-path ./resolve-version/Cargo.toml --target x86_64-unknown-linux-musl --profile release
-	mv ./resolve-version/target/x86_64-unknown-linux-musl/release/resolve-version lib/vendor/resolve-version-linux
+	    cargo build --manifest-path ./nodejs-data-query/Cargo.toml --target x86_64-unknown-linux-musl --profile release
+	mv ./nodejs-data-query/target/x86_64-unknown-linux-musl/release/nodejs-data-query lib/vendor/nodejs-data-query-linux
 
 test: heroku-22-build heroku-24-build heroku-26-build
 
