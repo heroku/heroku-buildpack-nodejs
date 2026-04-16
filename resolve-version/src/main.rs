@@ -30,14 +30,14 @@ fn is_wide_range(requirement: &VersionRange, resolved_major: u64) -> bool {
     false
 }
 
-fn should_enforce_lts_upper_bound(
+fn find_lts_ceiling<'a>(
     requirement: &VersionRange,
     resolved_version: &Version,
-    inventory: &NodejsInventory,
+    inventory: &'a NodejsInventory,
     os: Os,
     arch: Arch,
     lts_major_version: u64,
-) -> bool {
+) -> Option<&'a NodejsArtifact> {
     inventory
         .artifacts
         .iter()
@@ -47,9 +47,8 @@ fn should_enforce_lts_upper_bound(
                 && a.version.major() == lts_major_version
                 && requirement.satisfies(&a.version)
         })
-        .map(|a| &a.version)
-        .max()
-        .is_some_and(|lts_version| resolved_version > lts_version)
+        .max_by_key(|a| a.version.clone())
+        .filter(|lts_artifact| resolved_version > &lts_artifact.version)
 }
 
 fn resolve_node_artifact<'a>(
@@ -63,31 +62,23 @@ fn resolve_node_artifact<'a>(
     let artifact = inventory.resolve(os, arch, requirement)?;
     let uses_wide_range = is_wide_range(requirement, artifact.version.major());
 
-    let lts_upper_bound_enforced = !allow_wide_range
-        && should_enforce_lts_upper_bound(
+    let lts_artifact = if allow_wide_range {
+        None
+    } else {
+        find_lts_ceiling(
             requirement,
             &artifact.version,
             inventory,
             os,
             arch,
             lts_major_version,
-        );
-
-    let (artifact, lts_upper_bound_enforced) = if lts_upper_bound_enforced {
-        let lts_range = VersionRange::parse(&format!("{lts_major_version}.x"))
-            .expect("LTS range should be valid");
-        match inventory.resolve(os, arch, &lts_range) {
-            Some(lts_artifact) => (lts_artifact, true),
-            None => (artifact, false),
-        }
-    } else {
-        (artifact, false)
+        )
     };
 
     Some(Resolution {
-        artifact,
+        artifact: lts_artifact.unwrap_or(artifact),
         uses_wide_range,
-        lts_upper_bound_enforced,
+        lts_upper_bound_enforced: lts_artifact.is_some(),
     })
 }
 
@@ -272,9 +263,9 @@ mod tests {
         assert!(is_wide_range(&requirement, 0));
     }
 
-    // --- LTS enforcement tests ---
+    // --- find_lts_ceiling tests ---
 
-    fn assert_lts_enforcement(range: &str, expected: bool) {
+    fn assert_lts_ceiling(range: &str, expected: bool) {
         let inventory = create_inventory();
         let requirement = VersionRange::parse(range).unwrap();
         let resolved_version = inventory
@@ -283,77 +274,78 @@ mod tests {
             .version
             .clone();
         assert_eq!(
-            should_enforce_lts_upper_bound(
+            find_lts_ceiling(
                 &requirement,
                 &resolved_version,
                 &inventory,
                 Os::Linux,
                 Arch::Amd64,
                 TEST_LTS_MAJOR_VERSION,
-            ),
+            )
+            .is_some(),
             expected,
-            "wrong lts enforcement for range '{range}'"
+            "wrong lts ceiling for range '{range}'"
         );
     }
 
     #[test]
-    fn lts_enforced_when_wide_range_resolves_above_lts() {
-        assert_lts_enforcement(">= 22", true);
+    fn lts_ceiling_found_when_wide_range_resolves_above_lts() {
+        assert_lts_ceiling(">= 22", true);
     }
 
     #[test]
-    fn lts_not_enforced_for_narrow_range_below_lts() {
-        assert_lts_enforcement("22.x", false);
+    fn lts_ceiling_not_found_for_narrow_range_below_lts() {
+        assert_lts_ceiling("22.x", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_exact_version_below_lts() {
-        assert_lts_enforcement("22.21.0", false);
+    fn lts_ceiling_not_found_for_exact_version_below_lts() {
+        assert_lts_ceiling("22.21.0", false);
     }
 
     #[test]
-    fn lts_enforced_when_range_starts_at_lts_and_resolves_above() {
-        assert_lts_enforcement(">= 24", true);
+    fn lts_ceiling_found_when_range_starts_at_lts_and_resolves_above() {
+        assert_lts_ceiling(">= 24", true);
     }
 
     #[test]
-    fn lts_not_enforced_for_narrow_lts_range() {
-        assert_lts_enforcement("24.x", false);
+    fn lts_ceiling_not_found_for_narrow_lts_range() {
+        assert_lts_ceiling("24.x", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_exact_lts_version() {
-        assert_lts_enforcement("24.10.0", false);
+    fn lts_ceiling_not_found_for_exact_lts_version() {
+        assert_lts_ceiling("24.10.0", false);
     }
 
     #[test]
-    fn lts_not_enforced_when_range_starts_above_lts() {
-        assert_lts_enforcement(">=25.x", false);
+    fn lts_ceiling_not_found_when_range_starts_above_lts() {
+        assert_lts_ceiling(">=25.x", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_narrow_range_above_lts() {
-        assert_lts_enforcement("25.x", false);
+    fn lts_ceiling_not_found_for_narrow_range_above_lts() {
+        assert_lts_ceiling("25.x", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_exact_version_above_lts() {
-        assert_lts_enforcement("25.0.0", false);
+    fn lts_ceiling_not_found_for_exact_version_above_lts() {
+        assert_lts_ceiling("25.0.0", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_complex_range_with_upper_bound_within_lts() {
-        assert_lts_enforcement(">=22.x <25.x", false);
+    fn lts_ceiling_not_found_for_complex_range_with_upper_bound_within_lts() {
+        assert_lts_ceiling(">=22.x <25.x", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_complex_range_above_lts() {
-        assert_lts_enforcement(">=25.x <27.x", false);
+    fn lts_ceiling_not_found_for_complex_range_above_lts() {
+        assert_lts_ceiling(">=25.x <27.x", false);
     }
 
     #[test]
-    fn lts_not_enforced_for_complex_range_within_single_lts_major() {
-        assert_lts_enforcement(">=24.x <25.x", false);
+    fn lts_ceiling_not_found_for_complex_range_within_single_lts_major() {
+        assert_lts_ceiling(">=24.x <25.x", false);
     }
 
     // --- End-to-end resolution tests ---
@@ -407,6 +399,21 @@ mod tests {
     #[test]
     fn e2e_narrow_range_resolves_without_downgrade() {
         assert_resolution("22.x", DISALLOW_WIDE_RANGE, 22, false, false);
+    }
+
+    #[test]
+    fn e2e_exact_version_above_lts_not_downgraded() {
+        assert_resolution("25.0.0", DISALLOW_WIDE_RANGE, 25, false, false);
+    }
+
+    #[test]
+    fn e2e_wide_range_starting_at_lts_downgraded() {
+        assert_resolution(">= 24", DISALLOW_WIDE_RANGE, 24, true, true);
+    }
+
+    #[test]
+    fn e2e_star_range_downgraded_to_lts() {
+        assert_resolution("*", DISALLOW_WIDE_RANGE, 24, true, true);
     }
 
     #[test]
