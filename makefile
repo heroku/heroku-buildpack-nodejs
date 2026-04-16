@@ -46,12 +46,6 @@ hatchet:
 	@bash etc/hatchet.sh spec/ci/
 	@echo ""
 
-nodebin-test:
-	@echo "Running test for Node v${TEST_NODE_VERSION}..."
-	@bash etc/ci-setup.sh
-	@bash etc/hatchet.sh spec/nodebin/
-	@echo ""
-
 unit:
 	@echo "Running unit tests in docker (heroku-22)..."
 	@docker run -v $(shell pwd):/buildpack:ro --rm -it -e "STACK=heroku-22" heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; test/unit;'
