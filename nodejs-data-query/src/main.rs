@@ -36,6 +36,7 @@ const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
 
 struct Resolution<'a> {
     artifact: &'a NodejsArtifact,
+    eol: bool,
     uses_wide_range: bool,
     lts_upper_bound_enforced: bool,
 }
@@ -101,8 +102,11 @@ fn resolve_node_artifact<'a>(
         )
     };
 
+    let final_artifact = lts_artifact.unwrap_or(artifact);
+
     Some(Resolution {
-        artifact: lts_artifact.unwrap_or(artifact),
+        eol: !SUPPORTED_NODEJS_VERSIONS.contains(&final_artifact.version.major()),
+        artifact: final_artifact,
         uses_wide_range,
         lts_upper_bound_enforced: lts_artifact.is_some(),
     })
@@ -186,6 +190,7 @@ fn cmd_resolve_version(
                 "checksum_value": hex::encode(&resolution.artifact.checksum.value),
                 "uses_wide_range": resolution.uses_wide_range,
                 "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
+                "eol": resolution.eol,
             })
         );
     } else {
@@ -239,6 +244,13 @@ mod tests {
             arch = "amd64"
             url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
             checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
+
+            [[artifacts]]
+            version = "18.20.0"
+            os = "linux"
+            arch = "amd64"
+            url = "https://nodejs.org/download/release/v18.20.0/node-v18.20.0-linux-x64.tar.gz"
+            checksum = "sha256:80620426d177141aa99376de2ad1cb5ed461104cc53c0a5334df91467c60cac3"
         "#;
         toml::from_str(contents).unwrap()
     }
@@ -498,5 +510,41 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    // --- EOL detection tests ---
+
+    #[test]
+    fn eol_true_for_unsupported_version() {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse("18.x").unwrap();
+        let resolution = resolve_node_artifact(
+            &inventory,
+            Os::Linux,
+            Arch::Amd64,
+            &requirement,
+            TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
+        )
+        .expect("expected resolution to succeed");
+        assert_eq!(resolution.artifact.version.major(), 18);
+        assert!(resolution.eol);
+    }
+
+    #[test]
+    fn eol_false_for_supported_version() {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse("24.x").unwrap();
+        let resolution = resolve_node_artifact(
+            &inventory,
+            Os::Linux,
+            Arch::Amd64,
+            &requirement,
+            TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
+        )
+        .expect("expected resolution to succeed");
+        assert_eq!(resolution.artifact.version.major(), 24);
+        assert!(!resolution.eol);
     }
 }
