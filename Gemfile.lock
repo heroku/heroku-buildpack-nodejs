@@ -41,7 +41,6 @@ GEM
     rspec-retry (0.6.2)
       rspec-core (> 3.3)
     rspec-support (3.13.4)
-    sem_version (2.0.1)
     thor (1.4.0)
     threaded (0.0.4)
     webrick (1.9.1)
@@ -55,7 +54,6 @@ DEPENDENCIES
   rake
   rspec-expectations
   rspec-retry
-  sem_version
 
 BUNDLED WITH
    2.2.28
