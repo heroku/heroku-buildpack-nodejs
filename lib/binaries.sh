@@ -77,6 +77,9 @@ install_nodejs() {
     uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
     lts_version=$(echo "$resolve_result" | jq -r .lts_version)
+    eol=$(echo "$resolve_result" | jq .eol)
+
+    build_data::set_raw "node_version_eol" "$eol"
 
     if [[ "$uses_wide_range" == "true" ]]; then
       echo
@@ -95,6 +98,19 @@ install_nodejs() {
     # if either warning message was displayed, ensure we add a newline before continuing with regular output
     if [[ "$uses_wide_range" == "true" ]] || [[ "$lts_upper_bound_enforced" == "true" ]]; then
       echo
+    fi
+
+    if [[ "$eol" == "true" ]]; then
+      output::warn <<-EOF
+				Node.js $version is now End-of-Life (EOL). It no longer receives security
+				updates, bug fixes, or support from the Node.js project and is no longer
+				supported on Heroku.
+
+				In a future buildpack release, this warning will become a build error. Please
+				upgrade to a supported version as soon as possible to avoid build failures.
+
+				https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+			EOF
     fi
 
     echo "Downloading and installing node $version..."
