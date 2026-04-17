@@ -1,7 +1,8 @@
 use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use nodejs_data::{
-    NodejsArtifact, NodejsInventory, RECOMMENDED_LTS_VERSION, Version, VersionError, VersionRange,
+    NodejsArtifact, NodejsInventory, RECOMMENDED_LTS_VERSION, SUPPORTED_NODEJS_VERSIONS, Version,
+    VersionError, VersionRange,
 };
 use std::env::consts;
 
@@ -99,6 +100,7 @@ fn main() {
                 "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
                 "default": default,
                 "lts_version": RECOMMENDED_LTS_VERSION.to_string(),
+                "eol": !SUPPORTED_NODEJS_VERSIONS.contains(&resolution.artifact.version.major()),
             })
         );
     } else {
@@ -470,6 +472,42 @@ mod tests {
         assert_eq!(result.unwrap().to_string(), "22.x");
     }
 
+    // --- EOL detection tests ---
+
+    #[test]
+    fn eol_true_for_unsupported_version() {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse("18.x").unwrap();
+        let resolution = resolve_node_artifact(
+            &inventory,
+            Os::Linux,
+            Arch::Amd64,
+            &requirement,
+            TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
+        )
+        .expect("expected resolution to succeed");
+        assert_eq!(resolution.artifact.version.major(), 18);
+        assert!(!SUPPORTED_NODEJS_VERSIONS.contains(&resolution.artifact.version.major()));
+    }
+
+    #[test]
+    fn eol_false_for_supported_version() {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse("24.x").unwrap();
+        let resolution = resolve_node_artifact(
+            &inventory,
+            Os::Linux,
+            Arch::Amd64,
+            &requirement,
+            TEST_LTS_MAJOR_VERSION,
+            DISALLOW_WIDE_RANGE,
+        )
+        .expect("expected resolution to succeed");
+        assert_eq!(resolution.artifact.version.major(), 24);
+        assert!(SUPPORTED_NODEJS_VERSIONS.contains(&resolution.artifact.version.major()));
+    }
+
     fn create_inventory() -> NodejsInventory {
         let contents = r#"
             [[artifacts]]
@@ -492,6 +530,13 @@ mod tests {
             arch = "amd64"
             url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
             checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
+
+            [[artifacts]]
+            version = "18.20.8"
+            os = "linux"
+            arch = "amd64"
+            url = "https://nodejs.org/download/release/v18.20.8/node-v18.20.8-linux-x64.tar.gz"
+            checksum = "sha256:27a9f3f14d5e99ad05a07ed3524ba3ee92f8ff8b6db5ff80b00f9feb5ec8097a"
         "#;
         toml::from_str(contents).unwrap()
     }
