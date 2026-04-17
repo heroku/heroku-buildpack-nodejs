@@ -219,14 +219,13 @@ fail_yarn_lockfile_outdated() {
 fail_bin_install() {
   local error
   local version="$1"
-  local lts_major_version="$2"
 
   # Allow the subcommand to fail without trapping the error so we can
   # get the failing message output
   set +e
 
   # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" "$lts_major_version" 2>&1)
+  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" 2>&1)
 
   # re-enable trapping
   set -e
