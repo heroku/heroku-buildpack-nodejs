@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Updated resolve-version binary to use shared `nodejs-data` crate. ([#1617](https://github.com/heroku/heroku-buildpack-nodejs/pull/1617))
 
 ## [v342] - 2026-04-16
 
