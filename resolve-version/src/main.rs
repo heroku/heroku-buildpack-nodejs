@@ -2,12 +2,17 @@ use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use nodejs_data::{NodejsArtifact, NodejsInventory, Version, VersionRange};
 use std::env::consts;
-use std::ops::Deref;
 
 const VERSION_REQS_EXIT_CODE: i32 = 1;
 const INVENTORY_EXIT_CODE: i32 = 2;
 const UNSUPPORTED_OS_EXIT_CODE: i32 = 3;
 const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
+
+struct Resolution<'a> {
+    artifact: &'a NodejsArtifact,
+    uses_wide_range: bool,
+    lts_upper_bound_enforced: bool,
+}
 
 fn main() {
     let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
@@ -66,7 +71,7 @@ fn main() {
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
-    if let Some((artifact, uses_wide_range, lts_upper_bound_enforced)) = resolve_node_artifact(
+    if let Some(resolution) = resolve_node_artifact(
         &node_inventory,
         os,
         arch,
@@ -77,12 +82,12 @@ fn main() {
         println!(
             "{}",
             serde_json::json!({
-                "version": artifact.version,
-                "url": artifact.url,
-                "checksum_type": artifact.checksum.name,
-                "checksum_value": hex::encode(&artifact.checksum.value),
-                "uses_wide_range": *uses_wide_range,
-                "lts_upper_bound_enforced": *lts_upper_bound_enforced,
+                "version": resolution.artifact.version,
+                "url": resolution.artifact.url,
+                "checksum_type": resolution.artifact.checksum.name,
+                "checksum_value": hex::encode(&resolution.artifact.checksum.value),
+                "uses_wide_range": resolution.uses_wide_range,
+                "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
             })
         );
     } else {
@@ -132,7 +137,7 @@ fn resolve_node_artifact<'a>(
     requirement: &VersionRange,
     lts_major_version: u64,
     allow_wide_range: bool,
-) -> Option<(&'a NodejsArtifact, UsesWideRange, LtsUpperBoundEnforced)> {
+) -> Option<Resolution<'a>> {
     let resolved_artifact = node_inventory.resolve(os, arch, requirement)?;
     let uses_wide_range = is_wide_range(requirement, resolved_artifact.version.major());
 
@@ -149,31 +154,11 @@ fn resolve_node_artifact<'a>(
         )
     };
 
-    Some((
-        lts_artifact.unwrap_or(resolved_artifact),
-        UsesWideRange(uses_wide_range),
-        LtsUpperBoundEnforced(lts_artifact.is_some()),
-    ))
-}
-
-struct UsesWideRange(bool);
-
-impl Deref for UsesWideRange {
-    type Target = bool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-struct LtsUpperBoundEnforced(bool);
-
-impl Deref for LtsUpperBoundEnforced {
-    type Target = bool;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    Some(Resolution {
+        artifact: lts_artifact.unwrap_or(resolved_artifact),
+        uses_wide_range,
+        lts_upper_bound_enforced: lts_artifact.is_some(),
+    })
 }
 
 #[cfg(test)]
@@ -335,238 +320,120 @@ mod tests {
         assert_lts_ceiling(">=24.x <25.x", false);
     }
 
-    #[test]
-    fn resolve_version_when_wide_range_used_and_version_is_downgraded_to_lts() {
-        let wide_requirement = VersionRange::parse(">= 22").unwrap();
+    // --- End-to-end resolution tests ---
+
+    fn assert_resolution(
+        range: &str,
+        allow_wide_range: bool,
+        expected_major: u64,
+        expected_wide: bool,
+        expected_lts_enforced: bool,
+    ) {
         let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
+        let requirement = VersionRange::parse(range).unwrap();
+        let resolution = resolve_node_artifact(
             &inventory,
             Os::Linux,
             Arch::Amd64,
-            &wide_requirement,
+            &requirement,
             TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
+            allow_wide_range,
         )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(*show_wide_range_warning);
-        assert!(*show_downgrade_warning);
+        .unwrap_or_else(|| panic!("expected resolution to succeed for range '{range}'"));
+        assert_eq!(
+            resolution.artifact.version.major(),
+            expected_major,
+            "wrong major for range '{range}'"
+        );
+        assert_eq!(
+            resolution.uses_wide_range, expected_wide,
+            "wrong uses_wide_range for range '{range}'"
+        );
+        assert_eq!(
+            resolution.lts_upper_bound_enforced, expected_lts_enforced,
+            "wrong lts_enforced for range '{range}'"
+        );
     }
 
     #[test]
-    fn resolve_version_when_narrow_range_used_and_version_is_not_downgraded_to_lts() {
-        let wide_requirement = VersionRange::parse("22.x").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 22);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_wide_range_downgraded_to_lts() {
+        assert_resolution(">= 22", DISALLOW_WIDE_RANGE, 24, true, true);
     }
 
     #[test]
-    fn resolve_version_when_exact_range_used_and_version_is_not_downgraded_to_lts() {
-        let wide_requirement = VersionRange::parse("22.21.0").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 22);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_wide_range_not_downgraded_when_allowed() {
+        assert_resolution(">=22.x", ALLOW_WIDE_RANGE, 25, true, false);
     }
 
     #[test]
-    fn resolve_version_when_wide_range_used_and_version_is_lts() {
-        let wide_requirement = VersionRange::parse(">= 24").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(*show_wide_range_warning);
-        assert!(*show_downgrade_warning);
+    fn e2e_narrow_range_resolves_without_downgrade() {
+        assert_resolution("22.x", DISALLOW_WIDE_RANGE, 22, false, false);
     }
 
     #[test]
-    fn resolve_version_when_narrow_range_used_and_version_is_lts() {
-        let wide_requirement = VersionRange::parse("24.x").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_exact_version_above_lts_not_downgraded() {
+        assert_resolution("25.0.0", DISALLOW_WIDE_RANGE, 25, false, false);
     }
 
     #[test]
-    fn resolve_version_when_exact_lts_range_used() {
-        let wide_requirement = VersionRange::parse("24.10.0").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_wide_range_starting_at_lts_downgraded() {
+        assert_resolution(">= 24", DISALLOW_WIDE_RANGE, 24, true, true);
     }
 
     #[test]
-    fn resolve_version_when_wide_range_is_used_and_explicitly_requesting_range_beyond_lts() {
-        let wide_requirement = VersionRange::parse(">=25.x").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 25);
-        assert!(*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_star_range_downgraded_to_lts() {
+        assert_resolution("*", DISALLOW_WIDE_RANGE, 24, true, true);
     }
 
     #[test]
-    fn resolve_version_when_narrow_range_is_used_and_explicitly_requesting_range_beyond_lts() {
-        let wide_requirement = VersionRange::parse("25.x").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 25);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_complex_range_within_lts() {
+        assert_resolution(">=22.x <25.x", DISALLOW_WIDE_RANGE, 24, true, false);
     }
 
     #[test]
-    fn resolve_version_when_exact_range_is_used_and_explicitly_requesting_range_beyond_lts() {
-        let wide_requirement = VersionRange::parse("25.0.0").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 25);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_complex_range_beyond_lts() {
+        assert_resolution(">=25.x <27.x", DISALLOW_WIDE_RANGE, 25, true, false);
     }
 
     #[test]
-    fn resolve_version_with_complex_range_with_upper_bound_within_lts() {
-        let wide_requirement = VersionRange::parse(">=22.x <25.x").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+    fn e2e_complex_range_within_single_lts_major() {
+        assert_resolution(">=24.x <25.x", DISALLOW_WIDE_RANGE, 24, false, false);
     }
 
     #[test]
-    fn resolve_version_with_complex_range_with_upper_bound_beyond_lts() {
-        let wide_requirement = VersionRange::parse(">=25.x <27.x").unwrap();
+    fn e2e_lts_not_enforced_when_no_lts_artifact_exists() {
         let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
+        let requirement = VersionRange::parse(">= 22").unwrap();
+        let non_existent_lts: u64 = 23;
+        let resolution = resolve_node_artifact(
             &inventory,
             Os::Linux,
             Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
+            &requirement,
+            non_existent_lts,
             DISALLOW_WIDE_RANGE,
         )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 25);
-        assert!(*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+        .expect("expected resolution to succeed");
+        assert_eq!(resolution.artifact.version.major(), 25);
+        assert!(resolution.uses_wide_range);
+        assert!(!resolution.lts_upper_bound_enforced);
     }
 
     #[test]
-    fn resolve_version_with_complex_range_with_lower_and_upper_bounds_within_lts() {
-        let wide_requirement = VersionRange::parse(">=24.x <25.x").unwrap();
+    fn e2e_no_matching_version_returns_none() {
         let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            DISALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 24);
-        assert!(!*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
-    }
-
-    #[test]
-    fn resolve_version_with_wide_range_environment_override_to_prevent_downgrade() {
-        let wide_requirement = VersionRange::parse(">=22.x").unwrap();
-        let inventory = create_inventory();
-        let (artifact, show_wide_range_warning, show_downgrade_warning) = resolve_node_artifact(
-            &inventory,
-            Os::Linux,
-            Arch::Amd64,
-            &wide_requirement,
-            TEST_LTS_MAJOR_VERSION,
-            ALLOW_WIDE_RANGE,
-        )
-        .unwrap();
-        assert_eq!(artifact.version.major(), 25);
-        assert!(*show_wide_range_warning);
-        assert!(!*show_downgrade_warning);
+        let requirement = VersionRange::parse("99.x").unwrap();
+        assert!(
+            resolve_node_artifact(
+                &inventory,
+                Os::Linux,
+                Arch::Amd64,
+                &requirement,
+                TEST_LTS_MAJOR_VERSION,
+                DISALLOW_WIDE_RANGE,
+            )
+            .is_none()
+        );
     }
 
     fn create_inventory() -> NodejsInventory {
