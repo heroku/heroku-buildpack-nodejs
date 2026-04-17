@@ -83,6 +83,9 @@ install_nodejs() {
     uses_wide_range=$(echo "$resolve_result" | jq .uses_wide_range)
     lts_upper_bound_enforced=$(echo "$resolve_result" | jq .lts_upper_bound_enforced)
     lts_version=$(echo "$resolve_result" | jq -r .lts_version)
+    eol=$(echo "$resolve_result" | jq .eol)
+
+    build_data::set_raw "node_version_eol" "$eol"
 
     if [[ "$uses_wide_range" == "true" ]]; then
       output::warning <<-EOF
@@ -96,6 +99,19 @@ install_nodejs() {
       output::warning <<-EOF
 				The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`.
 				To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`
+				https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+			EOF
+    fi
+
+    if [[ "$eol" == "true" ]]; then
+      output::warn <<-EOF
+				Node.js $version is now End-of-Life (EOL). It no longer receives security
+				updates, bug fixes, or support from the Node.js project and is no longer
+				supported on Heroku.
+
+				In a future buildpack release, this warning will become a build error. Please
+				upgrade to a supported version as soon as possible to avoid build failures.
+
 				https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
 			EOF
     fi
