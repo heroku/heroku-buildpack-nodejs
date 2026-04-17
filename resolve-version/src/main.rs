@@ -1,6 +1,8 @@
 use clap::{Command, arg, value_parser};
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use nodejs_data::{NodejsArtifact, NodejsInventory, Version, VersionRange};
+use nodejs_data::{
+    NodejsArtifact, NodejsInventory, RECOMMENDED_LTS_VERSION, Version, VersionError, VersionRange,
+};
 use std::env::consts;
 
 const VERSION_REQS_EXIT_CODE: i32 = 1;
@@ -22,7 +24,6 @@ fn main() {
     let matches = Command::new("resolve_version")
         .arg(arg!(<inventory_path>))
         .arg(arg!(<node_version>))
-        .arg(arg!(<lts_major_version>))
         .arg(arg!(--os <os>).value_parser(value_parser!(Os)))
         .arg(arg!(--arch <arch>).value_parser(value_parser!(Arch)))
         .get_matches();
@@ -33,11 +34,6 @@ fn main() {
 
     let node_version = matches
         .get_one::<String>("node_version")
-        .expect("required argument");
-
-    let lts_major_version = matches
-        .get_one::<String>("lts_major_version")
-        .map(|v| v.parse::<u64>().expect("must be a positive number"))
         .expect("required argument");
 
     let os = match matches.get_one::<Os>("os") {
@@ -56,7 +52,9 @@ fn main() {
         }),
     };
 
-    let version_requirements = VersionRange::parse(node_version.as_str()).unwrap_or_else(|e| {
+    let default = node_version.is_empty();
+
+    let requirement = parse_node_version(node_version).unwrap_or_else(|e| {
         eprintln!("Could not parse Version Requirements '{node_version}': {e}");
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
@@ -71,11 +69,22 @@ fn main() {
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
+    let lts_major_version = match node_inventory.resolve(os, arch, &*RECOMMENDED_LTS_VERSION) {
+        Some(artifact) => artifact.version.major(),
+        None => {
+            eprintln!(
+                "Inventory does not contain a version matching RECOMMENDED_LTS_VERSION ({})",
+                *RECOMMENDED_LTS_VERSION
+            );
+            std::process::exit(INVENTORY_EXIT_CODE);
+        }
+    };
+
     if let Some(resolution) = resolve_node_artifact(
         &node_inventory,
         os,
         arch,
-        &version_requirements,
+        &requirement,
         lts_major_version,
         allow_wide_range,
     ) {
@@ -88,10 +97,20 @@ fn main() {
                 "checksum_value": hex::encode(&resolution.artifact.checksum.value),
                 "uses_wide_range": resolution.uses_wide_range,
                 "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
+                "default": default,
+                "lts_version": RECOMMENDED_LTS_VERSION.to_string(),
             })
         );
     } else {
         println!("No result");
+    }
+}
+
+fn parse_node_version(node_version: &str) -> Result<VersionRange, VersionError> {
+    if node_version.is_empty() {
+        Ok(RECOMMENDED_LTS_VERSION.clone())
+    } else {
+        VersionRange::parse(node_version)
     }
 }
 
@@ -434,6 +453,21 @@ mod tests {
             )
             .is_none()
         );
+    }
+
+    #[test]
+    fn empty_version_uses_recommended_lts() {
+        let result = parse_node_version("");
+        assert_eq!(
+            result.unwrap().to_string(),
+            RECOMMENDED_LTS_VERSION.to_string()
+        );
+    }
+
+    #[test]
+    fn non_empty_version_parses_as_given() {
+        let result = parse_node_version("22.x");
+        assert_eq!(result.unwrap().to_string(), "22.x");
     }
 
     fn create_inventory() -> NodejsInventory {
