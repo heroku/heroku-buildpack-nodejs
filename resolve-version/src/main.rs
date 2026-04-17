@@ -90,6 +90,41 @@ fn main() {
     }
 }
 
+fn is_wide_range(requirement: &VersionRange, resolved_major: u64) -> bool {
+    if let Some(next) = resolved_major.checked_add(1)
+        && requirement.satisfies(&Version::new(next, 0, 0))
+    {
+        return true;
+    }
+    if let Some(prev) = resolved_major.checked_sub(1)
+        && requirement.satisfies(&Version::new(prev, 0, 0))
+    {
+        return true;
+    }
+    false
+}
+
+fn find_lts_ceiling<'a>(
+    requirement: &VersionRange,
+    resolved_version: &Version,
+    inventory: &'a NodejsInventory,
+    os: Os,
+    arch: Arch,
+    lts_major_version: u64,
+) -> Option<&'a NodejsArtifact> {
+    inventory
+        .artifacts
+        .iter()
+        .filter(|a| {
+            a.os == os
+                && a.arch == arch
+                && a.version.major() == lts_major_version
+                && requirement.satisfies(&a.version)
+        })
+        .max_by_key(|a| a.version.clone())
+        .filter(|lts_artifact| resolved_version > &lts_artifact.version)
+}
+
 fn resolve_node_artifact<'a>(
     node_inventory: &'a NodejsInventory,
     os: Os,
@@ -98,44 +133,27 @@ fn resolve_node_artifact<'a>(
     lts_major_version: u64,
     allow_wide_range: bool,
 ) -> Option<(&'a NodejsArtifact, UsesWideRange, LtsUpperBoundEnforced)> {
-    let lts_range_value = format!("{lts_major_version}.x");
-    let lts_range = VersionRange::parse(&lts_range_value)
-        .unwrap_or_else(|_| panic!("Range {lts_range_value} should be valid"));
+    let resolved_artifact = node_inventory.resolve(os, arch, requirement)?;
+    let uses_wide_range = is_wide_range(requirement, resolved_artifact.version.major());
 
-    if let Some(resolved_artifact) = node_inventory.resolve(os, arch, requirement)
-        && let Some(highest_lts_artifact) = node_inventory.resolve(os, arch, &lts_range)
-    {
-        let uses_wide_range =
-            if requirement.satisfies(&Version::new(resolved_artifact.version.major() - 1, 0, 0))
-                || requirement.satisfies(&Version::new(resolved_artifact.version.major() + 1, 0, 0))
-            {
-                UsesWideRange(true)
-            } else {
-                UsesWideRange(false)
-            };
-
-        let lts_upper_bound_enforced = if allow_wide_range {
-            LtsUpperBoundEnforced(false)
-        } else if resolved_artifact.version > highest_lts_artifact.version
-            && let Some(min_version) = requirement.min_version()
-            && min_version <= highest_lts_artifact.version
-        {
-            LtsUpperBoundEnforced(true)
-        } else {
-            LtsUpperBoundEnforced(false)
-        };
-        Some((
-            if *lts_upper_bound_enforced {
-                highest_lts_artifact
-            } else {
-                resolved_artifact
-            },
-            uses_wide_range,
-            lts_upper_bound_enforced,
-        ))
-    } else {
+    let lts_artifact = if allow_wide_range {
         None
-    }
+    } else {
+        find_lts_ceiling(
+            requirement,
+            &resolved_artifact.version,
+            node_inventory,
+            os,
+            arch,
+            lts_major_version,
+        )
+    };
+
+    Some((
+        lts_artifact.unwrap_or(resolved_artifact),
+        UsesWideRange(uses_wide_range),
+        LtsUpperBoundEnforced(lts_artifact.is_some()),
+    ))
 }
 
 struct UsesWideRange(bool);
@@ -165,6 +183,157 @@ mod tests {
     const TEST_LTS_MAJOR_VERSION: u64 = 24;
     const ALLOW_WIDE_RANGE: bool = true;
     const DISALLOW_WIDE_RANGE: bool = false;
+
+    // --- is_wide_range tests ---
+
+    #[test]
+    fn wide_range_detected_for_open_ended_range() {
+        assert!(is_wide_range(&VersionRange::parse(">= 22").unwrap(), 25));
+    }
+
+    #[test]
+    fn wide_range_not_detected_for_single_major() {
+        assert!(!is_wide_range(&VersionRange::parse("22.x").unwrap(), 22));
+    }
+
+    #[test]
+    fn wide_range_not_detected_for_exact_version() {
+        assert!(!is_wide_range(&VersionRange::parse("22.21.0").unwrap(), 22));
+    }
+
+    #[test]
+    fn wide_range_detected_for_range_starting_at_highest_major() {
+        assert!(is_wide_range(&VersionRange::parse(">= 24").unwrap(), 25));
+    }
+
+    #[test]
+    fn wide_range_detected_for_range_starting_above_highest_major() {
+        assert!(is_wide_range(&VersionRange::parse(">=25.x").unwrap(), 25));
+    }
+
+    #[test]
+    fn wide_range_not_detected_for_narrow_lts_range() {
+        assert!(!is_wide_range(&VersionRange::parse("24.x").unwrap(), 24));
+    }
+
+    #[test]
+    fn wide_range_detected_for_complex_range_spanning_majors() {
+        assert!(is_wide_range(
+            &VersionRange::parse(">=22.x <25.x").unwrap(),
+            24
+        ));
+    }
+
+    #[test]
+    fn wide_range_detected_for_complex_range_above_lts() {
+        assert!(is_wide_range(
+            &VersionRange::parse(">=25.x <27.x").unwrap(),
+            25
+        ));
+    }
+
+    #[test]
+    fn wide_range_not_detected_for_complex_range_within_single_major() {
+        assert!(!is_wide_range(
+            &VersionRange::parse(">=24.x <25.x").unwrap(),
+            24
+        ));
+    }
+
+    #[test]
+    fn wide_range_not_detected_for_major_zero() {
+        assert!(!is_wide_range(&VersionRange::parse("0.x").unwrap(), 0));
+    }
+
+    #[test]
+    fn wide_range_detected_for_star_range_at_major_zero() {
+        assert!(is_wide_range(&VersionRange::parse("*").unwrap(), 0));
+    }
+
+    // --- find_lts_ceiling tests ---
+
+    fn assert_lts_ceiling(range: &str, expected: bool) {
+        let inventory = create_inventory();
+        let requirement = VersionRange::parse(range).unwrap();
+        let resolved_version = inventory
+            .resolve(Os::Linux, Arch::Amd64, &requirement)
+            .unwrap_or_else(|| panic!("expected resolution to succeed for range '{range}'"))
+            .version
+            .clone();
+        assert_eq!(
+            find_lts_ceiling(
+                &requirement,
+                &resolved_version,
+                &inventory,
+                Os::Linux,
+                Arch::Amd64,
+                TEST_LTS_MAJOR_VERSION,
+            )
+            .is_some(),
+            expected,
+            "wrong lts ceiling for range '{range}'"
+        );
+    }
+
+    #[test]
+    fn lts_ceiling_found_when_wide_range_resolves_above_lts() {
+        assert_lts_ceiling(">= 22", true);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_narrow_range_below_lts() {
+        assert_lts_ceiling("22.x", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_exact_version_below_lts() {
+        assert_lts_ceiling("22.21.0", false);
+    }
+
+    #[test]
+    fn lts_ceiling_found_when_range_starts_at_lts_and_resolves_above() {
+        assert_lts_ceiling(">= 24", true);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_narrow_lts_range() {
+        assert_lts_ceiling("24.x", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_exact_lts_version() {
+        assert_lts_ceiling("24.10.0", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_when_range_starts_above_lts() {
+        assert_lts_ceiling(">=25.x", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_narrow_range_above_lts() {
+        assert_lts_ceiling("25.x", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_exact_version_above_lts() {
+        assert_lts_ceiling("25.0.0", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_complex_range_with_upper_bound_within_lts() {
+        assert_lts_ceiling(">=22.x <25.x", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_complex_range_above_lts() {
+        assert_lts_ceiling(">=25.x <27.x", false);
+    }
+
+    #[test]
+    fn lts_ceiling_not_found_for_complex_range_within_single_lts_major() {
+        assert_lts_ceiling(">=24.x <25.x", false);
+    }
 
     #[test]
     fn resolve_version_when_wide_range_used_and_version_is_downgraded_to_lts() {
