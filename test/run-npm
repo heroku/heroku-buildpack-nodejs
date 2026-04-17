@@ -315,6 +315,7 @@ testNpmBuildMetaData() {
     select(.install_dependencies_time | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.node_version == "v10.24.1")
+    select(.node_version_eol == true)
     select(.node_version_major == 10)
     select(.node_version_request == "10.x")
     select(.npm_version == "6.14.12")
