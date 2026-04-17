@@ -20,6 +20,7 @@ testPnpmBuildMetaData() {
     select(.install_pnpm_binary_memory | type == "number")
     select(.install_pnpm_binary_time | type == "number")
     select(.node_version | test("v20.\\d+\\.\\d+"))
+    select(.node_version_eol == false)
     select(.node_version_major == 20)
     select(.node_version_request == "20.x")
     select(.package_manager == "pnpm")
