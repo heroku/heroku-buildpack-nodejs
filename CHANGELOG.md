@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Updated resolve-version binary to use shared `nodejs-data` crate. ([#1617](https://github.com/heroku/heroku-buildpack-nodejs/pull/1617))
+- Improve resolve-version logic for detecting highest LTS to use when a wide version range is requested. ([#1618](https://github.com/heroku/heroku-buildpack-nodejs/pull/1618))
 
 ## [v342] - 2026-04-16
 
