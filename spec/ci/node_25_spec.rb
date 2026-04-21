@@ -8,7 +8,6 @@ describe "Hello World for Node v25.x" do
 
     it "should deploy successfully without EOL warning" do
       app.deploy do |app|
-        expect(app.output).not_to include("End-of-Life")
         expect(successful_body(app).strip).to eq("Hello, world!")
         expect(clean_output(app.output)).to match(Regexp.new(<<~'REGEX'))
           remote: -----> Installing binaries

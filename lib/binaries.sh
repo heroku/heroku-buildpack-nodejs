@@ -104,7 +104,7 @@ install_nodejs() {
     fi
 
     if [[ "$eol" == "true" ]]; then
-      output::warn <<-EOF
+      output::warning <<-EOF
 				Node.js $version is now End-of-Life (EOL). It no longer receives security
 				updates, bug fixes, or support from the Node.js project and is no longer
 				supported on Heroku.
