@@ -15,6 +15,7 @@ struct Resolution<'a> {
     artifact: &'a NodejsArtifact,
     uses_wide_range: bool,
     lts_upper_bound_enforced: bool,
+    eol: bool,
 }
 
 fn main() {
@@ -100,7 +101,7 @@ fn main() {
                 "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
                 "default": default,
                 "lts_version": RECOMMENDED_LTS_VERSION.to_string(),
-                "eol": !SUPPORTED_NODEJS_VERSIONS.contains(&resolution.artifact.version.major()),
+                "eol": resolution.eol,
             })
         );
     } else {
@@ -175,8 +176,11 @@ fn resolve_node_artifact<'a>(
         )
     };
 
+    let artifact = lts_artifact.unwrap_or(resolved_artifact);
+
     Some(Resolution {
-        artifact: lts_artifact.unwrap_or(resolved_artifact),
+        eol: !SUPPORTED_NODEJS_VERSIONS.contains(&artifact.version.major()),
+        artifact,
         uses_wide_range,
         lts_upper_bound_enforced: lts_artifact.is_some(),
     })
@@ -488,7 +492,7 @@ mod tests {
         )
         .expect("expected resolution to succeed");
         assert_eq!(resolution.artifact.version.major(), 18);
-        assert!(!SUPPORTED_NODEJS_VERSIONS.contains(&resolution.artifact.version.major()));
+        assert!(resolution.eol);
     }
 
     #[test]
@@ -505,7 +509,7 @@ mod tests {
         )
         .expect("expected resolution to succeed");
         assert_eq!(resolution.artifact.version.major(), 24);
-        assert!(SUPPORTED_NODEJS_VERSIONS.contains(&resolution.artifact.version.major()));
+        assert!(!resolution.eol);
     }
 
     fn create_inventory() -> NodejsInventory {
