@@ -97,6 +97,21 @@ assertCapturedSuccess()
   assertEquals "Expected STD_ERR to be empty; was <$(cat ${STD_ERR})>" "" "$(cat ${STD_ERR})"
 }
 
+assertCapturedSuccessWithWarnings()
+{
+  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+}
+
+assertCapturedStderr()
+{
+  assertFileContains "$@" "${STD_ERR}"
+}
+
+assertNotCapturedStderr()
+{
+  assertFileNotContains "$@" "${STD_ERR}"
+}
+
 # assertCapturedError [[expectedErrorCode] expectedErrorMsg]
 assertCapturedError()
 {

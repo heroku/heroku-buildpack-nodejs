@@ -122,16 +122,16 @@ testPnpmWithCorepackAndEngine() {
   compile "pnpm-with-corepack-and-engine"
   assertCaptured "engines.pnpm (package.json):   8.x"
   assertCaptured "packageManager (package.json): pnpm@8.4.0"
-  assertCaptured "Multiple pnpm versions declared"
-  assertCaptured "The package.json file indicates the target version of pnpm to install in two fields:"
-  assertCaptured '- "packageManager": "pnpm@8.4.0"'
-  assertCaptured '- "engines.pnpm": "8.x"'
-  assertCaptured 'If both fields are present, then "packageManager" will take precedence and "pnpm@8.4.0" will be installed.'
-  assertCaptured "To ensure we install the version of pnpm you want, remove one of these fields."
+  assertCapturedStderr "Multiple pnpm versions declared"
+  assertCapturedStderr "The package.json file indicates the target version of pnpm to install in two fields:"
+  assertCapturedStderr '- "packageManager": "pnpm@8.4.0"'
+  assertCapturedStderr '- "engines.pnpm": "8.x"'
+  assertCapturedStderr 'If both fields are present, then "packageManager" will take precedence and "pnpm@8.4.0" will be installed.'
+  assertCapturedStderr "To ensure we install the version of pnpm you want, remove one of these fields."
   assertCaptured "Downloading and installing pnpm (8.4.0)"
   assertCaptured "Using pnpm 8.4.0"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -217,8 +217,8 @@ testPnpmWithNoPackageManagerEntry() {
   assertCaptured "Downloading and installing pnpm (latest)"
   assertCaptured "Using pnpm"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
-  assertCaptured "Default pnpm version used"
-  assertCapturedSuccess
+  assertCapturedStderr "Default pnpm version used"
+  assertCapturedSuccessWithWarnings
 }
 
 
