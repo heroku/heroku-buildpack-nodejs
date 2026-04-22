@@ -905,65 +905,6 @@ warn_unmet_dep() {
   fi
 }
 
-warn_multiple_yarn_version() {
-  local package_manager="$1"
-  local yarn_engine="$2"
-  warn "Multiple Yarn versions declared
-
-       The package.json file indicates the target version of Yarn to install in two fields:
-       - \"packageManager\": \"$package_manager\"
-       - \"engines.yarn\": \"$yarn_engine\"
-
-       If both fields are present, then \"packageManager\" will take precedence and \"$package_manager\" will be installed.
-
-       To ensure we install the version of Yarn you want, remove one of these fields."
-}
-
-warn_yarn_release_script_with_package_manager() {
-  local package_manager="$1"
-  local release_script="$2"
-  warn "Yarn release script may conflict with \"packageManager\"
-
-       The package.json file indicates the target version of Yarn to install with:
-       - \"packageManager\": \"$package_manager\"
-
-       But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:
-       - yarnPath: \"$release_script\"
-
-       This will cause the buildpack to install $package_manager but, when running Yarn commands, the vendored release
-       at \"$release_script\" will be executed instead.
-
-       To ensure we install the version of Yarn you want, choose only one of the following actions:
-       - Remove the \"packageManager\" field from package.json
-       - Remove the \"yarnPath\" configuration from .yarnrc.yml and delete the vendored release at \"$release_script\""
-}
-
-warn_default_pnpm_version_used() {
-  local default_version="$1"
-  warn "Default pnpm version used
-
-       A pnpm lockfile (pnpm-lock.yaml) was detected but no specific version of pnpm was defined in package.json in either of the following fields:
-       - \"packageManager\"
-       - \"engines.pnpm\"
-
-       Without a specific version defined, this build will use \"$default_version\" by default. We highly recommend setting an explicit version
-       of pnpm to improve the reliability of your builds."
-}
-
-warn_multiple_pnpm_version() {
-  local package_manager="$1"
-  local pnpm_engine="$2"
-  warn "Multiple pnpm versions declared
-
-       The package.json file indicates the target version of pnpm to install in two fields:
-       - \"packageManager\": \"$package_manager\"
-       - \"engines.pnpm\": \"$pnpm_engine\"
-
-       If both fields are present, then \"packageManager\" will take precedence and \"$package_manager\" will be installed.
-
-       To ensure we install the version of pnpm you want, remove one of these fields."
-}
-
 warn_skipping_unsafe_pnpm_prune() {
   local pnpm_version="$1"
   warn "Pruning skipped due to presence of lifecycle scripts
@@ -995,17 +936,6 @@ in package.json during reinstallation of prod dependencies which can cause build
 - prepare
 
 Since pruning can't be done safely for your build, it will be skipped."
-}
-
-warn_about_node_version_22_5_0() {
-  echo ""
-  warn "Issues with Node.js v22.5.0 
-
-       Shortly after the release of Node.js v22.5.0, users began reporting issues around broken
-       or hanging installs for npm and Yarn. To avoid experiencing these problems with your builds 
-       on Heroku, we recommend avoiding this release version until a fix has been released by 
-       pinning to an earlier version of Node.js (e.g.; 22.4.1).
-  " "https://github.com/nodejs/node/pull/53934"
 }
 
 fail_conflicting_package_manager_metadata() {

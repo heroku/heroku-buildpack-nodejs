@@ -235,20 +235,64 @@ install_bins() {
     echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
 
-  echo ""
-
   warn_node_engine "$node_engine"
 
+  local showed_warning=false
+
   if [ -n "$pnpm_engine" ] && [[ "$package_manager" == pnpm* ]]; then
-    warn_multiple_pnpm_version "$package_manager" "$pnpm_engine"
+    showed_warning=true
+    output::warning <<-EOF
+			Multiple pnpm versions declared
+
+			The package.json file indicates the target version of pnpm to install in two fields:
+			- "packageManager": "$package_manager"
+			- "engines.pnpm": "$pnpm_engine"
+
+			If both fields are present, then "packageManager" will take precedence and "$package_manager" will be installed.
+
+			To ensure we install the version of pnpm you want, remove one of these fields.
+		EOF
   fi
 
   if [ -n "$yarn_engine" ] && [[ "$package_manager" == yarn* ]]; then
-    warn_multiple_yarn_version "$package_manager" "$yarn_engine"
+    showed_warning=true
+    output::warning <<-EOF
+			Multiple Yarn versions declared
+
+			The package.json file indicates the target version of Yarn to install in two fields:
+			- "packageManager": "$package_manager"
+			- "engines.yarn": "$yarn_engine"
+
+			If both fields are present, then "packageManager" will take precedence and "$package_manager" will be installed.
+
+			To ensure we install the version of Yarn you want, remove one of these fields.
+		EOF
   fi
 
   if has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
-    warn_yarn_release_script_with_package_manager "$package_manager" "$(get_yarn_path "$BUILD_DIR")"
+    showed_warning=true
+    local release_script
+    release_script="$(get_yarn_path "$BUILD_DIR")"
+    output::warning <<-EOF
+			Yarn release script may conflict with "packageManager"
+
+			The package.json file indicates the target version of Yarn to install with:
+			- "packageManager": "$package_manager"
+
+			But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:
+			- yarnPath: "$release_script"
+
+			This will cause the buildpack to install $package_manager but, when running Yarn commands, the vendored release
+			at "$release_script" will be executed instead.
+
+			To ensure we install the version of Yarn you want, choose only one of the following actions:
+			- Remove the "packageManager" field from package.json
+			- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at "$release_script"
+		EOF
+  fi
+
+  if [ "$showed_warning" = false ]; then
+    echo ""
   fi
 
   build_data::set_string "build_step" "install-nodejs"
@@ -291,7 +335,16 @@ install_bins() {
     monitor "install_pnpm_binary" install_pnpm "$pnpm_version"
     pnpm config set store-dir "$PNPM_CONFIG_CACHE" 2>&1
     if [ "$using_default_pnpm" == true ]; then
-      warn_default_pnpm_version_used "$default_pnpm_version"
+      output::warning <<-EOF
+				Default pnpm version used
+
+				A pnpm lockfile (pnpm-lock.yaml) was detected but no specific version of pnpm was defined in package.json in either of the following fields:
+				- "packageManager"
+				- "engines.pnpm"
+
+				Without a specific version defined, this build will use "$default_pnpm_version" by default. We highly recommend setting an explicit version
+				of pnpm to improve the reliability of your builds.
+			EOF
     fi
   fi
 
@@ -316,8 +369,8 @@ install_bins() {
   fi
 }
 
-header "Installing binaries" | output "$LOG_FILE"
-install_bins | output "$LOG_FILE"
+output::step "Installing binaries"
+install_bins | output::indent | tee -a "$LOG_FILE"
 
 if [[ -z "$USE_NPM_INSTALL" ]]; then
   if [[ "$(should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then

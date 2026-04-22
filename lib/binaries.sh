@@ -79,28 +79,33 @@ install_nodejs() {
     lts_version=$(echo "$resolve_result" | jq -r .lts_version)
 
     if [[ "$uses_wide_range" == "true" ]]; then
-      echo
-      echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version"
-      echo "  higher than you intended. Limiting the requested range to a major LTS range like \`$lts_version\` is recommended."
-      echo "  https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+      output::warning <<-EOF
+				The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version
+				higher than you intended. Limiting the requested range to a major LTS range like \`$lts_version\` is recommended.
+				https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version
+			EOF
     fi
 
     if [[ "$lts_upper_bound_enforced" == "true" ]]; then
-      echo
-      echo "! The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`."
-      echo "  To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`"
-      echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
-    fi
-
-    # if either warning message was displayed, ensure we add a newline before continuing with regular output
-    if [[ "$uses_wide_range" == "true" ]] || [[ "$lts_upper_bound_enforced" == "true" ]]; then
-      echo
+      output::warning <<-EOF
+				The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`.
+				To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`
+				https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+			EOF
     fi
 
     echo "Downloading and installing node $version..."
 
     if [[ "$version" == "22.5.0" ]]; then
-      warn_about_node_version_22_5_0
+      output::warning <<-EOF
+				Issues with Node.js v22.5.0
+
+				Shortly after the release of Node.js v22.5.0, users began reporting issues around broken
+				or hanging installs for npm and Yarn. To avoid experiencing these problems with your builds
+				on Heroku, we recommend avoiding this release version until a fix has been released by
+				pinning to an earlier version of Node.js (e.g.; 22.4.1).
+				https://github.com/nodejs/node/pull/53934
+			EOF
     fi
   fi
 
