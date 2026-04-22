@@ -9,6 +9,16 @@ describe "Hello World for Node v14.x" do
     it "should deploy successfully" do
       app.deploy do |app|
         expect(successful_body(app).strip).to eq("Hello, world!")
+        expect(clean_output(app.output)).to include(<<~OUTPUT)
+          remote: -----> Installing binaries
+          remote:        engines.node (package.json):   14.x
+          remote:        engines.npm (package.json):    unspecified (use default)
+          remote:
+          remote:        Resolving node version 14.x...
+          remote:        Downloading and installing node 14.21.3...
+          remote:        Validating checksum
+          remote:        Using default npm version: 6.14.18
+        OUTPUT
       end
     end
 
