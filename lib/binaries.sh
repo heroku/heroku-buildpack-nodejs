@@ -218,7 +218,7 @@ install_npm_binary() {
     fi
     if [[ "$major" == "11" ]] && [[ "$minor" -ge 11 ]]; then
       echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
-      if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0" >/dev/null; then
+      if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
         build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
         output::error <<-EOF
 					Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround.
@@ -230,7 +230,7 @@ install_npm_binary() {
     fi
   fi
 
-  if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
+  if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version"; then
     build_data::set_string "failure" "npm-install-failed"
     output::error <<-EOF
 			Unable to install npm $version.
