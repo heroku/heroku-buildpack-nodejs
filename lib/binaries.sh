@@ -185,7 +185,10 @@ install_npm() {
     echo "npm $npm_version already installed with node"
   else
     echo "Bootstrapping npm $version (replacing $npm_version)..."
-    monitor "install_npm_binary" install_npm_binary "${version}"
+    local install_npm_start
+    install_npm_start=$(build_data::current_unix_realtime)
+    install_npm_binary "${version}"
+    build_data::set_duration "install_npm_binary_time" "$install_npm_start"
     # Verify npm works before capturing and ensure its stderr is inspectable later
     suppress_output npm --version
     echo "npm $(npm --version) installed"
