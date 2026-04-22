@@ -623,17 +623,6 @@ log_other_failures() {
     return 0
   fi
 
-  # checksum errors
-  if grep -q "Checksum validation failed" "$log_file"; then
-    build_data::set_string "failure" "checksum-validation-failed"
-    return 0
-  fi
-
-  if grep -q "Unsupported checksum" "$log_file"; then
-    build_data::set_string "failure" "unsupported-checksum"
-    return 0
-  fi
-
   if grep -qi "econnreset" "$log_file"; then
     build_data::set_string "failure" "econnreset"
     return 0

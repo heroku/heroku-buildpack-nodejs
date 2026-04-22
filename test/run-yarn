@@ -132,9 +132,9 @@ testYarnInvalid() {
   compile "yarn-invalid"
   assertCaptured "Downloading and installing yarn (0.171"
   assertCaptured "npm error code ETARGET"
-  assertCaptured "Unable to install yarn 0.171"
-  assertCaptured "https://help.heroku.com/8MEL050H"
-  assertCaptured "https://help.heroku.com/0ZIOF3ST"
+  assertCapturedStderr "Unable to install yarn 0.171"
+  assertCapturedStderr "https://help.heroku.com/8MEL050H"
+  assertCapturedStderr "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
 
@@ -143,9 +143,9 @@ testYarnSemverInvalid() {
   compile "yarn-invalid-semver"
   assertCaptured "Downloading and installing yarn (0.17q"
   assertCaptured "npm error code ETARGET"
-  assertCaptured "Unable to install yarn 0.17q"
-  assertCaptured "https://help.heroku.com/8MEL050H"
-  assertCaptured "https://help.heroku.com/0ZIOF3ST"
+  assertCapturedStderr "Unable to install yarn 0.17q"
+  assertCapturedStderr "https://help.heroku.com/8MEL050H"
+  assertCapturedStderr "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
 
@@ -529,7 +529,7 @@ testDetermineYarnPackageNameFailure() {
   # using a bad registry to force `npm info` calls to fail
   echo "https://registry.invalid" > "$env_dir/NPM_CONFIG_REGISTRY"
   compile "yarn-registry-failure" "$(mktmpdir)" "$env_dir"
-  assertCaptured "Unable to resolve yarn version '1.22.x' via npm info"
+  assertCapturedStderr "Unable to resolve yarn version '1.22.x' via npm info"
   assertCapturedError
 }
 

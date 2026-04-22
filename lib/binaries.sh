@@ -29,14 +29,20 @@ install_yarn() {
   else
     echo "Downloading and installing yarn ($version)"
     if ! package_name=$(determine_yarn_package_name "$version"); then
-      echo "Unable to resolve yarn version '$version' via npm info" >&2
+      build_data::set_string "failure" "yarn-resolve-failed"
+      output::error <<-EOF
+				Unable to resolve yarn version '$version' via npm info
+			EOF
       false
     fi
     if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version"; then
-      echo "Unable to install yarn $version. " \
-        "Does yarn $version exist? (https://help.heroku.com/8MEL050H) " \
-        "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
-        "Is yarn $version compatible with this Node.js version?"
+      build_data::set_string "failure" "yarn-install-failed"
+      output::error <<-EOF
+				Unable to install yarn $version.
+				Does yarn $version exist? (https://help.heroku.com/8MEL050H)
+				Is $version valid semver? (https://help.heroku.com/0ZIOF3ST)
+				Is yarn $version compatible with this Node.js version?
+			EOF
       false
     fi
   fi
@@ -111,6 +117,7 @@ install_nodejs() {
 
   output_file="/tmp/node.tar.gz"
 	if ! curl "$download_url" --no-progress-meter --location --fail --max-time 30 --retry 5 --retry-connrefused --connect-timeout 5 -o "$output_file"; then
+		build_data::set_string "failure" "node-download-failed"
 		output::error <<-EOF
 			Error: Unable to download Node.js.
 
@@ -134,11 +141,19 @@ install_nodejs() {
       "sha256")
         echo "Validating checksum"
         if ! echo "$checksum_value $output_file" | sha256sum --check --status; then
-          echo "Checksum validation failed for Node.js $version - $checksum_type:$checksum_value" && false
+          build_data::set_string "failure" "checksum-validation-failed"
+          output::error <<-EOF
+						Checksum validation failed for Node.js $version - $checksum_type:$checksum_value
+					EOF
+          false
         fi
         ;;
       *)
-        echo "Unsupported checksum for Node.js $version - $checksum_type:$checksum_value" && false
+        build_data::set_string "failure" "unsupported-checksum"
+        output::error <<-EOF
+					Unsupported checksum for Node.js $version - $checksum_type:$checksum_value
+				EOF
+        false
         ;;
     esac
   fi
@@ -190,22 +205,35 @@ install_npm_binary() {
     major=$(echo "$resolved_version" | cut -d. -f1)
     minor=$(echo "$resolved_version" | cut -d. -f2)
     if [[ -z "$resolved_version" ]] || [[ "$resolved_version" == "null" ]] || [[ -z "$major" ]] || [[ -z "$minor" ]]; then
-      echo "Failed to resolve npm version from range '$version'. Unable to perform Node.js 22.22.2 regression workaround (https://github.com/npm/cli/issues/9151)." && false
+      build_data::set_string "failure" "npm-resolve-failed"
+      output::error <<-EOF
+				Failed to resolve npm version from range '$version'.
+				Unable to perform Node.js 22.22.2 regression workaround (https://github.com/npm/cli/issues/9151).
+			EOF
+      false
       return
     fi
     if [[ "$major" == "11" ]] && [[ "$minor" -ge 11 ]]; then
       echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
       if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0" >/dev/null; then
-        echo "Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround. Consider pinning npm to an exact version that works with Node.js 22.22.2." && false
+        build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
+        output::error <<-EOF
+					Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround.
+					Consider pinning npm to an exact version that works with Node.js 22.22.2.
+				EOF
+        false
         return
       fi
     fi
   fi
 
   if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
-    echo "Unable to install npm $version. " \
-      "Does npm $version exist? " \
-      "Is npm $version compatible with this Node.js version?"
+    build_data::set_string "failure" "npm-install-failed"
+    output::error <<-EOF
+			Unable to install npm $version.
+			Does npm $version exist?
+			Is npm $version compatible with this Node.js version?
+		EOF
     false
   fi
 }
@@ -214,10 +242,13 @@ install_pnpm() {
   local version="$1"
   echo "Downloading and installing pnpm ($version)"
   if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "pnpm@$version"; then
-    echo "Unable to install pnpm $version. " \
-      "Does pnpm $version exist? (https://help.heroku.com/8MEL050H) " \
-      "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
-      "Is pnpm $version compatible with this Node.js version?"
+    build_data::set_string "failure" "pnpm-install-failed"
+    output::error <<-EOF
+			Unable to install pnpm $version.
+			Does pnpm $version exist? (https://help.heroku.com/8MEL050H)
+			Is $version valid semver? (https://help.heroku.com/0ZIOF3ST)
+			Is pnpm $version compatible with this Node.js version?
+		EOF
     false
   fi
   # Verify pnpm works before capturing and ensure its stderr is inspectable later
