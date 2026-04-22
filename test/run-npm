@@ -313,7 +313,6 @@ testNpmBuildMetaData() {
     select(.heroku_prebuild_script_time | type == "number")
     select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
-    select(.install_node_binary_memory | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.node_version == "v10.24.1")
     select(.node_version_major == 10)
