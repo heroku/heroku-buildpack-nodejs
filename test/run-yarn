@@ -247,6 +247,7 @@ testYarnBuildMetaData() {
     select(.install_node_binary_time | type == "number")
     select(.install_yarn_binary_time | type == "number")
     select(.node_version | test("v24.\\d+\\.\\d+"))
+    select(.node_version_eol == false)
     select(.node_version_major == 24)
     select(.package_manager == "yarn")
     select(.package_manager_version == "1.22.22")

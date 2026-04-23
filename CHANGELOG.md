@@ -6,6 +6,7 @@
 - Updated resolve-version binary to use shared `nodejs-data` crate. ([#1617](https://github.com/heroku/heroku-buildpack-nodejs/pull/1617))
 - Improve resolve-version logic for detecting highest LTS to use when a wide version range is requested. ([#1618](https://github.com/heroku/heroku-buildpack-nodejs/pull/1618))
 - Default Node.js version is now derived from the `nodejs-data` crate instead of being hardcoded in shell scripts. ([#1620](https://github.com/heroku/heroku-buildpack-nodejs/pull/1620))
+- Warn when deploying with End-of-Life Node.js versions. ([#1621](https://github.com/heroku/heroku-buildpack-nodejs/pull/1621))
 
 ## [v342] - 2026-04-16
 

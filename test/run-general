@@ -13,13 +13,13 @@ testBuildScriptBehavior() {
   # The 'build' script is run by default
   compile "build-script"
   assertCaptured "Running build"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   # the 'heroku-postbuild' script takes precedence over the 'build' script
   compile "build-script-override"
   assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
   assertCaptured "Running heroku-postbuild"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -38,7 +38,7 @@ testBuildFlags() {
   assertCaptured "Running build"
   assertCaptured "Running with --prod --optimize flags"
   assertCaptured 'echo build hook message "--prod --optimize"'
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -47,7 +47,7 @@ testPreferEmptyHerokuPostbuildOverBuild() {
   assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
   assertCaptured "Running heroku-postbuild"
   assertNotCaptured "build hook message"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -57,12 +57,12 @@ testPrePostBuildScripts() {
   assertCaptured "echo heroku-prebuild hook message"
   assertCaptured "Running heroku-postbuild"
   assertCaptured "echo heroku-postbuild hook message"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "stable-node"
   assertNotCaptured "Running heroku-prebuild"
   assertNotCaptured "Running heroku-postbuild"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -70,7 +70,7 @@ testCleanupScript() {
   compile "cleanup-scripts"
   assertCaptured "Running heroku-cleanup"
   assertCaptured "echo heroku-cleanup hook message"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -91,6 +91,7 @@ testCustomNodeBinaryURL() {
   compile "node-14" $cache $env_dir
   assertCaptured "from https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz"
   assertNotCaptured "Validating checksum"
+  # no EOL warning here because we don't warn on custom NODE_BINARY_URLs
   assertCapturedSuccess
 }
 
@@ -113,16 +114,16 @@ testDisableCache() {
   compile "node-modules-cache-1" $cache $env_dir
   assertCaptured "lodash@1.0.0"
   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c lodash | tr -d ' ')"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.0.0"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   echo "false" > $env_dir/NODE_MODULES_CACHE
   compile "node-modules-cache-2" $cache $env_dir
   assertCaptured "lodash@1.3.1"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -132,7 +133,7 @@ testNodeModulesCached() {
   compile "caching" $cache
   assertCaptured "- node_modules"
   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c express | tr -d ' ')"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -155,17 +156,17 @@ testBuildWithCache() {
   compile "stable-node" $cache
   assertNotCaptured "Restoring cache"
   assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c @heroku | tr -d ' ')"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "stable-node" $cache
   assertCaptured "- node_modules"
   assertFileContains "${STACK}" "${cache}/node/signature"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   rm -rf "$cache/node/cache/node_modules"
   compile "stable-node" $cache
   assertCaptured "- node_modules (not cached - skipping)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -271,7 +272,7 @@ testDotHerokuCollision() {
   compile "dot-heroku-collision-2"
   assertCaptured "Build succeeded!"
   assertNotCaptured ".heroku file is checked into this project"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -290,9 +291,9 @@ testMultipleRuns() {
 
   cp -a test/fixtures/stable-node/. ${compileDir}
   compileDir "$compileDir" "$cacheDir"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   compileDir "$compileDir" "$cacheDir"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -319,14 +320,14 @@ testBuildWithUserCacheDirectoriesCamel() {
   assertCaptured "- non/existent (nothing to cache)"
   assertEquals "1" "$(ls -1 $cache/node/cache/server | grep -c node_modules | tr -d ' ')"
   assertEquals "1" "$(ls -1 $cache/node/cache/client | grep -c node_modules | tr -d ' ')"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "cache-directories-camel" $cache
   assertCaptured "Loading from cacheDirectories"
   assertCaptured "- server/node_modules"
   assertCaptured "- client/node_modules"
   assertCaptured "- non/existent (not cached - skipping)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -405,19 +406,19 @@ testSignatureInvalidation() {
 
   compile "node-0.12.6" $cache
   assertCaptured "Downloading and installing node 0.12.6"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "node-0.12.7" $cache
   assertCaptured "Downloading and installing node 0.12.7"
   assertCaptured "Cached directories were not restored due to a change in version of node"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testModulesCheckedIn() {
   cache=$(mktmpdir)
   compile "modules-checked-in" $cache
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "modules-checked-in" $cache
   assertCaptured "Prebuild detected"
@@ -425,7 +426,7 @@ testModulesCheckedIn() {
   assertCaptured "(preinstall script)"
   assertCaptured "Installing any new modules"
   assertCaptured "(postinstall script)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -468,7 +469,7 @@ testSpecificVersion() {
   assertCaptured "Resolving node version"
   assertCaptured "Downloading and installing node 14.15.3"
   assertCaptured "Using default npm version: 6.14.9"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -476,7 +477,7 @@ testStableVersion() {
   compile "stable-node"
   assertCaptured "Downloading and installing node 0.10."
   assertNotCaptured "We're sorry this build is failing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -484,7 +485,7 @@ testUnstableVersion() {
   compile "unstable-version"
   assertCaptured "Resolving node version 0.11.x"
   assertCaptured "Downloading and installing node 0.11."
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -528,7 +529,7 @@ testRangeWithSpace() {
   compile "range-with-space"
   assertCaptured "Resolving node version = 0.8.x"
   assertCaptured "Downloading and installing node"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -549,13 +550,13 @@ testBuildWithUserCacheDirectories() {
   assertCaptured "Saving cacheDirectories"
   assertEquals "1" "$(ls -1 $cache/node/cache | grep -c bower_components | tr -d ' ')"
   assertEquals "1" "$(ls -1 $cache/node/cache | grep -c node_modules | tr -d ' ')"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "cache-directories" $cache
   assertCaptured "Loading from cacheDirectories"
   assertCaptured "- node_modules"
   assertCaptured "- bower_components"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -569,7 +570,7 @@ testDefaultProcType() {
 testDynamicProcfile() {
   compile "dynamic-procfile"
   assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -580,7 +581,7 @@ testEnvVars() {
   compile "stable-node" "$(mktmpdir)" $env_dir
   assertCaptured "NPM_CONFIG_PRODUCTION=false"
   assertCaptured "USE_NPM_INSTALL=true"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -590,7 +591,7 @@ testNonFileEnvVars() {
   compile "stable-node"
   assertCaptured "NPM_CONFIG_FOO=bar"
   assertCaptured "NPM_CONFIG_PRODUCTION=false"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   unset NPM_CONFIG_FOO
   unset NPM_CONFIG_PRODUCTION
 }
@@ -606,7 +607,7 @@ testModulesCheckedInWithDevDependencies() {
   assertCaptured "Rebuilding any native modules"
   assertCaptured "lodash"
   assertCaptured "removed 1 package"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -616,7 +617,7 @@ testModulesCheckedInWithoutDevDependencies() {
   assertCaptured "added 1 package"
   assertCaptured "lodash"
   assertCaptured "removed 1 package"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -625,7 +626,7 @@ testProfileExport() {
   assertCaptured "Creating runtime environment"
   assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/.heroku/yarn/bin:\$PATH:\$HOME/bin:\$HOME/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -639,7 +640,7 @@ testMultiExport() {
   assertFileContains "/.heroku/node\"" "${bp_dir}/export"
   # shellcheck disable=SC2016
   assertFileContains 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' "${bp_dir}/export"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -679,7 +680,7 @@ testAvoidHttpProxyVersionResolutionIssue() {
   #  from the proxy
   echo "amazonaws.com" > $env_dir/NO_PROXY
   compile "node-14" "$(mktmpdir)" $env_dir
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
