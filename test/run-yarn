@@ -401,7 +401,7 @@ testYarn3() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
-  assertCapturedSuccessWithWarnings
+  assertCapturedSuccess
 }
 
 

@@ -256,7 +256,7 @@ testShrinkwrap() {
 testCIDependencies() {
   compileTest "ci-dependencies"
   assertCaptured "lodash"
-  assertCapturedSuccessWithWarnings
+  assertCapturedSuccess
 }
 
 
