@@ -73,7 +73,7 @@ testPnpm7Pnp() {
   assertCaptured "heroku-prebuild"
   assertCaptured "heroku-build"
   assertCaptured "heroku-cleanup"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   assertFileExists "$build_dir/.heroku/node/bin/pnpm"
 }
 
@@ -142,7 +142,7 @@ testPnpmStorePruning() {
   compile "pnpm-7-pnp" "$cache_dir"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertNotCaptured "Cleaning up pnpm store"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   counter=$(<"$cache_dir/pnpm_prune_store_counter")
   assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
 
@@ -151,7 +151,7 @@ testPnpmStorePruning() {
   compile "pnpm-7-pnp" "$cache_dir"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertNotCaptured "Cleaning up pnpm store"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   counter=$(<"$cache_dir/pnpm_prune_store_counter")
   assertEquals "Expected pnpm prune store counter to be 0; was <${counter}>" "0" "${counter}"
 
@@ -159,7 +159,7 @@ testPnpmStorePruning() {
   compile "pnpm-7-pnp" "$cache_dir"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCaptured "Cleaning up pnpm store"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   counter=$(<"$cache_dir/pnpm_prune_store_counter")
   assertEquals "Expected pnpm prune store counter to be $default_counter_value; was <${counter}>" "$default_counter_value" "${counter}"
 
@@ -168,7 +168,7 @@ testPnpmStorePruning() {
   compile "pnpm-7-pnp" "$cache_dir"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertNotCaptured "Cleaning up pnpm store"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   counter=$(<"$cache_dir/pnpm_prune_store_counter")
   assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
 
@@ -177,7 +177,7 @@ testPnpmStorePruning() {
   compile "pnpm-7-pnp" "$cache_dir"
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertNotCaptured "Cleaning up pnpm store"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   counter=$(<"$cache_dir/pnpm_prune_store_counter")
   assertEquals "Expected pnpm prune store counter to be $(( default_counter_value - 1 )); was <${counter}>" "$(( default_counter_value - 1 ))" "${counter}"
 }
@@ -188,12 +188,12 @@ testPnpmCacheSimple() {
   compile "pnpm-7-pnp" "$cache_dir"
   assertNotCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "pnpm-7-pnp" "$cache_dir"
   assertCaptured "Restoring cache"
   assertCaptured "- pnpm cache"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 

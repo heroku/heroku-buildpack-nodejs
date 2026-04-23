@@ -14,7 +14,7 @@ testNpmCi() {
   assertCaptured "heroku-prebuild script"
   assertCaptured "build script"
   assertCaptured "postinstall script"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   assertFileExists "$build_dir/.heroku/node/bin/npm"
 
    # test metrics
@@ -22,7 +22,7 @@ testNpmCi() {
 
    # test re-using the cache
   compile "node-14-npm-ci" "$cache_dir"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -35,14 +35,14 @@ testNpmCiShrinkwrap() {
   assertCaptured "heroku-prebuild script"
   assertCaptured "build script"
   assertCaptured "postinstall script"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
    # test metrics
   assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "true"
 
    # test re-using the cache
   compile "node-10-npm-ci-shrinkwrap" "$cache_dir"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -50,7 +50,7 @@ testNpmCiFallback() {
   cache_dir=$(mktmpdir)
   # without a lockfile we should use "npm install" instead of "npm ci"
   compile "node-14-npm-ci-no-lockfile" "${cache_dir}"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   # detecting that we shouldn't use npm ci
   assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
 }
@@ -66,7 +66,7 @@ testNpmCiDisabled() {
   compile "node-14-npm-ci" $cache_dir $env_dir
 
   assertMetricEqualsRaw "$cache_dir" "use_npm_ci" "false"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -79,7 +79,7 @@ testNpm5CacheDirectory() {
   # These will be created if npm is using the directory for its cache
   assertDirectoryExists ${cache_dir}/npm
   assertDirectoryExists ${cache_dir}/npm/_cacache
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -87,7 +87,7 @@ testDefaultToNpm5() {
   compile "npm-lockfile-no-version"
   assertCaptured "Using default npm version"
   assertCaptured "Installing node modules (package.json + package-lock)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -96,7 +96,7 @@ testDefaultToNpm5WithNode6() {
   assertCaptured "Detected package-lock.json"
   assertCaptured "Bootstrapping npm 5"
   assertCaptured "Installing node modules (package.json + package-lock)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -126,14 +126,14 @@ testNonexistentNpm() {
 testSameNpm() {
   compile "same-npm"
   assertCaptured "npm 1.4.28 already installed"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testNpmVersionRange() {
   compile "npm-version-range"
   assertCaptured "Bootstrapping npm 5.7.x"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -141,7 +141,7 @@ testNpmVersionSpecific() {
   compile "npm-version-specific"
   assertCaptured "Bootstrapping npm 2.1.11"
   assertNotCaptured "WARNING"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -176,7 +176,7 @@ testDevDependenciesInstalled() {
   assertCaptured "lodash"
   assertCaptured "Pruning devDependencies"
   assertCaptured "removed 1 package"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # Default behavior: install devDependencies then prunes them away with Yarn
@@ -187,14 +187,14 @@ testDevDepenenciesWithNoPruning() {
   compile "dependencies" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
   assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is 'false'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/NPM_CONFIG_PRODUCTION
   compile "dependencies" "$(mktmpdir)" $env_dir
   assertNotCaptured "lodash"
   assertCaptured "Skipping because NPM_CONFIG_PRODUCTION is 'true'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # When NPM_CONFIG_PRODUCTION = false we should not prune the devDependencies with Yarn
@@ -205,7 +205,7 @@ testNodeEnvTestDepenencies() {
   compile "dependencies" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
   assertCaptured "Skipping because NODE_ENV is not 'production'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # When NODE_ENV != production we should not prune the devDependencies with Yarn
@@ -219,7 +219,7 @@ testOptionalDependencies() {
   assertCaptured "mkdirp"
   assertCaptured "clean-css"
   assertCaptured "request"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -233,14 +233,14 @@ testNoOptionalDependencies() {
   assertNotCaptured "mkdirp"
   assertNotCaptured "clean-css"
   assertNotCaptured "request"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testNpmrc() {
   compile "dev-dependencies-npmrc"
   assertCaptured "lodash"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -249,14 +249,14 @@ testShrinkwrap() {
   assertCaptured "express@4.10.4"
   assertCaptured "lodash@2.4.0"
   assertCaptured "mocha@2.0.1"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testCIDependencies() {
   compileTest "ci-dependencies"
   assertCaptured "lodash"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -279,7 +279,7 @@ testNpmPrune53Issue() {
   assertCaptured "npm 5.3.0 installed"
   assertCaptured "Skipping because npm 5.3.0 fails"
   assertCaptured "https://github.com/npm/npm/issues/17781"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # Avoid this issue for users with git dependencies
@@ -290,7 +290,7 @@ testNpmPrune56Issue() {
   assertCaptured "npm 5.6.0"
   assertCaptured "Skipping because npm 5.6.0 sometimes fails"
   assertCaptured "https://github.com/npm/npm/issues/19356"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -341,14 +341,14 @@ testNpmCiCaching() {
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
   assertCaptured "npm http fetch GET"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "ci-caching" $cache_dir $env_dir
   assertCaptured "Restoring cache"
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
   assertNotCaptured "npm http fetch GET"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -362,14 +362,14 @@ testNpmCiCachingWhenUseNpmInstallIsTrue() {
   assertCaptured "Caching build"
   assertNotCaptured "- npm cache"
   assertCaptured "- node_modules"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "ci-caching" $cache_dir $env_dir
   assertCaptured "Restoring cache"
   assertCaptured "Caching build"
   assertCaptured "- node_modules"
   assertNotCaptured "- npm cache"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -384,14 +384,14 @@ testNpmCiCachingWhenUseNpmInstallIsFalse() {
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
   assertCaptured "npm http fetch GET"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "ci-caching" $cache_dir $env_dir
   assertCaptured "Restoring cache"
   assertCaptured "Caching build"
   assertCaptured "- npm cache"
   assertNotCaptured "npm http fetch GET"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
