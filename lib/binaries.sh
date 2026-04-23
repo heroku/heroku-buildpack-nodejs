@@ -29,14 +29,20 @@ install_yarn() {
   else
     echo "Downloading and installing yarn ($version)"
     if ! package_name=$(determine_yarn_package_name "$version"); then
-      echo "Unable to resolve yarn version '$version' via npm info" >&2
+      build_data::set_string "failure" "yarn-resolve-failed"
+      output::error <<-EOF
+				Unable to resolve yarn version '$version' via npm info
+			EOF
       false
     fi
     if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version"; then
-      echo "Unable to install yarn $version. " \
-        "Does yarn $version exist? (https://help.heroku.com/8MEL050H) " \
-        "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
-        "Is yarn $version compatible with this Node.js version?"
+      build_data::set_string "failure" "yarn-install-failed"
+      output::error <<-EOF
+				Unable to install yarn $version.
+				Does yarn $version exist? (https://help.heroku.com/8MEL050H)
+				Is $version valid semver? (https://help.heroku.com/0ZIOF3ST)
+				Is yarn $version compatible with this Node.js version?
+			EOF
       false
     fi
   fi
@@ -79,33 +85,39 @@ install_nodejs() {
     lts_version=$(echo "$resolve_result" | jq -r .lts_version)
 
     if [[ "$uses_wide_range" == "true" ]]; then
-      echo
-      echo "! The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version"
-      echo "  higher than you intended. Limiting the requested range to a major LTS range like \`$lts_version\` is recommended."
-      echo "  https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+      output::warning <<-EOF
+				The requested Node.js version is using a wide range ($requested_version) that can resolve to a Node.js major version
+				higher than you intended. Limiting the requested range to a major LTS range like \`$lts_version\` is recommended.
+				https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version
+			EOF
     fi
 
     if [[ "$lts_upper_bound_enforced" == "true" ]]; then
-      echo
-      echo "! The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`."
-      echo "  To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`"
-      echo "  https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions"
-    fi
-
-    # if either warning message was displayed, ensure we add a newline before continuing with regular output
-    if [[ "$uses_wide_range" == "true" ]] || [[ "$lts_upper_bound_enforced" == "true" ]]; then
-      echo
+      output::warning <<-EOF
+				The resolved Node.js version has been limited to the Active LTS ($version) for the requested range of \`$requested_version\`.
+				To opt-out of this behavior, set the following config var: \`NODEJS_ALLOW_WIDE_RANGE=true\`
+				https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+			EOF
     fi
 
     echo "Downloading and installing node $version..."
 
     if [[ "$version" == "22.5.0" ]]; then
-      warn_about_node_version_22_5_0
+      output::warning <<-EOF
+				Issues with Node.js v22.5.0
+
+				Shortly after the release of Node.js v22.5.0, users began reporting issues around broken
+				or hanging installs for npm and Yarn. To avoid experiencing these problems with your builds
+				on Heroku, we recommend avoiding this release version until a fix has been released by
+				pinning to an earlier version of Node.js (e.g.; 22.4.1).
+				https://github.com/nodejs/node/pull/53934
+			EOF
     fi
   fi
 
   output_file="/tmp/node.tar.gz"
 	if ! curl "$download_url" --no-progress-meter --location --fail --max-time 30 --retry 5 --retry-connrefused --connect-timeout 5 -o "$output_file"; then
+		build_data::set_string "failure" "node-download-failed"
 		output::error <<-EOF
 			Error: Unable to download Node.js.
 
@@ -129,11 +141,19 @@ install_nodejs() {
       "sha256")
         echo "Validating checksum"
         if ! echo "$checksum_value $output_file" | sha256sum --check --status; then
-          echo "Checksum validation failed for Node.js $version - $checksum_type:$checksum_value" && false
+          build_data::set_string "failure" "checksum-validation-failed"
+          output::error <<-EOF
+						Checksum validation failed for Node.js $version - $checksum_type:$checksum_value
+					EOF
+          false
         fi
         ;;
       *)
-        echo "Unsupported checksum for Node.js $version - $checksum_type:$checksum_value" && false
+        build_data::set_string "failure" "unsupported-checksum"
+        output::error <<-EOF
+					Unsupported checksum for Node.js $version - $checksum_type:$checksum_value
+				EOF
+        false
         ;;
     esac
   fi
@@ -165,7 +185,10 @@ install_npm() {
     echo "npm $npm_version already installed with node"
   else
     echo "Bootstrapping npm $version (replacing $npm_version)..."
-    monitor "install_npm_binary" install_npm_binary "${version}"
+    local install_npm_start
+    install_npm_start=$(build_data::current_unix_realtime)
+    install_npm_binary "${version}"
+    build_data::set_duration "install_npm_binary_time" "$install_npm_start"
     # Verify npm works before capturing and ensure its stderr is inspectable later
     suppress_output npm --version
     echo "npm $(npm --version) installed"
@@ -185,22 +208,35 @@ install_npm_binary() {
     major=$(echo "$resolved_version" | cut -d. -f1)
     minor=$(echo "$resolved_version" | cut -d. -f2)
     if [[ -z "$resolved_version" ]] || [[ "$resolved_version" == "null" ]] || [[ -z "$major" ]] || [[ -z "$minor" ]]; then
-      echo "Failed to resolve npm version from range '$version'. Unable to perform Node.js 22.22.2 regression workaround (https://github.com/npm/cli/issues/9151)." && false
+      build_data::set_string "failure" "npm-resolve-failed"
+      output::error <<-EOF
+				Failed to resolve npm version from range '$version'.
+				Unable to perform Node.js 22.22.2 regression workaround (https://github.com/npm/cli/issues/9151).
+			EOF
+      false
       return
     fi
     if [[ "$major" == "11" ]] && [[ "$minor" -ge 11 ]]; then
       echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
-      if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0" >/dev/null; then
-        echo "Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround. Consider pinning npm to an exact version that works with Node.js 22.22.2." && false
+      if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
+        build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
+        output::error <<-EOF
+					Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround.
+					Consider pinning npm to an exact version that works with Node.js 22.22.2.
+				EOF
+        false
         return
       fi
     fi
   fi
 
-  if ! npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version" >/dev/null; then
-    echo "Unable to install npm $version. " \
-      "Does npm $version exist? " \
-      "Is npm $version compatible with this Node.js version?"
+  if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@$version"; then
+    build_data::set_string "failure" "npm-install-failed"
+    output::error <<-EOF
+			Unable to install npm $version.
+			Does npm $version exist?
+			Is npm $version compatible with this Node.js version?
+		EOF
     false
   fi
 }
@@ -209,10 +245,13 @@ install_pnpm() {
   local version="$1"
   echo "Downloading and installing pnpm ($version)"
   if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "pnpm@$version"; then
-    echo "Unable to install pnpm $version. " \
-      "Does pnpm $version exist? (https://help.heroku.com/8MEL050H) " \
-      "Is $version valid semver? (https://help.heroku.com/0ZIOF3ST) " \
-      "Is pnpm $version compatible with this Node.js version?"
+    build_data::set_string "failure" "pnpm-install-failed"
+    output::error <<-EOF
+			Unable to install pnpm $version.
+			Does pnpm $version exist? (https://help.heroku.com/8MEL050H)
+			Is $version valid semver? (https://help.heroku.com/0ZIOF3ST)
+			Is pnpm $version compatible with this Node.js version?
+		EOF
     false
   fi
   # Verify pnpm works before capturing and ensure its stderr is inspectable later

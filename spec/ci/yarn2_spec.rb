@@ -13,21 +13,20 @@ describe "yarn2 examples" do
         remote:        engines\.yarn \(package\.json\):   unspecified \(use default\)
         remote:        packageManager \(package\.json\): yarn@3\.1\.1
         remote:
-        remote:         !     Yarn release script may conflict with "packageManager"
-        remote:
-        remote:               The package\.json file indicates the target version of Yarn to install with:
-        remote:               - "packageManager": "yarn@3\.1\.1"
-        remote:
-        remote:               But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
-        remote:               - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:
-        remote:               This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
-        remote:               at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
-        remote:
-        remote:               To ensure we install the version of Yarn you want, choose only one of the following actions:
-        remote:               - Remove the "packageManager" field from package\.json
-        remote:               - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:               https://devcenter\.heroku\.com/articles/nodejs-support
+        remote:  !     Yarn release script may conflict with "packageManager"
+        remote:  !
+        remote:  !     The package\.json file indicates the target version of Yarn to install with:
+        remote:  !     - "packageManager": "yarn@3\.1\.1"
+        remote:  !
+        remote:  !     But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
+        remote:  !     - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
+        remote:  !
+        remote:  !     This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
+        remote:  !     at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
+        remote:  !
+        remote:  !     To ensure we install the version of Yarn you want, choose only one of the following actions:
+        remote:  !     - Remove the "packageManager" field from package\.json
+        remote:  !     - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
         remote:
         remote:        No Node\.js version specified, resolving current LTS version\.\.\.
         remote:        Downloading and installing node .+\.\.\.
@@ -58,21 +57,20 @@ describe "yarn2 examples" do
         remote:        engines\.yarn \(package\.json\):   unspecified \(use default\)
         remote:        packageManager \(package\.json\): yarn@3\.1\.1
         remote:
-        remote:         !     Yarn release script may conflict with "packageManager"
-        remote:
-        remote:               The package\.json file indicates the target version of Yarn to install with:
-        remote:               - "packageManager": "yarn@3\.1\.1"
-        remote:
-        remote:               But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
-        remote:               - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:
-        remote:               This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
-        remote:               at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
-        remote:
-        remote:               To ensure we install the version of Yarn you want, choose only one of the following actions:
-        remote:               - Remove the "packageManager" field from package\.json
-        remote:               - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:               https://devcenter\.heroku\.com/articles/nodejs-support
+        remote:  !     Yarn release script may conflict with "packageManager"
+        remote:  !
+        remote:  !     The package\.json file indicates the target version of Yarn to install with:
+        remote:  !     - "packageManager": "yarn@3\.1\.1"
+        remote:  !
+        remote:  !     But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
+        remote:  !     - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
+        remote:  !
+        remote:  !     This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
+        remote:  !     at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
+        remote:  !
+        remote:  !     To ensure we install the version of Yarn you want, choose only one of the following actions:
+        remote:  !     - Remove the "packageManager" field from package\.json
+        remote:  !     - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
         remote:
         remote:        No Node\.js version specified, resolving current LTS version\.\.\.
         remote:        Downloading and installing node .+\.\.\.
@@ -105,21 +103,20 @@ describe "yarn2 examples" do
         remote:        engines\.yarn \(package\.json\):   unspecified \(use default\)
         remote:        packageManager \(package\.json\): yarn@3\.1\.1
         remote:
-        remote:         !     Yarn release script may conflict with "packageManager"
-        remote:
-        remote:               The package\.json file indicates the target version of Yarn to install with:
-        remote:               - "packageManager": "yarn@3\.1\.1"
-        remote:
-        remote:               But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
-        remote:               - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:
-        remote:               This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
-        remote:               at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
-        remote:
-        remote:               To ensure we install the version of Yarn you want, choose only one of the following actions:
-        remote:               - Remove the "packageManager" field from package\.json
-        remote:               - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:               https://devcenter\.heroku\.com/articles/nodejs-support
+        remote:  !     Yarn release script may conflict with "packageManager"
+        remote:  !
+        remote:  !     The package\.json file indicates the target version of Yarn to install with:
+        remote:  !     - "packageManager": "yarn@3\.1\.1"
+        remote:  !
+        remote:  !     But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
+        remote:  !     - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
+        remote:  !
+        remote:  !     This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
+        remote:  !     at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
+        remote:  !
+        remote:  !     To ensure we install the version of Yarn you want, choose only one of the following actions:
+        remote:  !     - Remove the "packageManager" field from package\.json
+        remote:  !     - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
         remote:
         remote:        No Node\.js version specified, resolving current LTS version\.\.\.
         remote:        Downloading and installing node .+\.\.\.
@@ -151,21 +148,20 @@ describe "yarn2 examples" do
         remote:        engines\.yarn \(package\.json\):   unspecified \(use default\)
         remote:        packageManager \(package\.json\): yarn@3\.1\.1
         remote:
-        remote:         !     Yarn release script may conflict with "packageManager"
-        remote:
-        remote:               The package\.json file indicates the target version of Yarn to install with:
-        remote:               - "packageManager": "yarn@3\.1\.1"
-        remote:
-        remote:               But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
-        remote:               - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:
-        remote:               This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
-        remote:               at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
-        remote:
-        remote:               To ensure we install the version of Yarn you want, choose only one of the following actions:
-        remote:               - Remove the "packageManager" field from package\.json
-        remote:               - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
-        remote:               https://devcenter\.heroku\.com/articles/nodejs-support
+        remote:  !     Yarn release script may conflict with "packageManager"
+        remote:  !
+        remote:  !     The package\.json file indicates the target version of Yarn to install with:
+        remote:  !     - "packageManager": "yarn@3\.1\.1"
+        remote:  !
+        remote:  !     But the \.yarnrc\.yml configuration indicates a vendored release of Yarn should be used with:
+        remote:  !     - yarnPath: "\.yarn/releases/yarn-3\.1\.1\.cjs"
+        remote:  !
+        remote:  !     This will cause the buildpack to install yarn@3\.1\.1 but, when running Yarn commands, the vendored release
+        remote:  !     at "\.yarn/releases/yarn-3\.1\.1\.cjs" will be executed instead\.
+        remote:  !
+        remote:  !     To ensure we install the version of Yarn you want, choose only one of the following actions:
+        remote:  !     - Remove the "packageManager" field from package\.json
+        remote:  !     - Remove the "yarnPath" configuration from \.yarnrc\.yml and delete the vendored release at "\.yarn/releases/yarn-3\.1\.1\.cjs"
         remote:
         remote:        No Node\.js version specified, resolving current LTS version\.\.\.
         remote:        Downloading and installing node .+\.\.\.

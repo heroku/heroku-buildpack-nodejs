@@ -132,9 +132,9 @@ testYarnInvalid() {
   compile "yarn-invalid"
   assertCaptured "Downloading and installing yarn (0.171"
   assertCaptured "npm error code ETARGET"
-  assertCaptured "Unable to install yarn 0.171"
-  assertCaptured "https://help.heroku.com/8MEL050H"
-  assertCaptured "https://help.heroku.com/0ZIOF3ST"
+  assertCapturedStderr "Unable to install yarn 0.171"
+  assertCapturedStderr "https://help.heroku.com/8MEL050H"
+  assertCapturedStderr "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
 
@@ -143,9 +143,9 @@ testYarnSemverInvalid() {
   compile "yarn-invalid-semver"
   assertCaptured "Downloading and installing yarn (0.17q"
   assertCaptured "npm error code ETARGET"
-  assertCaptured "Unable to install yarn 0.17q"
-  assertCaptured "https://help.heroku.com/8MEL050H"
-  assertCaptured "https://help.heroku.com/0ZIOF3ST"
+  assertCapturedStderr "Unable to install yarn 0.17q"
+  assertCapturedStderr "https://help.heroku.com/8MEL050H"
+  assertCapturedStderr "https://help.heroku.com/0ZIOF3ST"
   assertCapturedError
 }
 
@@ -244,9 +244,7 @@ testYarnBuildMetaData() {
     select(.has_procfile == false)
     select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
-    select(.install_node_binary_memory | type == "number")
     select(.install_node_binary_time | type == "number")
-    select(.install_yarn_binary_memory | type == "number")
     select(.install_yarn_binary_time | type == "number")
     select(.node_version | test("v24.\\d+\\.\\d+"))
     select(.node_version_major == 24)
@@ -432,22 +430,22 @@ testYarn4() {
   compile "yarn-4"
   assertCaptured "engines.yarn (package.json):   unspecified (use default)"
   assertCaptured "packageManager (package.json): yarn@4.1.1"
-  assertCaptured 'Yarn release script may conflict with "packageManager"'
-  assertCaptured "The package.json file indicates the target version of Yarn to install with:"
-  assertCaptured '- "packageManager": "yarn@4.1.1"'
-  assertCaptured "But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:"
-  assertCaptured '- yarnPath: ".yarn/releases/yarn-4.0.0.cjs"'
-  assertCaptured "This will cause the buildpack to install yarn@4.1.1 but, when running Yarn commands, the vendored release"
-  assertCaptured 'at ".yarn/releases/yarn-4.0.0.cjs" will be executed instead.'
-  assertCaptured "To ensure we install the version of Yarn you want, choose only one of the following actions:"
-  assertCaptured '- Remove the "packageManager" field from package.json'
-  assertCaptured '- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at ".yarn/releases/yarn-4.0.0.cjs"'
+  assertCapturedStderr 'Yarn release script may conflict with "packageManager"'
+  assertCapturedStderr "The package.json file indicates the target version of Yarn to install with:"
+  assertCapturedStderr '- "packageManager": "yarn@4.1.1"'
+  assertCapturedStderr "But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:"
+  assertCapturedStderr '- yarnPath: ".yarn/releases/yarn-4.0.0.cjs"'
+  assertCapturedStderr "This will cause the buildpack to install yarn@4.1.1 but, when running Yarn commands, the vendored release"
+  assertCapturedStderr 'at ".yarn/releases/yarn-4.0.0.cjs" will be executed instead.'
+  assertCapturedStderr "To ensure we install the version of Yarn you want, choose only one of the following actions:"
+  assertCapturedStderr '- Remove the "packageManager" field from package.json'
+  assertCapturedStderr '- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at ".yarn/releases/yarn-4.0.0.cjs"'
   assertCaptured "Using yarn 4.0.0"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -486,19 +484,19 @@ testYarn4WithCorepackAndEngine() {
   compile "yarn-4-with-corepack-and-engine"
   assertCaptured "engines.yarn (package.json):   4.1.1"
   assertCaptured "packageManager (package.json): yarn@4.1.1"
-  assertCaptured "Multiple Yarn versions declared"
-  assertCaptured "The package.json file indicates the target version of Yarn to install in two fields:"
-  assertCaptured '- "packageManager": "yarn@4.1.1"'
-  assertCaptured '- "engines.yarn": "4.1.1"'
-  assertCaptured 'If both fields are present, then "packageManager" will take precedence and "yarn@4.1.1" will be installed.'
-  assertCaptured "To ensure we install the version of Yarn you want, remove one of these fields."
+  assertCapturedStderr "Multiple Yarn versions declared"
+  assertCapturedStderr "The package.json file indicates the target version of Yarn to install in two fields:"
+  assertCapturedStderr '- "packageManager": "yarn@4.1.1"'
+  assertCapturedStderr '- "engines.yarn": "4.1.1"'
+  assertCapturedStderr 'If both fields are present, then "packageManager" will take precedence and "yarn@4.1.1" will be installed.'
+  assertCapturedStderr "To ensure we install the version of Yarn you want, remove one of these fields."
   assertCaptured "Downloading and installing yarn (4.1.1)"
   assertCaptured "Using yarn 4.1.1"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 ###
 
@@ -531,7 +529,7 @@ testDetermineYarnPackageNameFailure() {
   # using a bad registry to force `npm info` calls to fail
   echo "https://registry.invalid" > "$env_dir/NPM_CONFIG_REGISTRY"
   compile "yarn-registry-failure" "$(mktmpdir)" "$env_dir"
-  assertCaptured "Unable to resolve yarn version '1.22.x' via npm info"
+  assertCapturedStderr "Unable to resolve yarn version '1.22.x' via npm info"
   assertCapturedError
 }
 

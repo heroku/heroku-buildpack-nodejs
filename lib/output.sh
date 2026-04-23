@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 ANSI_RED=$'\e[1;31m'
+ANSI_YELLOW=$'\e[1;33m'
 ANSI_RESET=$'\e[0m'
 
 # TODO: deprecated these in favor of https://github.com/heroku/heroku-buildpack-python/blob/main/lib/output.sh
@@ -57,5 +58,20 @@ error() {
 output::error() {
   echo >&2
   sed --unbuffered "s/^/${ANSI_RED} !     /" | sed --unbuffered "s/$/${ANSI_RESET}/" >&2
+  echo >&2
+}
+
+output::step() {
+  echo ""
+  echo "-----> $*"
+}
+
+output::indent() {
+  sed --unbuffered 's/^/       /'
+}
+
+output::warning() {
+  echo >&2
+  sed --unbuffered "s/^/${ANSI_YELLOW} !     /" | sed --unbuffered "s/$/${ANSI_RESET}/" >&2
   echo >&2
 }

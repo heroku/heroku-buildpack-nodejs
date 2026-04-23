@@ -99,9 +99,9 @@ testNodeDownloadFailure() {
   env_dir=$(mktmpdir)
   echo "https://registry.invalid/node.tar.gz" > "$env_dir/NODE_BINARY_URL"
   compile "no-version" "$(mktmpdir)" "$env_dir"
-  assertCaptured "Unable to download Node.js"
-  assertCaptured "https://registry.invalid/node.tar.gz"
-  assertCaptured "https://status.nodejs.org/"
+  assertCapturedStderr "Unable to download Node.js"
+  assertCapturedStderr "https://registry.invalid/node.tar.gz"
+  assertCapturedStderr "https://status.nodejs.org/"
   assertCapturedError
 }
 
@@ -944,8 +944,8 @@ testBinReportScriptsWithQuotes() {
 
 testWarningNode_22_5_0() {
   compile "node-22.5.0-warning"
-  assertCaptured "Issues with Node.js v22.5.0"
-  assertCapturedSuccess
+  assertCapturedStderr "Issues with Node.js v22.5.0"
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -1023,33 +1023,33 @@ testOptOutOfWideVersionDowngrade() {
   env_dir=$(mktmpdir)
   echo "true" > "$env_dir/NODEJS_ALLOW_WIDE_RANGE"
   compile "version-bounds-wide" "$(mktmpdir)" "$env_dir"
-  assertCaptured "! The requested Node.js version is using a wide range"
-  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccess
+  assertCapturedStderr "The requested Node.js version is using a wide range"
+  assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccessWithWarnings
 }
 
 
 testVersionBoundsWide() {
   compile "version-bounds-wide"
-  assertCaptured "! The requested Node.js version is using a wide range"
-  assertCaptured "! The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccess
+  assertCapturedStderr "The requested Node.js version is using a wide range"
+  assertCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccessWithWarnings
 }
 
 
 testVersionBoundsNarrow() {
   compile "version-bounds-narrow"
-  assertNotCaptured "! The requested Node.js version is using a wide range"
-  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
+  assertNotCapturedStderr "The requested Node.js version is using a wide range"
+  assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
   assertCapturedSuccess
 }
 
 
 testVersionBoundsExplicitlyGreaterThanLTS() {
   compile "version-bounds-explicitly-greater-than-lts"
-  assertCaptured "! The requested Node.js version is using a wide range"
-  assertNotCaptured "! The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccess
+  assertCapturedStderr "The requested Node.js version is using a wide range"
+  assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+  assertCapturedSuccessWithWarnings
 }
 
 source "$(pwd)"/test/shunit2

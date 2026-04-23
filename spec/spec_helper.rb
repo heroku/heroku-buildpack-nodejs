@@ -53,8 +53,9 @@ def clean_output(output)
     # Remove trailing whitespace characters added by Git:
     # https://github.com/heroku/hatchet/issues/162
     .gsub(/ {8}(?=\R)/, '')
-    # Normalize blank remote lines (e.g. "remote:       \n") to "remote:\n".
-    .gsub(/^(remote:)[ \t]+$/, '\1')
     # Remove ANSI colour codes used in buildpack output (e.g. error messages).
     .gsub(/\e\[[0-9;]+m/, '')
+    # Strip trailing whitespace from lines that are just remote prefixes
+    # (e.g. "remote:       \n", "remote:  !     \n").
+    .gsub(/^(remote:(?:  !)?)[ \t]+$/, '\1')
 end

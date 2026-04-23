@@ -118,7 +118,7 @@ testOldNpm() {
 
 testNonexistentNpm() {
   compile "nonexistent-npm"
-  assertCaptured "Unable to install npm 1.1.65"
+  assertCapturedStderr "Unable to install npm 1.1.65"
   assertCapturedError 1 ""
 }
 
@@ -147,8 +147,8 @@ testNpmVersionSpecific() {
 
 testNpmVersionIncompatible() {
   compile "npm-version-incompat"
-  assertCaptured "Unable to install npm 10.x"
-  assertCaptured "Is npm 10.x compatible with this Node.js version?"
+  assertCapturedStderr "Unable to install npm 10.x"
+  assertCapturedStderr "Is npm 10.x compatible with this Node.js version?"
   assertCapturedError
 }
 
@@ -313,7 +313,6 @@ testNpmBuildMetaData() {
     select(.heroku_prebuild_script_time | type == "number")
     select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
-    select(.install_node_binary_memory | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.node_version == "v10.24.1")
     select(.node_version_major == 10)
