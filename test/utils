@@ -100,6 +100,7 @@ assertCapturedSuccess()
 assertCapturedSuccessWithWarnings()
 {
   assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+  assertNotEquals "Expected STD_ERR to be non-empty (warnings should have been emitted)" "" "$(cat ${STD_ERR})"
 }
 
 assertCapturedStderr()
