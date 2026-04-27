@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v343] - 2026-04-27
+
 - Warnings during binary installation now use styled stderr output instead of plain stdout. ([#1623](https://github.com/heroku/heroku-buildpack-nodejs/pull/1623))
 - Updated resolve-version binary to use shared `nodejs-data` crate. ([#1617](https://github.com/heroku/heroku-buildpack-nodejs/pull/1617))
 - Improve resolve-version logic for detecting highest LTS to use when a wide version range is requested. ([#1618](https://github.com/heroku/heroku-buildpack-nodejs/pull/1618))
@@ -1297,7 +1300,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v342...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v343...main
+[v343]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v342...v343
 [v342]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v341...v342
 [v341]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v340...v341
 [v340]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v339...v340
