@@ -343,7 +343,8 @@ install_bins() {
     install_start=$(build_data::current_unix_realtime)
     install_pnpm "$pnpm_version"
     build_data::set_duration "install_pnpm_binary_time" "$install_start"
-    pnpm config set store-dir "$PNPM_CONFIG_CACHE" 2>&1
+    # npm_config_store_dir works across all pnpm versions (7.x – 11.x)
+    export npm_config_store_dir="$PNPM_CONFIG_CACHE"
     if [ "$using_default_pnpm" == true ]; then
       output::warning <<-EOF
 				Default pnpm version used

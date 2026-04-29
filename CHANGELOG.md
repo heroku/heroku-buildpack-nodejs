@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Fix pnpm config environment variables to support pnpm v11. ([#1625](https://github.com/heroku/heroku-buildpack-nodejs/pull/1625))
 
 ## [v343] - 2026-04-27
 
