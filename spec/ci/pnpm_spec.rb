@@ -19,6 +19,7 @@ describe "pnpm support" do
         remote:        Using pnpm .+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(app.output).to include("devDependencies: skipped because NODE_ENV is set to production")
       expect(successful_body(app).strip).to eq("Hello from pnpm workspace")
@@ -31,6 +32,7 @@ describe "pnpm support" do
       expect(app.output).to include("Restoring cache")
       expect(app.output).to include("- pnpm cache")
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(app.output).to include("devDependencies: skipped because NODE_ENV is set to production")
       expect(successful_body(app).strip).to eq("Hello from pnpm workspace")
@@ -55,6 +57,7 @@ describe "pnpm support" do
         remote:        Using pnpm .+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(successful_body(app).strip).to eq("Hello from pnpm 10")
 
@@ -64,6 +67,7 @@ describe "pnpm support" do
 
       expect(app.output).to include("Restoring cache")
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(successful_body(app).strip).to eq("Hello from pnpm 10")
     end
@@ -87,6 +91,7 @@ describe "pnpm support" do
         remote:        Using pnpm .+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(successful_body(app).strip).to eq("Hello from pnpm 10 workspace")
 
@@ -96,6 +101,7 @@ describe "pnpm support" do
 
       expect(app.output).to include("Restoring cache")
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(successful_body(app).strip).to eq("Hello from pnpm 10 workspace")
     end
   end
@@ -118,6 +124,7 @@ describe "pnpm support" do
         remote:        Using pnpm .+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(successful_body(app).strip).to eq("Hello from pnpm 11")
 
@@ -127,6 +134,7 @@ describe "pnpm support" do
 
       expect(app.output).to include("Restoring cache")
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(successful_body(app).strip).to eq("Hello from pnpm 11")
     end
@@ -150,6 +158,7 @@ describe "pnpm support" do
         remote:        Using pnpm .+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(app.output).to include("Pruning devDependencies")
       expect(successful_body(app).strip).to eq("Hello from pnpm 11 workspace")
 
@@ -159,6 +168,7 @@ describe "pnpm support" do
 
       expect(app.output).to include("Restoring cache")
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
       expect(successful_body(app).strip).to eq("Hello from pnpm 11 workspace")
     end
   end
