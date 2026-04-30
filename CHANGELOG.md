@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v344] - 2026-04-30
+
 - Use environment variables instead of `pnpm config set store-dir` for configuring the pnpm store cache, adding support for pnpm v11. ([#1625](https://github.com/heroku/heroku-buildpack-nodejs/pull/1625))
 
 ## [v343] - 2026-04-27
@@ -1301,7 +1304,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v343...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v344...main
+[v344]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v343...v344
 [v343]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v342...v343
 [v342]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v341...v342
 [v341]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v340...v341
