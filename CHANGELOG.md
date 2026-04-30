@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Use environment variables instead of `pnpm config set store-dir` for configuring the pnpm store cache, adding support for pnpm v11. ([#1625](https://github.com/heroku/heroku-buildpack-nodejs/pull/1625))
 
 ## [v343] - 2026-04-27
 

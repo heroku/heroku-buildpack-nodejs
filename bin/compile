@@ -343,7 +343,6 @@ install_bins() {
     install_start=$(build_data::current_unix_realtime)
     install_pnpm "$pnpm_version"
     build_data::set_duration "install_pnpm_binary_time" "$install_start"
-    pnpm config set store-dir "$PNPM_CONFIG_CACHE" 2>&1
     if [ "$using_default_pnpm" == true ]; then
       output::warning <<-EOF
 				Default pnpm version used
@@ -381,6 +380,26 @@ install_bins() {
 
 output::step "Installing binaries"
 install_bins | output::indent | tee -a "$LOG_FILE"
+
+if $PNPM; then
+  # pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
+  # older versions use npm_config_*
+  pnpm_major=$(pnpm --version | cut -d "." -f 1)
+  if (( pnpm_major >= 11 )); then
+    export pnpm_config_store_dir="$PNPM_CONFIG_CACHE"
+  else
+    export npm_config_store_dir="$PNPM_CONFIG_CACHE"
+  fi
+
+  actual_store_path=$(pnpm config get store-dir 2>/dev/null)
+  if [[ -z "$actual_store_path" || "$actual_store_path" != "$PNPM_CONFIG_CACHE" ]]; then
+    output::warning <<-EOF
+			The pnpm store is at '${actual_store_path:-undefined}' instead of the expected
+			location '$PNPM_CONFIG_CACHE'. The pnpm store cache may not work
+			correctly between builds.
+		EOF
+  fi
+fi
 
 if [[ -z "$USE_NPM_INSTALL" ]]; then
   if [[ "$(should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then
