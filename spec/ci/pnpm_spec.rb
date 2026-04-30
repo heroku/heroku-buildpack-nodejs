@@ -16,7 +16,7 @@ describe "pnpm support" do
         remote:        Validating checksum
         remote:        Using default npm version: .+
         remote:        Downloading and installing pnpm \(9\.5\.0\)
-        remote:        Using pnpm .+
+        remote:        Using pnpm 9\..+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
       expect(app.output).not_to include("pnpm store cache may not work")
@@ -54,7 +54,7 @@ describe "pnpm support" do
         remote:        Validating checksum
         remote:        Using default npm version: .+
         remote:        Downloading and installing pnpm \(10\.0\.0\)
-        remote:        Using pnpm .+
+        remote:        Using pnpm 10\..+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
       expect(app.output).not_to include("pnpm store cache may not work")
@@ -88,7 +88,7 @@ describe "pnpm support" do
         remote:        Validating checksum
         remote:        Using default npm version: .+
         remote:        Downloading and installing pnpm \(10\.0\.0\)
-        remote:        Using pnpm .+
+        remote:        Using pnpm 10\..+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
       expect(app.output).not_to include("pnpm store cache may not work")
@@ -121,7 +121,7 @@ describe "pnpm support" do
         remote:        Validating checksum
         remote:        Using default npm version: .+
         remote:        Downloading and installing pnpm \(11\.0\.0\)
-        remote:        Using pnpm .+
+        remote:        Using pnpm 11\..+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
       expect(app.output).not_to include("pnpm store cache may not work")
@@ -155,7 +155,7 @@ describe "pnpm support" do
         remote:        Validating checksum
         remote:        Using default npm version: .+
         remote:        Downloading and installing pnpm \(11\.0\.0\)
-        remote:        Using pnpm .+
+        remote:        Using pnpm 11\..+
       REGEX
       expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
       expect(app.output).not_to include("pnpm store cache may not work")

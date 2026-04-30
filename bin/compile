@@ -382,7 +382,8 @@ output::step "Installing binaries"
 install_bins | output::indent | tee -a "$LOG_FILE"
 
 if $PNPM; then
-  # pnpm 11+ reads config from pnpm_config_* env vars, older versions use npm_config_*
+  # pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
+  # older versions use npm_config_*
   pnpm_major=$(pnpm --version | cut -d "." -f 1)
   if (( pnpm_major >= 11 )); then
     export pnpm_config_store_dir="$PNPM_CONFIG_CACHE"
