@@ -385,10 +385,18 @@ if $PNPM; then
   # pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
   # older versions use npm_config_*
   pnpm_major=$(pnpm --version | cut -d "." -f 1)
+  pnpm_store_dir_config_name="npm_config_store_dir"
   if (( pnpm_major >= 11 )); then
-    export pnpm_config_store_dir="$PNPM_CONFIG_CACHE"
-  else
-    export npm_config_store_dir="$PNPM_CONFIG_CACHE"
+    pnpm_store_dir_config_name="pnpm_config_store_dir"
+  fi
+
+  export "${pnpm_store_dir_config_name}=${PNPM_CONFIG_CACHE}"
+
+  # only write the export script if the buildpack directory is writable.
+  # this may occur in situations outside of Heroku, such as running the
+  # buildpacks locally.
+  if [ -w "$BP_DIR" ]; then
+    echo "export ${pnpm_store_dir_config_name}=\"$PNPM_CONFIG_CACHE\"" >> "$BP_DIR/export"
   fi
 
   actual_store_path=$(pnpm config get store-dir 2>/dev/null)

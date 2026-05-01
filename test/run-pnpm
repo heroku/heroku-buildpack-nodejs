@@ -211,6 +211,40 @@ testPnpmCacheComplex() {
 }
 
 
+testPnpm10StoreDirExport() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  pnpm_config_cache="${cache_dir}/pnpm-store"
+  echo "$pnpm_config_cache" > "$env_dir/PNPM_CONFIG_CACHE"
+
+  compile "pnpm-10" "$cache_dir" "$env_dir"
+
+  assertFileContains "export npm_config_store_dir=\"${pnpm_config_cache}\"" "${bp_dir}/export"
+  assertFileNotContains "export pnpm_config_store_dir=" "${bp_dir}/export"
+  actual_store_dir=$(source "${bp_dir}/export" && cd "${compile_dir}" && pnpm config get store-dir)
+  assertEquals "$pnpm_config_cache" "$actual_store_dir"
+  assertNotCaptured "pnpm store cache may not work"
+  assertCapturedSuccess
+}
+
+
+testPnpm11StoreDirExport() {
+  cache_dir=$(mktmpdir)
+  env_dir=$(mktmpdir)
+  pnpm_config_cache="${cache_dir}/pnpm-store"
+  echo "$pnpm_config_cache" > "$env_dir/PNPM_CONFIG_CACHE"
+
+  compile "pnpm-11" "$cache_dir" "$env_dir"
+
+  assertFileContains "export pnpm_config_store_dir=\"${pnpm_config_cache}\"" "${bp_dir}/export"
+  assertFileNotContains "export npm_config_store_dir=" "${bp_dir}/export"
+  actual_store_dir=$(source "${bp_dir}/export" && cd "${compile_dir}" && pnpm config get store-dir)
+  assertEquals "$pnpm_config_cache" "$actual_store_dir"
+  assertNotCaptured "pnpm store cache may not work"
+  assertCapturedSuccess
+}
+
+
 testPnpmWithNoPackageManagerEntry() {
   compile "pnpm-unknown-version"
   assertCaptured "Downloading and installing pnpm (latest)"
