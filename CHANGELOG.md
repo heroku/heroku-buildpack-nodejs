@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Persist the pnpm store-dir environment variable for subsequent buildpacks, fixing a multi-buildpack regression from [#1625](https://github.com/heroku/heroku-buildpack-nodejs/pull/1625).
 
 ## [v344] - 2026-04-30
 
