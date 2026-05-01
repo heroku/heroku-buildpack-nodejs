@@ -5,16 +5,16 @@
   "main": "./src/index.ts",
   "dependencies": {
     "@yarnpkg/builder": "^4.2.3",
-    "@yarnpkg/core": "^4.6.0",
+    "@yarnpkg/core": "^4.7.0",
     "clipanion": "^3.2.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
+    "@biomejs/biome": "^2.4.14",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.6.0",
     "fs-extra": "^11.3.4",
-    "typescript": "^6.0.2",
-    "vitest": "^4.1.4"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   },
   "scripts": {
     "build": "npm run lint && npm run format && builder build plugin --no-minify",
