@@ -329,6 +329,20 @@ testPnpmWorkspacePruningWithLifecycleScriptInRoot() {
 }
 
 
+testPnpmCiConfigExportPnpm10() {
+  compile "pnpm-10"
+  assertFileContains 'export npm_config_ci="${npm_config_ci:-true}"' "${bp_dir}/export"
+  assertCapturedSuccess
+}
+
+
+testPnpmCiConfigExportPnpm11() {
+  compile "pnpm-11"
+  assertFileContains 'export pnpm_config_ci="${pnpm_config_ci:-true}"' "${bp_dir}/export"
+  assertCapturedSuccess
+}
+
+
 testExecWithPnpmAndCorepack() {
   compileTest "test-pnpm-with-corepack"
   assertCaptured "pnpm test run"
