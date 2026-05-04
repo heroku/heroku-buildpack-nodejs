@@ -25,6 +25,9 @@ create_default_env() {
   export NODE_MODULES_CACHE=${NODE_MODULES_CACHE:-true}
   export NODE_ENV=${NODE_ENV:-production}
   export NODE_VERBOSE=${NODE_VERBOSE:-false}
+  
+  # This is set to prevent pnpm from thinking it can run in interactive mode which can cause commands like `pnpm install` to fail waiting for user confirmation
+  export CI=${CI:-true}
 
   if $YARN; then
     export USE_YARN_CACHE=${USE_YARN_CACHE:-true}
@@ -99,6 +102,12 @@ write_export() {
   # buildpacks locally.
   if [ -w "$bp_dir" ]; then
     echo "export PATH=\"$build_dir/.heroku/node/bin:$build_dir/.heroku/yarn/bin:\$PATH:$build_dir/node_modules/.bin\"" > "$bp_dir/export"
+
+    # This is set to prevent pnpm from thinking it can run in interactive mode which can cause commands
+    # like `pnpm install` to fail waiting for user confirmation. For later buildpacks, like Ruby apps
+    # that may call Node.js tools for asset compilation, they will also need this.
+    echo "export CI=\"true\"" >> "$bp_dir/export"
+
     echo "export NODE_HOME=\"$build_dir/.heroku/node\"" >> "$bp_dir/export"
     # shellcheck disable=SC2016
     echo 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' >> "$bp_dir/export"
