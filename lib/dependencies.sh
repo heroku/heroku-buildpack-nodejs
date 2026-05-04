@@ -309,7 +309,7 @@ pnpm_install() {
   echo "Running 'pnpm install' with pnpm-lock.yaml"
   cd "$build_dir" || return
 
-  pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
+  pnpm_install_args=("install" "--prod=false" "--frozen-lockfile" "--force")
 
   if [ -n "$PNPM_INSTALL_REPORTER" ]; then
     case "$PNPM_INSTALL_REPORTER" in

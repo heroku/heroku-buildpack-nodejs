@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Export `CI=true` to prevent pnpm interactive mode failures in multi-buildpack setups. ([#1633](https://github.com/heroku/heroku-buildpack-nodejs/pull/1633))
+- Fix pnpm interactive mode failures in multi-buildpack setups by using `--force` during install and exporting pnpm CI config to subsequent buildpacks. ([#1634](https://github.com/heroku/heroku-buildpack-nodejs/pull/1634))
 
 ## [v344] - 2026-04-30
 

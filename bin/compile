@@ -387,8 +387,18 @@ if $PNPM; then
   pnpm_major=$(pnpm --version | cut -d "." -f 1)
   if (( pnpm_major >= 11 )); then
     export pnpm_config_store_dir="$PNPM_CONFIG_CACHE"
+    if [ -w "$BP_DIR" ]; then
+      # Prevent pnpm from prompting for confirmation when purging node_modules in later buildpacks
+      # (e.g. Ruby apps using cssbundling-rails that invoke pnpm during asset precompilation).
+      echo 'export pnpm_config_ci="${pnpm_config_ci:-true}"' >> "$BP_DIR/export"
+    fi
   else
     export npm_config_store_dir="$PNPM_CONFIG_CACHE"
+    if [ -w "$BP_DIR" ]; then
+      # Prevent pnpm from prompting for confirmation when purging node_modules in later buildpacks
+      # (e.g. Ruby apps using cssbundling-rails that invoke pnpm during asset precompilation).
+      echo 'export npm_config_ci="${npm_config_ci:-true}"' >> "$BP_DIR/export"
+    fi
   fi
 
   actual_store_path=$(pnpm config get store-dir 2>/dev/null)
