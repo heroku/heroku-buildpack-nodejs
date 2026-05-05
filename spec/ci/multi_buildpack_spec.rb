@@ -6,7 +6,7 @@ describe "Multi-buildpack pnpm" do
       :default,
       "heroku/ruby"
     ]
-    Hatchet::Runner.new("multi-buildpack-pnpm-rails", buildpacks: buildpacks, stack: "heroku-24").deploy do |app|
+    Hatchet::Runner.new("spec/fixtures/repos/multi-buildpack-pnpm-rails", buildpacks: buildpacks, stack: "heroku-24").deploy do |app|
       output = clean_output(app.output)
       expect(output).to include("Build succeeded!")
       expect(output).not_to include("ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY")
