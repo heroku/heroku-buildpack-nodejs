@@ -1,0 +1,23 @@
+{
+  "name": "pnpm-multi-buildpack",
+  "private": "true",
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.5.0",
+    "bootstrap": "^5.3.8",
+    "postcss": "^8.5.13",
+    "postcss-cli": "^11.0.1",
+    "sass": "^1.99.0"
+  },
+  "scripts": {
+    "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules",
+    "build:css:prefix": "postcss ./app/assets/builds/application.css --use=autoprefixer --output=./app/assets/builds/application.css",
+    "build:css": "pnpm run build:css:compile && pnpm run build:css:prefix"
+  },
+  "browserslist": [
+    "defaults"
+  ]
+}
