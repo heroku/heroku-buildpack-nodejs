@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v345] - 2026-05-05
+
 - Persist the pnpm store-dir environment variable for subsequent buildpacks, fixing a multi-buildpack regression from [#1625](https://github.com/heroku/heroku-buildpack-nodejs/pull/1625).
 
 ## [v344] - 2026-04-30
@@ -1305,7 +1308,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v344...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v345...main
+[v345]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v344...v345
 [v344]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v343...v344
 [v343]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v342...v343
 [v342]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v341...v342
