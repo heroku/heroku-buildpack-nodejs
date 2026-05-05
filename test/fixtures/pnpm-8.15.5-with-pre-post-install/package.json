@@ -7,7 +7,7 @@
     "url" : "http://github.com/example/example.git"
   },
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node foo.js",
