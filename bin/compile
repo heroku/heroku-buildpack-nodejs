@@ -140,6 +140,7 @@ download_sfdocs_build_config() {
   local file_sync_file_url="https://raw.githubusercontent.com/salesforcedocs/sfdocs-repo-build-config/${branch}/file-sync.js"
   local file_npmrc_file_url="https://raw.githubusercontent.com/salesforcedocs/sfdocs-repo-build-config/${branch}/template/npmrcfile"
   local file_apply_patches_url="https://raw.githubusercontent.com/salesforcedocs/sfdocs-repo-build-config/${branch}/apply-patches.js"
+  local file_apply_patches_url="https://raw.githubusercontent.com/salesforcedocs/sfdocs-repo-build-config/${branch}/resolve-path.js"
 
   if [[ -z "${SFDOCS_RELEASE_TAG}" ]]; then
     return
@@ -162,6 +163,7 @@ download_sfdocs_build_config() {
   download_config_file "${file_sync_file_url}" "sfdocs-repo-build-config/file-sync.js"
   download_config_file "${file_npmrc_file_url}" ".npmrc"
   download_config_file "${file_apply_patches_url}" "sfdocs-repo-build-config/apply-patches.js"
+  download_config_file "${file_apply_patches_url}" "sfdocs-repo-build-config/resolve-path.js"
 }
 
 download_sfdocs_build_config
