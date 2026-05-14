@@ -34,6 +34,7 @@ jobs:
       image: heroku/heroku:${{ matrix.stack_number }}-build
       options: --user root
     strategy:
+      fail-fast: false
       matrix:
         stack_number: ["22", "24", "26"]
         test_suite: ["npm", "yarn", "pnpm", "general"]
