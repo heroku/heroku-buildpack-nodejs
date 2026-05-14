@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 22.22.3 (linux-amd64)
 
 ## [v347] - 2026-05-08
 
