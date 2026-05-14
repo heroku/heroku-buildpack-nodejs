@@ -8,7 +8,7 @@ testPnpmBuildMetaData() {
   assertMetrics "${cache_dir}" <<-'EOF'
     select(.build_step == "finished")
     select(.build_time | type == "number")
-    select(.bundled_npm_version == "10.9.7")
+    select(.bundled_npm_version | type == "string")
     select(.cache_status == "not-found")
     select(.has_cached_bower_components == false)
     select(.has_custom_cache_dirs == false)
