@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  # Auto-trigger when the "Prepare release" PR (created by the
+  # _classic-buildpack-prepare-release.yml workflow) is merged.
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      qa:
+        description: "QA mode (staging registry, -qa tag suffix, draft releases)"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  release:
+    name: Release
+    # On `pull_request`, only run for the merged auto-generated
+    # "Prepare release" PR (branch name set by
+    # _classic-buildpack-prepare-release.yml). Manual dispatches always run.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       github.event.pull_request.head.ref == 'prepare-release' &&
+       github.event.pull_request.user.login == 'heroku-linguist[bot]')
+    uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-publish.yml@latest
+    with:
+      buildpack_id: "heroku/nodejs"
+      # `inputs.qa` is unset on `pull_request`, so coerce to false — auto-triggered
+      # publishes always go to production. Manual dispatches pass the input through.
+      qa: ${{ inputs.qa || false }}
