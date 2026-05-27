@@ -31,3 +31,23 @@ RSpec.configure do |config|
     File.write(File.join(COVERAGE_TRACES_DIR, "hatchet-#{safe}.log"), out)
   end
 end
+
+require "hatchet"
+
+module Hatchet
+  module CoverageConfigInjection
+    def initialize(*args, **kwargs)
+      kwargs[:config] = (kwargs[:config] || {}).merge(
+        "BUILDPACK_COVERAGE" => "1"
+      )
+      super(*args, **kwargs)
+    end
+  end
+end
+
+if defined?(Hatchet::Runner)
+  Hatchet::Runner.prepend(Hatchet::CoverageConfigInjection)
+end
+if defined?(Hatchet::App)
+  Hatchet::App.prepend(Hatchet::CoverageConfigInjection)
+end
