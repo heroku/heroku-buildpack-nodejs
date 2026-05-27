@@ -3,6 +3,7 @@ GEM
   specs:
     base64 (0.3.0)
     diff-lcs (1.6.2)
+    docile (1.4.1)
     erubis (2.7.0)
     excon (1.2.8)
       logger
@@ -41,6 +42,12 @@ GEM
     rspec-retry (0.6.2)
       rspec-core (> 3.3)
     rspec-support (3.13.4)
+    simplecov (0.22.0)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.13.2)
+    simplecov_json_formatter (0.1.4)
     thor (1.4.0)
     threaded (0.0.4)
     webrick (1.9.1)
@@ -54,6 +61,7 @@ DEPENDENCIES
   rake
   rspec-expectations
   rspec-retry
+  simplecov
 
 BUNDLED WITH
    2.2.28
