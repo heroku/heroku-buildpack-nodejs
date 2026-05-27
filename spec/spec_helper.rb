@@ -8,6 +8,8 @@ require 'rspec/retry'
 require 'date'
 require 'json'
 
+require_relative 'support/coverage_collector'
+
 ENV['RACK_ENV'] = 'test'
 
 RSpec.configure do |config|
