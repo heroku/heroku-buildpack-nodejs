@@ -1,0 +1,103 @@
+#!/usr/bin/env ruby
+# Parse trace files in coverage/traces/ produced by lib/coverage.sh,
+# convert them to a SimpleCov resultset, and write coverage/index.html.
+
+require "json"
+require "fileutils"
+require "set"
+require "simplecov"
+
+REPO_ROOT = ENV["BUILDPACK_REPO_ROOT"] || Dir.pwd
+TRACES_DIR = File.join(Dir.pwd, "coverage", "traces")
+COVERAGE_DIR = File.join(Dir.pwd, "coverage")
+
+# Bash xtrace prefixes statements with one or more '+'. Sourced or subshell
+# contexts produce '++COV:' / '+++COV:' / etc., so accept any positive count.
+COV_LINE = /\A\++COV:([^:]+):(\d+):/.freeze
+
+WATCHED = [
+  /\Abin\/[^\/]+\z/,        # bin/compile, bin/detect, bin/release, etc.
+  /\Alib\/[^\/]+\.sh\z/,    # lib/*.sh (one level deep — excludes lib/vendor/)
+  /\Aprofile\/[^\/]+\z/,    # profile/*
+].freeze
+
+def parse_trace(path)
+  hits = Hash.new { |h, k| h[k] = Hash.new(0) }
+  File.foreach(path) do |line|
+    next unless m = COV_LINE.match(line)
+    rel = m[1]
+    line_no = m[2].to_i
+    next unless WATCHED.any? { |rx| rx.match?(rel) }
+    hits[rel][line_no] += 1
+  end
+  hits
+end
+
+def merge!(into, from)
+  from.each do |rel, lines|
+    target = into[rel] ||= Hash.new(0)
+    lines.each { |ln, cnt| target[ln] += cnt }
+  end
+end
+
+def file_line_count(abs_path)
+  File.foreach(abs_path).count
+rescue Errno::ENOENT
+  0
+end
+
+# Convert {rel => {line_no => hit_count}} into SimpleCov's
+# {abs_path => {"lines" => [hit_count_or_nil, ...]}} format.
+def to_simplecov(hits)
+  result = {}
+  hits.each do |rel, line_hits|
+    abs = File.join(REPO_ROOT, rel)
+    line_count = file_line_count(abs)
+    next if line_count.zero?
+    arr = Array.new(line_count, nil)
+    line_hits.each do |ln, cnt|
+      idx = ln - 1
+      arr[idx] = cnt if idx >= 0 && idx < arr.length
+    end
+    result[abs] = { "lines" => arr }
+  end
+  result
+end
+
+def main
+  unless Dir.exist?(TRACES_DIR)
+    warn "No traces directory at #{TRACES_DIR}. Run `make coverage` first."
+    exit 1
+  end
+
+  trace_files = Dir.glob(File.join(TRACES_DIR, "*.log"))
+  if trace_files.empty?
+    warn "No trace files found in #{TRACES_DIR}."
+    exit 1
+  end
+
+  combined = {}
+  trace_files.each { |path| merge!(combined, parse_trace(path)) }
+
+  if combined.empty?
+    warn "Parsed #{trace_files.length} trace file(s) but no +COV: lines matched watched globs."
+    exit 1
+  end
+
+  simplecov_data = to_simplecov(combined)
+
+  SimpleCov.coverage_dir COVERAGE_DIR
+  SimpleCov.root REPO_ROOT
+  resultset = { "buildpack" => { "coverage" => simplecov_data, "timestamp" => Time.now.to_i } }
+  FileUtils.mkdir_p(COVERAGE_DIR)
+  File.write(File.join(COVERAGE_DIR, ".resultset.json"), JSON.pretty_generate(resultset))
+
+  result = SimpleCov::Result.new(simplecov_data)
+  result.command_name = "buildpack"
+  result.format!
+
+  puts "Coverage report: #{File.join(COVERAGE_DIR, "index.html")}"
+  puts "Files measured: #{simplecov_data.length}"
+end
+
+main
