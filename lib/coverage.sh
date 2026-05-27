@@ -6,9 +6,19 @@
 #   - BP_DIR must be set to the buildpack root before sourcing this file.
 #   - BUILDPACK_COVERAGE_DIR may be set to override the trace output dir.
 #     Defaults to $BUILD_DIR/.heroku/coverage when running under bin/compile.
+#
+# Activation sources, in order of precedence:
+#   1. $BUILDPACK_COVERAGE in the current environment (docker test runs).
+#   2. $ENV_DIR/BUILDPACK_COVERAGE file with content "1" (real Heroku
+#      build dynos — the slug compiler delivers user config vars to
+#      bin/compile via $ENV_DIR rather than the process environment).
 
 if [[ "${BUILDPACK_COVERAGE:-}" != "1" ]]; then
-  return 0
+  if [[ -n "${ENV_DIR:-}" ]] && [[ -f "${ENV_DIR}/BUILDPACK_COVERAGE" ]] && [[ "$(cat "${ENV_DIR}/BUILDPACK_COVERAGE")" == "1" ]]; then
+    export BUILDPACK_COVERAGE=1
+  else
+    return 0
+  fi
 fi
 
 : "${BUILDPACK_COVERAGE_DIR:=${BUILD_DIR:-/tmp}/.heroku/coverage}"
