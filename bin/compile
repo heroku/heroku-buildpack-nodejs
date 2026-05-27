@@ -16,6 +16,9 @@ CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
+# shellcheck source=lib/coverage.sh
+source "$BP_DIR/lib/coverage.sh"
+
 ### Load dependencies
 
 # shellcheck source=lib/vendor/stdlib_v7.sh
