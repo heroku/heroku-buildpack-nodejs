@@ -4,7 +4,6 @@
 
 require "json"
 require "fileutils"
-require "set"
 require "simplecov"
 
 REPO_ROOT = ENV["BUILDPACK_REPO_ROOT"] || Dir.pwd

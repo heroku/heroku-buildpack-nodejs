@@ -67,6 +67,29 @@ class CoverageReportTest < Minitest::Test
     refute_nil cov[abs_failure], "triple-plus line should be parsed"
   end
 
+  def test_merges_hits_across_multiple_trace_files
+    # Two trace files contribute hits to the same file. Hit counts must sum.
+    write_trace("trace-1.log", [
+      "+COV:lib/output.sh:5: a",
+      "+COV:lib/output.sh:5: a",
+      "+COV:lib/output.sh:10: b",
+    ])
+    write_trace("trace-2.log", [
+      "+COV:lib/output.sh:5: a",
+      "+COV:lib/output.sh:20: c",
+    ])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    abs = File.join(REPO_ROOT, "lib", "output.sh")
+    refute_nil cov[abs], "expected coverage for #{abs}"
+    # 1-indexed line N → 0-indexed array slot N-1
+    assert_equal 3, cov[abs]["lines"][4],  "line 5 should be hit 3 times (2 from trace-1 + 1 from trace-2)"
+    assert_equal 1, cov[abs]["lines"][9],  "line 10 should be hit once (trace-1 only)"
+    assert_equal 1, cov[abs]["lines"][19], "line 20 should be hit once (trace-2 only)"
+  end
+
   def test_drops_lines_outside_watched_globs
     write_trace("trace-1.log", [
       "+COV:test/unit:5: should be dropped",
