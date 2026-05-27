@@ -488,6 +488,9 @@ testGetYarnMajorVersionNoVersion() {
 
 BP_DIR="$(pwd)"
 
+# Coverage shim — no-op unless BUILDPACK_COVERAGE=1
+source "$(pwd)"/lib/coverage.sh
+
 # the modules to be tested
 
 source "$(pwd)"/lib/vendor/stdlib_v7.sh
