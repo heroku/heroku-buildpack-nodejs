@@ -147,4 +147,55 @@ class CoverageReportTest < Minitest::Test
     assert_equal 0, status, "generator failed: #{out}"
     assert File.exist?(File.join(@out, "index.html")), "expected index.html, got: #{Dir.entries(@out)}"
   end
+
+  def test_unhit_executable_lines_default_to_zero
+    # Real-world case: only line 5 of lib/output.sh ran. Every other
+    # executable line in the file should appear as 0 (not nil), so the
+    # coverage report shows what isn't tested rather than 100% of nothing.
+    write_trace("trace-1.log", ["+COV:lib/output.sh:5: x"])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    abs = File.join(REPO_ROOT, "lib", "output.sh")
+    refute_nil cov[abs], "expected coverage for #{abs}"
+    arr = cov[abs]["lines"]
+    # Line 5 (idx 4) was hit
+    assert_equal 1, arr[4]
+    # Some line other than 5 should be 0 (executable, untested) — find at least one
+    refute arr.compact.all? { |v| v > 0 }, "all executable lines hit, expected some 0s"
+    has_executable_unhit = arr.each_with_index.any? { |v, _i| v == 0 }
+    assert has_executable_unhit, "expected at least one executable line to be 0 (not nil), got #{arr.first(20).inspect}..."
+  end
+
+  def test_blank_and_comment_lines_marked_nil
+    # Use a deliberately small file. Pick lib/npm.sh — only 5 source lines.
+    write_trace("trace-1.log", ["+COV:lib/npm.sh:1: dummy"])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    abs = File.join(REPO_ROOT, "lib", "npm.sh")
+    refute_nil cov[abs]
+    arr = cov[abs]["lines"]
+    source = File.readlines(abs).map(&:strip)
+    arr.each_with_index do |val, i|
+      stripped = source[i].to_s
+      if stripped.empty? || stripped.start_with?("#")
+        # Blank or comment — must be nil (unless it was actually traced, but
+        # this test only traces line 1, which is `#!/usr/bin/env bash` so
+        # it'd still be classified comment AND hit. Hit overrides.).
+        if i + 1 == 1
+          # Line 1 was traced — it's a shebang, so classified as comment but
+          # promoted to hit-count.
+          assert_equal 1, val, "line 1 (shebang, but traced) should be 1"
+        else
+          assert_nil val, "line #{i+1} (#{stripped.inspect}) is blank/comment, should be nil"
+        end
+      else
+        # Executable line — should be 0 or a positive integer (never nil).
+        refute_nil val, "line #{i+1} (#{stripped.inspect}) is executable, should be 0 or hit count"
+      end
+    end
+  end
 end

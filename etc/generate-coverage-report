@@ -14,6 +14,9 @@ COVERAGE_DIR = File.join(Dir.pwd, "coverage")
 # contexts produce '++COV:' / '+++COV:' / etc., so accept any positive count.
 COV_LINE = /\A\++COV:([^:]+):(\d+):/.freeze
 
+# Files matching these globs become part of the coverage report. Each line in
+# the source is classified as executable (0, if not yet hit) or non-executable
+# (nil, for blanks and pure comments), then bumped to actual hit count if traced.
 WATCHED = [
   /\Abin\/[^\/]+\z/,        # bin/compile, bin/detect, bin/release, etc.
   /\Alib\/[^\/]+\.sh\z/,    # lib/*.sh (one level deep — excludes lib/vendor/)
@@ -39,24 +42,39 @@ def merge!(into, from)
   end
 end
 
-def file_line_count(abs_path)
-  File.foreach(abs_path).count
+# Read a file, classify each line as executable (0) or non-executable (nil).
+# Returns an Array sized to file's line count, or [] if the file is missing.
+def initial_coverage_array(abs_path)
+  arr = []
+  File.foreach(abs_path) do |line|
+    stripped = line.strip
+    if stripped.empty? || stripped.start_with?("#")
+      arr << nil      # blank line or pure comment — not executable
+    else
+      arr << 0        # executable, not yet hit
+    end
+  end
+  arr
 rescue Errno::ENOENT
-  0
+  []
 end
 
 # Convert {rel => {line_no => hit_count}} into SimpleCov's
 # {abs_path => {"lines" => [hit_count_or_nil, ...]}} format.
+# Lines that exist in the source but never appeared in the trace stay at 0
+# (executable, not covered) — making the coverage report actually useful.
 def to_simplecov(hits)
   result = {}
   hits.each do |rel, line_hits|
     abs = File.join(REPO_ROOT, rel)
-    line_count = file_line_count(abs)
-    next if line_count.zero?
-    arr = Array.new(line_count, nil)
+    arr = initial_coverage_array(abs)
+    next if arr.empty?
     line_hits.each do |ln, cnt|
       idx = ln - 1
-      arr[idx] = cnt if idx >= 0 && idx < arr.length
+      next unless idx >= 0 && idx < arr.length
+      # If the line was classified non-executable but actually ran, the
+      # trace is more authoritative — promote to hit count.
+      arr[idx] = cnt
     end
     result[abs] = { "lines" => arr }
   end
