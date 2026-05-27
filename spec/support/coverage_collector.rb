@@ -1,38 +1,18 @@
 # Hatchet coverage collector. Active only when BUILDPACK_COVERAGE=1 is set in
-# the host environment running rspec. After each example, fetches per-process
-# trace files from the deployed app and writes them to coverage/traces/ on
-# the host so etc/generate-coverage-report can consume them.
+# the host environment running rspec. Wraps Hatchet::App#deploy so that, after
+# the test's deploy block returns but before Hatchet's teardown! destroys the
+# app, we fetch /app/.heroku/coverage/trace-*.log and write it to the host's
+# coverage/traces/ dir for etc/generate-coverage-report to consume.
 
 require "fileutils"
 require "shellwords"
 
 return unless ENV["BUILDPACK_COVERAGE"] == "1"
 
+require "hatchet"
+
 COVERAGE_TRACES_DIR = File.expand_path("../../coverage/traces", __dir__).freeze
 FileUtils.mkdir_p(COVERAGE_TRACES_DIR)
-
-RSpec.configure do |config|
-  config.after(:each) do |example|
-    app_name = nil
-    [:@app, :app].each do |meth|
-      candidate = instance_variable_get(meth) rescue nil
-      candidate ||= (example.metadata[meth] rescue nil)
-      if candidate.respond_to?(:name)
-        app_name = candidate.name
-        break
-      end
-    end
-    next if app_name.nil?
-
-    out = `heroku run --no-tty --app #{Shellwords.escape(app_name)} -- cat /app/.heroku/coverage/trace-*.log 2>/dev/null`
-    next if out.empty?
-
-    safe = app_name.gsub(/[^A-Za-z0-9_-]/, "_")
-    File.write(File.join(COVERAGE_TRACES_DIR, "hatchet-#{safe}.log"), out)
-  end
-end
-
-require "hatchet"
 
 module Hatchet
   module CoverageConfigInjection
@@ -43,11 +23,36 @@ module Hatchet
       super(*args, **kwargs)
     end
   end
+
+  module CoverageDeployWrapper
+    def deploy(&block)
+      return super unless block_given?
+      super do |app, *rest|
+        begin
+          block.call(app, *rest)
+        ensure
+          ::CoverageCollector.collect(app)
+        end
+      end
+    end
+  end
 end
 
-if defined?(Hatchet::Runner)
-  Hatchet::Runner.prepend(Hatchet::CoverageConfigInjection)
+module CoverageCollector
+  def self.collect(app)
+    name = app.respond_to?(:name) ? app.name : nil
+    return if name.nil? || name.empty?
+
+    out = `heroku run --no-tty --app #{Shellwords.escape(name)} -- cat /app/.heroku/coverage/trace-*.log 2>/dev/null`
+    return if out.empty?
+
+    safe = name.gsub(/[^A-Za-z0-9_-]/, "_")
+    File.write(File.join(COVERAGE_TRACES_DIR, "hatchet-#{safe}.log"), out)
+    puts "[coverage] collected #{out.bytesize} bytes for #{name}"
+  rescue => e
+    warn "[coverage] failed for #{name}: #{e.class}: #{e.message}"
+  end
 end
-if defined?(Hatchet::App)
-  Hatchet::App.prepend(Hatchet::CoverageConfigInjection)
-end
+
+Hatchet::App.prepend(Hatchet::CoverageConfigInjection)
+Hatchet::App.prepend(Hatchet::CoverageDeployWrapper)
