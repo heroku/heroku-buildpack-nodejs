@@ -74,7 +74,7 @@ coverage:
 	@echo "==> Running heroku-26 functional tests with coverage"
 	@BUILDPACK_COVERAGE=1 $(MAKE) heroku-26-build
 	@echo "==> Running hatchet integration tests with coverage"
-	@BUILDPACK_COVERAGE=1 $(MAKE) hatchet
+	@CI=true BUILDPACK_COVERAGE=1 $(MAKE) hatchet
 	@echo "==> Generating coverage report"
 	@BUILDPACK_REPO_ROOT=$(shell pwd) bundle exec ruby etc/generate-coverage-report
 	@echo "==> Done. Open coverage/index.html"
