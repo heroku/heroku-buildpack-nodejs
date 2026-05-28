@@ -578,3 +578,10 @@ warn_unmet_dep "$LOG_FILE"
 warn_old_npm_lockfile "$NPM_LOCK"
 
 build_data::set_string "build_step" "finished"
+
+# TEMPORARY: emits a stdout marker so etc/measure-coverage-overhead can extract
+# bin/compile wall-clock duration from hatchet build logs. Removed after the
+# overhead measurement run completes.
+__compile_end_time=$(build_data::current_unix_realtime)
+__compile_duration=$(awk -v s="${build_start_time}" -v e="${__compile_end_time}" 'BEGIN { printf "%f", (e - s) }')
+echo "BUILDPACK_TIMING_S=${__compile_duration} coverage=${BUILDPACK_COVERAGE:-0}"
