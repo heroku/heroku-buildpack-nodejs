@@ -9,6 +9,7 @@ require 'date'
 require 'json'
 
 require_relative 'support/coverage_collector'
+require_relative 'support/timing_collector'
 
 ENV['RACK_ENV'] = 'test'
 

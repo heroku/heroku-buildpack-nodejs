@@ -1,0 +1,202 @@
+#!/usr/bin/env ruby
+# Measure the wall-clock overhead BUILDPACK_COVERAGE adds to bin/compile.
+#
+# Runs the hatchet suite N times with coverage off and N times with coverage on,
+# extracting per-deploy timings from the BUILDPACK_TIMING_S marker that
+# bin/compile emits at the end of a successful build (see the temporary
+# instrumentation block at the bottom of bin/compile and
+# spec/support/timing_collector.rb).
+#
+# Usage:
+#   bundle exec etc/measure-coverage-overhead [--iterations=N] [--spec=path]
+#
+# Outputs:
+#   coverage/timings/baseline-{1..N}.csv  — coverage=0 runs
+#   coverage/timings/coverage-{1..N}.csv  — coverage=1 runs
+#   coverage/timings/summary.txt          — aggregate stats
+#
+# CSV columns: timestamp_iso, app_name, fixture, coverage, duration_seconds
+
+require "fileutils"
+require "optparse"
+require "csv"
+require "time"
+
+DEFAULT_ITERATIONS = 3
+
+options = { iterations: DEFAULT_ITERATIONS, spec: "spec/ci/" }
+OptionParser.new do |o|
+  o.on("--iterations=N", Integer) { |n| options[:iterations] = n }
+  o.on("--spec=PATH", String)     { |s| options[:spec] = s }
+  o.on("-h", "--help") { puts o; exit }
+end.parse!
+
+REPO_ROOT     = File.expand_path("..", __dir__)
+TIMINGS_DIR   = File.join(REPO_ROOT, "coverage", "timings")
+SUMMARY_PATH  = File.join(TIMINGS_DIR, "summary.txt")
+
+FileUtils.mkdir_p(TIMINGS_DIR)
+
+# Hatchet deploys real Heroku apps that pull the buildpack from origin/HEAD of
+# the current branch. Local-only commits won't be visible to those apps. Bail
+# loudly if the working tree or branch is not pushed.
+def preflight!
+  branch = `git rev-parse --abbrev-ref HEAD`.strip
+  if branch.empty? || branch == "HEAD"
+    abort "preflight: not on a named branch (got: #{branch.inspect})"
+  end
+
+  remote_sha = `git rev-parse origin/#{branch} 2>/dev/null`.strip
+  local_sha  = `git rev-parse HEAD`.strip
+
+  if remote_sha.empty?
+    abort "preflight: branch #{branch.inspect} not found on origin. Push the branch first:\n  git push origin #{branch}"
+  end
+
+  if remote_sha != local_sha
+    abort "preflight: local HEAD (#{local_sha[0, 8]}) does not match origin/#{branch} (#{remote_sha[0, 8]}). Push the branch first:\n  git push origin #{branch}"
+  end
+
+  unless `git status --porcelain`.strip.empty?
+    abort "preflight: working tree has uncommitted changes. Commit and push before running hatchet."
+  end
+
+  branch
+end
+
+CURRENT_BRANCH = preflight!
+
+# --- run hatchet once, with the requested coverage flag, capturing timings to a CSV ---
+
+def run_hatchet(coverage:, csv_path:, spec:)
+  # Hatchet uses HATCHET_BUILDPACK_BASE + HATCHET_BUILDPACK_BRANCH to tell each
+  # deployed app which buildpack URL/branch to install. etc/hatchet.sh derives
+  # the branch from CI env vars (CIRCLE_BRANCH, GITHUB_HEAD_REF, GITHUB_REF_NAME)
+  # and the owner from CIRCLE_PROJECT_USERNAME or GITHUB_REPOSITORY_OWNER. We
+  # impersonate a CI run by setting the GitHub variants. Falls back to git-
+  # detected current branch if not provided.
+  env = {
+    "CI"                        => "true",
+    "GITHUB_REPOSITORY_OWNER"   => ENV.fetch("GITHUB_REPOSITORY_OWNER", "heroku"),
+    "GITHUB_REPOSITORY"         => ENV.fetch("GITHUB_REPOSITORY", "heroku/heroku-buildpack-nodejs"),
+    "GITHUB_REF_NAME"           => ENV["GITHUB_REF_NAME"] || CURRENT_BRANCH,
+    "BUILDPACK_TIMING_OUT"      => csv_path,
+    "BUILDPACK_COVERAGE"        => coverage ? "1" : nil,
+  }.compact
+
+  # Pre-create the CSV so even a zero-deploy run leaves a (possibly empty) file.
+  FileUtils.touch(csv_path)
+
+  cmd = ["bash", "etc/hatchet.sh", spec]
+  puts "==> #{coverage ? "coverage" : "baseline"} | #{csv_path}"
+  puts "    env: BUILDPACK_COVERAGE=#{coverage ? "1" : "(unset)"}"
+  puts "    cmd: #{cmd.join(" ")}"
+
+  Dir.chdir(REPO_ROOT) do
+    system(env, *cmd)
+  end
+  exit_status = $?.exitstatus
+  puts "    exit: #{exit_status}"
+end
+
+# --- aggregate ---
+
+Stat = Struct.new(:n, :mean, :median, :p90, :stddev, :min, :max)
+
+def stats_for(durations)
+  return Stat.new(0, 0, 0, 0, 0, 0, 0) if durations.empty?
+  sorted = durations.sort
+  n      = sorted.length
+  mean   = sorted.sum / n
+  median = sorted[n / 2]
+  p90    = sorted[(n * 0.9).floor.clamp(0, n - 1)]
+  variance = sorted.sum { |x| (x - mean)**2 } / n
+  stddev = Math.sqrt(variance)
+  Stat.new(n, mean, median, p90, stddev, sorted.first, sorted.last)
+end
+
+def load_csv(path)
+  rows = []
+  return rows unless File.exist?(path)
+  CSV.foreach(path) do |row|
+    next if row.length < 5
+    rows << {
+      timestamp: row[0],
+      app:       row[1],
+      fixture:   row[2],
+      coverage:  row[3] == "1",
+      duration:  row[4].to_f,
+    }
+  end
+  rows
+end
+
+def fmt(stat)
+  format("n=%-4d  mean=%6.2fs  median=%6.2fs  p90=%6.2fs  stddev=%5.2f  min=%5.2f  max=%6.2f",
+         stat.n, stat.mean, stat.median, stat.p90, stat.stddev, stat.min, stat.max)
+end
+
+def write_summary(baseline_rows, coverage_rows)
+  bs = stats_for(baseline_rows.map { |r| r[:duration] })
+  cs = stats_for(coverage_rows.map { |r| r[:duration] })
+
+  lines = []
+  lines << "Coverage overhead measurement"
+  lines << "Generated: #{Time.now.utc.iso8601}"
+  lines << ""
+  lines << "Baseline (BUILDPACK_COVERAGE unset):"
+  lines << "  #{fmt(bs)}"
+  lines << ""
+  lines << "Coverage (BUILDPACK_COVERAGE=1):"
+  lines << "  #{fmt(cs)}"
+  lines << ""
+
+  if bs.n > 0 && cs.n > 0
+    abs = cs.mean - bs.mean
+    rel = (cs.mean / bs.mean) - 1
+    lines << "Overhead:"
+    lines << "  mean delta:  #{format("%+.2fs (%+.1f%%)", abs, rel * 100)}"
+    lines << "  median delta: #{format("%+.2fs", cs.median - bs.median)}"
+    lines << "  p90 delta:    #{format("%+.2fs", cs.p90 - bs.p90)}"
+    lines << ""
+  end
+
+  lines << "Per-fixture breakdown (mean baseline → mean coverage, delta):"
+  fixtures = (baseline_rows.map { |r| r[:fixture] } + coverage_rows.map { |r| r[:fixture] }).uniq.sort
+  fixtures.each do |fix|
+    b_durs = baseline_rows.select { |r| r[:fixture] == fix }.map { |r| r[:duration] }
+    c_durs = coverage_rows.select { |r| r[:fixture] == fix }.map { |r| r[:duration] }
+    next if b_durs.empty? && c_durs.empty?
+    b_mean = b_durs.empty? ? 0 : b_durs.sum / b_durs.length
+    c_mean = c_durs.empty? ? 0 : c_durs.sum / c_durs.length
+    delta_pct = (b_mean.zero? || c_durs.empty?) ? "-" : format("%+.1f%%", ((c_mean / b_mean) - 1) * 100)
+    lines << format("  %-50s %6.2fs (n=%d) -> %6.2fs (n=%d)  %s",
+                    fix, b_mean, b_durs.length, c_mean, c_durs.length, delta_pct)
+  end
+
+  File.write(SUMMARY_PATH, lines.join("\n") + "\n")
+  puts ""
+  puts "==> Summary written to #{SUMMARY_PATH}"
+  puts ""
+  puts lines.join("\n")
+end
+
+# --- driver ---
+
+iterations = options[:iterations]
+spec       = options[:spec]
+
+baseline_csvs = (1..iterations).map { |i| File.join(TIMINGS_DIR, "baseline-#{i}.csv") }
+coverage_csvs = (1..iterations).map { |i| File.join(TIMINGS_DIR, "coverage-#{i}.csv") }
+
+# Interleave baseline/coverage runs so platform variance affects both conditions
+# similarly. (e.g. baseline-1, coverage-1, baseline-2, coverage-2, ...)
+(1..iterations).each do |i|
+  run_hatchet(coverage: false, csv_path: baseline_csvs[i - 1], spec: spec)
+  run_hatchet(coverage: true,  csv_path: coverage_csvs[i - 1], spec: spec)
+end
+
+baseline_rows = baseline_csvs.flat_map { |p| load_csv(p) }
+coverage_rows = coverage_csvs.flat_map { |p| load_csv(p) }
+
+write_summary(baseline_rows, coverage_rows)
