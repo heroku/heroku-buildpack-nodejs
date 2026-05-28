@@ -64,6 +64,7 @@ shell:
 	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
 	@echo ""
 
+.PHONY: coverage
 coverage:
 	@echo "==> Coverage spike: clearing previous output"
 	@rm -rf coverage
