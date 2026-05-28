@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir> <env-dir>
 
+# shellcheck source=lib/coverage.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)/lib/coverage.sh"
+coverage::enable "$(cd "$(dirname "${0:-}")"; cd ..; pwd)" "$1" "$3"
+
 ### Configure directories
 
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
 BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
-
-# shellcheck source=lib/coverage.sh
-source "$BP_DIR/lib/coverage.sh"
 
 ### Configure environment
 
