@@ -47,7 +47,9 @@ module CoverageCollector
     return if out.empty?
 
     safe = name.gsub(/[^A-Za-z0-9_-]/, "_")
-    File.write(File.join(COVERAGE_TRACES_DIR, "hatchet-#{safe}.log"), out)
+    # Append rather than truncate: tests that re-deploy the same Hatchet::Runner
+    # (e.g. cache-reuse scenarios) would otherwise overwrite earlier traces.
+    File.open(File.join(COVERAGE_TRACES_DIR, "hatchet-#{safe}.log"), "a") { |f| f.write(out) }
     puts "[coverage] collected #{out.bytesize} bytes for #{name}"
   rescue => e
     warn "[coverage] failed for #{name}: #{e.class}: #{e.message}"
