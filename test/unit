@@ -490,6 +490,7 @@ BP_DIR="$(pwd)"
 
 # Coverage shim — no-op unless BUILDPACK_COVERAGE=1
 source "$(pwd)"/lib/coverage.sh
+coverage::enable "$BP_DIR" "" ""
 
 # the modules to be tested
 
