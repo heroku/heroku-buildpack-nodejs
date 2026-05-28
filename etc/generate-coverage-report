@@ -25,6 +25,14 @@ WATCHED = [
   /\Aprofile\/[^\/]+\z/,    # profile/*
 ].freeze
 
+# Files that match WATCHED but should still be excluded from the report.
+# These are scripts that aren't reachable from bin/compile (so the shim can
+# never instrument them) plus the shim itself.
+EXCLUDED = [
+  /\Alib\/coverage\.sh\z/,                           # the coverage shim itself
+  /\Abin\/(detect|release|report|test|test-compile)\z/,
+].freeze
+
 def parse_trace(path)
   hits = Hash.new { |h, k| h[k] = Hash.new(0) }
   # Track which functions have been entered to mark their declaration lines.
@@ -35,6 +43,7 @@ def parse_trace(path)
     rel = m[1]
     line_no = m[2].to_i
     func_name = m[3]
+    next if EXCLUDED.any? { |rx| rx.match?(rel) }
     next unless WATCHED.any? { |rx| rx.match?(rel) }
     hits[rel][line_no] += 1
 

@@ -219,4 +219,27 @@ class CoverageReportTest < Minitest::Test
     # Line 40 (function declaration) should be hit
     assert arr[39] > 0, "line 40 (fail_invalid_package_json() declaration) should be hit"
   end
+
+  def test_drops_excluded_files
+    # Files that match WATCHED but are explicitly excluded — the shim itself
+    # plus scripts that aren't reachable from bin/compile.
+    write_trace("trace-1.log", [
+      "+COV:lib/coverage.sh:5:: should be dropped (the shim itself)",
+      "+COV:bin/detect:5:: should be dropped",
+      "+COV:bin/release:5:: should be dropped",
+      "+COV:bin/report:5:: should be dropped",
+      "+COV:bin/test:5:: should be dropped",
+      "+COV:bin/test-compile:5:: should be dropped",
+      "+COV:lib/output.sh:5:: kept",
+    ])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    %w[lib/coverage.sh bin/detect bin/release bin/report bin/test bin/test-compile].each do |path|
+      abs = File.join(REPO_ROOT, path)
+      assert_nil cov[abs], "#{path} should be excluded but appeared in coverage"
+    end
+    refute_nil cov[File.join(REPO_ROOT, "lib", "output.sh")], "lib/output.sh should still appear"
+  end
 end
