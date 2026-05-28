@@ -20,39 +20,55 @@ The Ruby parser (`etc/generate-coverage-report`) merges all 272 trace files into
 
 ## Coverage results
 
+After the lexer refinement (see `docs/superpowers/specs/2026-05-28-coverage-lexer-design.md`):
+
 ```
 file                                total   hit  zero   nil    pct
 ----------------------------------------------------------------------
-bin/compile                           579   296   119   164  71.3%
-lib/binaries.sh                       320   140   121    59  53.6%
-lib/builddata.sh                      174    33    32   109  50.8%
-lib/cache.sh                          281   159    73    49  68.5%
-lib/dependencies.sh                   432   272    86    74  76.0%
-lib/environment.sh                    106    47    35    24  57.3%
-lib/failure.sh                        976   346   414   216  45.5%
-lib/features.sh                       186    46    34   106  57.5%
-lib/json.sh                            51    15    20    16  42.9%
-lib/kvstore.sh                         73    36    18    19  66.7%
-lib/monitor.sh                         60    26     4    30  86.7%
-lib/npm.sh                              5     2     1     2  66.7%
-lib/output.sh                          77    26    24    27  52.0%
-lib/plugin.sh                          53    31    11    11  73.8%
-lib/uuid.sh                            47    12    20    15  37.5%
-lib/yaml.sh                             9     5     1     3  83.3%
-lib/yarn-2.sh                          91    50    18    23  73.5%
-profile/WEB_CONCURRENCY.sh             88    36    32    20  52.9%
+bin/compile                           580   290    97   193  74.9%
+lib/binaries.sh                       320   136     1   183  99.3%
+lib/builddata.sh                      174    33     6   135  84.6%
+lib/cache.sh                          281   146    13   122  91.8%
+lib/dependencies.sh                   432   254    11   167  95.8%
+lib/environment.sh                    106    40    11    55  78.4%
+lib/failure.sh                        976   311    95   570  76.6%
+lib/features.sh                       186    42     7   137  85.7%
+lib/json.sh                            51    12     7    32  63.2%
+lib/kvstore.sh                         73    29     0    44 100.0%
+lib/monitor.sh                         60    24     0    36 100.0%
+lib/npm.sh                              5     1     0     4 100.0%
+lib/output.sh                          77    22     4    51  84.6%
+lib/plugin.sh                          53    26     0    27 100.0%
+lib/uuid.sh                            47    11     3    33  78.6%
+lib/yaml.sh                             9     4     0     5 100.0%
+lib/yarn-2.sh                          91    43     1    47  97.7%
+profile/WEB_CONCURRENCY.sh             88    31     7    50  81.6%
 ----------------------------------------------------------------------
-TOTAL                                3608  1578  1063   967  59.8%
+TOTAL                                3609  1455   263  1891  84.7%
 Files measured: 18
 ```
 
-`hit` = lines that ran. `zero` = executable lines that did not run. `nil` = blank or pure-comment lines (treated as non-executable).
+`hit` = lines that ran. `zero` = executable lines that did not run. `nil` = non-executable (blank, comment, structural token like `}`/`done`/`fi`/`else`, function declaration, case selector, or multi-line construct body).
 
-The numbers look plausible:
-- `bin/compile` at 71.3% — entry point, exercises most code paths.
-- `lib/dependencies.sh` at 76.0% and `lib/cache.sh` at 68.5% — heavily exercised by both unit and functional layers.
-- `lib/failure.sh` at 45.5% — error-path code, only some failure scenarios are tested.
-- `lib/uuid.sh` at 37.5%, `lib/json.sh` at 42.9% — used in narrower contexts; gaps highlight real testing opportunities.
+Coverage jumped from 59.8% → 84.7% between the spike and this report. The trace data is identical — what changed is line classification. Bashcov-inspired rules now correctly identify lines that bash xtrace cannot trace (closing braces, control-flow keywords on their own line, heredoc bodies, etc.) and remove them from the denominator.
+
+The `hit` count dropped (1578 → 1455). This is the philosophical flip on function declarations: the spike synthesized hits on `name() {` lines whenever the body ran. The refined report classifies declarations as non-executable (nil) — they register a name, they don't execute. SimpleCov treats nil lines as not counting for or against coverage, so the percentage rises despite the lower hit count.
+
+What the cleaner numbers reveal:
+- Files at or near 100% (`kvstore.sh`, `monitor.sh`, `plugin.sh`, `yaml.sh`, `npm.sh`) — narrow, well-exercised utility libraries.
+- `bin/compile` at 74.9% — the entry point still has untested branches (mostly error/edge paths).
+- `lib/failure.sh` at 76.6% — error-path code; the 95 untested executable lines are the genuine gap.
+- `lib/json.sh` at 63.2% — narrowest test coverage of the libraries; real testing opportunity.
+
+### Trace-wins overlay
+
+The parser logs a warning when the lexer classifies a line non-executable but a trace records it ran. From this run:
+
+- `lib/dependencies.sh` × 11 lines (around array literals on lines 22–23, 305, 317, 356, 377–380, 395, 411, 426)
+- `lib/monitor.sh` × 3 lines (around the `local command=( "$@" )` array on line 50)
+- `profile/WEB_CONCURRENCY.sh` × 2 lines
+
+All trace into bashcov's "multi-line array" regex over-walking around `name=(...)` constructs. The trace-wins overlay catches them — they appear as covered in the report. Worth knowing about, not worth fixing in this iteration.
 
 ## Checkpoint history
 
