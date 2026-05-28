@@ -169,7 +169,12 @@ class CoverageReportTest < Minitest::Test
   end
 
   def test_blank_and_comment_lines_marked_nil
-    # Use a deliberately small file. Pick lib/npm.sh — only 5 source lines.
+    # lib/npm.sh — 5 source lines. After lexer classification:
+    #   1 #!/usr/bin/env bash    → nil (comment), but trace promotes to 1
+    #   2 (blank)                → nil
+    #   3 npm_version_major() {  → nil (function declaration)
+    #   4   npm --version | ...  → 0 (executable, not hit)
+    #   5 }                      → nil (structural)
     write_trace("trace-1.log", ["+COV:lib/npm.sh:1:: dummy"])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -178,34 +183,21 @@ class CoverageReportTest < Minitest::Test
     abs = File.join(REPO_ROOT, "lib", "npm.sh")
     refute_nil cov[abs]
     arr = cov[abs]["lines"]
-    source = File.readlines(abs).map(&:strip)
-    arr.each_with_index do |val, i|
-      stripped = source[i].to_s
-      if stripped.empty? || stripped.start_with?("#")
-        # Blank or comment — must be nil (unless it was actually traced, but
-        # this test only traces line 1, which is `#!/usr/bin/env bash` so
-        # it'd still be classified comment AND hit. Hit overrides.).
-        if i + 1 == 1
-          # Line 1 was traced — it's a shebang, so classified as comment but
-          # promoted to hit-count.
-          assert_equal 1, val, "line 1 (shebang, but traced) should be 1"
-        else
-          assert_nil val, "line #{i+1} (#{stripped.inspect}) is blank/comment, should be nil"
-        end
-      else
-        # Executable line — should be 0 or a positive integer (never nil).
-        refute_nil val, "line #{i+1} (#{stripped.inspect}) is executable, should be 0 or hit count"
-      end
-    end
+    assert_equal 1, arr[0], "line 1 (shebang) traced — trace wins, expect 1"
+    assert_nil arr[1],   "line 2 (blank) should be nil"
+    assert_nil arr[2],   "line 3 (function decl) should be nil"
+    assert_equal 0, arr[3], "line 4 (executable, not traced) should be 0"
+    assert_nil arr[4],   "line 5 (closing brace) should be nil"
   end
 
-  def test_marks_function_declarations_as_executed
-    # When a function executes, its declaration line should be marked as hit.
-    # lib/failure.sh has: `failure_message() {` on line 17 and
-    # `fail_invalid_package_json() {` on line 40
+  def test_function_declaration_lines_classified_non_executable
+    # Function declaration lines (`name() {`) don't execute — they register a
+    # name. The lexer marks them nil so they don't count for or against
+    # coverage. Even when the function body is hit, the declaration stays nil
+    # unless the trace itself records the declaration line (rare).
     write_trace("trace-1.log", [
-      "+COV:lib/failure.sh:18:failure_message: echo foo",
-      "+COV:lib/failure.sh:41:fail_invalid_package_json: is_invalid=...",
+      "+COV:lib/failure.sh:18:: echo foo",
+      "+COV:lib/failure.sh:41:: is_invalid=...",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -214,10 +206,47 @@ class CoverageReportTest < Minitest::Test
     abs = File.join(REPO_ROOT, "lib", "failure.sh")
     refute_nil cov[abs], "expected coverage for #{abs}"
     arr = cov[abs]["lines"]
-    # Line 17 (function declaration) should be hit
-    assert arr[16] > 0, "line 17 (failure_message() declaration) should be hit"
-    # Line 40 (function declaration) should be hit
-    assert arr[39] > 0, "line 40 (fail_invalid_package_json() declaration) should be hit"
+    # The body-line hits land where they're traced.
+    assert arr[17].is_a?(Integer) && arr[17] > 0, "line 18 (body) should be hit"
+    assert arr[40].is_a?(Integer) && arr[40] > 0, "line 41 (body) should be hit"
+    # The function declaration lines stay nil — they're not executable code.
+    assert_nil arr[16], "line 17 (failure_message() decl) should be nil"
+    assert_nil arr[39], "line 40 (fail_invalid_package_json() decl) should be nil"
+  end
+
+  def test_trace_wins_over_lexer_nil_classification
+    # If the trace records a hit on a line the lexer classified non-executable,
+    # the trace wins. Use lib/output.sh line 11 (the closing `}` of `info()`).
+    # The lexer marks `}` as nil; if the trace says it ran, the report reflects
+    # that.
+    write_trace("trace-1.log", [
+      "+COV:lib/output.sh:11:: synthetic hit on a `}` line",
+    ])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    abs = File.join(REPO_ROOT, "lib", "output.sh")
+    refute_nil cov[abs]
+    arr = cov[abs]["lines"]
+    assert_equal 1, arr[10], "trace-recorded hit on `}` line should win over nil classification"
+  end
+
+  def test_structural_lines_classified_non_executable
+    # The whole point of the lexer pass: closing braces, fi, done, else on
+    # their own line are nil, not counted as `0` (untested executable).
+    # lib/output.sh line 11 = `}`, line 22 = `else`, line 24 = `fi`,
+    # line 26 = `done`, line 27 = `}` of output(), line 32 = `}` of header().
+    write_trace("trace-1.log", ["+COV:lib/output.sh:5:: dummy"])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    abs = File.join(REPO_ROOT, "lib", "output.sh")
+    arr = cov[abs]["lines"]
+    [11, 22, 24, 26, 27, 32].each do |ln|
+      assert_nil arr[ln - 1], "line #{ln} should be classified non-executable (nil), got #{arr[ln - 1].inspect}"
+    end
   end
 
   def test_drops_excluded_files

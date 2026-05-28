@@ -5,7 +5,7 @@
 require "json"
 require "fileutils"
 require "simplecov"
-require "set"
+require_relative "coverage_lexer"
 
 REPO_ROOT = ENV["BUILDPACK_REPO_ROOT"] || Dir.pwd
 TRACES_DIR = File.join(Dir.pwd, "coverage", "traces")
@@ -13,12 +13,14 @@ COVERAGE_DIR = File.join(Dir.pwd, "coverage")
 
 # Bash xtrace prefixes statements with one or more '+'. Sourced or subshell
 # contexts produce '++COV:' / '+++COV:' / etc., so accept any positive count.
-# Format: +COV:file:line:funcname: (funcname may be empty at top-level)
-COV_LINE = /\A\++COV:([^:]+):(\d+):([^:]*):/.freeze
+# Format: +COV:file:line: (the trailing colon and space terminate the prefix
+# so we can find statement bodies in the trace if needed).
+COV_LINE = /\A\++COV:([^:]+):(\d+):/.freeze
 
 # Files matching these globs become part of the coverage report. Each line in
-# the source is classified as executable (0, if not yet hit) or non-executable
-# (nil, for blanks and pure comments), then bumped to actual hit count if traced.
+# the source is classified by CoverageLexer as executable (0, if not yet hit)
+# or non-executable (nil, for blanks/comments/structural tokens), then bumped
+# to actual hit count if traced.
 WATCHED = [
   /\Abin\/[^\/]+\z/,        # bin/compile, bin/detect, bin/release, etc.
   /\Alib\/[^\/]+\.sh\z/,    # lib/*.sh (one level deep — excludes lib/vendor/)
@@ -35,47 +37,17 @@ EXCLUDED = [
 
 def parse_trace(path)
   hits = Hash.new { |h, k| h[k] = Hash.new(0) }
-  # Track which functions have been entered to mark their declaration lines.
-  func_entries = Hash.new { |h, k| h[k] = Set.new }
 
   File.foreach(path) do |line|
     next unless m = COV_LINE.match(line)
     rel = m[1]
     line_no = m[2].to_i
-    func_name = m[3]
     next if EXCLUDED.any? { |rx| rx.match?(rel) }
     next unless WATCHED.any? { |rx| rx.match?(rel) }
     hits[rel][line_no] += 1
-
-    # If we see a function name for the first time, we've entered that function.
-    # We'll need to find its declaration line in a second pass.
-    func_entries[rel] << func_name unless func_name.empty?
   end
-
-  # Second pass: mark function declaration lines as executed if the function ran.
-  mark_function_declarations!(hits, func_entries)
 
   hits
-end
-
-# Find function declarations in source files and mark them as executed if the
-# function was entered during trace collection. Bash function declarations are
-# typically of the form: `function_name() {` or `function function_name() {`
-def mark_function_declarations!(hits, func_entries)
-  func_entries.each do |rel, func_names|
-    abs = File.join(REPO_ROOT, rel)
-    next unless File.exist?(abs)
-
-    File.foreach(abs).with_index(1) do |line, line_no|
-      func_names.each do |func_name|
-        # Match: funcname() { or function funcname() {
-        if line =~ /\b#{Regexp.escape(func_name)}\(\)\s*\{/ ||
-           line =~ /\bfunction\s+#{Regexp.escape(func_name)}\(\)/
-          hits[rel][line_no] += 1
-        end
-      end
-    end
-  end
 end
 
 def merge!(into, from)
@@ -85,38 +57,26 @@ def merge!(into, from)
   end
 end
 
-# Read a file, classify each line as executable (0) or non-executable (nil).
-# Returns an Array sized to file's line count, or [] if the file is missing.
-def initial_coverage_array(abs_path)
-  arr = []
-  File.foreach(abs_path) do |line|
-    stripped = line.strip
-    if stripped.empty? || stripped.start_with?("#")
-      arr << nil      # blank line or pure comment — not executable
-    else
-      arr << 0        # executable, not yet hit
-    end
-  end
-  arr
-rescue Errno::ENOENT
-  []
-end
-
 # Convert {rel => {line_no => hit_count}} into SimpleCov's
 # {abs_path => {"lines" => [hit_count_or_nil, ...]}} format.
-# Lines that exist in the source but never appeared in the trace stay at 0
-# (executable, not covered) — making the coverage report actually useful.
+#
+# Classification (nil vs 0) comes from the CoverageLexer. Trace hits then
+# overlay: any traced line is set to its hit count, even if the lexer
+# classified it non-executable — the shell's evidence beats our regex's
+# guess. This is rare; when it happens it's worth noticing.
 def to_simplecov(hits)
   result = {}
   hits.each do |rel, line_hits|
     abs = File.join(REPO_ROOT, rel)
-    arr = initial_coverage_array(abs)
+    next unless File.exist?(abs)
+    arr = CoverageLexer.classify(abs)
     next if arr.empty?
     line_hits.each do |ln, cnt|
       idx = ln - 1
       next unless idx >= 0 && idx < arr.length
-      # If the line was classified non-executable but actually ran, the
-      # trace is more authoritative — promote to hit count.
+      if arr[idx].nil?
+        warn "trace-wins: #{rel}:#{ln} classified non-executable but traced (#{cnt}×)"
+      end
       arr[idx] = cnt
     end
     result[abs] = { "lines" => arr }
