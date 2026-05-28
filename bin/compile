@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 # bin/compile <build-dir> <cache-dir> <env-dir>
 
-### Configure environment
-
-set -o errexit    # always exit on error
-set -o pipefail   # don't ignore exit codes when piping output
-unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
-
-[ "$BUILDPACK_XTRACE" ] && set -o xtrace
-
 ### Configure directories
 
 BUILD_DIR=${1:-}
@@ -18,6 +10,14 @@ BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 # shellcheck source=lib/coverage.sh
 source "$BP_DIR/lib/coverage.sh"
+
+### Configure environment
+
+set -o errexit    # always exit on error
+set -o pipefail   # don't ignore exit codes when piping output
+unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
+
+[ "$BUILDPACK_XTRACE" ] && set -o xtrace
 
 ### Load dependencies
 
