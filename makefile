@@ -63,3 +63,17 @@ shell:
 	@echo "Opening heroku-22 shell..."
 	@docker run -v $(shell pwd):/buildpack:ro --rm -it heroku/heroku:22 bash -c 'cp -r /buildpack /buildpack_test; cd /buildpack_test/; bash'
 	@echo ""
+
+coverage:
+	@echo "==> Coverage spike: clearing previous output"
+	@rm -rf coverage
+	@mkdir -p $(COVERAGE_DIR)
+	@echo "==> Running unit tests with coverage"
+	@BUILDPACK_COVERAGE=1 $(MAKE) unit
+	@echo "==> Running heroku-26 functional tests with coverage"
+	@BUILDPACK_COVERAGE=1 $(MAKE) heroku-26-build
+	@echo "==> Running hatchet integration tests with coverage"
+	@BUILDPACK_COVERAGE=1 $(MAKE) hatchet
+	@echo "==> Generating coverage report"
+	@BUILDPACK_REPO_ROOT=$(shell pwd) bundle exec ruby etc/generate-coverage-report
+	@echo "==> Done. Open coverage/index.html"
