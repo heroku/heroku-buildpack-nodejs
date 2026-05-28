@@ -5,6 +5,7 @@
 require "json"
 require "fileutils"
 require "simplecov"
+require "set"
 
 REPO_ROOT = ENV["BUILDPACK_REPO_ROOT"] || Dir.pwd
 TRACES_DIR = File.join(Dir.pwd, "coverage", "traces")
@@ -12,7 +13,8 @@ COVERAGE_DIR = File.join(Dir.pwd, "coverage")
 
 # Bash xtrace prefixes statements with one or more '+'. Sourced or subshell
 # contexts produce '++COV:' / '+++COV:' / etc., so accept any positive count.
-COV_LINE = /\A\++COV:([^:]+):(\d+):/.freeze
+# Format: +COV:file:line:funcname: (funcname may be empty at top-level)
+COV_LINE = /\A\++COV:([^:]+):(\d+):([^:]*):/.freeze
 
 # Files matching these globs become part of the coverage report. Each line in
 # the source is classified as executable (0, if not yet hit) or non-executable
@@ -25,14 +27,46 @@ WATCHED = [
 
 def parse_trace(path)
   hits = Hash.new { |h, k| h[k] = Hash.new(0) }
+  # Track which functions have been entered to mark their declaration lines.
+  func_entries = Hash.new { |h, k| h[k] = Set.new }
+
   File.foreach(path) do |line|
     next unless m = COV_LINE.match(line)
     rel = m[1]
     line_no = m[2].to_i
+    func_name = m[3]
     next unless WATCHED.any? { |rx| rx.match?(rel) }
     hits[rel][line_no] += 1
+
+    # If we see a function name for the first time, we've entered that function.
+    # We'll need to find its declaration line in a second pass.
+    func_entries[rel] << func_name unless func_name.empty?
   end
+
+  # Second pass: mark function declaration lines as executed if the function ran.
+  mark_function_declarations!(hits, func_entries)
+
   hits
+end
+
+# Find function declarations in source files and mark them as executed if the
+# function was entered during trace collection. Bash function declarations are
+# typically of the form: `function_name() {` or `function function_name() {`
+def mark_function_declarations!(hits, func_entries)
+  func_entries.each do |rel, func_names|
+    abs = File.join(REPO_ROOT, rel)
+    next unless File.exist?(abs)
+
+    File.foreach(abs).with_index(1) do |line, line_no|
+      func_names.each do |func_name|
+        # Match: funcname() { or function funcname() {
+        if line =~ /\b#{Regexp.escape(func_name)}\(\)\s*\{/ ||
+           line =~ /\bfunction\s+#{Regexp.escape(func_name)}\(\)/
+          hits[rel][line_no] += 1
+        end
+      end
+    end
+  end
 end
 
 def merge!(into, from)

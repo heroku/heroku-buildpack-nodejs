@@ -33,9 +33,9 @@ class CoverageReportTest < Minitest::Test
 
   def test_parses_single_plus_cov_lines
     write_trace("trace-1.log", [
-      "+COV:lib/output.sh:10: foo",
-      "+COV:lib/output.sh:11: bar",
-      "+COV:lib/output.sh:10: foo",
+      "+COV:lib/output.sh:10:: foo",
+      "+COV:lib/output.sh:11:: bar",
+      "+COV:lib/output.sh:10:: foo",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -51,9 +51,9 @@ class CoverageReportTest < Minitest::Test
   def test_parses_multi_plus_cov_lines_from_sourced_files
     # Real bash xtrace prefixes sourced/subshell statements with multiple '+'.
     write_trace("trace-1.log", [
-      "+COV:bin/compile:25: source ...",
-      "++COV:lib/output.sh:3: ANSI_RED='[1;31m'",
-      "+++COV:lib/failure.sh:3: mktemp -t heroku-buildpack-nodejs-XXXX",
+      "+COV:bin/compile:25:: source ...",
+      "++COV:lib/output.sh:3:: ANSI_RED='[1;31m'",
+      "+++COV:lib/failure.sh:3:: mktemp -t heroku-buildpack-nodejs-XXXX",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -70,13 +70,13 @@ class CoverageReportTest < Minitest::Test
   def test_merges_hits_across_multiple_trace_files
     # Two trace files contribute hits to the same file. Hit counts must sum.
     write_trace("trace-1.log", [
-      "+COV:lib/output.sh:5: a",
-      "+COV:lib/output.sh:5: a",
-      "+COV:lib/output.sh:10: b",
+      "+COV:lib/output.sh:5:: a",
+      "+COV:lib/output.sh:5:: a",
+      "+COV:lib/output.sh:10:: b",
     ])
     write_trace("trace-2.log", [
-      "+COV:lib/output.sh:5: a",
-      "+COV:lib/output.sh:20: c",
+      "+COV:lib/output.sh:5:: a",
+      "+COV:lib/output.sh:20:: c",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -92,9 +92,9 @@ class CoverageReportTest < Minitest::Test
 
   def test_drops_lines_outside_watched_globs
     write_trace("trace-1.log", [
-      "+COV:test/unit:5: should be dropped",
-      "+COV:lib/vendor/stdlib_v7.sh:5: also dropped (vendored, two-level path)",
-      "+COV:lib/output.sh:5: kept",
+      "+COV:test/unit:5:: should be dropped",
+      "+COV:lib/vendor/stdlib_v7.sh:5:: also dropped (vendored, two-level path)",
+      "+COV:lib/output.sh:5:: kept",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -113,7 +113,7 @@ class CoverageReportTest < Minitest::Test
       "+ regular xtrace line",
       "++ subshell line",
       "garbage",
-      "+COV:lib/output.sh:5: kept",
+      "+COV:lib/output.sh:5:: kept",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -129,8 +129,8 @@ class CoverageReportTest < Minitest::Test
     # are content of statements being traced, not coverage targets. They never
     # match the watched globs because they start with `/`.
     write_trace("trace-1.log", [
-      "+COV:/tmp/codon/foo/bin/compile:5: should be dropped",
-      "+COV:lib/output.sh:5: kept",
+      "+COV:/tmp/codon/foo/bin/compile:5:: should be dropped",
+      "+COV:lib/output.sh:5:: kept",
     ])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
@@ -142,7 +142,7 @@ class CoverageReportTest < Minitest::Test
   end
 
   def test_writes_html_index
-    write_trace("trace-1.log", ["+COV:lib/output.sh:5: x"])
+    write_trace("trace-1.log", ["+COV:lib/output.sh:5:: x"])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
     assert File.exist?(File.join(@out, "index.html")), "expected index.html, got: #{Dir.entries(@out)}"
@@ -152,7 +152,7 @@ class CoverageReportTest < Minitest::Test
     # Real-world case: only line 5 of lib/output.sh ran. Every other
     # executable line in the file should appear as 0 (not nil), so the
     # coverage report shows what isn't tested rather than 100% of nothing.
-    write_trace("trace-1.log", ["+COV:lib/output.sh:5: x"])
+    write_trace("trace-1.log", ["+COV:lib/output.sh:5:: x"])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
     resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
@@ -170,7 +170,7 @@ class CoverageReportTest < Minitest::Test
 
   def test_blank_and_comment_lines_marked_nil
     # Use a deliberately small file. Pick lib/npm.sh — only 5 source lines.
-    write_trace("trace-1.log", ["+COV:lib/npm.sh:1: dummy"])
+    write_trace("trace-1.log", ["+COV:lib/npm.sh:1:: dummy"])
     out, status = run_generator
     assert_equal 0, status, "generator failed: #{out}"
     resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
@@ -197,5 +197,26 @@ class CoverageReportTest < Minitest::Test
         refute_nil val, "line #{i+1} (#{stripped.inspect}) is executable, should be 0 or hit count"
       end
     end
+  end
+
+  def test_marks_function_declarations_as_executed
+    # When a function executes, its declaration line should be marked as hit.
+    # lib/failure.sh has: `failure_message() {` on line 17 and
+    # `fail_invalid_package_json() {` on line 40
+    write_trace("trace-1.log", [
+      "+COV:lib/failure.sh:18:failure_message: echo foo",
+      "+COV:lib/failure.sh:41:fail_invalid_package_json: is_invalid=...",
+    ])
+    out, status = run_generator
+    assert_equal 0, status, "generator failed: #{out}"
+    resultset = JSON.parse(File.read(File.join(@out, ".resultset.json")))
+    cov = resultset.dig("buildpack", "coverage")
+    abs = File.join(REPO_ROOT, "lib", "failure.sh")
+    refute_nil cov[abs], "expected coverage for #{abs}"
+    arr = cov[abs]["lines"]
+    # Line 17 (function declaration) should be hit
+    assert arr[16] > 0, "line 17 (failure_message() declaration) should be hit"
+    # Line 40 (function declaration) should be hit
+    assert arr[39] > 0, "line 40 (fail_invalid_package_json() declaration) should be hit"
   end
 end
