@@ -1,0 +1,8 @@
+{
+  "name": "pnpm-empty-deps",
+  "version": "1.0.0",
+  "packageManager": "pnpm@9.7.1",
+  "engines": {
+    "node": "22.x"
+  }
+}

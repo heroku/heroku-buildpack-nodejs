@@ -329,7 +329,22 @@ pnpm_install() {
   counter=$(load_pnpm_prune_store_counter "$cache_dir")
   if (( counter == 0 )); then
     echo "Cleaning up pnpm store"
-    suppress_output pnpm store prune
+    # pnpm <9.12.0 errors with `ENOENT: ... scandir '<store>/v*/files'`
+    # when the store has no fetched package files (e.g. an install with
+    # no external dependencies), because pnpm only creates that
+    # directory on first download. Treat any ENOENT-on-scandir of the
+    # store's `vN/files` directory during prune as a benign empty-store
+    # no-op; surface every other failure so we don't mask unrelated
+    # prune errors. Fixed upstream in pnpm/pnpm#8555.
+    # TODO: remove when minimum supported pnpm is >= 9.12.0.
+    local prune_output prune_exit=0
+    prune_output=$(mktemp)
+    trap "rm -f '$prune_output' >/dev/null" RETURN
+    pnpm store prune >"$prune_output" 2>&1 || prune_exit=$?
+    if (( prune_exit != 0 )) && ! grep -qE "ENOENT.*scandir" "$prune_output"; then
+      cat "$prune_output"
+      return "$prune_exit"
+    fi
   fi
   save_pnpm_prune_store_counter "$cache_dir" "$(( counter - 1 ))"
 }

@@ -183,6 +183,34 @@ testPnpmStorePruning() {
 }
 
 
+# Regression test: when a project has no dependencies, `pnpm install` does not
+# create the content-addressable file directory (e.g. `<store>/v3/files`) under
+# the store. `pnpm store prune` then errors with `ENOENT: scandir '.../files'`
+# and (because bin/compile runs with `set -o errexit`) fails the build.
+#
+# The fixture pins `pnpm@9.7.1` deliberately: pnpm fixed this in 9.12.0
+# (pnpm/pnpm#8555), so bumping the version here would silently turn this
+# into a smoke test and stop guarding against regressions in the
+# lib/dependencies.sh workaround.
+testPnpmStorePruneWithEmptyStore() {
+  cache_dir=$(mktmpdir)
+
+  # force the next compile to enter the prune branch
+  mkdir -p "$cache_dir"
+  echo "0" > "$cache_dir/pnpm_prune_store_counter"
+
+  compile "pnpm-empty-deps" "$cache_dir"
+  assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
+  assertCaptured "Cleaning up pnpm store"
+  assertNotCaptured "ENOENT"
+  assertCapturedSuccess
+
+  # the counter should still advance past 0 after the benign ENOENT
+  counter=$(<"$cache_dir/pnpm_prune_store_counter")
+  assertNotEquals "Expected pnpm prune store counter to no longer be 0; was <${counter}>" "0" "${counter}"
+}
+
+
 testPnpmCacheSimple() {
   cache_dir=$(mktmpdir)
   compile "pnpm-7-pnp" "$cache_dir"
