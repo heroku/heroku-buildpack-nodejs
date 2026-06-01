@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Tolerate `ENOENT` from `pnpm store prune` when the pnpm store has no fetched package files, fixing build failures on pnpm <9.12.0 for projects that resolve with no external dependencies. ([#1654](https://github.com/heroku/heroku-buildpack-nodejs/pull/1654))
 
 ## [v350] - 2026-05-21
 
