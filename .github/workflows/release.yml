@@ -26,10 +26,20 @@ jobs:
     # On `pull_request`, only run for the merged auto-generated
     # "Prepare release" PR (branch name set by
     # _classic-buildpack-prepare-release.yml). Manual dispatches always run.
+    #
+    # We intentionally do NOT gate on `head.repo.full_name == github.repository`.
+    # This repo has `delete_branch_on_merge` enabled, and the `prepare-release`
+    # branch is deleted as part of the merge. On the `closed` event the head
+    # branch is already gone, so `pull_request.head.repo` is `null` in the
+    # payload (it is schema-nullable: `head.repo` is `oneOf [repository, null]`,
+    # see https://github.com/octokit/webhooks/blob/main/payload-schemas/api.github.com/common/pull-request.schema.json).
+    # A `null.full_name` comparison short-circuits the whole `&&` to false and
+    # the job silently skips. The `head.ref == 'prepare-release'` +
+    # bot-author checks already scope this tightly (fork PRs can't access
+    # secrets/OIDC on `pull_request` anyway), so the cross-repo check is redundant.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.pull_request.merged == true &&
-       github.event.pull_request.head.repo.full_name == github.repository &&
        github.event.pull_request.head.ref == 'prepare-release' &&
        github.event.pull_request.user.login == 'heroku-linguist[bot]')
     uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-publish.yml@latest
