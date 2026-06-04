@@ -29,3 +29,5 @@ jobs:
     uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-publish.yml@latest
     with:
       buildpack_id: "heroku/nodejs"
+    secrets:
+      honeycomb_api_key: ${{ secrets.HONEYCOMB_API_KEY }}
