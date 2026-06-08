@@ -1,4 +1,4 @@
-name: Release
+name: Release Buildpack
 
 on:
   # Auto-trigger when the "Prepare release" PR (created by the
@@ -9,12 +9,6 @@ on:
     types:
       - closed
   workflow_dispatch:
-    inputs:
-      qa:
-        description: "QA mode (staging registry, -qa tag suffix, draft releases)"
-        required: true
-        default: true
-        type: boolean
 
 permissions:
   id-token: write
@@ -35,6 +29,3 @@ jobs:
     uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-publish.yml@latest
     with:
       buildpack_id: "heroku/nodejs"
-      # `inputs.qa` is unset on `pull_request`, so coerce to false — auto-triggered
-      # publishes always go to production. Manual dispatches pass the input through.
-      qa: ${{ inputs.qa || false }}
