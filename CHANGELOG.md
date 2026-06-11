@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Deprecated Node.js 25.x (reached end-of-life). ([#1665](https://github.com/heroku/heroku-buildpack-nodejs/pull/1665))
 
 ## [v351] - 2026-06-03
 
