@@ -29,3 +29,7 @@ jobs:
     uses: heroku/languages-github-actions/.github/workflows/_classic-buildpack-publish.yml@latest
     with:
       buildpack_id: "heroku/nodejs"
+      app_id: ${{ vars.LINGUIST_GH_APP_ID }}
+    secrets:
+      app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+      slack_webhook_url: ${{ secrets.BUILDPACK_RELEASE_FAILURE_WEBHOOK_URL }}
