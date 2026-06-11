@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v352] - 2026-06-11
+
 - Deprecated Node.js 25.x (reached end-of-life). ([#1665](https://github.com/heroku/heroku-buildpack-nodejs/pull/1665))
 
 ## [v351] - 2026-06-03
@@ -1334,7 +1337,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v351...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v352...main
+[v352]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v351...v352
 [v351]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v350...v351
 [v350]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v349...v350
 [v349]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v348...v349
