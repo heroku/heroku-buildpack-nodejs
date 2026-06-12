@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fixed pnpm 11 apps experiencing `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` errors at runtime when pnpm commands are executed. ([#1667](https://github.com/heroku/heroku-buildpack-nodejs/pull/1667))
+
 
 ## [v352] - 2026-06-11
 
