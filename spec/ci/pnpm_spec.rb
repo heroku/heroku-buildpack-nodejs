@@ -172,4 +172,37 @@ describe "pnpm support" do
       expect(successful_body(app).strip).to eq("Hello from pnpm 11 workspace")
     end
   end
+
+  # Regression test for W-22952473.
+  #
+  # pnpm 11 defaults `verify-deps-before-run` to `install`, so any `pnpm run`
+  # (including `pnpm start`) first checks whether `node_modules` is in sync with
+  # the lockfile. That check keys on the absolute project paths recorded in
+  # `node_modules/.pnpm-workspace-state-v1.json` at install time. The classic
+  # buildpack installs in `/tmp/build_<hash>` but the app runs from `/app`, so
+  # every workspace project lookup misses, pnpm decides the "workspace structure
+  # has changed", and runs a nested `pnpm install` at boot. In the non-TTY dyno
+  # environment that install aborts with
+  # `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` and the process crashes.
+  #
+  # NODE_ENV is deliberately not "production" so devDependency pruning is skipped
+  # (matching the reported app), proving the crash originates from the initial
+  # install's workspace-state file rather than from the prune step.
+  it "starts a pnpm 11 workspace web process that runs through pnpm" do
+    app = Hatchet::Runner.new(
+      "spec/fixtures/repos/pnpm-11-verify-deps",
+      stack: "heroku-24",
+      config: { "NODE_ENV" => "staging" }
+    )
+    app.deploy do |app|
+      expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).to include("Skipping because NODE_ENV is not 'production'")
+      # The web process is `pnpm --filter=server start`. If the runtime deps
+      # check misfires it shells out to `pnpm install`, which aborts in the
+      # non-TTY dyno with ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY and the
+      # dyno crashes before serving a response.
+      # lodash's `_.capitalize` upper-cases the first letter: "Pnpm ...".
+      expect(successful_body(app).strip).to eq("Hello from Pnpm 11 workspace")
+    end
+  end
 end
