@@ -1,0 +1,12 @@
+{
+  "name": "pnpm-11-verify-deps-test",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.5.3",
+  "scripts": {
+    "start": "pnpm --filter=server start"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
