@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v353] - 2026-06-15
+
 - Fixed pnpm 11 apps experiencing `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` errors at runtime when pnpm commands are executed. ([#1667](https://github.com/heroku/heroku-buildpack-nodejs/pull/1667))
 
 
@@ -1339,7 +1342,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v352...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v353...main
+[v353]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v352...v353
 [v352]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v351...v352
 [v351]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v350...v351
 [v350]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v349...v350
