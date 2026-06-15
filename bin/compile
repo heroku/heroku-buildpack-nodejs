@@ -407,6 +407,26 @@ if $PNPM; then
 			correctly between builds.
 		EOF
   fi
+
+  # pnpm 11 added `verify-deps-before-run` (defaulting to `install`), so any
+  # `pnpm run`/`pnpm start`/`pnpm exec` re-checks that node_modules is in sync
+  # before running. That check keys on the absolute project paths recorded in
+  # `node_modules/.pnpm-workspace-state-v1.json` at install time. We install in
+  # the build directory (e.g. /tmp/build_<hash>) but the dyno runs from /app,
+  # so the recorded paths never match at runtime and pnpm shells out to a
+  # nested `pnpm install` that aborts in the non-TTY dyno with
+  # ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY, crashing the process.
+  #
+  # Downgrade the check's action from `install` to `warn` at runtime so a path
+  # mismatch logs a warning instead of crashing, while still surfacing genuine
+  # out-of-sync state. Scoped to pnpm 11+ (older versions lack the feature and
+  # use the npm_config_* prefix). Respect any value the user has already set.
+  if (( pnpm_major >= 11 )); then
+    mkdir -p "$BUILD_DIR/.profile.d"
+    cat > "$BUILD_DIR/.profile.d/pnpm.sh" <<-'EOF'
+			export pnpm_config_verify_deps_before_run="${pnpm_config_verify_deps_before_run:-warn}"
+		EOF
+  fi
 fi
 
 if [[ -z "$USE_NPM_INSTALL" ]]; then
