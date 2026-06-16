@@ -10,7 +10,7 @@ lint: lint-scripts check-format
 
 lint-scripts:
 	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
-		shellcheck --check-sourced --color=always $(MIGRATED_FILES); \
+		shellcheck --check-sourced $(MIGRATED_FILES); \
 	else \
 		echo "lint-scripts: no migrated files yet"; \
 	fi
@@ -42,12 +42,6 @@ build-resolver-linux: .build
 	mv ./resolve-version/target/x86_64-unknown-linux-musl/release/resolve-version lib/vendor/resolve-version-linux
 
 test: heroku-22-build heroku-24-build heroku-26-build
-
-shellcheck:
-	@shellcheck -x bin/compile bin/detect bin/release bin/test bin/test-compile
-	@shellcheck -x lib/*.sh
-	@shellcheck -x ci-profile/**
-	@shellcheck -x etc/**
 
 # Use `make -j4 heroku-26-build` to run all suites in parallel.
 # Ctrl-C cleanly terminates all parallel jobs when using make -j.
