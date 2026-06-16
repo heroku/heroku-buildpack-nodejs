@@ -270,7 +270,6 @@ testDotHerokuCollision() {
   assertCapturedError
 
   compile "dot-heroku-collision-2"
-  assertCaptured "Build succeeded!"
   assertNotCaptured ".heroku file is checked into this project"
   assertCapturedSuccessWithWarnings
 }

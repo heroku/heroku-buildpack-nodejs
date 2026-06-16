@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Removed the `Build succeeded!` log line from the build output. In multi-buildpack builds this misleadingly implied the entire build had succeeded when only the Node.js buildpack had finished. ([#1672](https://github.com/heroku/heroku-buildpack-nodejs/pull/1672))
+
 
 ## [v353] - 2026-06-15
 
