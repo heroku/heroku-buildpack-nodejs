@@ -1,3 +1,34 @@
+# Files migrated to tabs + shellcheck enable=all + namespace::function naming.
+# Add a file here only once it passes `make lint` cleanly. This list is the single
+# source of truth for what gets linted/formatted (CI invokes these targets, it does
+# not maintain its own list). It is empty until the first file is migrated.
+MIGRATED_FILES =
+
+.PHONY: lint lint-scripts check-format format
+
+lint: lint-scripts check-format
+
+lint-scripts:
+	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
+		shellcheck --check-sourced --color=always $(MIGRATED_FILES); \
+	else \
+		echo "lint-scripts: no migrated files yet"; \
+	fi
+
+check-format:
+	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
+		shfmt --diff $(MIGRATED_FILES); \
+	else \
+		echo "check-format: no migrated files yet"; \
+	fi
+
+format:
+	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
+		shfmt --write --list $(MIGRATED_FILES); \
+	else \
+		echo "format: no migrated files yet"; \
+	fi
+
 build-resolvers: build-resolver-linux
 
 .build:
