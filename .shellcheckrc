@@ -1,0 +1,2 @@
+# Enable all checks, including the optional ones that are off by default.
+enable=all
