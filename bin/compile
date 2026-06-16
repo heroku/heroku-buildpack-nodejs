@@ -585,7 +585,6 @@ build_data::set_string "build_step" "install-metrics-plugin"
 install_plugin "$BP_DIR" "$BUILD_DIR"
 
 build_data::set_string "build_step" "summarize"
-header "Build succeeded!" | output "$LOG_FILE"
 summarize_build | output "$LOG_FILE"
 build_data::set_duration "build_time" "$build_start_time"
 
