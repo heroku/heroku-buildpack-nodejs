@@ -1,0 +1,30 @@
+# https://editorconfig.org
+root = true
+
+# Baseline for every file. Intentionally omits indent_style so editors don't reformat the
+# indentation of files that haven't been migrated yet.
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Migrated shell files (kept in sync with the makefile's MIGRATED_FILES list). Tabs are used
+# so here-documents can be indented:
+# https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Here-Documents
+[{lib/failures.sh,lib/package_managers/*.sh}]
+binary_next_line = true
+indent_style = tab
+shell_variant = bash
+switch_case_indent = true
+
+[Makefile]
+indent_style = tab
+
+[*.{js,cjs,mjs,ts,json}]
+indent_style = space
+indent_size = 2
+
+[*.{yml,yaml,toml}]
+indent_style = space
+indent_size = 2
