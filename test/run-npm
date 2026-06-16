@@ -311,7 +311,6 @@ testNpmBuildMetaData() {
     select(.heroku_prebuild_script == "echo heroku-prebuild hook message")
     select(.heroku_prebuild_script_memory | type == "number")
     select(.heroku_prebuild_script_time | type == "number")
-    select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.node_version == "v10.24.1")

@@ -26,10 +26,12 @@ source "$BP_DIR/lib/output.sh"
 source "$BP_DIR/lib/monitor.sh"
 # shellcheck source=lib/environment.sh
 source "$BP_DIR/lib/environment.sh"
-# shellcheck source=lib/npm.sh
-source "$BP_DIR/lib/npm.sh"
-# shellcheck source=lib/failure.sh
-source "$BP_DIR/lib/failure.sh"
+# shellcheck source=lib/failures.sh
+source "$BP_DIR/lib/failures.sh"
+# shellcheck source=lib/package_managers/npm.sh
+source "$BP_DIR/lib/package_managers/npm.sh"
+# shellcheck source=lib/_failures.sh
+source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/binaries.sh
 source "$BP_DIR/lib/binaries.sh"
 # shellcheck source=lib/json.sh
@@ -506,7 +508,7 @@ build_dependencies() {
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
   else
-    npm_node_modules "$BUILD_DIR"
+    npm::install_dependencies "$BUILD_DIR"
   fi
 
   build_data::set_string "build_step" "build-script"

@@ -1,8 +1,10 @@
 # Files migrated to tabs + shellcheck enable=all + namespace::function naming.
 # Add a file here only once it passes `make lint` cleanly. This list is the single
 # source of truth for what gets linted/formatted (CI invokes these targets, it does
-# not maintain its own list). It is empty until the first file is migrated.
-MIGRATED_FILES =
+# not maintain its own list).
+MIGRATED_FILES = \
+	lib/failures.sh \
+	lib/package_managers/npm.sh
 
 .PHONY: lint lint-scripts check-format format
 
