@@ -486,7 +486,6 @@ testGetYarnMajorVersionNoVersion() {
   rm -rf "$build_dir"
 }
 
-<<<<<<< HEAD
 testMultipleLockfilesFixStepsTwoManagers() {
   local expected
   expected="$(cat <<-'EOF'
