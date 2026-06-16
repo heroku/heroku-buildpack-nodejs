@@ -189,7 +189,10 @@ testErrorYarnAndNpmLockfiles() {
   assertNotCaptured "Creating runtime environment"
   assertCaptured "Multiple lockfiles found"
   assertCaptured "Multiple package managers (npm,Yarn) have created lockfiles for this application"
-  assertCaptured "https://help.heroku.com/0KU2EM53"
+  assertCaptured "If you use npm:"
+  assertCaptured "git rm yarn.lock"
+  assertCaptured "If you use Yarn:"
+  assertCaptured "git rm package-lock.json"
   assertCapturedError
 }
 
@@ -198,7 +201,6 @@ testErrorYarnAndNpmShrinkwrap() {
   compile "yarn-and-shrinkwrap-lockfiles"
   assertNotCaptured "Creating runtime environment"
   assertCaptured "Multiple lockfiles conflicting with npm-shrinkwrap.json"
-  assertCaptured "https://help.heroku.com/0KU2EM53"
   assertCapturedError
 }
 
@@ -208,7 +210,8 @@ testErrorYarnAndPnpmAndNpmLockfiles() {
   assertNotCaptured "Creating runtime environment"
   assertCaptured "Multiple lockfiles found"
   assertCaptured "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
-  assertCaptured "https://help.heroku.com/0KU2EM53"
+  assertCaptured "If you use pnpm:"
+  assertCaptured "git rm package-lock.json yarn.lock"
   assertCapturedError
 }
 

@@ -109,6 +109,36 @@ fail_iojs_unsupported() {
   fi
 }
 
+# Builds the "keep one, remove the rest" fix instructions for a multiple-lockfiles error.
+# Given the detected package manager names as arguments (e.g. "npm" "pnpm" "Yarn"), it prints
+# one block per package manager listing the exact `git rm` command needed to remove the other
+# lockfiles, so the advice is specific to the lockfiles actually present in the application.
+multiple_lockfiles_fix_steps() {
+  local managers=("$@")
+
+  declare -A lockfiles=(
+    ["npm"]="package-lock.json"
+    ["pnpm"]="pnpm-lock.yaml"
+    ["Yarn"]="yarn.lock"
+  )
+
+  local keep other remove
+  for keep in "${managers[@]}"; do
+    remove=()
+    for other in "${managers[@]}"; do
+      if [ "$other" != "$keep" ]; then
+        remove+=("${lockfiles["$other"]}")
+      fi
+    done
+
+    echo "       If you use $keep:"
+    echo "       \$ git rm ${remove[*]}"
+    echo "       \$ git commit -m \"Remove unused lockfiles\""
+    echo "       \$ git push heroku main"
+    echo ""
+  done
+}
+
 fail_multiple_lockfiles() {
   local build_dir="${1:-}"
   local has_modern_lockfile=false
@@ -135,16 +165,22 @@ fail_multiple_lockfiles() {
     warn "Multiple lockfiles found
 
        Multiple package managers ($(IFS=','; printf '%s' "${package_managers_sorted[*]}")) have created lockfiles for this application,
-       but only one can be used to install dependencies. Installing dependencies using the wrong package manager can result in missing
-       packages or subtle bugs in production.
+       but only one can be used to install dependencies. This usually happens when a project standardizes on one
+       package manager, but a dependency is later added with a different one and the extra lockfile is committed.
+       Installing dependencies with the wrong package manager can result in missing packages or subtle, hard to
+       debug bugs in production.
 
-       Only one of the following package manager lockfiles are supported at a time:
-       - ${lockfiles["npm"]}
-       - ${lockfiles["Yarn"]}
-       - ${lockfiles["pnpm"]}
+       Only one of the following package manager lockfiles is supported at a time:
+       - ${lockfiles["npm"]} (npm)
+       - ${lockfiles["Yarn"]} (Yarn)
+       - ${lockfiles["pnpm"]} (pnpm)
 
-       Please delete the lockfile(s) that should not be in use.
-    " https://help.heroku.com/0KU2EM53
+       Keep the lockfile for the package manager you use and delete the rest, then commit and redeploy:
+
+$(multiple_lockfiles_fix_steps "${package_managers_sorted[@]}")
+
+       To stop the extra lockfiles from being committed again, add them to your .gitignore file.
+    "
     fail
   fi
 
@@ -159,13 +195,15 @@ fail_multiple_lockfiles() {
        can result in missing packages or subtle bugs in production.
 
        Please make sure there is only one of the following files in your
-       application directory:
+       application directory, then commit and redeploy:
 
        - yarn.lock
        - pnpm-lock.yaml
        - package-lock.json
        - npm-shrinkwrap.json
-    " https://help.heroku.com/0KU2EM53
+
+       To stop the extra lockfiles from being committed again, add them to your .gitignore file.
+    "
     fail
   fi
 }

@@ -486,6 +486,49 @@ testGetYarnMajorVersionNoVersion() {
   rm -rf "$build_dir"
 }
 
+testMultipleLockfilesFixStepsTwoManagers() {
+  local expected
+  expected="$(cat <<-'EOF'
+       If you use npm:
+       $ git rm yarn.lock
+       $ git commit -m "Remove unused lockfiles"
+       $ git push heroku main
+
+       If you use Yarn:
+       $ git rm package-lock.json
+       $ git commit -m "Remove unused lockfiles"
+       $ git push heroku main
+
+EOF
+)"
+
+  assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm Yarn)"
+}
+
+testMultipleLockfilesFixStepsThreeManagers() {
+  local expected
+  expected="$(cat <<-'EOF'
+       If you use npm:
+       $ git rm pnpm-lock.yaml yarn.lock
+       $ git commit -m "Remove unused lockfiles"
+       $ git push heroku main
+
+       If you use pnpm:
+       $ git rm package-lock.json yarn.lock
+       $ git commit -m "Remove unused lockfiles"
+       $ git push heroku main
+
+       If you use Yarn:
+       $ git rm package-lock.json pnpm-lock.yaml
+       $ git commit -m "Remove unused lockfiles"
+       $ git push heroku main
+
+EOF
+)"
+
+  assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm pnpm Yarn)"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
@@ -500,6 +543,7 @@ source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/features.sh
 source "$(pwd)"/lib/yarn-2.sh
+source "$(pwd)"/lib/failure.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
