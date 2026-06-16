@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 
 # Enable strict mode for ShellCheck but restore the caller's options at the end of the file
-# (see epilogue) so they don't bleed into un-migrated scripts that source this lib.
-# shellcheck disable=SC2034 # used by the eval in the epilogue
-__npm_saved_shell_opts="$(set +o)"
+# (see epilogue) so they don't bleed into un-migrated scripts that source this lib. The
+# caller's flags are read from `$-` (the current shell); a `$(set +o)` capture runs in a
+# command-substitution subshell where bash always forces errexit off, so it would later
+# restore errexit as disabled even when the caller had it on. pipefail has no `$-` letter, so
+# it is captured separately (it is reported correctly inside command substitution).
+# shellcheck disable=SC2034 # both are consumed by the epilogue
+__npm_saved_flags="$-"
+__npm_saved_pipefail="$(set +o | grep pipefail)"
 set -euo pipefail
 
 function npm_version_major() {
@@ -149,6 +154,9 @@ function npm::install_dependencies() {
 	build_data::set_duration "install_dependencies_time" "${start}"
 }
 
-# Restore the sourcing shell's original options (see preamble).
-eval "${__npm_saved_shell_opts}"
-unset __npm_saved_shell_opts
+# Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
+# saved `$-`; pipefail from its own saved `set +o` line.
+case "${__npm_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
+case "${__npm_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
+eval "${__npm_saved_pipefail}"
+unset __npm_saved_flags __npm_saved_pipefail

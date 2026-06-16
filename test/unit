@@ -597,6 +597,23 @@ testFailuresLibDoesNotLeakShellOptions() {
   assertEquals "nounset should be restored to off after sourcing" "off" "${nounset_after}"
 }
 
+testFailuresLibDoesNotLeakErrexit() {
+  # Regression guard: bin/compile runs under `set -e`. If the lib captures the caller's
+  # options with `$(set +o)`, bash forces errexit off inside that command-substitution
+  # subshell, so the epilogue would wrongly restore errexit as DISABLED — silencing real
+  # build failures. Source the lib in a subshell that has errexit ON and confirm `$-` still
+  # carries `e` afterwards. `$-` is read directly (not via another `$(...)`, which would
+  # itself drop errexit and mask the result).
+  local errexit_after
+  errexit_after=$(
+    set -e
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/failures.sh"
+    case "$-" in *e*) echo "on" ;; *) echo "off" ;; esac
+  )
+  assertEquals "errexit should remain on after sourcing" "on" "${errexit_after}"
+}
+
 testHandleNpmInstallEbadplatform() {
   local json
   json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
