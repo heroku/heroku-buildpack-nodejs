@@ -486,6 +486,7 @@ testGetYarnMajorVersionNoVersion() {
   rm -rf "$build_dir"
 }
 
+<<<<<<< HEAD
 testMultipleLockfilesFixStepsTwoManagers() {
   local expected
   expected="$(cat <<-'EOF'
@@ -529,6 +530,106 @@ EOF
   assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm pnpm Yarn)"
 }
 
+testFailureMessageBuildsJson() {
+  local json
+  json=$(failure::message \
+    --reason "install-dependencies::npm" \
+    --detail "EBADPLATFORM" \
+    --classification "user" <<-EOF
+			Error: Unable to install dependencies using npm.
+
+			Docs: https://example.com
+		EOF
+  )
+
+  assertEquals "install-dependencies::npm" "$(echo "$json" | jq -r '.failure_reason')"
+  assertEquals "EBADPLATFORM" "$(echo "$json" | jq -r '.failure_detail')"
+  assertEquals "user" "$(echo "$json" | jq -r '.failure_classification')"
+  # Message preserves newlines and the inline doc URL.
+  assertContains "$(echo "$json" | jq -r '.message')" "Error: Unable to install dependencies using npm."
+  assertContains "$(echo "$json" | jq -r '.message')" "Docs: https://example.com"
+}
+
+testFailureMessageDefaultsAreEmpty() {
+  local json
+  json=$(failure::message --reason "x::y" <<-EOF
+			An error.
+		EOF
+  )
+  assertEquals "" "$(echo "$json" | jq -r '.failure_detail')"
+  assertEquals "" "$(echo "$json" | jq -r '.failure_classification')"
+}
+
+testFailureEmitRendersAndRecords() {
+  local out
+  # Run in a subshell with stubs so `fail` doesn't kill the test runner and build_data
+  # writes are captured to a temp file instead of the real store.
+  local capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    json=$(failure::message --reason "install-dependencies::npm" --detail "EBADPLATFORM" \
+      --classification "user" <<-EOF
+				Error: Unable to install dependencies using npm.
+			EOF
+    )
+    failure::emit "$json" 2>&1 || true
+  )
+
+  assertContains "$out" "Error: Unable to install dependencies using npm."
+  assertContains "$(cat "$capture")" "failure=install-dependencies::npm"
+  assertContains "$(cat "$capture")" "failure_detail=EBADPLATFORM"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailuresLibDoesNotLeakShellOptions() {
+  # Source the lib in a fresh subshell that does NOT have nounset enabled, and confirm
+  # nounset is still off afterwards (i.e. the lib restored our options instead of leaving
+  # `set -u` on). `set -o` prints the active options; nounset should read "off".
+  local nounset_after
+  nounset_after=$(
+    set +u
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/failures.sh"
+    set -o | awk '$1 == "nounset" { print $2 }'
+  )
+  assertEquals "nounset should be restored to off after sourcing" "off" "${nounset_after}"
+}
+
+testHandleNpmInstallEbadplatform() {
+  local json
+  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
+  assertEquals "npm-ebadplatform" "$(echo "$json" | jq -r '.failure_reason')"
+  assertEquals "user" "$(echo "$json" | jq -r '.failure_classification')"
+}
+
+testHandleNpmInstallInvalidName() {
+  local json
+  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/einvalidpackagename.log")
+  assertEquals "npm-package-name-typo" "$(echo "$json" | jq -r '.failure_reason')"
+}
+
+testHandleNpmInstall404() {
+  local json
+  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/e404.log")
+  assertEquals "module-404" "$(echo "$json" | jq -r '.failure_reason')"
+}
+
+testHandleNpmInstallFlatmapStream() {
+  local json
+  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/flatmap-stream.log")
+  assertEquals "flatmap-stream-404" "$(echo "$json" | jq -r '.failure_reason')"
+  assertContains "$(echo "$json" | jq -r '.message')" "flatmap-stream module has been removed"
+}
+
+testHandleNpmInstallNoMatchIsEmpty() {
+  local json
+  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/clean.log")
+  assertEquals "" "$json"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
@@ -538,6 +639,8 @@ source "$(pwd)"/lib/uuid.sh
 source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/json.sh
+source "$(pwd)"/lib/failures.sh
+source "$(pwd)"/lib/package_managers/npm.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh

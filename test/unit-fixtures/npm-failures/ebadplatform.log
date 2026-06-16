@@ -1,0 +1,5 @@
+npm error code EBADPLATFORM
+npm error notsup Unsupported platform for fsevents@2.3.3: wanted {"os":"darwin","arch":"any"} (current: {"os":"linux","arch":"x64"})
+npm error notsup Valid os:  darwin
+npm error notsup Actual os: linux
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log
