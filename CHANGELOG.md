@@ -4,7 +4,6 @@
 
 - Removed the `Build succeeded!` log line from the build output. In multi-buildpack builds this misleadingly implied the entire build had succeeded when only the Node.js buildpack had finished. ([#1672](https://github.com/heroku/heroku-buildpack-nodejs/pull/1672))
 
-
 ## [v353] - 2026-06-15
 
 - Fixed pnpm 11 apps experiencing `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY` errors at runtime when pnpm commands are executed. ([#1667](https://github.com/heroku/heroku-buildpack-nodejs/pull/1667))
