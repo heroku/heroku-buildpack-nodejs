@@ -12,79 +12,34 @@ __failures_saved_flags="$-"
 __failures_saved_pipefail="$(set +o | grep pipefail)"
 set -euo pipefail
 
-# Builds a validatable JSON classification object from a multi-line message passed on stdin.
+# Records a classified failure in build data, prints its message, and exits the build. This is
+# the only side-effecting layer; classifiers (e.g. npm::_handle_npm_install_failure) stay pure
+# by filling an associative array that is passed here by name.
 #
-# The message body is read from stdin (typically a here-document) so that error text can be
-# authored in the familiar heredoc style without hand-escaping JSON. Doc/help URLs go inline
-# in the message body; there is no separate URL field.
+# The named array may define:
+#   [id]              build_data `failure` value          (required)
+#   [message]         multi-line message shown to user     (required)
+#   [detail]          build_data `failure_detail` value    (optional)
+#   [classification]  build_data `failure_classification`  (optional)
 #
-# Usage:
+# Usage (quote the subscripts on assignment so ShellCheck doesn't read the bare keys as
+# references to unassigned variables):
 # ```
-# failure::message --reason "install-dependencies::npm" --detail "EBADPLATFORM" \
-#   --classification "user" <<-EOF
-#     Error: ...
-#   EOF
-# ```
-function failure::message() {
-	local reason="" detail="" classification=""
-
-	while (("$#")); do
-		case "${1}" in
-			--reason)
-				reason="${2}"
-				shift 2
-				;;
-			--detail)
-				detail="${2}"
-				shift 2
-				;;
-			--classification)
-				classification="${2}"
-				shift 2
-				;;
-			*)
-				echo "failure::message: unknown argument '${1}'" >&2
-				return 1
-				;;
-		esac
-	done
-
-	# `--rawfile` ingests the stdin heredoc body verbatim as a JSON string, so newlines and
-	# special characters are encoded safely without manual escaping.
-	jq -n --rawfile message /dev/stdin \
-		--arg reason "${reason}" \
-		--arg detail "${detail}" \
-		--arg classification "${classification}" \
-		'{
-			failure_reason: $reason,
-			failure_detail: $detail,
-			failure_classification: $classification,
-			message: $message
-		}'
-}
-
-# Renders a classification object (produced by failure::message / a handler), records the
-# failure in build data, and exits the build. This is the only side-effecting layer.
-#
-# Usage:
-# ```
-# failure::emit "${classification_json}"
+# declare -A failure
+# failure["id"]="install-dependencies::npm"
+# failure["message"]="Error: ..."
+# failure::emit failure
 # ```
 function failure::emit() {
-	local json="${1}"
-	local reason detail classification message
-
-	reason=$(echo "${json}" | jq -r '.failure_reason')
-	detail=$(echo "${json}" | jq -r '.failure_detail')
-	classification=$(echo "${json}" | jq -r '.failure_classification')
-	message=$(echo "${json}" | jq -r '.message')
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure="${1}"
 
 	# Print to stderr so the message bypasses any stdout pipes (e.g. `| output "$LOG_FILE"`).
-	echo "${message}" | output::error
+	echo "${__failure[message]}" | output::error
 
-	build_data::set_string "failure" "${reason}"
-	[[ -n "${detail}" ]] && build_data::set_string "failure_detail" "${detail}"
-	[[ -n "${classification}" ]] && build_data::set_string "failure_classification" "${classification}"
+	build_data::set_string "failure" "${__failure[id]}"
+	[[ -n "${__failure[detail]:-}" ]] && build_data::set_string "failure_detail" "${__failure[detail]}"
+	[[ -n "${__failure[classification]:-}" ]] && build_data::set_string "failure_classification" "${__failure[classification]}"
 
 	fail
 }

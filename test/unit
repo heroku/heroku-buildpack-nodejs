@@ -529,36 +529,6 @@ EOF
   assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm pnpm Yarn)"
 }
 
-testFailureMessageBuildsJson() {
-  local json
-  json=$(failure::message \
-    --reason "install-dependencies::npm" \
-    --detail "EBADPLATFORM" \
-    --classification "user" <<-EOF
-			Error: Unable to install dependencies using npm.
-
-			Docs: https://example.com
-		EOF
-  )
-
-  assertEquals "install-dependencies::npm" "$(echo "$json" | jq -r '.failure_reason')"
-  assertEquals "EBADPLATFORM" "$(echo "$json" | jq -r '.failure_detail')"
-  assertEquals "user" "$(echo "$json" | jq -r '.failure_classification')"
-  # Message preserves newlines and the inline doc URL.
-  assertContains "$(echo "$json" | jq -r '.message')" "Error: Unable to install dependencies using npm."
-  assertContains "$(echo "$json" | jq -r '.message')" "Docs: https://example.com"
-}
-
-testFailureMessageDefaultsAreEmpty() {
-  local json
-  json=$(failure::message --reason "x::y" <<-EOF
-			An error.
-		EOF
-  )
-  assertEquals "" "$(echo "$json" | jq -r '.failure_detail')"
-  assertEquals "" "$(echo "$json" | jq -r '.failure_classification')"
-}
-
 testFailureEmitRendersAndRecords() {
   local out
   # Run in a subshell with stubs so `fail` doesn't kill the test runner and build_data
@@ -568,18 +538,38 @@ testFailureEmitRendersAndRecords() {
   out=$(
     fail() { exit 1; }
     build_data::set_string() { echo "$1=$2" >> "$capture"; }
-    json=$(failure::message --reason "install-dependencies::npm" --detail "EBADPLATFORM" \
-      --classification "user" <<-EOF
-				Error: Unable to install dependencies using npm.
-			EOF
-    )
-    failure::emit "$json" 2>&1 || true
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[detail]="EBADPLATFORM"
+    failure[classification]="user"
+    failure[message]="Error: Unable to install dependencies using npm."
+    failure::emit failure 2>&1 || true
   )
 
   assertContains "$out" "Error: Unable to install dependencies using npm."
   assertContains "$(cat "$capture")" "failure=install-dependencies::npm"
   assertContains "$(cat "$capture")" "failure_detail=EBADPLATFORM"
   assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailureEmitOmitsOptionalFields() {
+  # detail and classification are optional; emit must not write those build_data keys when
+  # they are unset.
+  local capture
+  capture=$(mktemp)
+  (
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[message]="An error."
+    failure::emit failure >/dev/null 2>&1 || true
+  )
+
+  assertContains "$(cat "$capture")" "failure=install-dependencies::npm"
+  assertNotContains "$(cat "$capture")" "failure_detail="
+  assertNotContains "$(cat "$capture")" "failure_classification="
   rm -f "$capture"
 }
 
@@ -615,35 +605,45 @@ testFailuresLibDoesNotLeakErrexit() {
 }
 
 testHandleNpmInstallEbadplatform() {
-  local json
-  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
-  assertEquals "npm-ebadplatform" "$(echo "$json" | jq -r '.failure_reason')"
-  assertEquals "user" "$(echo "$json" | jq -r '.failure_classification')"
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "npm-ebadplatform" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  # Detail carries the npm code plus the first descriptive error line.
+  assertContains "${result[detail]}" "EBADPLATFORM:"
+  assertContains "${result[detail]}" "Unsupported platform"
 }
 
 testHandleNpmInstallInvalidName() {
-  local json
-  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/einvalidpackagename.log")
-  assertEquals "npm-package-name-typo" "$(echo "$json" | jq -r '.failure_reason')"
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/einvalidpackagename.log" result
+  assertEquals "npm-package-name-typo" "${result[id]}"
+  assertContains "${result[detail]}" "EINVALIDPACKAGENAME:"
 }
 
 testHandleNpmInstall404() {
-  local json
-  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/e404.log")
-  assertEquals "module-404" "$(echo "$json" | jq -r '.failure_reason')"
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/e404.log" result
+  assertEquals "module-404" "${result[id]}"
+  assertContains "${result[detail]}" "E404:"
 }
 
 testHandleNpmInstallFlatmapStream() {
-  local json
-  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/flatmap-stream.log")
-  assertEquals "flatmap-stream-404" "$(echo "$json" | jq -r '.failure_reason')"
-  assertContains "$(echo "$json" | jq -r '.message')" "flatmap-stream module has been removed"
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/flatmap-stream.log" result
+  assertEquals "flatmap-stream-404" "${result[id]}"
+  assertContains "${result[message]}" "flatmap-stream module has been removed"
 }
 
-testHandleNpmInstallNoMatchIsEmpty() {
-  local json
-  json=$(npm::handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/clean.log")
-  assertEquals "" "$json"
+testHandleNpmInstallNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install; the classifier should not match and should leave the
+  # array empty. Guard the call so set -e (if active) doesn't abort on the expected non-zero.
+  if npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
 BP_DIR="$(pwd)"
@@ -662,7 +662,7 @@ source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/features.sh
 source "$(pwd)"/lib/yarn-2.sh
-source "$(pwd)"/lib/failure.sh
+source "$(pwd)"/lib/_failures.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
