@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.3.1 (linux-amd64)
+- Added Node.js 24.17.0 (linux-amd64)
+- Added Node.js 22.23.0 (linux-amd64)
 - Removed the `Build succeeded!` log line from the build output. In multi-buildpack builds this misleadingly implied the entire build had succeeded when only the Node.js buildpack had finished. ([#1672](https://github.com/heroku/heroku-buildpack-nodejs/pull/1672))
 - Improved the multiple-lockfiles build error message: it now inlines actionable, per-package-manager fix steps (covering npm, Yarn, and pnpm) instead of linking out to a knowledge base article. ([#1673](https://github.com/heroku/heroku-buildpack-nodejs/pull/1673))
 
