@@ -110,7 +110,8 @@ testOldNpmWithLockfile() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "This version of npm (1.2.8000) has several known issues. Please update your npm version in package.json."
+  # warn_old_npm now emits via output::warning, which writes to stderr.
+  assertCapturedStderr "This version of npm (1.2.8000) has several known issues. Please update your npm version in package.json."
   assertNotCaptured "integer expression expected"
   assertCapturedError
 }

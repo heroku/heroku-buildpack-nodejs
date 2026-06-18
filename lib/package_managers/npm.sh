@@ -53,29 +53,53 @@ function npm::install_dependencies() {
 	local start
 	start=$(build_data::current_unix_realtime)
 
-	# Run inside `if !` so errexit is suppressed: the legacy ERR trap won't fire and we
-	# classify the failure ourselves at the call site.
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 	if ! { "${npm_command[@]}" 2>&1 | tee "${log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local npm_exit="${pipe_status[0]}"
 		build_data::set_duration "install_dependencies_time" "${start}"
+
+		if [[ "${npm_exit}" -eq 0 ]]; then
+			# npm itself succeeded; the pipeline failed because `tee` (which captures the install
+			# log) failed — e.g. the build ran out of disk space. That is a failure on the
+			# buildpack's side, not a problem with the app's dependencies, so don't run it through
+			# the npm classifier (it would match nothing and blame the user). `tee` returns a bare
+			# non-zero on any write error without encoding the cause, so we record the raw pipe
+			# status as detail for observability rather than guessing why it failed.
+			local -A failure
+			failure["id"]="npm-install-pipefail"
+			failure["classification"]="buildpack"
+			failure["detail"]="PIPESTATUS=[${pipe_status[*]}]"
+			failure["message"]=$(
+				cat <<-EOF
+					Error: Unable to capture the npm install log output.
+
+					The dependency install ran, but writing its log to disk failed (for example,
+					the build ran out of disk space). This is not a problem with your
+					dependencies. Please try again.
+				EOF
+			)
+			failure::emit failure
+		fi
 
 		# The classifier fills `failure` by nameref and returns 0 on a match. It must be called
 		# as a statement (not `$(...)`) so the writes survive — a command substitution runs in a
 		# subshell where the nameref updates would be lost.
 		local -A failure
 		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-		if ! npm::_handle_npm_install_failure "${log_file}" failure; then
-			# No known failure mode recognised — emit a generic npm-install failure.
-			failure["id"]="install-dependencies::npm"
-			failure["message"]=$(
-				cat <<-EOF
-					Error: Unable to install dependencies using npm.
-
-					See the log output above for more information.
-				EOF
-			)
+		if npm::_handle_npm_install_failure "${log_file}" failure; then
+			failure::emit failure
 		fi
-		failure::emit failure
+
+		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
+		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
+		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
+		# failure from $LOG_FILE — covering the codes (ERESOLVE, ETARGET, ENOSPC, …) not yet
+		# migrated here, instead of masking them with a generic message.
+		return "${npm_exit}"
 	fi
 
 	build_data::set_duration "install_dependencies_time" "${start}"

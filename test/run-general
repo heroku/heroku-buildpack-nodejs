@@ -4,7 +4,8 @@ source "$(pwd)"/test/run-helpers
 
 testFlatmapStream() {
   compile "flatmap-stream"
-  assertCaptured "flatmap-stream module has been removed from the npm registry"
+  # The migrated npm-install path renders this via failure::emit, which writes to stderr.
+  assertCapturedStderr "flatmap-stream module has been removed from the npm registry"
   assertCapturedError
 }
 
@@ -258,8 +259,12 @@ testEnvBlacklist() {
 
 testWarningsOnFailure() {
   compile "many-warnings"
-  assertCaptured "troubleshooting-node-deploys"
-  assertCaptured "has several known issues"
+  # The npm 404 install failure is now classified by failure::emit, which renders a specific
+  # message to stderr and skips the legacy troubleshooting footer. The old-npm warning is
+  # emitted at detection via output::warning (also stderr).
+  assertCapturedStderr "A package could not be found in the npm registry"
+  assertCapturedStderr "has several known issues"
+  assertNotCaptured "troubleshooting-node-deploys"
   assertNotCaptured "please submit a ticket"
   assertCapturedError
 }
@@ -537,9 +542,12 @@ testRangeWithSpace() {
 
 testInvalidDependency() {
   compile "invalid-dependency"
+  # The 404 is now classified by failure::emit: the specific message goes to stderr and the
+  # legacy troubleshooting footer is skipped. The raw npm output still appears on stdout.
   assertCaptured "npm ERR! 404"
-  assertCaptured "troubleshooting-node-deploys"
-  assertCaptured "please submit a ticket"
+  assertCapturedStderr "A package could not be found in the npm registry"
+  assertNotCaptured "troubleshooting-node-deploys"
+  assertNotCaptured "please submit a ticket"
   assertNotCaptured "possible problems"
   assertCapturedError 1 ""
 }

@@ -854,7 +854,14 @@ warn_old_npm() {
   npm_version="$(npm --version)"
 
   if [ "$(npm_version_major)" -lt "2" ]; then
-    warning "This version of npm ($npm_version) has several known issues. Please update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+    # Emit immediately rather than via warning(), whose $warnings buffer is only flushed by
+    # failure_message on a failed build — so a migrated failure that bypasses the legacy
+    # handler, or a successful build, would never surface this warning.
+    output::warning <<-EOF
+			This version of npm ($npm_version) has several known issues. Please update your npm version in package.json.
+
+			https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
+		EOF
   fi
 }
 

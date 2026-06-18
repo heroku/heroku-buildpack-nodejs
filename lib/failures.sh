@@ -35,11 +35,18 @@ function failure::emit() {
 	local -n __failure="${1}"
 
 	# Print to stderr so the message bypasses any stdout pipes (e.g. `| output "$LOG_FILE"`).
+	header "Build failed"
 	echo "${__failure[message]}" | output::error
 
 	build_data::set_string "failure" "${__failure[id]}"
 	[[ -n "${__failure[detail]:-}" ]] && build_data::set_string "failure_detail" "${__failure[detail]}"
 	[[ -n "${__failure[classification]:-}" ]] && build_data::set_string "failure_classification" "${__failure[classification]}"
+
+	# Signal that this failure is fully handled so the legacy ERR trap skips its classification
+	# matchers and doesn't re-report it. A file (not a variable) because emit may run inside a
+	# subshell (e.g. the left side of `build_dependencies | output`) where the trap, running in
+	# the parent shell, would never see a variable assignment.
+	[[ -n "${FAILURE_EMITTED_MARKER:-}" ]] && : >"${FAILURE_EMITTED_MARKER}"
 
 	fail
 }
