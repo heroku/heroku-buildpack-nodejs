@@ -62,6 +62,8 @@ function npm::install_dependencies() {
 		local npm_exit="${pipe_status[0]}"
 		build_data::set_duration "install_dependencies_time" "${start}"
 
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${npm_exit}" -eq 0 ]]; then
 			# npm itself succeeded; the pipeline failed because `tee` (which captures the install
 			# log) failed — e.g. the build ran out of disk space. That is a failure on the
@@ -69,7 +71,6 @@ function npm::install_dependencies() {
 			# the npm classifier (it would match nothing and blame the user). `tee` returns a bare
 			# non-zero on any write error without encoding the cause, so we record the raw pipe
 			# status as detail for observability rather than guessing why it failed.
-			local -A failure
 			failure["id"]="npm-install-pipefail"
 			failure["classification"]="buildpack"
 			failure["detail"]="PIPESTATUS=[${pipe_status[*]}]"
@@ -83,14 +84,10 @@ function npm::install_dependencies() {
 				EOF
 			)
 			failure::emit failure
-		fi
-
-		# The classifier fills `failure` by nameref and returns 0 on a match. It must be called
-		# as a statement (not `$(...)`) so the writes survive — a command substitution runs in a
-		# subshell where the nameref updates would be lost.
-		local -A failure
-		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-		if npm::_handle_npm_install_failure "${log_file}" failure; then
+		elif npm::_handle_npm_install_failure "${log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
 		fi
 
@@ -124,7 +121,7 @@ function npm::_handle_npm_install_failure() {
 	local -n __failure="${2}"
 
 	# npm EBADPLATFORM code — stable npm v3–v11 (lib/utils/error-message.js).
-	if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "${log_file}"; then
+	if grep -qiE 'npm (ERR!|error) code EBADPLATFORM($| )' "${log_file}"; then
 		__failure["id"]="npm-ebadplatform"
 		__failure["classification"]="user"
 		__failure["detail"]="EBADPLATFORM: $(npm::_extract_error_detail "${log_file}")"
@@ -142,7 +139,7 @@ function npm::_handle_npm_install_failure() {
 
 	# npm EINVALIDPACKAGENAME code — stable npm v3–v11. The code is set in the npm-package-arg
 	# dependency and printed via npm's generic `npm (ERR!|error) code <CODE>` summary line.
-	if grep -qiE 'npm (ERR!|error) code EINVALIDPACKAGENAME' "${log_file}"; then
+	if grep -qiE 'npm (ERR!|error) code EINVALIDPACKAGENAME($| )' "${log_file}"; then
 		__failure["id"]="npm-package-name-typo"
 		__failure["classification"]="user"
 		__failure["detail"]="EINVALIDPACKAGENAME: $(npm::_extract_error_detail "${log_file}")"
@@ -159,7 +156,7 @@ function npm::_handle_npm_install_failure() {
 
 	# npm E404 code — stable npm v3–v11 (lib/utils/error-message.js). The second pattern matches
 	# Yarn's 404 wording, carried over from the legacy log_other_failures matcher.
-	if grep -qiE -e 'npm (ERR!|error) code E404' \
+	if grep -qiE -e 'npm (ERR!|error) code E404($| )' \
 		-e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "${log_file}"; then
 
 		# The flatmap-stream malware case is a more specific instance of a 404.

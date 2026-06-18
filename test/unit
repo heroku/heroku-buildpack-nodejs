@@ -646,6 +646,21 @@ testHandleNpmInstallNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testExtractErrorDetailReturnsFirstDescriptiveLine() {
+  # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
+  # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
+  local detail
+  detail=$(npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
+  assertEquals "notsup Unsupported platform for fsevents@2.3.3: wanted {\"os\":\"darwin\",\"arch\":\"any\"} (current: {\"os\":\"linux\",\"arch\":\"x64\"})" "$detail"
+}
+
+testExtractErrorDetailEmptyWhenNoDescriptiveLine() {
+  # A log with no `npm error`/`npm ERR!` line at all yields empty detail without erroring.
+  local detail
+  detail=$(npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/clean.log")
+  assertEquals "" "$detail"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
