@@ -209,33 +209,6 @@ should_use_npm_ci() {
   fi
 }
 
-npm_node_modules() {
-  local build_dir=${1:-}
-  local production=${NPM_CONFIG_PRODUCTION:-false}
-
-  if [ -e "$build_dir/package.json" ]; then
-    cd "$build_dir" || return
-
-    if [[ "$USE_NPM_INSTALL" == "false" ]]; then
-      build_data::set_raw "use_npm_ci" "true"
-      echo "Installing node modules"
-      monitor "install_dependencies" npm ci --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
-    else
-      build_data::set_raw "use_npm_ci" "false"
-      if [ -e "$build_dir/package-lock.json" ]; then
-        echo "Installing node modules (package.json + package-lock)"
-      elif [ -e "$build_dir/npm-shrinkwrap.json" ]; then
-        echo "Installing node modules (package.json + shrinkwrap)"
-      else
-        echo "Installing node modules (package.json)"
-      fi
-      monitor "install_dependencies" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
-    fi
-  else
-    echo "Skipping (no package.json)"
-  fi
-}
-
 npm_rebuild() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
