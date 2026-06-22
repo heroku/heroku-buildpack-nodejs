@@ -573,6 +573,26 @@ testFailureEmitOmitsOptionalFields() {
   rm -f "$capture"
 }
 
+testFailureEmitWritesMarkerWhenSet() {
+  # When FAILURE_EMITTED_MARKER is set, emit must create the marker file so the legacy ERR
+  # trap in bin/compile knows this failure is already handled and skips its own matchers.
+  local marker
+  marker=$(mktemp)
+  rm -f "$marker"
+  (
+    fail() { exit 1; }
+    build_data::set_string() { :; }
+    export FAILURE_EMITTED_MARKER="$marker"
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[message]="An error."
+    failure::emit failure >/dev/null 2>&1 || true
+  )
+
+  assertTrue "emit should create the marker file when FAILURE_EMITTED_MARKER is set" "[ -e '$marker' ]"
+  rm -f "$marker"
+}
+
 testFailuresLibDoesNotLeakShellOptions() {
   # Source the lib in a fresh subshell that does NOT have nounset enabled, and confirm
   # nounset is still off afterwards (i.e. the lib restored our options instead of leaving
