@@ -34,7 +34,7 @@ function failure::emit() {
 	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
 	local -n __failure="${1}"
 
- 	# This function may run inside a pipe whose stdout is styled by `output`
+	# This function may run inside a pipe whose stdout is styled by `output`
 	# (e.g. `build_dependencies | output "$LOG_FILE"`), which indents every non-header line and
 	# copies it to the build log. To avoid double styling, anything emitted here must either:
 	#   - Be a header, which `output` passes through untouched via its `^----->` check, or
