@@ -529,6 +529,158 @@ EOF
   assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm pnpm Yarn)"
 }
 
+testFailureEmitRendersAndRecords() {
+  local out
+  # Run in a subshell with stubs so `fail` doesn't kill the test runner and build_data
+  # writes are captured to a temp file instead of the real store.
+  local capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[detail]="EBADPLATFORM"
+    failure[classification]="user"
+    failure[message]="Error: Unable to install dependencies using npm."
+    failure::emit failure 2>&1 || true
+  )
+
+  assertContains "$out" "Error: Unable to install dependencies using npm."
+  assertContains "$(cat "$capture")" "failure=install-dependencies::npm"
+  assertContains "$(cat "$capture")" "failure_detail=EBADPLATFORM"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailureEmitOmitsOptionalFields() {
+  # detail and classification are optional; emit must not write those build_data keys when
+  # they are unset.
+  local capture
+  capture=$(mktemp)
+  (
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[message]="An error."
+    failure::emit failure >/dev/null 2>&1 || true
+  )
+
+  assertContains "$(cat "$capture")" "failure=install-dependencies::npm"
+  assertNotContains "$(cat "$capture")" "failure_detail="
+  assertNotContains "$(cat "$capture")" "failure_classification="
+  rm -f "$capture"
+}
+
+testFailureEmitWritesMarkerWhenSet() {
+  # When FAILURE_EMITTED_MARKER is set, emit must create the marker file so the legacy ERR
+  # trap in bin/compile knows this failure is already handled and skips its own matchers.
+  local marker
+  marker=$(mktemp)
+  rm -f "$marker"
+  (
+    fail() { exit 1; }
+    build_data::set_string() { :; }
+    export FAILURE_EMITTED_MARKER="$marker"
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[message]="An error."
+    failure::emit failure >/dev/null 2>&1 || true
+  )
+
+  assertTrue "emit should create the marker file when FAILURE_EMITTED_MARKER is set" "[ -e '$marker' ]"
+  rm -f "$marker"
+}
+
+testFailuresLibDoesNotLeakShellOptions() {
+  # Source the lib in a fresh subshell that does NOT have nounset enabled, and confirm
+  # nounset is still off afterwards (i.e. the lib restored our options instead of leaving
+  # `set -u` on). `set -o` prints the active options; nounset should read "off".
+  local nounset_after
+  nounset_after=$(
+    set +u
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/failures.sh"
+    set -o | awk '$1 == "nounset" { print $2 }'
+  )
+  assertEquals "nounset should be restored to off after sourcing" "off" "${nounset_after}"
+}
+
+testFailuresLibDoesNotLeakErrexit() {
+  # Regression guard: bin/compile runs under `set -e`. If the lib captures the caller's
+  # options with `$(set +o)`, bash forces errexit off inside that command-substitution
+  # subshell, so the epilogue would wrongly restore errexit as DISABLED — silencing real
+  # build failures. Source the lib in a subshell that has errexit ON and confirm `$-` still
+  # carries `e` afterwards. `$-` is read directly (not via another `$(...)`, which would
+  # itself drop errexit and mask the result).
+  local errexit_after
+  errexit_after=$(
+    set -e
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/failures.sh"
+    case "$-" in *e*) echo "on" ;; *) echo "off" ;; esac
+  )
+  assertEquals "errexit should remain on after sourcing" "on" "${errexit_after}"
+}
+
+testHandleNpmInstallEbadplatform() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "npm-ebadplatform" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  # Detail carries the npm code plus the first descriptive error line.
+  assertContains "${result[detail]}" "EBADPLATFORM:"
+  assertContains "${result[detail]}" "Unsupported platform"
+}
+
+testHandleNpmInstallInvalidName() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/einvalidpackagename.log" result
+  assertEquals "npm-package-name-typo" "${result[id]}"
+  assertContains "${result[detail]}" "EINVALIDPACKAGENAME:"
+}
+
+testHandleNpmInstall404() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/e404.log" result
+  assertEquals "module-404" "${result[id]}"
+  assertContains "${result[detail]}" "E404:"
+}
+
+testHandleNpmInstallFlatmapStream() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/flatmap-stream.log" result
+  assertEquals "flatmap-stream-404" "${result[id]}"
+  assertContains "${result[message]}" "flatmap-stream module has been removed"
+}
+
+testHandleNpmInstallNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install; the classifier should not match and should leave the
+  # array empty. Guard the call so set -e (if active) doesn't abort on the expected non-zero.
+  if npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testExtractErrorDetailReturnsFirstDescriptiveLine() {
+  # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
+  # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
+  local detail
+  detail=$(npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
+  assertEquals "notsup Unsupported platform for fsevents@2.3.3: wanted {\"os\":\"darwin\",\"arch\":\"any\"} (current: {\"os\":\"linux\",\"arch\":\"x64\"})" "$detail"
+}
+
+testExtractErrorDetailEmptyWhenNoDescriptiveLine() {
+  # A log with no `npm error`/`npm ERR!` line at all yields empty detail without erroring.
+  local detail
+  detail=$(npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/clean.log")
+  assertEquals "" "$detail"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
@@ -538,12 +690,14 @@ source "$(pwd)"/lib/uuid.sh
 source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/json.sh
+source "$(pwd)"/lib/failures.sh
+source "$(pwd)"/lib/package_managers/npm.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
 source "$(pwd)"/lib/features.sh
 source "$(pwd)"/lib/yarn-2.sh
-source "$(pwd)"/lib/failure.sh
+source "$(pwd)"/lib/_failures.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils

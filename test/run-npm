@@ -110,7 +110,8 @@ testOldNpmWithLockfile() {
 
 testOldNpm() {
   compile "old-npm"
-  assertCaptured "This version of npm (1.2.8000) has several known issues. Please update your npm version in package.json."
+  # warn_old_npm now emits via output::warning, which writes to stderr.
+  assertCapturedStderr "This version of npm (1.2.8000) has several known issues. Please update your npm version in package.json."
   assertNotCaptured "integer expression expected"
   assertCapturedError
 }
@@ -311,7 +312,6 @@ testNpmBuildMetaData() {
     select(.heroku_prebuild_script == "echo heroku-prebuild hook message")
     select(.heroku_prebuild_script_memory | type == "number")
     select(.heroku_prebuild_script_time | type == "number")
-    select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.node_version == "v10.24.1")

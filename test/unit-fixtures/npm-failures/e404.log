@@ -1,0 +1,5 @@
+npm error code E404
+npm error 404 Not Found - GET https://registry.npmjs.org/this-package-does-not-exist-abc123
+npm error 404
+npm error 404  'this-package-does-not-exist-abc123@^1.0.0' is not in this registry.
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log

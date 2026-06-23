@@ -26,10 +26,12 @@ source "$BP_DIR/lib/output.sh"
 source "$BP_DIR/lib/monitor.sh"
 # shellcheck source=lib/environment.sh
 source "$BP_DIR/lib/environment.sh"
-# shellcheck source=lib/npm.sh
-source "$BP_DIR/lib/npm.sh"
-# shellcheck source=lib/failure.sh
-source "$BP_DIR/lib/failure.sh"
+# shellcheck source=lib/failures.sh
+source "$BP_DIR/lib/failures.sh"
+# shellcheck source=lib/package_managers/npm.sh
+source "$BP_DIR/lib/package_managers/npm.sh"
+# shellcheck source=lib/_failures.sh
+source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/binaries.sh
 source "$BP_DIR/lib/binaries.sh"
 # shellcheck source=lib/json.sh
@@ -57,6 +59,13 @@ export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
 LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
+
+# Marker written by `failure::emit` (lib/failures.sh) when a migrated code path has already
+# classified, rendered, and recorded a failure. The global ERR trap checks for it and skips
+# the legacy classification matchers so the same failure isn't reported twice. It is a file
+# (not a shell variable) because `failure::emit` runs inside the `build_dependencies | output`
+# pipe's subshell, where a variable assignment would be invisible to the trap in the parent.
+export FAILURE_EMITTED_MARKER="${LOG_FILE}.emitted"
 
 build_start_time=$(build_data::current_unix_realtime)
 
@@ -89,19 +98,25 @@ done
 ### Handle errors
 
 handle_failure() {
-  header "Build failed"
-  fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
-  fail_yarn_outdated "$LOG_FILE"
-  fail_yarn_lockfile_outdated "$LOG_FILE"
-  fail_node_install "$LOG_FILE" "$BUILD_DIR"
-  fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
-  fail_invalid_semver "$LOG_FILE"
-  log_other_failures "$LOG_FILE"
-  warn_aws_proxy "$BUILD_DIR"
-  warn_untracked_dependencies "$LOG_FILE"
-  warn_angular_resolution "$LOG_FILE"
-  warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
-  failure_message | output "$LOG_FILE"
+  # A migrated code path may have already classified and rendered this failure via
+  # `failure::emit`. If so, skip the entire legacy handler — its classification matchers would
+  # re-report the failure, and its generic warnings/troubleshooting footer would bury the
+  # specific message emit already printed. Migrated failures are self-contained by design.
+  if [[ ! -e "${FAILURE_EMITTED_MARKER:-}" ]]; then
+    header "Build failed"
+    fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
+    fail_yarn_outdated "$LOG_FILE"
+    fail_yarn_lockfile_outdated "$LOG_FILE"
+    fail_node_install "$LOG_FILE" "$BUILD_DIR"
+    fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
+    fail_invalid_semver "$LOG_FILE"
+    log_other_failures "$LOG_FILE"
+    warn_aws_proxy "$BUILD_DIR"
+    warn_untracked_dependencies "$LOG_FILE"
+    warn_angular_resolution "$LOG_FILE"
+    warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
+    failure_message | output "$LOG_FILE"
+  fi
 }
 trap 'handle_failure' ERR
 
@@ -506,7 +521,7 @@ build_dependencies() {
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
   else
-    npm_node_modules "$BUILD_DIR"
+    npm::install_dependencies "$BUILD_DIR"
   fi
 
   build_data::set_string "build_step" "build-script"
