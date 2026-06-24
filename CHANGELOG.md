@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Added Node.js 26.4.0 (linux-amd64)
+- Added clearer `npm install` build errors for npm 12's new install-blocking defaults: blocked install scripts (`ESTRICTALLOWSCRIPTS`), git dependencies (`EALLOWGIT`), and remote-URL dependencies (`EALLOWREMOTE`), with guidance on approving scripts or adjusting `.npmrc`. ([#1683](https://github.com/heroku/heroku-buildpack-nodejs/pull/1683))
 
 ## [v355] - 2026-06-24
 
