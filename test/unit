@@ -656,6 +656,16 @@ testHandleNpmInstallFlatmapStream() {
   assertContains "${result[message]}" "flatmap-stream module has been removed"
 }
 
+testHandleNpmInstallStrictAllowScripts() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/estrictallowscripts.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "npm-strict-allow-scripts" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ESTRICTALLOWSCRIPTS:"
+  assertContains "${result[message]}" "npm approve-scripts"
+}
+
 testHandleNpmInstallNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful install; the classifier should not match and should leave the
