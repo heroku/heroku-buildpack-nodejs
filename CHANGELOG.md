@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 24.18.0 (linux-amd64)
+- Added Node.js 22.23.1 (linux-amd64)
 
 ## [v354] - 2026-06-18
 
