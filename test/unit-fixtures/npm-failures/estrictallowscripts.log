@@ -1,0 +1,5 @@
+npm error code ESTRICTALLOWSCRIPTS
+npm error --strict-allow-scripts: 1 package(s) have install scripts not covered by allowScripts:
+npm error   bcrypt@5.1.1 (install: (install scripts present))
+npm error Approve them with `npm approve-scripts`, deny them with `npm deny-scripts`, or bypass this check with `--dangerously-allow-all-scripts`.
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log
