@@ -675,6 +675,15 @@ testHandleNpmInstallAllowGitBlocked() {
   assertContains "${result[message]}" "git repository"
 }
 
+testHandleNpmInstallAllowRemoteBlocked() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eallowremote.log" result
+  assertEquals "npm-allow-remote-blocked" "${result[id]}"
+  assertContains "${result[detail]}" "EALLOWREMOTE:"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "remote URL"
+}
+
 testHandleNpmInstallNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful install; the classifier should not match and should leave the

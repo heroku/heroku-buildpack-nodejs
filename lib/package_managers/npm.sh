@@ -240,6 +240,29 @@ function npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm EALLOWREMOTE — new in npm 12. Remote-URL/tarball dependencies (direct or transitive) are
+	# refused unless allow-remote is set. Error code is `EALLOW${TYPE}` from arborist.
+	if grep -qiE 'npm (ERR!|error) code EALLOWREMOTE' "${log_file}"; then
+		__failure["id"]="npm-allow-remote-blocked"
+		__failure["classification"]="user"
+		__failure["detail"]="EALLOWREMOTE: $(npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				npm refused to fetch a dependency that points to a remote URL (e.g. an
+				https tarball), because remote dependencies are disabled by default in
+				npm 12+. Check the log output above for the offending package.
+
+				Either replace it with a published registry version, or set "allow-remote"
+				in your .npmrc to permit it.
+
+				Docs: https://docs.npmjs.com/cli/v11/using-npm/config#allow-remote
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
 	# e.g. ETARGET (no matching version), ERESOLVE (dependency conflict), ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.
