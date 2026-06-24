@@ -666,6 +666,15 @@ testHandleNpmInstallStrictAllowScripts() {
   assertContains "${result[message]}" "npm approve-scripts"
 }
 
+testHandleNpmInstallAllowGitBlocked() {
+  local -A result
+  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eallowgit.log" result
+  assertEquals "npm-allow-git-blocked" "${result[id]}"
+  assertContains "${result[detail]}" "EALLOWGIT:"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "git repository"
+}
+
 testHandleNpmInstallNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful install; the classifier should not match and should leave the
