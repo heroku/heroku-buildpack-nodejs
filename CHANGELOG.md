@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v356] - 2026-06-25
+
 - Added Node.js 26.4.0 (linux-amd64)
 - Added clearer `npm install` build errors for npm 12's new install-blocking defaults: blocked install scripts (`ESTRICTALLOWSCRIPTS`), git dependencies (`EALLOWGIT`), and remote-URL dependencies (`EALLOWREMOTE`), with guidance on approving scripts or adjusting `.npmrc`. ([#1683](https://github.com/heroku/heroku-buildpack-nodejs/pull/1683))
 
@@ -1358,7 +1361,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v355...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v356...main
+[v356]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v355...v356
 [v355]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v354...v355
 [v354]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v353...v354
 [v353]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v352...v353
