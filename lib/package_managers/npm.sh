@@ -193,6 +193,76 @@ function npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm ESTRICTALLOWSCRIPTS — new in npm 12. Install scripts are blocked unless covered by the
+	# "allowScripts" policy in package.json. Code surfaces on the `npm error code <CODE>` line.
+	if grep -qiE 'npm (ERR!|error) code ESTRICTALLOWSCRIPTS' "${log_file}"; then
+		__failure["id"]="npm-strict-allow-scripts"
+		__failure["classification"]="user"
+		__failure["detail"]="ESTRICTALLOWSCRIPTS: $(npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				npm blocked one or more dependency install scripts because they are not
+				covered by the "allowScripts" policy in your package.json. Native modules
+				that compile on install (e.g. via node-gyp) will not be built until you
+				approve them.
+
+				Run \`npm approve-scripts <package>\` locally to review and allow the trusted
+				packages listed above, then commit the updated package.json and redeploy.
+
+				Docs: https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts
+			EOF
+		)
+		return 0
+	fi
+
+	# npm EALLOWGIT — new in npm 12. Git dependencies (direct or transitive) are refused unless
+	# allow-git is set. Error code is `EALLOW${TYPE}` from arborist build-ideal-tree.js.
+	if grep -qiE 'npm (ERR!|error) code EALLOWGIT' "${log_file}"; then
+		__failure["id"]="npm-allow-git-blocked"
+		__failure["classification"]="user"
+		__failure["detail"]="EALLOWGIT: $(npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				npm refused to fetch a dependency that points to a git repository, because
+				git dependencies are disabled by default in npm 12+. Check the log output
+				above for the offending package.
+
+				Either replace it with a published registry version, or set "allow-git" in
+				your .npmrc to permit it.
+
+				Docs: https://docs.npmjs.com/cli/v11/using-npm/config#allow-git
+			EOF
+		)
+		return 0
+	fi
+
+	# npm EALLOWREMOTE — new in npm 12. Remote-URL/tarball dependencies (direct or transitive) are
+	# refused unless allow-remote is set. Error code is `EALLOW${TYPE}` from arborist.
+	if grep -qiE 'npm (ERR!|error) code EALLOWREMOTE' "${log_file}"; then
+		__failure["id"]="npm-allow-remote-blocked"
+		__failure["classification"]="user"
+		__failure["detail"]="EALLOWREMOTE: $(npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				npm refused to fetch a dependency that points to a remote URL (e.g. an
+				https tarball), because remote dependencies are disabled by default in
+				npm 12+. Check the log output above for the offending package.
+
+				Either replace it with a published registry version, or set "allow-remote"
+				in your .npmrc to permit it.
+
+				Docs: https://docs.npmjs.com/cli/v11/using-npm/config#allow-remote
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
 	# e.g. ETARGET (no matching version), ERESOLVE (dependency conflict), ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.
