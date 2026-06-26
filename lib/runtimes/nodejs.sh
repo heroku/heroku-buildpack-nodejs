@@ -14,6 +14,49 @@ RESOLVE="${BP_DIR}/lib/vendor/resolve-version-$(get_os)"
 function runtimes::nodejs::install() {
 	local requested_version="${1:-}"
 	local dir="${2:?}"
+
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Capture only stdout into the log: `_install` echoes its failure discriminators to stdout
+	# for the classifier, while user-facing warnings/errors go to stderr (via output::*) and must
+	# pass straight through to the real stderr — so we deliberately do NOT merge `2>&1` here.
+	# `tee` passes stdout through, so normal install output still reaches the caller's pipe.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { runtimes::nodejs::_install "${requested_version}" "${dir}" | tee "${log_file}"; }; then
+		# Capture the full pipe status before any other command clobbers PIPESTATUS.
+		local install_exit="${PIPESTATUS[0]}"
+		build_data::set_duration "install_node_binary_time" "${start}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the classifier fills `failure` by nameref; invoked directly so its writes survive
+		if runtimes::nodejs::_handle_install_failure "${log_file}" "${requested_version}" failure; then
+			failure::emit failure
+		fi
+
+		# No known failure mode recognised. Bubble up so the legacy ERR trap classifies it
+		# (generic fallback) while matchers not yet migrated here still get handled.
+		return "${install_exit}"
+	fi
+
+	build_data::set_duration "install_node_binary_time" "${start}"
+
+	local node_version node_version_major bundled_npm_version
+	node_version=$(node --version)
+	node_version_major=$(get_node_major_version)
+	bundled_npm_version=$(npm --version)
+	build_data::set_string "node_version" "${node_version}"
+	build_data::set_raw "node_version_major" "${node_version_major}"
+	build_data::set_string "bundled_npm_version" "${bundled_npm_version}"
+}
+
+function runtimes::nodejs::_install() {
+	local requested_version="${1:-}"
+	local dir="${2:?}"
 	local resolve_result
 
 	if [[ -n "${NODE_BINARY_URL}" ]]; then
@@ -26,11 +69,22 @@ function runtimes::nodejs::install() {
 			echo "Resolving node version ${requested_version}..."
 		fi
 
-		# shellcheck disable=SC2310 # || disables errexit, but that's intentional for this pattern
-		resolve_result=$(runtimes::nodejs::_resolve "${requested_version}" || echo "failed")
+		# The resolver prints "No result" on stdout (exit 0) for an unknown version, or
+		# "Could not parse"/"Could not get …" for a malformed requirement; capture stderr too so
+		# either surfaces in a single invocation.
+		local resolve_result resolve_exit_code
+		resolve_result=$("${RESOLVE}" "${BP_DIR}/inventory/node.toml" "${requested_version}" 2>&1) && resolve_exit_code=0 || resolve_exit_code=$?
 
-		if [[ "${resolve_result}" == "failed" ]]; then
-			fail_bin_install "${requested_version}"
+		if [[ "${resolve_exit_code}" -ne 0 || "${resolve_result}" == "No result" ]]; then
+			# Print the canonical discriminating line so _handle_install_failure can classify it.
+			if [[ "${resolve_result}" == "No result" ]]; then
+				echo "Could not find Node version corresponding to version requirement: ${requested_version}"
+			elif [[ "${resolve_result}" == "Could not parse"* ]] || [[ "${resolve_result}" == "Could not get"* ]]; then
+				echo "Error: Invalid semantic version \"${requested_version}\""
+			else
+				echo "Error: Unknown error installing \"${requested_version}\" of node"
+			fi
+			return 1
 		fi
 
 		version=$(echo "${resolve_result}" | jq -r .version)
@@ -101,21 +155,6 @@ function runtimes::nodejs::install() {
 	chmod +x "${dir}"/bin/*
 }
 
-function runtimes::nodejs::_resolve() {
-	local node_version="$1"
-	local output
-
-	if output=$("${RESOLVE}" "${BP_DIR}/inventory/node.toml" "${node_version}"); then
-		if [[ ${output} = "No result" ]]; then
-			return 1
-		else
-			echo "${output}"
-			return 0
-		fi
-	fi
-	return 1
-}
-
 function runtimes::nodejs::_warn_wide_range() {
 	local requested_version="$1"
 	local lts_version="$2"
@@ -164,13 +203,70 @@ function runtimes::nodejs::_warn_known_bad_release() {
 
 # Pure classifier for Node.js install failures.
 #
-# Input:  $1 path to the captured Node install log; $2 name of an associative array to fill.
+# Input:  $1 path to the captured Node install log; $2 the requested version requirement;
+#         $3 name of an associative array to fill.
 # Returns 0 + fills the array on a known failure; returns 1 untouched otherwise. No side effects.
 function runtimes::nodejs::_handle_install_failure() {
 	local log_file="${1}"
+	local requested_version="${2}"
 	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
-	local -n __failure="${2}"
+	local -n __failure="${3}"
 
+	if grep -qi 'Could not find Node version corresponding to version requirement' "${log_file}"; then
+		__failure["id"]="invalid-node-version"
+		__failure["classification"]="user"
+		__failure["detail"]="${requested_version}"
+		__failure["message"]=$(
+			cat <<-EOF
+				No matching version found for Node: ${requested_version}
+
+				Heroku supports the latest Stable version of Node.js as well as all
+				active LTS (Long-Term-Support) versions, however you have specified
+				a version in package.json (${requested_version}) that does not correspond to
+				any published version of Node.js.
+
+				You should always specify a Node.js version that matches the runtime
+				you're developing and testing with. To find your version locally:
+
+				$ node --version
+				v6.11.1
+
+				Use the engines section of your package.json to specify the version of
+				Node.js to use on Heroku. Drop the 'v' to save only the version number:
+
+				"engines": {
+				  "node": "6.11.1"
+				}
+
+				https://help.heroku.com/6235QYN4/
+			EOF
+		)
+		return 0
+	fi
+
+	if grep -qi 'Error: Invalid semantic version' "${log_file}"; then
+		__failure["id"]="invalid-semver-requirement"
+		__failure["classification"]="user"
+		__failure["detail"]="${requested_version}"
+		__failure["message"]=$(
+			cat <<-EOF
+				Invalid semver requirement
+
+				Node, Yarn, and npm adhere to semver, the semantic versioning convention
+				popularized by GitHub.
+
+				http://semver.org/
+
+				However you have specified a version requirement that is not a valid
+				semantic version.
+
+				https://help.heroku.com/0ZIOF3ST
+			EOF
+		)
+		return 0
+	fi
+
+	# No known failure mode recognised — let the caller fall through.
 	return 1
 }
 

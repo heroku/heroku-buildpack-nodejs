@@ -109,9 +109,7 @@ handle_failure() {
     fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
     fail_yarn_outdated "$LOG_FILE"
     fail_yarn_lockfile_outdated "$LOG_FILE"
-    fail_node_install "$LOG_FILE" "$BUILD_DIR"
     fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
-    fail_invalid_semver "$LOG_FILE"
     log_other_failures "$LOG_FILE"
     warn_aws_proxy "$BUILD_DIR"
     warn_untracked_dependencies "$LOG_FILE"
@@ -315,12 +313,7 @@ install_bins() {
   local install_start
 
   build_data::set_string "build_step" "install-nodejs"
-  install_start=$(build_data::current_unix_realtime)
   runtimes::nodejs::install "$node_engine" "$BUILD_DIR/.heroku/node"
-  build_data::set_duration "install_node_binary_time" "$install_start"
-  build_data::set_string "node_version" "$(node --version)"
-  build_data::set_raw "node_version_major" "$(get_node_major_version)"
-  build_data::set_string "bundled_npm_version" "$(npm --version)"
 
   build_data::set_string "build_step" "install-npm"
   install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"

@@ -703,10 +703,29 @@ testHandleNpmInstallNoMatchReturnsNonZero() {
 testHandleNodeInstallScaffoldNoMatch() {
   local -A result
   # Scaffold classifier recognises nothing yet; it must return non-zero and leave the array empty.
-  if runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/no-result.log)" result; then
+  if runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/no-result.log)" "16.0.0" result; then
     fail "expected scaffold classifier to return non-zero"
   fi
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleNodeInstallInvalidVersion() {
+  local -A result
+  runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/invalid-version.log)" "0.11.333" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "invalid-node-version" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "No matching version found for Node: 0.11.333"
+  assertContains "${result[detail]}" "0.11.333"
+}
+
+testHandleNodeInstallInvalidSemver() {
+  local -A result
+  runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/invalid-semver.log)" "stable" result
+  assertEquals "invalid-semver-requirement" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Invalid semver requirement"
+  assertEquals "stable" "${result[detail]}"
 }
 
 testExtractErrorDetailReturnsFirstDescriptiveLine() {

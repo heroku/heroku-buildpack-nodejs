@@ -254,64 +254,6 @@ fail_yarn_lockfile_outdated() {
   fi
 }
 
-fail_bin_install() {
-  local error
-  local version="$1"
-
-  # Allow the subcommand to fail without trapping the error so we can
-  # get the failing message output
-  set +e
-
-  # re-request the result, saving off the reason for the failure this time
-  error=$($RESOLVE "$BP_DIR/inventory/node.toml" "$version" 2>&1)
-
-  # re-enable trapping
-  set -e
-
-  if [[ $error = "No result" ]]; then
-    echo "Could not find Node version corresponding to version requirement: $version"
-  elif [[ $error == "Could not parse"* ]] || [[ $error == "Could not get"* ]]; then
-    echo "Error: Invalid semantic version \"$version\""
-  else
-    echo "Error: Unknown error installing \"$version\" of node"
-  fi
-
-  return 1
-}
-
-fail_node_install() {
-  local node_engine
-  local log_file="$1"
-  local build_dir="$2"
-
-  if grep -qi 'Could not find Node version corresponding to version requirement' "$log_file"; then
-    node_engine=$(read_json "$build_dir/package.json" ".engines.node")
-    build_data::set_string "failure" "invalid-node-version"
-    echo ""
-    warn "No matching version found for Node: $node_engine
-
-       Heroku supports the latest Stable version of Node.js as well as all
-       active LTS (Long-Term-Support) versions, however you have specified
-       a version in package.json ($node_engine) that does not correspond to
-       any published version of Node.js.
-
-       You should always specify a Node.js version that matches the runtime
-       you’re developing and testing with. To find your version locally:
-
-       $ node --version
-       v6.11.1
-
-       Use the engines section of your package.json to specify the version of
-       Node.js to use on Heroku. Drop the ‘v’ to save only the version number:
-
-       \"engines\": {
-         \"node\": \"6.11.1\"
-       }
-    " https://help.heroku.com/6235QYN4/
-    fail
-  fi
-}
-
 fail_yarn_install() {
   local yarn_engine
   local log_file="$1"
@@ -343,25 +285,6 @@ fail_yarn_install() {
          \"yarn\": \"1.x\"
        }
     " https://help.heroku.com/8MEL050H
-    fail
-  fi
-}
-
-fail_invalid_semver() {
-  local log_file="$1"
-  if grep -qi 'Error: Invalid semantic version' "$log_file"; then
-    build_data::set_string "failure" "invalid-semver-requirement"
-    echo ""
-    warn "Invalid semver requirement
-
-       Node, Yarn, and npm adhere to semver, the semantic versioning convention
-       popularized by GitHub.
-
-       http://semver.org/
-
-       However you have specified a version requirement that is not a valid
-       semantic version.
-    " https://help.heroku.com/0ZIOF3ST
     fail
   fi
 }
