@@ -32,6 +32,8 @@ source "$BP_DIR/lib/failures.sh"
 source "$BP_DIR/lib/package_managers/npm.sh"
 # shellcheck source=lib/_failures.sh
 source "$BP_DIR/lib/_failures.sh"
+# shellcheck source=lib/runtimes/nodejs.sh
+source "$BP_DIR/lib/runtimes/nodejs.sh"
 # shellcheck source=lib/binaries.sh
 source "$BP_DIR/lib/binaries.sh"
 # shellcheck source=lib/json.sh
@@ -314,7 +316,7 @@ install_bins() {
 
   build_data::set_string "build_step" "install-nodejs"
   install_start=$(build_data::current_unix_realtime)
-  install_nodejs "$node_engine" "$BUILD_DIR/.heroku/node"
+  runtimes::nodejs::install "$node_engine" "$BUILD_DIR/.heroku/node"
   build_data::set_duration "install_node_binary_time" "$install_start"
   build_data::set_string "node_version" "$(node --version)"
   build_data::set_raw "node_version_major" "$(get_node_major_version)"
