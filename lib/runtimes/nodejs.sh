@@ -116,8 +116,10 @@ function runtimes::nodejs::_install() {
 		case "${checksum_type}" in
 		"sha256")
 			echo "Validating checksum"
-			if ! echo "${checksum_value} ${output_file}" | sha256sum --check --status; then
-				runtimes::nodejs::_fail_checksum_validation "${version}" "${checksum_type}" "${checksum_value}"
+			local actual_checksum
+			actual_checksum=$(sha256sum "${output_file}" | cut -d " " -f 1)
+			if [[ "${actual_checksum}" != "${checksum_value}" ]]; then
+				runtimes::nodejs::_fail_checksum_validation "${version}" "${checksum_type}" "${checksum_value}" "${actual_checksum}"
 			fi
 			;;
 		*)
@@ -212,9 +214,11 @@ function runtimes::nodejs::_fail_checksum_validation() {
 	local version="${1}"
 	local checksum_type="${2}"
 	local checksum_value="${3}"
+	local actual_checksum="${4}"
 	local -A failure
 	failure["id"]="checksum-validation-failed"
 	failure["classification"]="buildpack"
+	failure["detail"]="${checksum_type} expected:${checksum_value} actual:${actual_checksum}"
 	failure["message"]=$(
 		cat <<-EOF
 			Checksum validation failed for Node.js ${version} - ${checksum_type}:${checksum_value}
@@ -232,6 +236,7 @@ function runtimes::nodejs::_fail_unsupported_checksum() {
 	local -A failure
 	failure["id"]="unsupported-checksum"
 	failure["classification"]="buildpack"
+	failure["detail"]="${checksum_type}:${checksum_value}"
 	failure["message"]=$(
 		cat <<-EOF
 			Unsupported checksum for Node.js ${version} - ${checksum_type}:${checksum_value}

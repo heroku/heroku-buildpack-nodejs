@@ -764,11 +764,13 @@ testFailChecksumValidationEmitsDetailedMessage() {
   local out capture
   capture=$(mktemp)
   _capture_node_fail out "$capture" \
-    runtimes::nodejs::_fail_checksum_validation "20.0.0" "sha256" "abc123"
+    runtimes::nodejs::_fail_checksum_validation "20.0.0" "sha256" "abc123" "def456"
 
   assertContains "$out" "Checksum validation failed for Node.js 20.0.0 - sha256:abc123"
   assertContains "$(cat "$capture")" "failure=checksum-validation-failed"
   assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  # Detail records both the expected and the actual (mismatched) checksum for observability.
+  assertContains "$(cat "$capture")" "failure_detail=sha256 expected:abc123 actual:def456"
   rm -f "$capture"
 }
 
@@ -781,6 +783,7 @@ testFailUnsupportedChecksumEmitsDetailedMessage() {
   assertContains "$out" "Unsupported checksum for Node.js 20.0.0 - sha512:abc123"
   assertContains "$(cat "$capture")" "failure=unsupported-checksum"
   assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=sha512:abc123"
   rm -f "$capture"
 }
 
