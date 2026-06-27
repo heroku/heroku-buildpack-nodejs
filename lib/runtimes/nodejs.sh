@@ -109,23 +109,7 @@ function runtimes::nodejs::_install() {
 
 	output_file="/tmp/node.tar.gz"
 	if ! curl "${download_url}" --no-progress-meter --location --fail --max-time 30 --retry 5 --retry-connrefused --connect-timeout 5 -o "${output_file}"; then
-		build_data::set_string "failure" "node-download-failed"
-		output::error <<-EOF
-			Error: Unable to download Node.js.
-
-			Failed to download Node.js from:
-			${download_url}
-
-			In some cases, this happens due to a temporary network
-			issue or an outage with the Node.js distribution server.
-
-			Confirm the download url ({url}) works then try building again
-			to see if the error resolves itself.
-
-			If that doesn't help, check the Node.js status page:
-			https://status.nodejs.org/
-		EOF
-		return 1
+		runtimes::nodejs::_fail_node_download "${download_url}"
 	fi
 
 	if [[ -z "${NODE_BINARY_URL}" ]]; then
@@ -133,19 +117,11 @@ function runtimes::nodejs::_install() {
 		"sha256")
 			echo "Validating checksum"
 			if ! echo "${checksum_value} ${output_file}" | sha256sum --check --status; then
-				build_data::set_string "failure" "checksum-validation-failed"
-				output::error <<-EOF
-					Checksum validation failed for Node.js ${version} - ${checksum_type}:${checksum_value}
-				EOF
-				return 1
+				runtimes::nodejs::_fail_checksum_validation "${version}" "${checksum_type}" "${checksum_value}"
 			fi
 			;;
 		*)
-			build_data::set_string "failure" "unsupported-checksum"
-			output::error <<-EOF
-				Unsupported checksum for Node.js ${version} - ${checksum_type}:${checksum_value}
-			EOF
-			return 1
+			runtimes::nodejs::_fail_unsupported_checksum "${version}" "${checksum_type}" "${checksum_value}"
 			;;
 		esac
 	fi
@@ -199,6 +175,69 @@ function runtimes::nodejs::_warn_known_bad_release() {
 		pinning to an earlier version of Node.js (e.g.; 22.4.1).
 		https://github.com/nodejs/node/pull/53934
 	EOF
+}
+
+# Emits the classified failure for a Node.js download error and exits. Called directly at the
+# failure site (not via the log classifier) because the buildpack already knows exactly what
+# failed here — no log inspection is needed to identify it.
+function runtimes::nodejs::_fail_node_download() {
+	local download_url="${1}"
+	local -A failure
+	failure["id"]="node-download-failed"
+	failure["classification"]="buildpack"
+	failure["detail"]="${download_url}"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: Unable to download Node.js.
+
+			Failed to download Node.js from:
+			${download_url}
+
+			In some cases, this happens due to a temporary network
+			issue or an outage with the Node.js distribution server.
+
+			Confirm the download url (${download_url}) works then try building again
+			to see if the error resolves itself.
+
+			If that doesn't help, check the Node.js status page:
+			https://status.nodejs.org/
+		EOF
+	)
+	failure::emit failure
+}
+
+# Emits the classified failure for a Node.js checksum mismatch and exits. See
+# runtimes::nodejs::_fail_node_download for why this is called directly at the failure site.
+function runtimes::nodejs::_fail_checksum_validation() {
+	local version="${1}"
+	local checksum_type="${2}"
+	local checksum_value="${3}"
+	local -A failure
+	failure["id"]="checksum-validation-failed"
+	failure["classification"]="buildpack"
+	failure["message"]=$(
+		cat <<-EOF
+			Checksum validation failed for Node.js ${version} - ${checksum_type}:${checksum_value}
+		EOF
+	)
+	failure::emit failure
+}
+
+# Emits the classified failure for an unsupported Node.js checksum type and exits. See
+# runtimes::nodejs::_fail_node_download for why this is called directly at the failure site.
+function runtimes::nodejs::_fail_unsupported_checksum() {
+	local version="${1}"
+	local checksum_type="${2}"
+	local checksum_value="${3}"
+	local -A failure
+	failure["id"]="unsupported-checksum"
+	failure["classification"]="buildpack"
+	failure["message"]=$(
+		cat <<-EOF
+			Unsupported checksum for Node.js ${version} - ${checksum_type}:${checksum_value}
+		EOF
+	)
+	failure::emit failure
 }
 
 # Pure classifier for Node.js install failures.
