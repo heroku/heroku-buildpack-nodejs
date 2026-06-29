@@ -389,21 +389,25 @@ testConcurrencyTooHigh() {
 
 
 testInvalidNode() {
-  compile "invalid-node"
+  cache_dir=$(mktmpdir)
+  compile "invalid-node" "${cache_dir}"
   assertCaptured "Resolving node version 0.11.333"
   assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
-  assertCaptured "No matching version found for Node: 0.11.333"
-  assertCaptured "https://help.heroku.com/6235QYN4"
+  assertCapturedStderr "No matching version found for Node: 0.11.333"
+  assertCapturedStderr "https://help.heroku.com/6235QYN4"
   assertCapturedError
+  assertMetricEqualsString "${cache_dir}" "failure" "invalid-node-version"
 }
 
 
 testInvalidNodeSemver() {
-  compile "invalid-node-semver"
+  cache_dir=$(mktmpdir)
+  compile "invalid-node-semver" "${cache_dir}"
   assertCaptured "Resolving node version stable"
   assertCaptured "Error: Invalid semantic version \"stable\""
-  assertCaptured "Invalid semver requirement"
+  assertCapturedStderr "Invalid semver requirement"
   assertCapturedError
+  assertMetricEqualsString "${cache_dir}" "failure" "invalid-semver-requirement"
 }
 
 
