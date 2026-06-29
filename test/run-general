@@ -393,7 +393,7 @@ testInvalidNode() {
   compile "invalid-node" "${cache_dir}"
   assertCaptured "Resolving node version 0.11.333"
   assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
-  assertCapturedStderr "Error: No matching version found for Node"
+  assertCapturedStderr "No matching version found for Node: 0.11.333"
   assertCapturedStderr "https://help.heroku.com/6235QYN4"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "invalid-node-version"

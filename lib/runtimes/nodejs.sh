@@ -125,7 +125,7 @@ function runtimes::nodejs::_install() {
 			If that doesn't help, check the Node.js status page:
 			https://status.nodejs.org/
 		EOF
-		false
+		return 1
 	fi
 
 	if [[ -z "${NODE_BINARY_URL}" ]]; then
@@ -137,7 +137,7 @@ function runtimes::nodejs::_install() {
 				output::error <<-EOF
 					Checksum validation failed for Node.js ${version} - ${checksum_type}:${checksum_value}
 				EOF
-				false
+				return 1
 			fi
 			;;
 		*)
@@ -145,7 +145,7 @@ function runtimes::nodejs::_install() {
 			output::error <<-EOF
 				Unsupported checksum for Node.js ${version} - ${checksum_type}:${checksum_value}
 			EOF
-			false
+			return 1
 			;;
 		esac
 	fi
