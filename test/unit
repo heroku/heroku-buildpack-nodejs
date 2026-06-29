@@ -728,6 +728,65 @@ testHandleNodeInstallInvalidSemver() {
   assertEquals "stable" "${result[detail]}"
 }
 
+# Captures build_data writes and emitted message for one of the runtimes::nodejs::_fail_*
+# functions, which emit a classified failure directly at the failure site (see Design B). Runs
+# in a subshell with `fail`/`build_data::set_string` stubbed so emit doesn't kill the runner.
+# Usage: _capture_node_fail <out_var> <capture_file> <fn> [args...]
+_capture_node_fail() {
+  local out_var="$1"
+  local capture="$2"
+  shift 2
+  printf -v "$out_var" '%s' "$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    "$@" 2>&1 || true
+  )"
+}
+
+testFailNodeDownloadEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_node_download "https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz"
+
+  # The detailed, verbatim message reaches the user via failure::emit.
+  assertContains "$out" "Error: Unable to download Node.js."
+  assertContains "$out" "https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz"
+  assertContains "$out" "https://status.nodejs.org/"
+  # Classification + detail are recorded as build data.
+  assertContains "$(cat "$capture")" "failure=node-download-failed"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz"
+  rm -f "$capture"
+}
+
+testFailChecksumValidationEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_checksum_validation "20.0.0" "sha256" "abc123" "def456"
+
+  assertContains "$out" "Checksum validation failed for Node.js 20.0.0 - sha256:abc123"
+  assertContains "$(cat "$capture")" "failure=checksum-validation-failed"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  # Detail records both the expected and the actual (mismatched) checksum for observability.
+  assertContains "$(cat "$capture")" "failure_detail=sha256 expected:abc123 actual:def456"
+  rm -f "$capture"
+}
+
+testFailUnsupportedChecksumEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_unsupported_checksum "20.0.0" "sha512" "abc123"
+
+  assertContains "$out" "Unsupported checksum for Node.js 20.0.0 - sha512:abc123"
+  assertContains "$(cat "$capture")" "failure=unsupported-checksum"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=sha512:abc123"
+  rm -f "$capture"
+}
+
 testExtractErrorDetailReturnsFirstDescriptiveLine() {
   # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
   # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
