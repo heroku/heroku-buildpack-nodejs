@@ -4,7 +4,8 @@
 # not maintain its own list).
 MIGRATED_FILES = \
 	lib/failures.sh \
-	lib/package_managers/npm.sh
+	lib/package_managers/npm.sh \
+	lib/runtimes/nodejs.sh
 
 .PHONY: lint lint-scripts check-format format
 

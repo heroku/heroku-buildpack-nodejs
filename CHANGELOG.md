@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Relocated the Node.js engine install logic into a dedicated `lib/runtimes/nodejs.sh` module and brought it under the strict-mode lint scope. No change to build behavior. ([#1686](https://github.com/heroku/heroku-buildpack-nodejs/pull/1686))
 
 ## [v356] - 2026-06-25
 
