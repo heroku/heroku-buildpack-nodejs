@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install shfmt
         run: |
           SHFMT_VERSION=v3.10.0
@@ -38,7 +38,7 @@ jobs:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Unit tests on heroku:${{ matrix.stack_number }}-build
         run: test/unit
 
@@ -56,7 +56,7 @@ jobs:
       STACK: heroku-${{ matrix.stack_number }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Functional tests (${{ matrix.test_suite }}) on heroku:${{ matrix.stack_number }}-build
         run: test/run-${{ matrix.test_suite }}
 
@@ -68,7 +68,7 @@ jobs:
       HATCHET_EXPENSIVE_MODE: "1"
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
@@ -91,7 +91,7 @@ jobs:
     name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.version }}
@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
