@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v357] - 2026-07-06
+
 - Migrated Node.js version-resolution build errors (unresolvable version, invalid semver requirement) onto the call-site failure-classification framework. The error messages are unchanged. ([#1687](https://github.com/heroku/heroku-buildpack-nodejs/pull/1687))
 - Migrated Node.js download and checksum-validation build errors onto the failure-classification framework, and removed the obsolete AWS proxy (`NO_PROXY=amazonaws.com`) build warning, which dated to when Node.js binaries were served from an S3 mirror. ([#1688](https://github.com/heroku/heroku-buildpack-nodejs/pull/1688))
 
@@ -1363,7 +1366,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v356...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v357...main
+[v357]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v356...v357
 [v356]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v355...v356
 [v355]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v354...v355
 [v354]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v353...v354
