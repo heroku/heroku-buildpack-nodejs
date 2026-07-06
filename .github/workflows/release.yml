@@ -33,3 +33,4 @@ jobs:
     secrets:
       app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       slack_webhook_url: ${{ secrets.BUILDPACK_RELEASE_FAILURE_WEBHOOK_URL }}
+      honeycomb_api_key: ${{ secrets.HONEYCOMB_API_KEY }}
