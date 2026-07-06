@@ -23,6 +23,12 @@ print_number_args() {
   echo "$#"
 }
 
+# Resolve a unit-fixture path relative to the repo root, e.g.
+#   _unit_fixture "node-failures/no-result.log"
+_unit_fixture() {
+  echo "$(pwd)/test/unit-fixtures/$1"
+}
+
 testOutput() {
   local stdout
 
@@ -694,6 +700,15 @@ testHandleNpmInstallNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testHandleNodeInstallScaffoldNoMatch() {
+  local -A result
+  # Scaffold classifier recognises nothing yet; it must return non-zero and leave the array empty.
+  if runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/no-result.log)" result; then
+    fail "expected scaffold classifier to return non-zero"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
 testExtractErrorDetailReturnsFirstDescriptiveLine() {
   # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
   # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
@@ -720,6 +735,7 @@ source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/failures.sh
 source "$(pwd)"/lib/package_managers/npm.sh
+source "$(pwd)"/lib/runtimes/nodejs.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/kvstore.sh
