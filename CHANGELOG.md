@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated Node.js version-resolution build errors (unresolvable version, invalid semver requirement) onto the call-site failure-classification framework. The error messages are unchanged. ([#1687](https://github.com/heroku/heroku-buildpack-nodejs/pull/1687))
 
 ## [v356] - 2026-06-25
 
