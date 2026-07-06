@@ -217,16 +217,6 @@ testErrorYarnAndPnpmAndNpmLockfiles() {
 }
 
 
-testWarnAwsProxyHttps() {
-  env_dir=$(mktmpdir)
-  echo "http://localhost:5001" > $env_dir/HTTPS_PROXY
-  compile "node-14" "$(mktmpdir)" $env_dir
-  assertCaptured "Your build may fail if NO_PROXY is not set to amazonaws.com"
-  assertCapturedError
-}
-
-
-
 testWarnNoStart() {
   compile "no-start"
   assertCaptured "may not specify any way to start"

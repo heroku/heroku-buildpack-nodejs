@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Migrated Node.js version-resolution build errors (unresolvable version, invalid semver requirement) onto the call-site failure-classification framework. The error messages are unchanged. ([#1687](https://github.com/heroku/heroku-buildpack-nodejs/pull/1687))
+- Migrated Node.js download and checksum-validation build errors onto the failure-classification framework, and removed the obsolete AWS proxy (`NO_PROXY=amazonaws.com`) build warning, which dated to when Node.js binaries were served from an S3 mirror. ([#1688](https://github.com/heroku/heroku-buildpack-nodejs/pull/1688))
 
 ## [v356] - 2026-06-25
 
