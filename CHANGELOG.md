@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Improved the Node.js version-resolution build errors, and added error handling for previously-unclassified resolver failures. ([#1698](https://github.com/heroku/heroku-buildpack-nodejs/pull/1698))
 
 ## [v357] - 2026-07-06
 

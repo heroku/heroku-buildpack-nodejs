@@ -4,12 +4,9 @@ use nodejs_data::{
     NodejsArtifact, NodejsInventory, RECOMMENDED_LTS_VERSION, SUPPORTED_NODEJS_VERSIONS, Version,
     VersionError, VersionRange,
 };
+use serde::Serialize;
 use std::env::consts;
-
-const VERSION_REQS_EXIT_CODE: i32 = 1;
-const INVENTORY_EXIT_CODE: i32 = 2;
-const UNSUPPORTED_OS_EXIT_CODE: i32 = 3;
-const UNSUPPORTED_ARCH_EXIT_CODE: i32 = 4;
+use std::process::ExitCode;
 
 struct Resolution<'a> {
     artifact: &'a NodejsArtifact,
@@ -18,7 +15,47 @@ struct Resolution<'a> {
     eol: bool,
 }
 
-fn main() {
+/// The resolver's structured output. Serialized to stdout as a single JSON object in every case,
+/// with a `status` discriminator. Success returns exit code 0; every error variant returns exit
+/// code 1. This lets the shell caller branch on `status` without parsing prose or exit codes.
+#[derive(Serialize)]
+#[serde(tag = "status", rename_all = "kebab-case")]
+enum Output {
+    /// A version was resolved from the inventory.
+    Resolved {
+        version: Version,
+        url: String,
+        checksum_type: String,
+        checksum_value: String,
+        uses_wide_range: bool,
+        lts_upper_bound_enforced: bool,
+        default: bool,
+        lts_version: String,
+        eol: bool,
+    },
+    /// The requirement parsed as valid semver, but no inventory version matched it.
+    NoVersionResolved { error: String, lts_major: u64 },
+    /// The requested version requirement was not a valid semver range.
+    InvalidSemverRequirement { error: String, lts_major: u64 },
+    /// A catastrophic error the app can't fix: inventory read/parse failure, unsupported OS/arch,
+    /// or an inventory missing the recommended LTS. `lts_major` is omitted when it can't be
+    /// computed (e.g. the inventory couldn't be read).
+    InternalError {
+        error: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        lts_major: Option<u64>,
+    },
+}
+
+/// Prints the output as a single line of JSON to stdout.
+fn emit(output: &Output) {
+    println!(
+        "{}",
+        serde_json::to_string(output).expect("Output is always serializable")
+    );
+}
+
+fn main() -> ExitCode {
     let allow_wide_range = std::env::var("NODEJS_ALLOW_WIDE_RANGE")
         .map(|val| val == "true")
         .unwrap_or(false);
@@ -38,51 +75,88 @@ fn main() {
         .get_one::<String>("node_version")
         .expect("required argument");
 
+    // OS/arch are resolved before the inventory is read, so `lts_major` can't be computed yet if
+    // either is unsupported.
     let os = match matches.get_one::<Os>("os") {
         Some(os) => *os,
-        None => consts::OS.parse::<Os>().unwrap_or_else(|e| {
-            eprintln!("Unsupported OS '{}': {e}", consts::OS);
-            std::process::exit(UNSUPPORTED_OS_EXIT_CODE);
-        }),
+        None => match consts::OS.parse::<Os>() {
+            Ok(os) => os,
+            Err(e) => {
+                emit(&Output::InternalError {
+                    error: format!("Unsupported OS '{}': {e}", consts::OS),
+                    lts_major: None,
+                });
+                return ExitCode::FAILURE;
+            }
+        },
     };
 
     let arch = match matches.get_one::<Arch>("arch") {
         Some(arch) => *arch,
-        None => consts::ARCH.parse::<Arch>().unwrap_or_else(|e| {
-            eprintln!("Unsupported Architecture '{}': {e}", consts::ARCH);
-            std::process::exit(UNSUPPORTED_ARCH_EXIT_CODE);
-        }),
+        None => match consts::ARCH.parse::<Arch>() {
+            Ok(arch) => arch,
+            Err(e) => {
+                emit(&Output::InternalError {
+                    error: format!("Unsupported Architecture '{}': {e}", consts::ARCH),
+                    lts_major: None,
+                });
+                return ExitCode::FAILURE;
+            }
+        },
     };
 
     let default = node_version.is_empty();
 
-    let requirement = parse_node_version(node_version).unwrap_or_else(|e| {
-        eprintln!("Could not parse Version Requirements '{node_version}': {e}");
-        std::process::exit(VERSION_REQS_EXIT_CODE);
-    });
+    // Read and parse the inventory before parsing the requirement so that `lts_major` is available
+    // to the invalid-semver-requirement path below.
+    let inventory_contents = match std::fs::read_to_string(inventory_path) {
+        Ok(contents) => contents,
+        Err(e) => {
+            emit(&Output::InternalError {
+                error: format!("Error reading '{inventory_path}': {e}"),
+                lts_major: None,
+            });
+            return ExitCode::FAILURE;
+        }
+    };
 
-    let inventory_contents = std::fs::read_to_string(inventory_path).unwrap_or_else(|e| {
-        eprintln!("Error reading '{inventory_path}': {e}");
-        std::process::exit(INVENTORY_EXIT_CODE);
-    });
-
-    let node_inventory: NodejsInventory = toml::from_str(&inventory_contents).unwrap_or_else(|e| {
-        eprintln!("Error parsing '{inventory_path}': {e}");
-        std::process::exit(INVENTORY_EXIT_CODE);
-    });
+    let node_inventory: NodejsInventory = match toml::from_str(&inventory_contents) {
+        Ok(inventory) => inventory,
+        Err(e) => {
+            emit(&Output::InternalError {
+                error: format!("Error parsing '{inventory_path}': {e}"),
+                lts_major: None,
+            });
+            return ExitCode::FAILURE;
+        }
+    };
 
     let lts_major_version = match node_inventory.resolve(os, arch, &*RECOMMENDED_LTS_VERSION) {
         Some(artifact) => artifact.version.major(),
         None => {
-            eprintln!(
-                "Inventory does not contain a version matching RECOMMENDED_LTS_VERSION ({})",
-                *RECOMMENDED_LTS_VERSION
-            );
-            std::process::exit(INVENTORY_EXIT_CODE);
+            emit(&Output::InternalError {
+                error: format!(
+                    "Inventory does not contain a version matching RECOMMENDED_LTS_VERSION ({})",
+                    *RECOMMENDED_LTS_VERSION
+                ),
+                lts_major: None,
+            });
+            return ExitCode::FAILURE;
         }
     };
 
-    if let Some(resolution) = resolve_node_artifact(
+    let requirement = match parse_node_version(node_version) {
+        Ok(requirement) => requirement,
+        Err(e) => {
+            emit(&Output::InvalidSemverRequirement {
+                error: format!("Could not parse Version Requirements '{node_version}': {e}"),
+                lts_major: lts_major_version,
+            });
+            return ExitCode::FAILURE;
+        }
+    };
+
+    match resolve_node_artifact(
         &node_inventory,
         os,
         arch,
@@ -90,22 +164,29 @@ fn main() {
         lts_major_version,
         allow_wide_range,
     ) {
-        println!(
-            "{}",
-            serde_json::json!({
-                "version": resolution.artifact.version,
-                "url": resolution.artifact.url,
-                "checksum_type": resolution.artifact.checksum.name,
-                "checksum_value": hex::encode(&resolution.artifact.checksum.value),
-                "uses_wide_range": resolution.uses_wide_range,
-                "lts_upper_bound_enforced": resolution.lts_upper_bound_enforced,
-                "default": default,
-                "lts_version": RECOMMENDED_LTS_VERSION.to_string(),
-                "eol": resolution.eol,
-            })
-        );
-    } else {
-        println!("No result");
+        Some(resolution) => {
+            emit(&Output::Resolved {
+                version: resolution.artifact.version.clone(),
+                url: resolution.artifact.url.clone(),
+                checksum_type: resolution.artifact.checksum.name.clone(),
+                checksum_value: hex::encode(&resolution.artifact.checksum.value),
+                uses_wide_range: resolution.uses_wide_range,
+                lts_upper_bound_enforced: resolution.lts_upper_bound_enforced,
+                default,
+                lts_version: RECOMMENDED_LTS_VERSION.to_string(),
+                eol: resolution.eol,
+            });
+            ExitCode::SUCCESS
+        }
+        None => {
+            emit(&Output::NoVersionResolved {
+                error: format!(
+                    "No published Node.js version matches the requirement '{node_version}'"
+                ),
+                lts_major: lts_major_version,
+            });
+            ExitCode::FAILURE
+        }
     }
 }
 
@@ -510,6 +591,84 @@ mod tests {
         .expect("expected resolution to succeed");
         assert_eq!(resolution.artifact.version.major(), 24);
         assert!(!resolution.eol);
+    }
+
+    // --- Output serialization contract tests ---
+
+    #[test]
+    fn resolved_output_has_status_and_all_fields() {
+        let output = Output::Resolved {
+            version: Version::new(24, 10, 0),
+            url: "https://example.com/node.tar.gz".to_string(),
+            checksum_type: "sha256".to_string(),
+            checksum_value: "abc123".to_string(),
+            uses_wide_range: false,
+            lts_upper_bound_enforced: true,
+            default: false,
+            lts_version: "24.x".to_string(),
+            eol: false,
+        };
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "resolved");
+        assert_eq!(value["version"], "24.10.0");
+        assert_eq!(value["url"], "https://example.com/node.tar.gz");
+        assert_eq!(value["checksum_type"], "sha256");
+        assert_eq!(value["checksum_value"], "abc123");
+        assert_eq!(value["uses_wide_range"], false);
+        assert_eq!(value["lts_upper_bound_enforced"], true);
+        assert_eq!(value["default"], false);
+        assert_eq!(value["lts_version"], "24.x");
+        assert_eq!(value["eol"], false);
+    }
+
+    #[test]
+    fn no_version_resolved_output_carries_lts_major() {
+        let output = Output::NoVersionResolved {
+            error: "no match".to_string(),
+            lts_major: 24,
+        };
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "no-version-resolved");
+        assert_eq!(value["error"], "no match");
+        assert_eq!(value["lts_major"], 24);
+    }
+
+    #[test]
+    fn invalid_semver_requirement_output_carries_lts_major() {
+        let output = Output::InvalidSemverRequirement {
+            error: "bad semver".to_string(),
+            lts_major: 24,
+        };
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "invalid-semver-requirement");
+        assert_eq!(value["error"], "bad semver");
+        assert_eq!(value["lts_major"], 24);
+    }
+
+    #[test]
+    fn internal_error_output_omits_lts_major_when_none() {
+        let output = Output::InternalError {
+            error: "inventory unreadable".to_string(),
+            lts_major: None,
+        };
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "internal-error");
+        assert_eq!(value["error"], "inventory unreadable");
+        assert!(
+            value.get("lts_major").is_none(),
+            "lts_major key should be absent, not null, when None"
+        );
+    }
+
+    #[test]
+    fn internal_error_output_includes_lts_major_when_some() {
+        let output = Output::InternalError {
+            error: "missing recommended lts".to_string(),
+            lts_major: Some(24),
+        };
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "internal-error");
+        assert_eq!(value["lts_major"], 24);
     }
 
     fn create_inventory() -> NodejsInventory {
