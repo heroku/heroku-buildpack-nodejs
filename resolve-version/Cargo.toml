@@ -1,6 +1,6 @@
 [package]
 name = "resolve-version"
-rust-version = "1.89"
+rust-version = "1.96"
 edition = "2024"
 
 [dependencies]
