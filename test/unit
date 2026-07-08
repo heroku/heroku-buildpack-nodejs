@@ -759,6 +759,95 @@ _capture_node_fail() {
   )"
 }
 
+# Drives runtimes::nodejs::_install through its resolver-JSON dispatch by stubbing `RESOLVE` to
+# echo a canned payload, then captures the emitted message, build-data writes, and the function's
+# own return code. `RESOLVE` is only a command name, so pointing it at a shell function lets the
+# real `jq -e` guard, `case` dispatch, and `@tsv`/`read` split run against controlled input. Error
+# statuses exit via the stubbed `fail` before any download; a non-JSON payload `return 1`s early.
+# Usage: _capture_node_install <out_var> <capture_file> <rc_var> <resolver_json>
+_capture_node_install() {
+  local out_var="$1"
+  local capture="$2"
+  local rc_var="$3"
+  local resolver_json="$4"
+  # Internal locals are prefixed `_ci_` so they never collide with the caller-supplied variable
+  # names (`printf -v` uses dynamic scoping, so a local named `out` would shadow the caller's).
+  local _ci_out _ci_rc _ci_dir
+  _ci_dir=$(mktemp -d)
+  # Run in a subshell so the stubs don't leak. Use the `if` form to capture the subshell's exit
+  # code without tripping the runner's errexit (a bare assignment from a failing subshell would
+  # abort this function before the code is read). Capture stdout+stderr together.
+  if _ci_out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    build_data::set_raw() { echo "$1=$2" >> "$capture"; }
+    _stub_resolve() { printf '%s' "${resolver_json}"; }
+    RESOLVE=_stub_resolve
+    runtimes::nodejs::_install "some-requested-version" "${_ci_dir}" 2>&1
+  ); then
+    _ci_rc=0
+  else
+    _ci_rc=$?
+  fi
+  rm -rf "${_ci_dir}"
+  printf -v "$out_var" '%s' "$_ci_out"
+  printf -v "$rc_var" '%s' "$_ci_rc"
+}
+
+testInstallDispatchesNoVersionResolvedStatus() {
+  local out capture rc
+  capture=$(mktemp)
+  _capture_node_install out "$capture" rc \
+    '{"status":"no-version-resolved","error":"no match for 0.11.333","lts_major":24}'
+
+  # The `case` routed the status to _fail_no_version_resolved, which reworded the message and
+  # interpolated the resolver-supplied lts_major into the recommended range.
+  assertContains "$out" "Error: No published Node.js version matches the requested range."
+  assertContains "$out" '"node": "24.x"'
+  assertContains "$(cat "$capture")" "failure=invalid-node-version"
+  rm -f "$capture"
+}
+
+testInstallDispatchesInvalidSemverStatus() {
+  local out capture rc
+  capture=$(mktemp)
+  _capture_node_install out "$capture" rc \
+    '{"status":"invalid-semver-requirement","error":"bad semver","lts_major":24}'
+
+  assertContains "$out" "Error: Invalid Node.js version requirement."
+  assertContains "$out" '"node": "24.x"'
+  assertContains "$(cat "$capture")" "failure=invalid-semver-requirement"
+  rm -f "$capture"
+}
+
+testInstallDispatchesInternalErrorToCatchAll() {
+  local out capture rc
+  capture=$(mktemp)
+  # `internal-error` carries no lts_major; the `(.lts_major // "")` fallback keeps @tsv from
+  # dropping a field, and the catch-all routes to _fail_resolve carrying the resolver's error.
+  _capture_node_install out "$capture" rc \
+    '{"status":"internal-error","error":"Error reading node.toml: nope"}'
+
+  assertContains "$out" "Error: Unable to resolve a Node.js version to install."
+  assertContains "$out" "Error reading node.toml: nope"
+  assertContains "$(cat "$capture")" "failure=node-version-resolution-failed"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=internal-error: Error reading node.toml: nope"
+  rm -f "$capture"
+}
+
+testInstallBubblesNonJsonResolverOutput() {
+  local out capture rc
+  capture=$(mktemp)
+  # A crashed/garbled binary produces no parseable JSON: the `jq -e` guard fails, so _install
+  # returns non-zero without emitting a classified failure, leaving the global ERR trap to report.
+  _capture_node_install out "$capture" rc "Segmentation fault"
+
+  assertEquals "non-JSON output should bubble up via a non-zero return" "1" "$rc"
+  assertEquals "no classified failure should be recorded" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
 testFailNodeDownloadEmitsDetailedMessage() {
   local out capture
   capture=$(mktemp)
