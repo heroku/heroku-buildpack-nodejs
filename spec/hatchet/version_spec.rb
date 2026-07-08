@@ -12,7 +12,8 @@ describe "bad node version" do
         end
       end
       app.deploy do
-        expect(app.output).to include("Invalid semantic version \"14.x.badversion\"")
+        expect(app.output).to include("Error: Invalid Node.js version requirement.")
+        expect(app.output).to include("package.json (14.x.badversion)")
       end
     end
   end

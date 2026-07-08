@@ -382,9 +382,9 @@ testInvalidNode() {
   cache_dir=$(mktmpdir)
   compile "invalid-node" "${cache_dir}"
   assertCaptured "Resolving node version 0.11.333"
-  assertCaptured "Could not find Node version corresponding to version requirement: 0.11.333"
-  assertCapturedStderr "No matching version found for Node: 0.11.333"
-  assertCapturedStderr "https://help.heroku.com/6235QYN4"
+  assertCapturedStderr "Error: No published Node.js version matches the requested range."
+  assertCapturedStderr "package.json (0.11.333)"
+  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "invalid-node-version"
 }
@@ -394,8 +394,9 @@ testInvalidNodeSemver() {
   cache_dir=$(mktmpdir)
   compile "invalid-node-semver" "${cache_dir}"
   assertCaptured "Resolving node version stable"
-  assertCaptured "Error: Invalid semantic version \"stable\""
-  assertCapturedStderr "Invalid semver requirement"
+  assertCapturedStderr "Error: Invalid Node.js version requirement."
+  assertCapturedStderr "package.json (stable)"
+  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "invalid-semver-requirement"
 }

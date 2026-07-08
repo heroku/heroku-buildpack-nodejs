@@ -23,12 +23,6 @@ print_number_args() {
   echo "$#"
 }
 
-# Resolve a unit-fixture path relative to the repo root, e.g.
-#   _unit_fixture "node-failures/no-result.log"
-_unit_fixture() {
-  echo "$(pwd)/test/unit-fixtures/$1"
-}
-
 testOutput() {
   local stdout
 
@@ -700,32 +694,54 @@ testHandleNpmInstallNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
-testHandleNodeInstallScaffoldNoMatch() {
-  local -A result
-  # Scaffold classifier recognises nothing yet; it must return non-zero and leave the array empty.
-  if runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/no-result.log)" "16.0.0" result; then
-    fail "expected scaffold classifier to return non-zero"
-  fi
-  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+testFailNoVersionResolvedEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_no_version_resolved "0.11.333" "24"
+
+  # The reworded message recommends a major range using the resolver-supplied LTS major.
+  assertContains "$out" "Error: No published Node.js version matches the requested range."
+  assertContains "$out" "package.json (0.11.333)"
+  assertContains "$out" '"node": "24.x"'
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+  # The historical failure id is preserved for metric continuity.
+  assertContains "$(cat "$capture")" "failure=invalid-node-version"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  assertContains "$(cat "$capture")" "failure_detail=0.11.333"
+  rm -f "$capture"
 }
 
-testHandleNodeInstallInvalidVersion() {
-  local -A result
-  runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/invalid-version.log)" "0.11.333" result
-  assertEquals "classifier should return 0 on a match" "0" "$?"
-  assertEquals "invalid-node-version" "${result[id]}"
-  assertEquals "user" "${result[classification]}"
-  assertContains "${result[message]}" "No matching version found for Node: 0.11.333"
-  assertContains "${result[detail]}" "0.11.333"
+testFailInvalidSemverRequirementEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_invalid_semver_requirement "stable" "24"
+
+  assertContains "$out" "Error: Invalid Node.js version requirement."
+  assertContains "$out" "package.json (stable)"
+  assertContains "$out" '"node": "24.x"'
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+  assertContains "$(cat "$capture")" "failure=invalid-semver-requirement"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  assertContains "$(cat "$capture")" "failure_detail=stable"
+  rm -f "$capture"
 }
 
-testHandleNodeInstallInvalidSemver() {
-  local -A result
-  runtimes::nodejs::_handle_install_failure "$(_unit_fixture node-failures/invalid-semver.log)" "stable" result
-  assertEquals "invalid-semver-requirement" "${result[id]}"
-  assertEquals "user" "${result[classification]}"
-  assertContains "${result[message]}" "Invalid semver requirement"
-  assertEquals "stable" "${result[detail]}"
+testFailResolveEmitsCatchAllMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_resolve "20.0.0" "internal-error" "Error reading '/app/inventory/node.toml': No such file or directory"
+
+  assertContains "$out" "Error: Unable to resolve a Node.js version to install."
+  assertContains "$out" "(20.0.0)"
+  assertContains "$out" "Error reading '/app/inventory/node.toml': No such file or directory"
+  # Catch-all is classified as buildpack-side and records the resolver status + error in detail.
+  assertContains "$(cat "$capture")" "failure=node-version-resolution-failed"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=internal-error: Error reading '/app/inventory/node.toml': No such file or directory"
+  rm -f "$capture"
 }
 
 # Captures build_data writes and emitted message for one of the runtimes::nodejs::_fail_*
@@ -741,6 +757,95 @@ _capture_node_fail() {
     build_data::set_string() { echo "$1=$2" >> "$capture"; }
     "$@" 2>&1 || true
   )"
+}
+
+# Drives runtimes::nodejs::_install through its resolver-JSON dispatch by stubbing `RESOLVE` to
+# echo a canned payload, then captures the emitted message, build-data writes, and the function's
+# own return code. `RESOLVE` is only a command name, so pointing it at a shell function lets the
+# real `jq -e` guard, `case` dispatch, and `@tsv`/`read` split run against controlled input. Error
+# statuses exit via the stubbed `fail` before any download; a non-JSON payload `return 1`s early.
+# Usage: _capture_node_install <out_var> <capture_file> <rc_var> <resolver_json>
+_capture_node_install() {
+  local out_var="$1"
+  local capture="$2"
+  local rc_var="$3"
+  local resolver_json="$4"
+  # Internal locals are prefixed `_ci_` so they never collide with the caller-supplied variable
+  # names (`printf -v` uses dynamic scoping, so a local named `out` would shadow the caller's).
+  local _ci_out _ci_rc _ci_dir
+  _ci_dir=$(mktemp -d)
+  # Run in a subshell so the stubs don't leak. Use the `if` form to capture the subshell's exit
+  # code without tripping the runner's errexit (a bare assignment from a failing subshell would
+  # abort this function before the code is read). Capture stdout+stderr together.
+  if _ci_out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    build_data::set_raw() { echo "$1=$2" >> "$capture"; }
+    _stub_resolve() { printf '%s' "${resolver_json}"; }
+    RESOLVE=_stub_resolve
+    runtimes::nodejs::_install "some-requested-version" "${_ci_dir}" 2>&1
+  ); then
+    _ci_rc=0
+  else
+    _ci_rc=$?
+  fi
+  rm -rf "${_ci_dir}"
+  printf -v "$out_var" '%s' "$_ci_out"
+  printf -v "$rc_var" '%s' "$_ci_rc"
+}
+
+testInstallDispatchesNoVersionResolvedStatus() {
+  local out capture rc
+  capture=$(mktemp)
+  _capture_node_install out "$capture" rc \
+    '{"status":"no-version-resolved","error":"no match for 0.11.333","lts_major":24}'
+
+  # The `case` routed the status to _fail_no_version_resolved, which reworded the message and
+  # interpolated the resolver-supplied lts_major into the recommended range.
+  assertContains "$out" "Error: No published Node.js version matches the requested range."
+  assertContains "$out" '"node": "24.x"'
+  assertContains "$(cat "$capture")" "failure=invalid-node-version"
+  rm -f "$capture"
+}
+
+testInstallDispatchesInvalidSemverStatus() {
+  local out capture rc
+  capture=$(mktemp)
+  _capture_node_install out "$capture" rc \
+    '{"status":"invalid-semver-requirement","error":"bad semver","lts_major":24}'
+
+  assertContains "$out" "Error: Invalid Node.js version requirement."
+  assertContains "$out" '"node": "24.x"'
+  assertContains "$(cat "$capture")" "failure=invalid-semver-requirement"
+  rm -f "$capture"
+}
+
+testInstallDispatchesInternalErrorToCatchAll() {
+  local out capture rc
+  capture=$(mktemp)
+  # `internal-error` carries no lts_major; the `(.lts_major // "")` fallback keeps @tsv from
+  # dropping a field, and the catch-all routes to _fail_resolve carrying the resolver's error.
+  _capture_node_install out "$capture" rc \
+    '{"status":"internal-error","error":"Error reading node.toml: nope"}'
+
+  assertContains "$out" "Error: Unable to resolve a Node.js version to install."
+  assertContains "$out" "Error reading node.toml: nope"
+  assertContains "$(cat "$capture")" "failure=node-version-resolution-failed"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=internal-error: Error reading node.toml: nope"
+  rm -f "$capture"
+}
+
+testInstallBubblesNonJsonResolverOutput() {
+  local out capture rc
+  capture=$(mktemp)
+  # A crashed/garbled binary produces no parseable JSON: the `jq -e` guard fails, so _install
+  # returns non-zero without emitting a classified failure, leaving the global ERR trap to report.
+  _capture_node_install out "$capture" rc "Segmentation fault"
+
+  assertEquals "non-JSON output should bubble up via a non-zero return" "1" "$rc"
+  assertEquals "no classified failure should be recorded" "" "$(cat "$capture")"
+  rm -f "$capture"
 }
 
 testFailNodeDownloadEmitsDetailedMessage() {
