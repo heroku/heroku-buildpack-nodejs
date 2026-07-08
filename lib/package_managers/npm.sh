@@ -102,7 +102,7 @@ function package_managers::npm::install_dependencies() {
 	build_data::set_duration "install_dependencies_time" "${start}"
 }
 
-function npm_version_major() {
+function package_managers::npm::version_major() {
 	npm --version | cut -d "." -f 1
 }
 
