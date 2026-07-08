@@ -770,7 +770,7 @@ warn_old_npm() {
 
   npm_version="$(npm --version)"
 
-  if [ "$(npm_version_major)" -lt "2" ]; then
+  if [ "$(package_managers::npm::version_major)" -lt "2" ]; then
     # Emit immediately rather than via warning(), whose $warnings buffer is only flushed by
     # failure_message on a failed build — so a migrated failure that bypasses the legacy
     # handler, or a successful build, would never surface this warning.
@@ -788,7 +788,7 @@ warn_old_npm_lockfile() {
 
   npm_version="$(npm --version)"
 
-  if $npm_lock && [ "$(npm_version_major)" -lt "5" ]; then
+  if $npm_lock && [ "$(package_managers::npm::version_major)" -lt "5" ]; then
     warn "This version of npm ($npm_version) does not support package-lock.json. Please
        update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
   fi

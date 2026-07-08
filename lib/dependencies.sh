@@ -198,7 +198,7 @@ should_use_npm_ci() {
   local major
 
   npm_version=$(npm --version)
-  major=$(npm_version_major)
+  major=$(package_managers::npm::version_major)
 
   # We should only run `npm ci` if all of the manifest files are there, and we are running at least npm 6.x
   # `npm ci` was introduced in the 5.x line in 5.7.0, but this sees very little usage, < 5% of builds

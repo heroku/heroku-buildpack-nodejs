@@ -517,7 +517,7 @@ build_dependencies() {
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
   else
-    npm::install_dependencies "$BUILD_DIR"
+    package_managers::npm::install_dependencies "$BUILD_DIR"
   fi
 
   build_data::set_string "build_step" "build-script"
