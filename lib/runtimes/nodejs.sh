@@ -78,8 +78,10 @@ function runtimes::nodejs::_install() {
 		if [[ "${resolve_status}" != "resolved" ]]; then
 			# Decode the error fields in a single jq call. `lts_major` is absent for internal
 			# errors (jq `// ""`), which is fine — the catch-all handler doesn't use it. Capture
-			# jq's output on its own line so a jq failure trips errexit rather than being masked
-			# by `read`; @tsv escapes any embedded tab/newline so the field split is safe.
+			# jq's output on its own line for readability; errexit is disabled here (this runs
+			# inside the `if !` pipe), and the payload was already validated as well-formed JSON
+			# by the `jq -e` guard above, so this static-field extraction cannot fail on it.
+			# @tsv escapes any embedded tab/newline so the field split is safe.
 			local error lts_major resolve_error
 			resolve_error=$(jq -r '[.error, (.lts_major // "")] | @tsv' <<<"${resolve_result}")
 			IFS=$'\t' read -r error lts_major <<<"${resolve_error}"
@@ -100,8 +102,10 @@ function runtimes::nodejs::_install() {
 		fi
 
 		# Success: read all fields in a single batched jq call. Capture jq's output on its own
-		# line (so a jq failure trips errexit instead of being masked by `read`), then split it.
-		# Booleans arrive as the strings "true"/"false", matching the checks further down.
+		# line for readability; errexit is disabled here (this runs inside the `if !` pipe), and
+		# the payload was already validated as well-formed JSON by the `jq -e` guard above, so
+		# this static-field extraction cannot fail on it. Split the result into individual
+		# variables. Booleans arrive as the strings "true"/"false", matching the checks further down.
 		local version download_url checksum_type checksum_value
 		local uses_wide_range lts_upper_bound_enforced lts_version eol resolve_fields
 		resolve_fields=$(jq -r '[.version, .url, .checksum_type, .checksum_value,
@@ -194,8 +198,8 @@ function runtimes::nodejs::_warn_known_bad_release() {
 }
 
 # Emits the classified failure for a Node.js download error and exits. Called directly at the
-# failure site (not via the log classifier) because the buildpack already knows exactly what
-# failed here — no log inspection is needed to identify it.
+# failure site because the cause is known locally — the buildpack knows exactly what failed here,
+# so it can render a specific message and exit without any further inspection.
 function runtimes::nodejs::_fail_node_download() {
 	local download_url="${1}"
 	local -A failure
