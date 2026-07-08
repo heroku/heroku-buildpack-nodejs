@@ -626,7 +626,7 @@ testFailuresLibDoesNotLeakErrexit() {
 
 testHandleNpmInstallEbadplatform() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log" result
   assertEquals "classifier should return 0 on a match" "0" "$?"
   assertEquals "npm-ebadplatform" "${result[id]}"
   assertEquals "user" "${result[classification]}"
@@ -637,28 +637,28 @@ testHandleNpmInstallEbadplatform() {
 
 testHandleNpmInstallInvalidName() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/einvalidpackagename.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/einvalidpackagename.log" result
   assertEquals "npm-package-name-typo" "${result[id]}"
   assertContains "${result[detail]}" "EINVALIDPACKAGENAME:"
 }
 
 testHandleNpmInstall404() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/e404.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/e404.log" result
   assertEquals "module-404" "${result[id]}"
   assertContains "${result[detail]}" "E404:"
 }
 
 testHandleNpmInstallFlatmapStream() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/flatmap-stream.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/flatmap-stream.log" result
   assertEquals "flatmap-stream-404" "${result[id]}"
   assertContains "${result[message]}" "flatmap-stream module has been removed"
 }
 
 testHandleNpmInstallStrictAllowScripts() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/estrictallowscripts.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/estrictallowscripts.log" result
   assertEquals "classifier should return 0 on a match" "0" "$?"
   assertEquals "npm-strict-allow-scripts" "${result[id]}"
   assertEquals "user" "${result[classification]}"
@@ -668,7 +668,7 @@ testHandleNpmInstallStrictAllowScripts() {
 
 testHandleNpmInstallAllowGitBlocked() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eallowgit.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eallowgit.log" result
   assertEquals "npm-allow-git-blocked" "${result[id]}"
   assertContains "${result[detail]}" "EALLOWGIT:"
   assertEquals "user" "${result[classification]}"
@@ -677,7 +677,7 @@ testHandleNpmInstallAllowGitBlocked() {
 
 testHandleNpmInstallAllowRemoteBlocked() {
   local -A result
-  npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eallowremote.log" result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eallowremote.log" result
   assertEquals "npm-allow-remote-blocked" "${result[id]}"
   assertContains "${result[detail]}" "EALLOWREMOTE:"
   assertEquals "user" "${result[classification]}"
@@ -688,7 +688,7 @@ testHandleNpmInstallNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful install; the classifier should not match and should leave the
   # array empty. Guard the call so set -e (if active) doesn't abort on the expected non-zero.
-  if npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/clean.log" result; then
+  if package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/clean.log" result; then
     fail "expected classifier to return non-zero for an unrecognised log"
   fi
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
@@ -896,14 +896,14 @@ testExtractErrorDetailReturnsFirstDescriptiveLine() {
   # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
   # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
   local detail
-  detail=$(npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
+  detail=$(package_managers::npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log")
   assertEquals "notsup Unsupported platform for fsevents@2.3.3: wanted {\"os\":\"darwin\",\"arch\":\"any\"} (current: {\"os\":\"linux\",\"arch\":\"x64\"})" "$detail"
 }
 
 testExtractErrorDetailEmptyWhenNoDescriptiveLine() {
   # A log with no `npm error`/`npm ERR!` line at all yields empty detail without erroring.
   local detail
-  detail=$(npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/clean.log")
+  detail=$(package_managers::npm::_extract_error_detail "$(pwd)/test/unit-fixtures/npm-failures/clean.log")
   assertEquals "" "$detail"
 }
 

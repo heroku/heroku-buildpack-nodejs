@@ -14,11 +14,11 @@ set -euo pipefail
 # Installs app dependencies with npm (fresh install path; the prebuild/rebuild path is
 # still handled by lib/dependencies.sh until it is migrated).
 #
-# On failure, the captured output is run through npm::_handle_npm_install_failure and, if a
+# On failure, the captured output is run through package_managers::npm::_handle_npm_install_failure and, if a
 # known failure mode is recognised, failure::emit renders the message, records the
 # classification, and exits. Otherwise a generic npm-install failure is emitted so the build
 # never falls through silently.
-function npm::install_dependencies() {
+function package_managers::npm::install_dependencies() {
 	local build_dir="${1}"
 	local production="${NPM_CONFIG_PRODUCTION:-false}"
 
@@ -84,7 +84,7 @@ function npm::install_dependencies() {
 				EOF
 			)
 			failure::emit failure
-		elif npm::_handle_npm_install_failure "${log_file}" failure; then
+		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
@@ -115,7 +115,7 @@ function npm_version_major() {
 # the array untouched otherwise. Has no side effects: it does not write build data, print to
 # the build log, or exit. Detail is set to the npm error code plus the first descriptive
 # error line, giving observability a precise discriminator within each failure bucket.
-function npm::_handle_npm_install_failure() {
+function package_managers::npm::_handle_npm_install_failure() {
 	local log_file="${1}"
 	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
 	local -n __failure="${2}"
@@ -124,7 +124,7 @@ function npm::_handle_npm_install_failure() {
 	if grep -qiE 'npm (ERR!|error) code EBADPLATFORM($| )' "${log_file}"; then
 		__failure["id"]="npm-ebadplatform"
 		__failure["classification"]="user"
-		__failure["detail"]="EBADPLATFORM: $(npm::_extract_error_detail "${log_file}")"
+		__failure["detail"]="EBADPLATFORM: $(package_managers::npm::_extract_error_detail "${log_file}")"
 		__failure["message"]=$(
 			cat <<-EOF
 				Error: Unable to install dependencies using npm.
@@ -142,7 +142,7 @@ function npm::_handle_npm_install_failure() {
 	if grep -qiE 'npm (ERR!|error) code EINVALIDPACKAGENAME($| )' "${log_file}"; then
 		__failure["id"]="npm-package-name-typo"
 		__failure["classification"]="user"
-		__failure["detail"]="EINVALIDPACKAGENAME: $(npm::_extract_error_detail "${log_file}")"
+		__failure["detail"]="EINVALIDPACKAGENAME: $(package_managers::npm::_extract_error_detail "${log_file}")"
 		__failure["message"]=$(
 			cat <<-EOF
 				Error: Unable to install dependencies using npm.
@@ -163,7 +163,7 @@ function npm::_handle_npm_install_failure() {
 		if grep -qi "flatmap-stream" "${log_file}"; then
 			__failure["id"]="flatmap-stream-404"
 			__failure["classification"]="user"
-			__failure["detail"]="E404: $(npm::_extract_error_detail "${log_file}")"
+			__failure["detail"]="E404: $(package_managers::npm::_extract_error_detail "${log_file}")"
 			__failure["message"]=$(
 				cat <<-EOF
 					Error: The flatmap-stream module has been removed from the npm registry.
@@ -180,7 +180,7 @@ function npm::_handle_npm_install_failure() {
 
 		__failure["id"]="module-404"
 		__failure["classification"]="user"
-		__failure["detail"]="E404: $(npm::_extract_error_detail "${log_file}")"
+		__failure["detail"]="E404: $(package_managers::npm::_extract_error_detail "${log_file}")"
 		__failure["message"]=$(
 			cat <<-EOF
 				Error: Unable to install dependencies using npm.
@@ -198,7 +198,7 @@ function npm::_handle_npm_install_failure() {
 	if grep -qiE 'npm (ERR!|error) code ESTRICTALLOWSCRIPTS' "${log_file}"; then
 		__failure["id"]="npm-strict-allow-scripts"
 		__failure["classification"]="user"
-		__failure["detail"]="ESTRICTALLOWSCRIPTS: $(npm::_extract_error_detail "${log_file}")"
+		__failure["detail"]="ESTRICTALLOWSCRIPTS: $(package_managers::npm::_extract_error_detail "${log_file}")"
 		__failure["message"]=$(
 			cat <<-EOF
 				Error: Unable to install dependencies using npm.
@@ -222,7 +222,7 @@ function npm::_handle_npm_install_failure() {
 	if grep -qiE 'npm (ERR!|error) code EALLOWGIT' "${log_file}"; then
 		__failure["id"]="npm-allow-git-blocked"
 		__failure["classification"]="user"
-		__failure["detail"]="EALLOWGIT: $(npm::_extract_error_detail "${log_file}")"
+		__failure["detail"]="EALLOWGIT: $(package_managers::npm::_extract_error_detail "${log_file}")"
 		__failure["message"]=$(
 			cat <<-EOF
 				Error: Unable to install dependencies using npm.
@@ -245,7 +245,7 @@ function npm::_handle_npm_install_failure() {
 	if grep -qiE 'npm (ERR!|error) code EALLOWREMOTE' "${log_file}"; then
 		__failure["id"]="npm-allow-remote-blocked"
 		__failure["classification"]="user"
-		__failure["detail"]="EALLOWREMOTE: $(npm::_extract_error_detail "${log_file}")"
+		__failure["detail"]="EALLOWREMOTE: $(package_managers::npm::_extract_error_detail "${log_file}")"
 		__failure["message"]=$(
 			cat <<-EOF
 				Error: Unable to install dependencies using npm.
@@ -274,8 +274,8 @@ function npm::_handle_npm_install_failure() {
 # Returns the first descriptive npm error line for use as failure detail: the first
 # `npm error`/`npm ERR!` line that carries a human message, skipping the bare `code <CODE>`
 # line and the trailing "complete log" noise, with the prefix and indentation stripped.
-# Internal helper to npm::_handle_npm_install_failure; not meant to be called directly.
-function npm::_extract_error_detail() {
+# Internal helper to package_managers::npm::_handle_npm_install_failure; not meant to be called directly.
+function package_managers::npm::_extract_error_detail() {
 	local log_file="${1}"
 	grep -iE 'npm (ERR!|error) ' "${log_file}" \
 		| grep -ivE 'npm (ERR!|error) code ' \

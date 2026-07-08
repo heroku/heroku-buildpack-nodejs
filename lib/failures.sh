@@ -13,7 +13,7 @@ __failures_saved_pipefail="$(set +o | grep pipefail)"
 set -euo pipefail
 
 # Records a classified failure in build data, prints its message, and exits the build. This is
-# the only side-effecting layer; classifiers (e.g. npm::_handle_npm_install_failure) stay pure
+# the only side-effecting layer; classifiers (e.g. package_managers::npm::_handle_npm_install_failure) stay pure
 # by filling an associative array that is passed here by name.
 #
 # The named array may define:
