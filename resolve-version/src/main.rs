@@ -29,7 +29,6 @@ enum Output {
         checksum_value: String,
         uses_wide_range: bool,
         lts_upper_bound_enforced: bool,
-        default: bool,
         lts_version: String,
         eol: bool,
     },
@@ -38,13 +37,26 @@ enum Output {
     /// The requested version requirement was not a valid semver range.
     InvalidSemverRequirement { error: String, lts_major: u64 },
     /// A catastrophic error the app can't fix: inventory read/parse failure, unsupported OS/arch,
-    /// or an inventory missing the recommended LTS. `lts_major` is omitted when it can't be
-    /// computed (e.g. the inventory couldn't be read).
-    InternalError {
-        error: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        lts_major: Option<u64>,
-    },
+    /// or an inventory missing the recommended LTS. Unlike the two user-facing error variants this
+    /// carries no `lts_major` — the shell catch-all handler doesn't interpolate a recommended range
+    /// for these, and several of these errors are raised before the LTS major can be computed.
+    InternalError { error: String },
+}
+
+impl Output {
+    /// Whether this outcome is a success: true only for a resolved version.
+    fn is_success(&self) -> bool {
+        matches!(self, Output::Resolved { .. })
+    }
+
+    /// The process exit code paired with this outcome.
+    fn exit_code(&self) -> ExitCode {
+        if self.is_success() {
+            ExitCode::SUCCESS
+        } else {
+            ExitCode::FAILURE
+        }
+    }
 }
 
 /// Prints the output as a single line of JSON to stdout.
@@ -84,7 +96,6 @@ fn main() -> ExitCode {
             Err(e) => {
                 emit(&Output::InternalError {
                     error: format!("Unsupported OS '{}': {e}", consts::OS),
-                    lts_major: None,
                 });
                 return ExitCode::FAILURE;
             }
@@ -98,61 +109,79 @@ fn main() -> ExitCode {
             Err(e) => {
                 emit(&Output::InternalError {
                     error: format!("Unsupported Architecture '{}': {e}", consts::ARCH),
-                    lts_major: None,
                 });
                 return ExitCode::FAILURE;
             }
         },
     };
 
-    let default = node_version.is_empty();
-
-    // Read and parse the inventory before parsing the requirement so that `lts_major` is available
-    // to the invalid-semver-requirement path below.
+    // Read the inventory here (I/O stays in `main`); everything downstream is pure and lives in
+    // `resolve`.
     let inventory_contents = match std::fs::read_to_string(inventory_path) {
         Ok(contents) => contents,
         Err(e) => {
-            emit(&Output::InternalError {
+            let output = Output::InternalError {
                 error: format!("Error reading '{inventory_path}': {e}"),
-                lts_major: None,
-            });
-            return ExitCode::FAILURE;
+            };
+            emit(&output);
+            return output.exit_code();
         }
     };
 
-    let node_inventory: NodejsInventory = match toml::from_str(&inventory_contents) {
+    let output = resolve(
+        &inventory_contents,
+        inventory_path,
+        os,
+        arch,
+        node_version,
+        allow_wide_range,
+    );
+    emit(&output);
+    output.exit_code()
+}
+
+/// Resolves a Node.js version from the (already-read) inventory, returning the structured outcome.
+/// Pure over its inputs — no I/O, no process exit — so every branch is unit-testable. `main` reads
+/// the inventory file and handles OS/arch detection; everything after that flows through here.
+///
+/// The inventory is parsed and the recommended-LTS major computed *before* the requirement is
+/// parsed, so `lts_major` is available to the invalid-semver-requirement message.
+fn resolve(
+    inventory_contents: &str,
+    inventory_path: &str,
+    os: Os,
+    arch: Arch,
+    node_version: &str,
+    allow_wide_range: bool,
+) -> Output {
+    let node_inventory: NodejsInventory = match toml::from_str(inventory_contents) {
         Ok(inventory) => inventory,
         Err(e) => {
-            emit(&Output::InternalError {
+            return Output::InternalError {
                 error: format!("Error parsing '{inventory_path}': {e}"),
-                lts_major: None,
-            });
-            return ExitCode::FAILURE;
+            };
         }
     };
 
     let lts_major_version = match node_inventory.resolve(os, arch, &*RECOMMENDED_LTS_VERSION) {
         Some(artifact) => artifact.version.major(),
         None => {
-            emit(&Output::InternalError {
+            return Output::InternalError {
                 error: format!(
                     "Inventory does not contain a version matching RECOMMENDED_LTS_VERSION ({})",
                     *RECOMMENDED_LTS_VERSION
                 ),
-                lts_major: None,
-            });
-            return ExitCode::FAILURE;
+            };
         }
     };
 
     let requirement = match parse_node_version(node_version) {
         Ok(requirement) => requirement,
         Err(e) => {
-            emit(&Output::InvalidSemverRequirement {
+            return Output::InvalidSemverRequirement {
                 error: format!("Could not parse Version Requirements '{node_version}': {e}"),
                 lts_major: lts_major_version,
-            });
-            return ExitCode::FAILURE;
+            };
         }
     };
 
@@ -164,29 +193,20 @@ fn main() -> ExitCode {
         lts_major_version,
         allow_wide_range,
     ) {
-        Some(resolution) => {
-            emit(&Output::Resolved {
-                version: resolution.artifact.version.clone(),
-                url: resolution.artifact.url.clone(),
-                checksum_type: resolution.artifact.checksum.name.clone(),
-                checksum_value: hex::encode(&resolution.artifact.checksum.value),
-                uses_wide_range: resolution.uses_wide_range,
-                lts_upper_bound_enforced: resolution.lts_upper_bound_enforced,
-                default,
-                lts_version: RECOMMENDED_LTS_VERSION.to_string(),
-                eol: resolution.eol,
-            });
-            ExitCode::SUCCESS
-        }
-        None => {
-            emit(&Output::NoVersionResolved {
-                error: format!(
-                    "No published Node.js version matches the requirement '{node_version}'"
-                ),
-                lts_major: lts_major_version,
-            });
-            ExitCode::FAILURE
-        }
+        Some(resolution) => Output::Resolved {
+            version: resolution.artifact.version.clone(),
+            url: resolution.artifact.url.clone(),
+            checksum_type: resolution.artifact.checksum.name.clone(),
+            checksum_value: hex::encode(&resolution.artifact.checksum.value),
+            uses_wide_range: resolution.uses_wide_range,
+            lts_upper_bound_enforced: resolution.lts_upper_bound_enforced,
+            lts_version: RECOMMENDED_LTS_VERSION.to_string(),
+            eol: resolution.eol,
+        },
+        None => Output::NoVersionResolved {
+            error: format!("No published Node.js version matches the requirement '{node_version}'"),
+            lts_major: lts_major_version,
+        },
     }
 }
 
@@ -604,7 +624,6 @@ mod tests {
             checksum_value: "abc123".to_string(),
             uses_wide_range: false,
             lts_upper_bound_enforced: true,
-            default: false,
             lts_version: "24.x".to_string(),
             eol: false,
         };
@@ -616,7 +635,6 @@ mod tests {
         assert_eq!(value["checksum_value"], "abc123");
         assert_eq!(value["uses_wide_range"], false);
         assert_eq!(value["lts_upper_bound_enforced"], true);
-        assert_eq!(value["default"], false);
         assert_eq!(value["lts_version"], "24.x");
         assert_eq!(value["eol"], false);
     }
@@ -646,61 +664,162 @@ mod tests {
     }
 
     #[test]
-    fn internal_error_output_omits_lts_major_when_none() {
+    fn internal_error_output_has_status_and_error_only() {
         let output = Output::InternalError {
             error: "inventory unreadable".to_string(),
-            lts_major: None,
         };
         let value = serde_json::to_value(&output).unwrap();
         assert_eq!(value["status"], "internal-error");
         assert_eq!(value["error"], "inventory unreadable");
         assert!(
             value.get("lts_major").is_none(),
-            "lts_major key should be absent, not null, when None"
+            "internal-error carries no lts_major"
         );
     }
 
+    // --- `resolve` branch tests ---
+    //
+    // These drive the pure `resolve` core (everything after the inventory is read) so each `Output`
+    // variant it can return is exercised end to end, not just constructed by hand. The
+    // inventory-read and OS/arch-detection paths live in `main` and emit `InternalError` directly.
+
     #[test]
-    fn internal_error_output_includes_lts_major_when_some() {
-        let output = Output::InternalError {
-            error: "missing recommended lts".to_string(),
-            lts_major: Some(24),
-        };
+    fn resolve_returns_resolved_for_a_matching_range() {
+        let output = resolve(
+            INVENTORY_TOML,
+            "node.toml",
+            Os::Linux,
+            Arch::Amd64,
+            "24.x",
+            DISALLOW_WIDE_RANGE,
+        );
         let value = serde_json::to_value(&output).unwrap();
-        assert_eq!(value["status"], "internal-error");
-        assert_eq!(value["lts_major"], 24);
+        assert_eq!(value["status"], "resolved");
+        assert_eq!(value["version"], "24.10.0");
+        assert_eq!(value["lts_version"], RECOMMENDED_LTS_VERSION.to_string());
+        assert!(output.is_success());
     }
 
-    fn create_inventory() -> NodejsInventory {
-        let contents = r#"
-            [[artifacts]]
-            version = "25.0.0"
-            os = "linux"
-            arch = "amd64"
-            url = "https://nodejs.org/download/release/v25.0.0/node-v25.0.0-linux-x64.tar.gz"
-            checksum = "sha256:28dd46a6733192647d7c8267343f5a3f1c616f773c448e2c0d2539ae70724b40"
+    #[test]
+    fn resolve_returns_no_version_resolved_with_lts_major_for_valid_unmatched_range() {
+        let output = resolve(
+            INVENTORY_TOML,
+            "node.toml",
+            Os::Linux,
+            Arch::Amd64,
+            "99.x",
+            DISALLOW_WIDE_RANGE,
+        );
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "no-version-resolved");
+        assert_eq!(value["lts_major"], TEST_LTS_MAJOR_VERSION);
+        assert!(
+            value["error"].as_str().unwrap().contains("99.x"),
+            "error should name the requirement"
+        );
+        assert!(!output.is_success());
+    }
 
-            [[artifacts]]
-            version = "24.10.0"
-            os = "linux"
-            arch = "amd64"
-            url = "https://nodejs.org/download/release/v24.10.0/node-v24.10.0-linux-x64.tar.gz"
-            checksum = "sha256:2b03c5417ce0b1076780df00e01da373bead3b4b80d1c78c1ad10ee7b918d90c"
+    #[test]
+    fn resolve_returns_invalid_semver_requirement_with_lts_major() {
+        let output = resolve(
+            INVENTORY_TOML,
+            "node.toml",
+            Os::Linux,
+            Arch::Amd64,
+            "stable",
+            DISALLOW_WIDE_RANGE,
+        );
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "invalid-semver-requirement");
+        // The recommended-LTS major is computed before the requirement is parsed, so it is
+        // available to interpolate into the user-facing message.
+        assert_eq!(value["lts_major"], TEST_LTS_MAJOR_VERSION);
+        assert!(!output.is_success());
+    }
 
-            [[artifacts]]
-            version = "22.21.0"
-            os = "linux"
-            arch = "amd64"
-            url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
-            checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
+    #[test]
+    fn resolve_returns_internal_error_for_unparseable_inventory() {
+        let output = resolve(
+            "this is not valid toml =",
+            "node.toml",
+            Os::Linux,
+            Arch::Amd64,
+            "24.x",
+            DISALLOW_WIDE_RANGE,
+        );
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "internal-error");
+        assert!(value["error"].as_str().unwrap().contains("node.toml"));
+        assert!(value.get("lts_major").is_none());
+        assert!(!output.is_success());
+    }
 
+    #[test]
+    fn resolve_returns_internal_error_when_inventory_lacks_recommended_lts() {
+        // A syntactically valid inventory that contains no version matching RECOMMENDED_LTS_VERSION,
+        // so the recommended-LTS-major lookup fails.
+        let inventory_without_lts = r#"
             [[artifacts]]
-            version = "18.20.8"
+            version = "1.0.0"
             os = "linux"
             arch = "amd64"
-            url = "https://nodejs.org/download/release/v18.20.8/node-v18.20.8-linux-x64.tar.gz"
+            url = "https://example.com/node-v1.0.0-linux-x64.tar.gz"
             checksum = "sha256:27a9f3f14d5e99ad05a07ed3524ba3ee92f8ff8b6db5ff80b00f9feb5ec8097a"
         "#;
-        toml::from_str(contents).unwrap()
+        let output = resolve(
+            inventory_without_lts,
+            "node.toml",
+            Os::Linux,
+            Arch::Amd64,
+            "24.x",
+            DISALLOW_WIDE_RANGE,
+        );
+        let value = serde_json::to_value(&output).unwrap();
+        assert_eq!(value["status"], "internal-error");
+        assert!(
+            value["error"]
+                .as_str()
+                .unwrap()
+                .contains("RECOMMENDED_LTS_VERSION")
+        );
+        assert!(!output.is_success());
+    }
+
+    // A well-formed inventory reused by both the `resolve_node_artifact` unit tests (parsed into a
+    // `NodejsInventory`) and the `resolve` branch tests (passed as raw TOML). Must contain a
+    // version matching `RECOMMENDED_LTS_VERSION` so the recommended-LTS lookup succeeds.
+    const INVENTORY_TOML: &str = r#"
+        [[artifacts]]
+        version = "25.0.0"
+        os = "linux"
+        arch = "amd64"
+        url = "https://nodejs.org/download/release/v25.0.0/node-v25.0.0-linux-x64.tar.gz"
+        checksum = "sha256:28dd46a6733192647d7c8267343f5a3f1c616f773c448e2c0d2539ae70724b40"
+
+        [[artifacts]]
+        version = "24.10.0"
+        os = "linux"
+        arch = "amd64"
+        url = "https://nodejs.org/download/release/v24.10.0/node-v24.10.0-linux-x64.tar.gz"
+        checksum = "sha256:2b03c5417ce0b1076780df00e01da373bead3b4b80d1c78c1ad10ee7b918d90c"
+
+        [[artifacts]]
+        version = "22.21.0"
+        os = "linux"
+        arch = "amd64"
+        url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
+        checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
+
+        [[artifacts]]
+        version = "18.20.8"
+        os = "linux"
+        arch = "amd64"
+        url = "https://nodejs.org/download/release/v18.20.8/node-v18.20.8-linux-x64.tar.gz"
+        checksum = "sha256:27a9f3f14d5e99ad05a07ed3524ba3ee92f8ff8b6db5ff80b00f9feb5ec8097a"
+    "#;
+
+    fn create_inventory() -> NodejsInventory {
+        toml::from_str(INVENTORY_TOML).unwrap()
     }
 }
