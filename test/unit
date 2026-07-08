@@ -918,6 +918,7 @@ source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/failures.sh
 source "$(pwd)"/lib/package_managers/npm.sh
+source "$(pwd)"/lib/package_managers/pnpm.sh
 source "$(pwd)"/lib/runtimes/nodejs.sh
 source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
