@@ -30,6 +30,8 @@ source "$BP_DIR/lib/environment.sh"
 source "$BP_DIR/lib/failures.sh"
 # shellcheck source=lib/package_managers/npm.sh
 source "$BP_DIR/lib/package_managers/npm.sh"
+# shellcheck source=lib/package_managers/pnpm.sh
+source "$BP_DIR/lib/package_managers/pnpm.sh"
 # shellcheck source=lib/_failures.sh
 source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/runtimes/nodejs.sh
@@ -510,7 +512,7 @@ build_dependencies() {
   elif $YARN; then
     yarn_node_modules "$BUILD_DIR"
   elif $PNPM; then
-    pnpm_install "$BUILD_DIR" "$CACHE_DIR"
+    package_managers::pnpm::install_dependencies "$BUILD_DIR" "$CACHE_DIR"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
     npm_rebuild "$BUILD_DIR"
