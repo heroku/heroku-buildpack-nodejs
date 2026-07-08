@@ -247,6 +247,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "libherokubuildpack"
+version = "0.31.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6dff1b98739a1c06dbd1240f5dc8312af8976ff25ade19b441bf387cadb102f2"
+dependencies = [
+ "hex",
+ "serde",
+ "sha2",
+ "thiserror 2.0.18",
+ "toml",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -299,7 +312,7 @@ version = "0.0.0"
 source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#70fdbfaea44ce550fb5b371457f1b0ad78e2798b"
 dependencies = [
  "fun_run",
- "libherokubuildpack",
+ "libherokubuildpack 0.30.4",
  "node-semver",
  "serde",
  "sha2",
@@ -374,7 +387,7 @@ version = "0.0.0"
 dependencies = [
  "clap",
  "hex",
- "libherokubuildpack",
+ "libherokubuildpack 0.31.0",
  "nodejs-data",
  "serde",
  "serde_json",
