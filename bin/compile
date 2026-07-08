@@ -317,7 +317,7 @@ install_bins() {
   runtimes::nodejs::install "$node_engine" "$BUILD_DIR/.heroku/node"
 
   build_data::set_string "build_step" "install-npm"
-  install_npm "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
+  package_managers::npm::install_binary "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
 
   if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
     build_data::set_string "build_step" "install-yarn"
