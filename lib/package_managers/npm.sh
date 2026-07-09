@@ -45,7 +45,11 @@ function package_managers::npm::install_dependencies() {
 		fi
 		npm_command+=(install)
 	fi
-	npm_command+=(--production="${production}" --unsafe-perm --userconfig "${build_dir}/.npmrc")
+	npm_command+=(--production="${production}" --userconfig "${build_dir}/.npmrc")
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a non-match just omits the flag
+	if package_managers::npm::supports_unsafe_perm; then
+		npm_command+=(--unsafe-perm)
+	fi
 
 	local log_file
 	log_file=$(mktemp)
@@ -104,6 +108,14 @@ function package_managers::npm::install_dependencies() {
 
 function package_managers::npm::version_major() {
 	npm --version | cut -d "." -f 1
+}
+
+# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG. Returns 0 when the
+# active npm still accepts the flag (major < 12), 1 otherwise. Callers gate --unsafe-perm on this.
+function package_managers::npm::supports_unsafe_perm() {
+	local major
+	major="$(package_managers::npm::version_major)"
+	[[ "${major}" -lt 12 ]]
 }
 
 # Pure classifier for npm dependency-install failures.
@@ -325,6 +337,14 @@ function package_managers::npm::install_binary() {
 function package_managers::npm::_install_binary() {
 	local version="$1"
 
+	# The global installs below run with the currently-active (pre-bootstrap) npm, so gate
+	# --unsafe-perm on its version: npm 12 removed the flag and rejects it with EUNKNOWNCONFIG.
+	local unsafe_perm=()
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a non-match just omits the flag
+	if package_managers::npm::supports_unsafe_perm; then
+		unsafe_perm=(--unsafe-perm)
+	fi
+
 	# XXX: Workaround for https://github.com/heroku/heroku-buildpack-nodejs/issues/1590
 	# Node 22.22.2 fails to install npm >= 11.11.0 with a MODULE_NOT_FOUND error for `promise-retry`.
 	# Installing an intermediate npm version (~11.10.0) first avoids the issue.
@@ -347,7 +367,7 @@ function package_managers::npm::_install_binary() {
 		fi
 		if [[ "${major}" == "11" ]] && [[ "${minor}" -ge 11 ]]; then
 			echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
-			if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
+			if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
 				build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
 				output::error <<-EOF
 					Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround.
@@ -359,7 +379,7 @@ function package_managers::npm::_install_binary() {
 		fi
 	fi
 
-	if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "npm@${version}"; then
+	if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@${version}"; then
 		build_data::set_string "failure" "npm-install-failed"
 		output::error <<-EOF
 			Unable to install npm ${version}.
