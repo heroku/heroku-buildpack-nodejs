@@ -7,6 +7,13 @@ install_yarn() {
   local version=${2:-1.22.x}
   local number url code resolve_result
 
+  # npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
+  # to the currently-active npm when that npm still accepts it.
+  local unsafe_perm=()
+  if package_managers::npm::supports_unsafe_perm; then
+    unsafe_perm=(--unsafe-perm)
+  fi
+
   if [[ -n "$YARN_BINARY_URL" ]]; then
     url="$YARN_BINARY_URL"
     echo "Downloading and installing yarn from $url"
@@ -19,7 +26,7 @@ install_yarn() {
 			EOF
       false
     fi
-    if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "$package_name@$version"; then
+    if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "$package_name@$version"; then
       build_data::set_string "failure" "yarn-install-failed"
       output::error <<-EOF
 				Unable to install yarn $version.
@@ -42,7 +49,13 @@ install_yarn() {
 install_pnpm() {
   local version="$1"
   echo "Downloading and installing pnpm ($version)"
-  if ! suppress_output npm install --unsafe-perm --quiet --no-audit --no-progress -g "pnpm@$version"; then
+  # npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
+  # to the currently-active npm when that npm still accepts it.
+  local unsafe_perm=()
+  if package_managers::npm::supports_unsafe_perm; then
+    unsafe_perm=(--unsafe-perm)
+  fi
+  if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "pnpm@$version"; then
     build_data::set_string "failure" "pnpm-install-failed"
     output::error <<-EOF
 			Unable to install pnpm $version.
