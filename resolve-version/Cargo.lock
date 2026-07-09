@@ -171,9 +171,9 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "fun_run"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8edaa9292e7fb8dbab9a2a2b77e73ddb8b0d2504f74708ef0d265e0e9bf32b9b"
+checksum = "d3e351e36d8e11312b5afb4f03e5d2199cf9a79e7e1b5b0477bfbdc99d4c6364"
 dependencies = [
  "regex",
 ]
@@ -232,19 +232,6 @@ name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
-
-[[package]]
-name = "libherokubuildpack"
-version = "0.30.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e9c2f20192514c0a87b69dd87fd1cae41f45655f8a0a0ea8c52ee3f12a6b781"
-dependencies = [
- "hex",
- "serde",
- "sha2",
- "thiserror 2.0.18",
- "toml",
-]
 
 [[package]]
 name = "libherokubuildpack"
@@ -309,10 +296,10 @@ dependencies = [
 [[package]]
 name = "nodejs-data"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#70fdbfaea44ce550fb5b371457f1b0ad78e2798b"
+source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#e0ef63d78f68c79d3cc9598ff8fe565a5c56d1ec"
 dependencies = [
  "fun_run",
- "libherokubuildpack 0.30.4",
+ "libherokubuildpack",
  "node-semver",
  "serde",
  "sha2",
@@ -387,7 +374,7 @@ version = "0.0.0"
 dependencies = [
  "clap",
  "hex",
- "libherokubuildpack 0.31.0",
+ "libherokubuildpack",
  "nodejs-data",
  "serde",
  "serde_json",
