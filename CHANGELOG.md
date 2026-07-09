@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v358] - 2026-07-09
+
 - Added Node.js 26.5.0 (linux-amd64)
 - Fixed `npm install` failing on npm 12, which removed the `--unsafe-perm` flag the buildpack was passing. ([#1704](https://github.com/heroku/heroku-buildpack-nodejs/pull/1704))
 - Relocated the npm binary installation (`npm@<version>` bootstrap) into `lib/package_managers/npm.sh` as part of the error-handling migration. This is a behavior-neutral move; the build errors and their messages are unchanged. ([#1701](https://github.com/heroku/heroku-buildpack-nodejs/pull/1701))
@@ -1370,7 +1373,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v357...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v358...main
+[v358]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v357...v358
 [v357]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v356...v357
 [v356]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v355...v356
 [v355]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v354...v355
