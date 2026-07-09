@@ -213,6 +213,13 @@ npm_rebuild() {
   local build_dir=${1:-}
   local production=${NPM_CONFIG_PRODUCTION:-false}
 
+  # npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
+  # to the currently-active npm when that npm still accepts it.
+  local unsafe_perm=()
+  if package_managers::npm::supports_unsafe_perm; then
+    unsafe_perm=(--unsafe-perm)
+  fi
+
   if [ -e "$build_dir/package.json" ]; then
     cd "$build_dir" || return
     echo "Rebuilding any native modules"
@@ -222,7 +229,7 @@ npm_rebuild() {
     else
       echo "Installing any new modules (package.json)"
     fi
-    monitor "npm_rebuild" npm install --production="$production" --unsafe-perm --userconfig "$build_dir/.npmrc" 2>&1
+    monitor "npm_rebuild" npm install --production="$production" "${unsafe_perm[@]}" --userconfig "$build_dir/.npmrc" 2>&1
   else
     echo "Skipping (no package.json)"
   fi

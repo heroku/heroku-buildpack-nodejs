@@ -1,0 +1,12 @@
+{
+  "name": "npm-12-unsafe-perm",
+  "version": "1.0.0",
+  "description": "Reproduces npm 12 --unsafe-perm removal (heroku/heroku-buildpack-nodejs#1702)",
+  "dependencies": {
+    "@heroku/linewrap": "^1.0"
+  },
+  "engines": {
+    "node": "^24.15.0",
+    "npm": "12.x"
+  }
+}

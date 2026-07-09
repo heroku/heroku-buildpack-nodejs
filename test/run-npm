@@ -164,6 +164,16 @@ testNode22Npm11BootstrapRegressionWorkaround() {
   assertCapturedSuccess
 }
 
+# https://github.com/heroku/heroku-buildpack-nodejs/issues/1702
+# npm 12 removed the --unsafe-perm flag; the buildpack must not pass it.
+testNpm12UnsafePermRemoved() {
+  compile "npm-12-unsafe-perm"
+  assertCaptured "npm 12"
+  assertNotCaptured "Unknown cli flag"
+  assertNotCaptured "EUNKNOWNCONFIG"
+  assertCapturedSuccess
+}
+
 testUserConfig() {
   compile "userconfig"
   assertCaptured "www.google.com"

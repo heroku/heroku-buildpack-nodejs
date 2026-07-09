@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Added Node.js 26.5.0 (linux-amd64)
+- Fixed `npm install` failing on npm 12, which removed the `--unsafe-perm` flag the buildpack was passing. ([#1704](https://github.com/heroku/heroku-buildpack-nodejs/pull/1704))
 - Relocated the npm binary installation (`npm@<version>` bootstrap) into `lib/package_managers/npm.sh` as part of the error-handling migration. This is a behavior-neutral move; the build errors and their messages are unchanged. ([#1701](https://github.com/heroku/heroku-buildpack-nodejs/pull/1701))
 - Improved the Node.js version-resolution build errors, and added error handling for previously-unclassified resolver failures. ([#1698](https://github.com/heroku/heroku-buildpack-nodejs/pull/1698))
 
