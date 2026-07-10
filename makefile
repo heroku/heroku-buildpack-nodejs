@@ -6,6 +6,7 @@ MIGRATED_FILES = \
 	lib/failures.sh \
 	lib/package_managers/npm.sh \
 	lib/package_managers/pnpm.sh \
+	lib/package_managers/yarn.sh \
 	lib/runtimes/nodejs.sh
 
 .PHONY: lint lint-scripts check-format format
