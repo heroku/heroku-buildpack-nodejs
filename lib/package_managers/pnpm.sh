@@ -69,7 +69,7 @@ function package_managers::pnpm::install_binary() {
 	if package_managers::npm::supports_unsafe_perm; then
 		unsafe_perm=(--unsafe-perm)
 	fi
-	if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "pnpm@${version}"; then
+	if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "pnpm@${version}"; then
 		build_data::set_string "failure" "pnpm-install-failed"
 		output::error <<-EOF
 			Unable to install pnpm ${version}.
@@ -80,8 +80,8 @@ function package_managers::pnpm::install_binary() {
 		false
 	fi
 	# Verify pnpm works before capturing and ensure its stderr is inspectable later
-	suppress_output pnpm --version
-	# shellcheck disable=SC2312 # the preceding suppress_output already verified pnpm works, so masking its exit here is intentional (matches pre-migration behavior)
+	utils::command::suppress_output pnpm --version
+	# shellcheck disable=SC2312 # the preceding utils::command::suppress_output already verified pnpm works, so masking its exit here is intentional (matches pre-migration behavior)
 	echo "Using pnpm $(pnpm --version)"
 }
 

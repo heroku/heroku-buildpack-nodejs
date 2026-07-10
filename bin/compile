@@ -38,8 +38,8 @@ source "$BP_DIR/lib/package_managers/yarn.sh"
 source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/runtimes/nodejs.sh
 source "$BP_DIR/lib/runtimes/nodejs.sh"
-# shellcheck source=lib/binaries.sh
-source "$BP_DIR/lib/binaries.sh"
+# shellcheck source=lib/utils/command.sh
+source "$BP_DIR/lib/utils/command.sh"
 # shellcheck source=lib/json.sh
 source "$BP_DIR/lib/json.sh"
 # shellcheck source=lib/yaml.sh

@@ -304,7 +304,7 @@ function package_managers::npm::install_binary() {
 	local dir="$2"
 	local npm_lock="$3"
 	# Verify npm works before capturing and ensure its stderr is inspectable later
-	suppress_output npm --version
+	utils::command::suppress_output npm --version
 	npm_version="$(npm --version)"
 
 	# If the user has not specified a version of npm, but has an npm lockfile
@@ -327,7 +327,7 @@ function package_managers::npm::install_binary() {
 		package_managers::npm::_install_binary "${version}"
 		build_data::set_duration "install_npm_binary_time" "${install_npm_start}"
 		# Verify npm works before capturing and ensure its stderr is inspectable later
-		suppress_output npm --version
+		utils::command::suppress_output npm --version
 		local installed_npm_version
 		installed_npm_version="$(npm --version)"
 		echo "npm ${installed_npm_version} installed"
@@ -367,7 +367,7 @@ function package_managers::npm::_install_binary() {
 		fi
 		if [[ "${major}" == "11" ]] && [[ "${minor}" -ge 11 ]]; then
 			echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
-			if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
+			if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
 				build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
 				output::error <<-EOF
 					Unable to install intermediate npm ~11.10.0 for Node.js 22.22.2 workaround.
@@ -379,7 +379,7 @@ function package_managers::npm::_install_binary() {
 		fi
 	fi
 
-	if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@${version}"; then
+	if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@${version}"; then
 		build_data::set_string "failure" "npm-install-failed"
 		output::error <<-EOF
 			Unable to install npm ${version}.
