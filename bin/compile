@@ -32,6 +32,8 @@ source "$BP_DIR/lib/failures.sh"
 source "$BP_DIR/lib/package_managers/npm.sh"
 # shellcheck source=lib/package_managers/pnpm.sh
 source "$BP_DIR/lib/package_managers/pnpm.sh"
+# shellcheck source=lib/package_managers/yarn.sh
+source "$BP_DIR/lib/package_managers/yarn.sh"
 # shellcheck source=lib/_failures.sh
 source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/runtimes/nodejs.sh
@@ -323,7 +325,7 @@ install_bins() {
     build_data::set_string "build_step" "install-yarn"
     yarn_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "#" -f 1)"
     install_start=$(build_data::current_unix_realtime)
-    install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_version"
+    package_managers::yarn::install_binary "$BUILD_DIR/.heroku/yarn" "$yarn_version"
     build_data::set_duration "install_yarn_binary_time" "$install_start"
   else
     # Download yarn if there is a yarn.lock file or if the user
@@ -332,7 +334,7 @@ install_bins() {
     if $YARN || [ -n "$yarn_engine" ]; then
       build_data::set_string "build_step" "install-yarn"
       install_start=$(build_data::current_unix_realtime)
-      install_yarn "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
+      package_managers::yarn::install_binary "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
       build_data::set_duration "install_yarn_binary_time" "$install_start"
     fi
   fi
