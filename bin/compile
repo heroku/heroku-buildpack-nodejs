@@ -561,7 +561,7 @@ prune_devdependencies() {
   elif $PNPM; then
     pnpm_prune_devdependencies "$BUILD_DIR"
   else
-    npm_prune_devdependencies "$BUILD_DIR"
+    package_managers::npm::prune_devdependencies "$BUILD_DIR"
   fi
 }
 

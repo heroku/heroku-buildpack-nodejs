@@ -235,53 +235,6 @@ npm_rebuild() {
   fi
 }
 
-npm_prune_devdependencies() {
-  local npm_version
-  local build_dir=${1:-}
-
-  npm_version=$(npm --version)
-
-  if [ "$NODE_ENV" == "test" ]; then
-    echo "Skipping because NODE_ENV is 'test'"
-    build_data::set_raw "skipped_prune" "true"
-    return 0
-  elif [ "$NODE_ENV" != "production" ]; then
-    echo "Skipping because NODE_ENV is not 'production'"
-    build_data::set_raw "skipped_prune" "true"
-    return 0
-  elif [ -n "$NPM_CONFIG_PRODUCTION" ]; then
-    echo "Skipping because NPM_CONFIG_PRODUCTION is '$NPM_CONFIG_PRODUCTION'"
-    build_data::set_raw "skipped_prune" "true"
-    return 0
-  elif [ "$npm_version" == "5.3.0" ]; then
-    echo "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
-    echo "https://github.com/npm/npm/issues/17781"
-    echo ""
-    echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
-    echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-    build_data::set_raw "skipped_prune" "true"
-    return 0
-  elif [ "$npm_version" == "5.6.0" ] ||
-       [ "$npm_version" == "5.5.1" ] ||
-       [ "$npm_version" == "5.5.0" ] ||
-       [ "$npm_version" == "5.4.2" ] ||
-       [ "$npm_version" == "5.4.1" ] ||
-       [ "$npm_version" == "5.2.0" ] ||
-       [ "$npm_version" == "5.1.0" ]; then
-    echo "Skipping because npm $npm_version sometimes fails when running 'npm prune' due to a known issue"
-    echo "https://github.com/npm/npm/issues/19356"
-    echo ""
-    echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
-    echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-    build_data::set_raw "skipped_prune" "true"
-    return 0
-  else
-    cd "$build_dir" || return
-    monitor "prune_dev_dependencies" npm prune --userconfig "$build_dir/.npmrc" 2>&1
-    build_data::set_raw "skipped_prune" "false"
-  fi
-}
-
 pnpm_prune_devdependencies() {
   local build_dir=${1:-}
 
