@@ -59,6 +59,32 @@ package_managers::pnpm::install_dependencies() {
 	save_pnpm_prune_store_counter "${cache_dir}" "$((counter - 1))"
 }
 
+function package_managers::pnpm::install_binary() {
+	local version="$1"
+	echo "Downloading and installing pnpm (${version})"
+	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
+	# to the currently-active npm when that npm still accepts it.
+	local unsafe_perm=()
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a non-match just omits the flag
+	if package_managers::npm::supports_unsafe_perm; then
+		unsafe_perm=(--unsafe-perm)
+	fi
+	if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "pnpm@${version}"; then
+		build_data::set_string "failure" "pnpm-install-failed"
+		output::error <<-EOF
+			Unable to install pnpm ${version}.
+			Does pnpm ${version} exist? (https://help.heroku.com/8MEL050H)
+			Is ${version} valid semver? (https://help.heroku.com/0ZIOF3ST)
+			Is pnpm ${version} compatible with this Node.js version?
+		EOF
+		false
+	fi
+	# Verify pnpm works before capturing and ensure its stderr is inspectable later
+	suppress_output pnpm --version
+	# shellcheck disable=SC2312 # the preceding suppress_output already verified pnpm works, so masking its exit here is intentional (matches pre-migration behavior)
+	echo "Using pnpm $(pnpm --version)"
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__pnpm_saved_flags}" in *e*) set -e ;; *) set +e ;; esac

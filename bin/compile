@@ -354,7 +354,7 @@ install_bins() {
     fi
 
     install_start=$(build_data::current_unix_realtime)
-    install_pnpm "$pnpm_version"
+    package_managers::pnpm::install_binary "$pnpm_version"
     build_data::set_duration "install_pnpm_binary_time" "$install_start"
     if [ "$using_default_pnpm" == true ]; then
       output::warning <<-EOF
