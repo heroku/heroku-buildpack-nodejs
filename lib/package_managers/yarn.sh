@@ -37,7 +37,7 @@ function package_managers::yarn::install_binary() {
 			EOF
 			false
 		fi
-		if ! suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "${package_name}@${version}"; then
+		if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "${package_name}@${version}"; then
 			build_data::set_string "failure" "yarn-install-failed"
 			output::error <<-EOF
 				Unable to install yarn ${version}.
@@ -49,7 +49,7 @@ function package_managers::yarn::install_binary() {
 		fi
 	fi
 	# Verify yarn works before capturing and ensure its stderr is inspectable later
-	suppress_output yarn --version
+	utils::command::suppress_output yarn --version
 	installed_version="$(yarn --version)"
 	# shellcheck disable=SC2154 # YARN_2 is a global set by the caller (bin/compile)
 	if ${YARN_2}; then

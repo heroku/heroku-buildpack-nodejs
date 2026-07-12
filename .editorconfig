@@ -12,7 +12,7 @@ trim_trailing_whitespace = true
 # Migrated shell files (kept in sync with the makefile's MIGRATED_FILES list). Tabs are used
 # so here-documents can be indented:
 # https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Here-Documents
-[{lib/failures.sh,lib/package_managers/*.sh}]
+[{lib/failures.sh,lib/package_managers/*.sh,lib/utils/*.sh}]
 binary_next_line = true
 indent_style = tab
 shell_variant = bash

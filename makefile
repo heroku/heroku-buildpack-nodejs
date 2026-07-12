@@ -7,7 +7,8 @@ MIGRATED_FILES = \
 	lib/package_managers/npm.sh \
 	lib/package_managers/pnpm.sh \
 	lib/package_managers/yarn.sh \
-	lib/runtimes/nodejs.sh
+	lib/runtimes/nodejs.sh \
+	lib/utils/command.sh
 
 .PHONY: lint lint-scripts check-format format
 
