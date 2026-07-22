@@ -125,24 +125,6 @@ run_cleanup_script() {
   fi
 }
 
-yarn_node_modules() {
-  local build_dir=${1:-}
-  local production=${YARN_PRODUCTION:-false}
-
-  echo "Installing node modules (yarn.lock)"
-  cd "$build_dir" || return
-  monitor "install_dependencies" yarn install --production="$production" --frozen-lockfile --ignore-engines --prefer-offline 2>&1
-}
-
-yarn_2_install() {
-  local build_dir=${1:-}
-
-  echo "Running 'yarn install' with yarn.lock"
-  cd "$build_dir" || return
-
-  monitor "install_dependencies" yarn install --immutable 2>&1
-}
-
 yarn_prune_devdependencies() {
   local build_dir=${1:-}
   local cache_dir=${2:-}
