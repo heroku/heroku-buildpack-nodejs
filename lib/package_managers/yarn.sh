@@ -109,6 +109,48 @@ function package_managers::yarn::yarn2_install_dependencies() {
 	monitor "install_dependencies" yarn install --immutable 2>&1
 }
 
+function package_managers::yarn::prune_devdependencies() {
+	local build_dir=${1:-}
+	local buildpack_dir=${2:-}
+
+	# NODE_ENV, YARN_PRODUCTION, YARN_2, and YARN2_SKIP_PRUNING are globals exported by the
+	# caller (bin/compile via lib/environment.sh / the app's config vars).
+	# shellcheck disable=SC2154 # set by the caller (bin/compile)
+	if [[ "${NODE_ENV}" == "test" ]]; then
+		echo "Skipping because NODE_ENV is 'test'"
+		build_data::set_raw "skipped_prune" "true"
+		return 0
+	elif [[ "${NODE_ENV}" != "production" ]]; then
+		echo "Skipping because NODE_ENV is not 'production'"
+		build_data::set_raw "skipped_prune" "true"
+		return 0
+	elif [[ -n "${YARN_PRODUCTION}" ]]; then
+		echo "Skipping because YARN_PRODUCTION is '${YARN_PRODUCTION}'"
+		build_data::set_raw "skipped_prune" "true"
+		return 0
+	elif ${YARN_2}; then
+		if [[ "${YARN2_SKIP_PRUNING}" == "true" ]]; then
+			echo "Skipping because YARN2_SKIP_PRUNING is '${YARN2_SKIP_PRUNING}'"
+			build_data::set_raw "skipped_prune" "true"
+			return 0
+		fi
+		cd "${build_dir}" || return
+		echo "Running 'yarn heroku prune'"
+		export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
+		monitor "prune_dev_dependencies" yarn heroku prune
+		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a false result just skips the cache cleanup
+		if node_modules_enabled "${build_dir}"; then
+			echo "Removing local yarn cache to reduce slug size"
+			rm -rf "${build_dir}/.yarn/cache"
+		fi
+		build_data::set_raw "skipped_prune" "false"
+	else
+		cd "${build_dir}" || return
+		monitor "prune_dev_dependencies" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
+		build_data::set_raw "skipped_prune" "false"
+	fi
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__yarn_saved_flags}" in *e*) set -e ;; *) set +e ;; esac

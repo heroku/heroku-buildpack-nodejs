@@ -557,7 +557,7 @@ cache_build() {
 
 prune_devdependencies() {
   if $YARN || $YARN_2; then
-    yarn_prune_devdependencies "$BUILD_DIR" "$YARN_CACHE_FOLDER" "$BP_DIR"
+    package_managers::yarn::prune_devdependencies "$BUILD_DIR" "$BP_DIR"
   elif $PNPM; then
     pnpm_prune_devdependencies "$BUILD_DIR"
   else
