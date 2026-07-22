@@ -443,7 +443,7 @@ if $PNPM; then
 fi
 
 if [[ -z "$USE_NPM_INSTALL" ]]; then
-  if [[ "$(should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then
+  if [[ "$(package_managers::npm::should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then
     USE_NPM_INSTALL=false
   else
     USE_NPM_INSTALL=true
