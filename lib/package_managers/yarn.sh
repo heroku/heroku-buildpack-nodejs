@@ -91,6 +91,24 @@ function package_managers::yarn::_determine_package_name() {
 	return "${exit_code}"
 }
 
+function package_managers::yarn::install_dependencies() {
+	local build_dir="${1:-}"
+	local production="${YARN_PRODUCTION:-false}"
+
+	echo "Installing node modules (yarn.lock)"
+	cd "${build_dir}" || return
+	monitor "install_dependencies" yarn install --production="${production}" --frozen-lockfile --ignore-engines --prefer-offline 2>&1
+}
+
+function package_managers::yarn::yarn2_install_dependencies() {
+	local build_dir="${1:-}"
+
+	echo "Running 'yarn install' with yarn.lock"
+	cd "${build_dir}" || return
+
+	monitor "install_dependencies" yarn install --immutable 2>&1
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__yarn_saved_flags}" in *e*) set -e ;; *) set +e ;; esac

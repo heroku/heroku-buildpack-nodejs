@@ -510,9 +510,9 @@ build_dependencies() {
   cache_status="$(get_cache_status "$CACHE_DIR")"
   start=$(build_data::current_unix_realtime)
   if [[ "$YARN_2" == "true" ]]; then
-    yarn_2_install "$BUILD_DIR"
+    package_managers::yarn::yarn2_install_dependencies "$BUILD_DIR"
   elif $YARN; then
-    yarn_node_modules "$BUILD_DIR"
+    package_managers::yarn::install_dependencies "$BUILD_DIR"
   elif $PNPM; then
     package_managers::pnpm::install_dependencies "$BUILD_DIR" "$CACHE_DIR"
   elif $PREBUILD; then
