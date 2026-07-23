@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Removed the unused `lib/features.sh` A/B rollout module. ([#1719](https://github.com/heroku/heroku-buildpack-nodejs/pull/1719))
 
 ## [v358] - 2026-07-09
 
@@ -154,7 +155,7 @@
 
 ## [v328] - 2026-02-02
 
-- Support pnpm workspace pruning. ([#1535](https://github.com/heroku/heroku-buildpack-nodejs/pull/1535)) 
+- Support pnpm workspace pruning. ([#1535](https://github.com/heroku/heroku-buildpack-nodejs/pull/1535))
 - Fix pnpm workspace detection. ([#1528](https://github.com/heroku/heroku-buildpack-nodejs/pull/1528))
 - Fixed issue with parsing pnpm version from the `packageManager` field when an integrity check is present. ([#1540](https://github.com/heroku/heroku-buildpack-nodejs/pull/1540))
 
@@ -192,7 +193,7 @@
 
 ## [v320] - 2025-12-03
 
-- Updated default Node.js version to 24.x. ([#1510](https://github.com/heroku/heroku-buildpack-nodejs/pull/1510)) 
+- Updated default Node.js version to 24.x. ([#1510](https://github.com/heroku/heroku-buildpack-nodejs/pull/1510))
 
 ## [v319] - 2025-11-26
 
@@ -266,7 +267,7 @@
 
 - Added Node.js 24.6.0 (linux-amd64)
 - Fix escaping for buildpack metrics. ([#1451](https://github.com/heroku/heroku-buildpack-nodejs/pull/1451))
-- Remove calls to unsupported metrics format (i.e.; `mcount`, `mtime`, `mmeasure`) ([#1454](https://github.com/heroku/heroku-buildpack-nodejs/pull/1454)) 
+- Remove calls to unsupported metrics format (i.e.; `mcount`, `mtime`, `mmeasure`) ([#1454](https://github.com/heroku/heroku-buildpack-nodejs/pull/1454))
 
 ## [v303] - 2025-08-05
 
