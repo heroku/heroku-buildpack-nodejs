@@ -31,11 +31,6 @@ has_yarn_cache() {
   [[ -d "$yarn_cache" ]] && [[ -n "$(ls -A "$yarn_cache")" ]]
 }
 
-has_yarn_workspace_plugin_installed() {
-  local has_workspace_plugin=$(yarn plugin runtime | grep plugin-workspace-tools)
-  [[ ! "$has_workspace_plugin" == "" ]]
-}
-
 get_yarn_path() {
   local build_dir="$1"
   local yarn_path
