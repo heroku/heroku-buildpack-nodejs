@@ -4,20 +4,6 @@ get_os() {
   uname | tr '[:upper:]' '[:lower:]'
 }
 
-get_cpu() {
-  if [[ "$(uname -p)" = "i686" ]]; then
-    echo "x86"
-  else
-    echo "x64"
-  fi
-}
-
-get_platform() {
-  os=$(get_os)
-  cpu=$(get_cpu)
-  echo "$os-$cpu"
-}
-
 create_default_env() {
   local YARN=$1
 

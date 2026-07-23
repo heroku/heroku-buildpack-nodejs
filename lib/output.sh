@@ -31,15 +31,6 @@ header() {
   echo "-----> $*" || true
 }
 
-bright_header() {
-  echo "" || true
-  echo -e "\033[1;33m-----> $* \033[0m"
-}
-
-header_skip_newline() {
-  echo "-----> $*" || true
-}
-
 error() {
   echo " !     $*" >&2 || true
   echo "" || true
