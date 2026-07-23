@@ -11,8 +11,7 @@ __npm_saved_flags="$-"
 __npm_saved_pipefail="$(set +o | grep pipefail)"
 set -euo pipefail
 
-# Installs app dependencies with npm (fresh install path; the prebuild/rebuild path is
-# still handled by lib/dependencies.sh until it is migrated).
+# Installs app dependencies with npm (fresh install path).
 #
 # On failure, the captured output is run through package_managers::npm::_handle_npm_install_failure and, if a
 # known failure mode is recognised, failure::emit renders the message, records the
@@ -104,6 +103,38 @@ function package_managers::npm::install_dependencies() {
 	fi
 
 	build_data::set_duration "install_dependencies_time" "${start}"
+}
+
+# Rebuilds app dependencies with npm (prebuild/rebuild path used when node_modules is
+# checked into source control): runs `npm rebuild` to rebuild any native modules, then
+# `npm install` to install anything missing from package.json.
+function package_managers::npm::rebuild_dependencies() {
+	local build_dir="${1:-}"
+	local production="${NPM_CONFIG_PRODUCTION:-false}"
+
+	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
+	# to the currently-active npm when that npm still accepts it.
+	local unsafe_perm=()
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a non-match just omits the flag
+	if package_managers::npm::supports_unsafe_perm; then
+		unsafe_perm=(--unsafe-perm)
+	fi
+
+	# shellcheck disable=SC2292 # single-bracket preserved during relocation; converted alongside the Type B error-handling migration
+	if [ -e "${build_dir}/package.json" ]; then
+		cd "${build_dir}" || return
+		echo "Rebuilding any native modules"
+		npm rebuild 2>&1
+		# shellcheck disable=SC2292 # single-bracket preserved during relocation; converted alongside the Type B error-handling migration
+		if [ -e "${build_dir}/npm-shrinkwrap.json" ]; then
+			echo "Installing any new modules (package.json + shrinkwrap)"
+		else
+			echo "Installing any new modules (package.json)"
+		fi
+		monitor "npm_rebuild" npm install --production="${production}" "${unsafe_perm[@]}" --userconfig "${build_dir}/.npmrc" 2>&1
+	else
+		echo "Skipping (no package.json)"
+	fi
 }
 
 function package_managers::npm::version_major() {

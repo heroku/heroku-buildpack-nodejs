@@ -517,7 +517,7 @@ build_dependencies() {
     package_managers::pnpm::install_dependencies "$BUILD_DIR" "$CACHE_DIR"
   elif $PREBUILD; then
     echo "Prebuild detected (node_modules already exists)"
-    npm_rebuild "$BUILD_DIR"
+    package_managers::npm::rebuild_dependencies "$BUILD_DIR"
   else
     package_managers::npm::install_dependencies "$BUILD_DIR"
   fi
