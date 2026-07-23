@@ -124,31 +124,3 @@ run_cleanup_script() {
     run_if_present "$build_dir" 'heroku-cleanup'
   fi
 }
-
-has_npm_lock() {
-  local build_dir=${1:-}
-
-  if [[ -f "$build_dir/package-lock.json" ]] || [[ -f "$build_dir/npm-shrinkwrap.json" ]]; then
-    echo "true"
-  else
-    echo "false"
-  fi
-}
-
-should_use_npm_ci() {
-  local build_dir=${1:-}
-  local npm_version
-  local major
-
-  npm_version=$(npm --version)
-  major=$(package_managers::npm::version_major)
-
-  # We should only run `npm ci` if all of the manifest files are there, and we are running at least npm 6.x
-  # `npm ci` was introduced in the 5.x line in 5.7.0, but this sees very little usage, < 5% of builds
-  if [[ -f "$build_dir/package.json" ]] && [[ "$(has_npm_lock "$build_dir")" == "true" ]] && (( major >= 6 )); then
-    echo "true"
-  else
-    echo "false"
-  fi
-}
-

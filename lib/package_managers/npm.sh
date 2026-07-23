@@ -149,6 +149,32 @@ function package_managers::npm::supports_unsafe_perm() {
 	[[ "${major}" -lt 12 ]]
 }
 
+# Prints "true" when the build should install via `npm ci` (lockfile-strict) instead of
+# `npm install`. `npm ci` was introduced in the 5.x line in 5.7.0, but that sees very
+# little usage (< 5% of builds), so this gates on npm >= 6.
+function package_managers::npm::should_use_npm_ci() {
+	local build_dir="${1:-}"
+	local major has_lock
+	major="$(package_managers::npm::version_major)"
+	has_lock="$(package_managers::npm::_has_npm_lock "${build_dir}")"
+
+	if [[ -f "${build_dir}/package.json" ]] && [[ "${has_lock}" == "true" ]] && ((major >= 6)); then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function package_managers::npm::_has_npm_lock() {
+	local build_dir="${1:-}"
+
+	if [[ -f "${build_dir}/package-lock.json" ]] || [[ -f "${build_dir}/npm-shrinkwrap.json" ]]; then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
 # Pure classifier for npm dependency-install failures.
 #
 # Input:
