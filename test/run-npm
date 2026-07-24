@@ -435,7 +435,7 @@ testErrorNpmGitDependency() {
 testErrorPeerDependencyConflict() {
   cache_dir=$(mktmpdir)
   compile "error-npm-peer-dependency-conflict" "${cache_dir}"
-  assertCaptured "Conflict detected in requested npm dependencies"
+  assertCapturedStderr "Conflict detected in requested npm dependencies"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "npm-peer-dependency-conflict"
 }

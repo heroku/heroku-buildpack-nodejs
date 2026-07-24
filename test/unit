@@ -425,6 +425,24 @@ testFailureEmitWritesMarkerWhenSet() {
   rm -f "$marker"
 }
 
+testFailureHandlePipefail() {
+  # The generic pipefail helper hard-codes classification=buildpack and encodes the
+  # PIPESTATUS array into failure_detail for observability. Callers pass the id and message.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    failure::handle_pipefail "some-tool-pipefail" "0 1" "Error: log capture failed." 2>&1 || true
+  )
+
+  assertContains "$out" "Error: log capture failed."
+  assertContains "$(cat "$capture")" "failure=some-tool-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
 testFailuresLibDoesNotLeakShellOptions() {
   # Source the lib in a fresh subshell that does NOT have nounset enabled, and confirm
   # nounset is still off afterwards (i.e. the lib restored our options instead of leaving
@@ -539,6 +557,40 @@ testHandleNpmInstallAllowRemoteBlocked() {
   assertContains "${result[detail]}" "EALLOWREMOTE:"
   assertEquals "user" "${result[classification]}"
   assertContains "${result[message]}" "remote URL"
+}
+
+testHandleNpmInstallEresolve() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eresolve.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # The legacy failure id is preserved verbatim so the `failure` build-data key stays continuous
+  # for downstream metrics.
+  assertEquals "npm-peer-dependency-conflict" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ERESOLVE:"
+  assertContains "${result[detail]}" "could not resolve"
+  # The migrated message still surfaces the legacy_peer_deps workaround verbatim.
+  assertContains "${result[message]}" "npm_config_legacy_peer_deps=true"
+}
+
+testHandleInstallPipefail() {
+  # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
+  # verify both plus the buildpack classification and PIPESTATUS detail inherited from
+  # failure::handle_pipefail. Shared by install_dependencies and rebuild_dependencies.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::npm::_handle_install_pipefail "0 1" 2>&1 || true
+  )
+
+  assertContains "$out" "Unable to capture the npm install log output"
+  assertContains "$out" "ran out of disk space"
+  assertContains "$(cat "$capture")" "failure=npm-install-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
 }
 
 testHandleNpmInstallNoMatchReturnsNonZero() {

@@ -68,25 +68,9 @@ function package_managers::npm::install_dependencies() {
 		local -A failure
 		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${npm_exit}" -eq 0 ]]; then
-			# npm itself succeeded; the pipeline failed because `tee` (which captures the install
-			# log) failed — e.g. the build ran out of disk space. That is a failure on the
-			# buildpack's side, not a problem with the app's dependencies, so don't run it through
-			# the npm classifier (it would match nothing and blame the user). `tee` returns a bare
-			# non-zero on any write error without encoding the cause, so we record the raw pipe
-			# status as detail for observability rather than guessing why it failed.
-			failure["id"]="npm-install-pipefail"
-			failure["classification"]="buildpack"
-			failure["detail"]="PIPESTATUS=[${pipe_status[*]}]"
-			failure["message"]=$(
-				cat <<-EOF
-					Error: Unable to capture the npm install log output.
-
-					The dependency install ran, but writing its log to disk failed (for example,
-					the build ran out of disk space). This is not a problem with your
-					dependencies. Please try again.
-				EOF
-			)
-			failure::emit failure
+			# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the npm classifier.
+			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
 		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
@@ -112,6 +96,24 @@ function package_managers::npm::rebuild_dependencies() {
 	local build_dir="${1:-}"
 	local production="${NPM_CONFIG_PRODUCTION:-false}"
 
+	if [[ ! -e "${build_dir}/package.json" ]]; then
+		echo "Skipping (no package.json)"
+		return 0
+	fi
+
+	cd "${build_dir}"
+	echo "Rebuilding any native modules"
+	# `npm rebuild` runs unwrapped: its failure surface is native-module compile errors, not
+	# resolution/registry failures, so the npm-install classifier below does not apply. If it
+	# fails, errexit fires and the legacy trap classifies from the shared log.
+	npm rebuild 2>&1
+
+	if [[ -e "${build_dir}/npm-shrinkwrap.json" ]]; then
+		echo "Installing any new modules (package.json + shrinkwrap)"
+	else
+		echo "Installing any new modules (package.json)"
+	fi
+
 	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
 	# to the currently-active npm when that npm still accepts it.
 	local unsafe_perm=()
@@ -120,21 +122,39 @@ function package_managers::npm::rebuild_dependencies() {
 		unsafe_perm=(--unsafe-perm)
 	fi
 
-	# shellcheck disable=SC2292 # single-bracket preserved during relocation; converted alongside the Type B error-handling migration
-	if [ -e "${build_dir}/package.json" ]; then
-		cd "${build_dir}" || return
-		echo "Rebuilding any native modules"
-		npm rebuild 2>&1
-		# shellcheck disable=SC2292 # single-bracket preserved during relocation; converted alongside the Type B error-handling migration
-		if [ -e "${build_dir}/npm-shrinkwrap.json" ]; then
-			echo "Installing any new modules (package.json + shrinkwrap)"
-		else
-			echo "Installing any new modules (package.json)"
+	local npm_command=(
+		npm install --production="${production}" "${unsafe_perm[@]}"
+		--userconfig "${build_dir}/.npmrc"
+	)
+
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Shares the classifier with the fresh-install path (`install_dependencies`) — same
+	# command, same failure surface. The metric name (`npm_rebuild_time`) is kept distinct
+	# from `install_dependencies_time` so the two paths remain separable in observability.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { "${npm_command[@]}" 2>&1 | tee "${log_file}"; }; then
+		local pipe_status=("${PIPESTATUS[@]}")
+		local npm_exit="${pipe_status[0]}"
+		build_data::set_duration "npm_rebuild_time" "${start}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${npm_exit}" -eq 0 ]]; then
+			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
+			failure::emit failure
 		fi
-		monitor "npm_rebuild" npm install --production="${production}" "${unsafe_perm[@]}" --userconfig "${build_dir}/.npmrc" 2>&1
-	else
-		echo "Skipping (no package.json)"
+
+		return "${npm_exit}"
 	fi
+
+	build_data::set_duration "npm_rebuild_time" "${start}"
 }
 
 function package_managers::npm::version_major() {
@@ -173,6 +193,24 @@ function package_managers::npm::_has_npm_lock() {
 	else
 		echo "false"
 	fi
+}
+
+# Emits the npm-install pipefail failure. Shared by both `install_dependencies` and
+# `rebuild_dependencies`: both run `npm install 2>&1 | tee log`, and a tee-side failure
+# (typically the build ran out of disk space) classifies identically at either call site.
+function package_managers::npm::_handle_install_pipefail() {
+	local pipe_status_str="${1}"
+	local message
+	message=$(
+		cat <<-EOF
+			Error: Unable to capture the npm install log output.
+
+			The dependency install ran, but writing its log to disk failed (for example,
+			the build ran out of disk space). This is not a problem with your
+			dependencies. Please try again.
+		EOF
+	)
+	failure::handle_pipefail "npm-install-pipefail" "${pipe_status_str}" "${message}"
 }
 
 # Pure classifier for npm dependency-install failures.
@@ -332,8 +370,41 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm ERESOLVE code — stable npm v7–v12. Introduced in npm 7.0.0 by arborist v2 (see
+	# workspaces/arborist/lib/place-dep.js#failPeerConflict and
+	# workspaces/arborist/lib/arborist/build-ideal-tree.js#failPeerConflict) and handled first-class
+	# in lib/utils/error-message.js. Indicates the requested dependency tree contains conflicting
+	# peer-dependency requirements. Shared by both npm install call sites
+	# (`install_dependencies` and `rebuild_dependencies`).
+	if grep -qiE 'npm (ERR!|error) code ERESOLVE($| )' "${log_file}"; then
+		__failure["id"]="npm-peer-dependency-conflict"
+		__failure["classification"]="user"
+		__failure["detail"]="ERESOLVE: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Conflict detected in requested npm dependencies.
+
+				An \`ERESOLVE\` error during installation of npm dependencies means your app
+				contains two or more conflicting versions of the same dependency. This is
+				typically caused by peer dependency requirements of requested dependencies.
+				The error above should contain more detail about which dependencies are in
+				conflict. Use tools like \`npm info <package-name>\` to get details about a
+				package, including its peer dependencies.
+
+				The best way to address this issue is to regularly update your dependency
+				versions to prevent conflicts from happening.
+
+				If that is not possible, a temporary solution is to set a config var with
+				\`heroku config:set npm_config_legacy_peer_deps=true\`. This should be used
+				with caution as ignoring peer dependency conflicts can lead to unexpected
+				runtime errors.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
-	# e.g. ETARGET (no matching version), ERESOLVE (dependency conflict), ENOSPC (disk full).
+	# e.g. ETARGET (no matching version), ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.
 
 	# No known failure mode recognised — signal no match so the caller can fall through.
