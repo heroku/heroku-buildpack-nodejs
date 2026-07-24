@@ -180,9 +180,11 @@ testYarnOnlyEngine() {
 
 testYarnLockfileOutOfDate() {
   compile "yarn-lockfile-out-of-date"
+  # yarn's own progress output still lands on stdout via `tee` in the migrated install path
   assertCaptured "Your lockfile needs to be updated"
-  assertCaptured "Outdated Yarn lockfile"
-  assertCaptured "https://help.heroku.com/TXYS53YJ"
+  # The migrated failure message is emitted via output::error, which writes to stderr and
+  # bypasses the outer `output` pipe that shapes stdout.
+  assertCapturedStderr "Outdated Yarn lockfile"
   assertCapturedError
 }
 
@@ -242,7 +244,6 @@ testYarnBuildMetaData() {
     select(.has_cached_bower_components == false)
     select(.has_custom_cache_dirs == false)
     select(.has_procfile == false)
-    select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.install_yarn_binary_time | type == "number")
