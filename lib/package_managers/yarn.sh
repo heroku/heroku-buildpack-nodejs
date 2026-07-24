@@ -97,7 +97,132 @@ function package_managers::yarn::install_dependencies() {
 
 	echo "Installing node modules (yarn.lock)"
 	cd "${build_dir}" || return
-	monitor "install_dependencies" yarn install --production="${production}" --frozen-lockfile --ignore-engines --prefer-offline 2>&1
+
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Yarn 1 writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
+	# merged stream through `tee` for classification. Indentation is applied by the enclosing
+	# `build_dependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
+	# every yarn line would be indented twice.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { yarn install --production="${production}" --frozen-lockfile --ignore-engines --prefer-offline 2>&1 | tee "${log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local yarn_exit="${pipe_status[0]}"
+		build_data::set_duration "install_dependencies_time" "${start}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${yarn_exit}" -eq 0 ]]; then
+			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the yarn classifier.
+			package_managers::yarn::_handle_install_pipefail "${pipe_status[*]}"
+		elif package_managers::yarn::_handle_yarn_classic_install_failure "${log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		fi
+
+		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
+		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
+		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
+		# failure from $LOG_FILE — covering the yarn 1.x cases (fail_yarn_outdated, fail_yarn_install)
+		# not yet migrated here, instead of masking them with a generic message.
+		return "${yarn_exit}"
+	fi
+
+	build_data::set_duration "install_dependencies_time" "${start}"
+}
+
+# Emits the yarn-install pipefail failure for the yarn 1.x install path. Wraps
+# `failure::handle_pipefail` with the yarn-specific id and message so callers pass only the
+# joined PIPESTATUS string.
+function package_managers::yarn::_handle_install_pipefail() {
+	local pipe_status_str="${1}"
+	local message
+	message=$(
+		cat <<-EOF
+			Error: Unable to capture the yarn install log output.
+
+			The dependency install ran, but writing its log to disk failed (for example,
+			the build ran out of disk space). This is not a problem with your
+			dependencies. Please try again.
+		EOF
+	)
+	failure::handle_pipefail "yarn-install-pipefail" "${pipe_status_str}" "${message}"
+}
+
+# Pure classifier for yarn 1.x (classic) dependency-install failures. Yarn 2+ (Berry) has a
+# separate install path (`yarn2_install_dependencies`) with its own error surface and is not
+# handled here.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed yarn command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
+# the array untouched otherwise. Has no side effects: it does not write build data, print to
+# the build log, or exit. Yarn 1 has no numeric error codes, so detail carries the first
+# descriptive `error <line>` from the log (prefix stripped) as a discriminator.
+function package_managers::yarn::_handle_yarn_classic_install_failure() {
+	local log_file="${1}"
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure="${2}"
+
+	# Yarn 1.x emits this literal line from src/cli/commands/install.js when --frozen-lockfile
+	# detects a mismatch between package.json and yarn.lock.
+	if grep -qi 'Your lockfile needs to be updated' "${log_file}"; then
+		__failure["id"]="outdated-yarn-lockfile"
+		__failure["classification"]="user"
+		__failure["detail"]="$(package_managers::yarn::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Outdated Yarn lockfile
+
+				Your application's yarn.lock does not match the dependencies in
+				package.json. The yarn.lock records the exact modules Yarn installed,
+				and the build fails when the two drift apart to prevent subtle bugs
+				and security issues.
+
+				This commonly happens when another tool modifies package.json without
+				running yarn install — for example, using npm to add a dependency, or
+				editing a version requirement by hand.
+
+				To fix, run yarn install in your project directory and commit the
+				updated yarn.lock:
+
+				\$ yarn install
+				\$ git add yarn.lock
+				\$ git commit -m "Updated Yarn lockfile"
+				\$ git push heroku main
+			EOF
+		)
+		return 0
+	fi
+
+	# TODO: classify additional yarn 1.x failures currently handled by the legacy trap
+	# (fail_yarn_outdated, fail_yarn_install) in a follow-up migration.
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
+}
+
+# Returns the first descriptive yarn error line for use as failure detail: the first
+# `error <message>` line, with the `error ` prefix stripped. Yarn 1 has no numeric codes, so
+# the message text itself is the discriminator inside a bucket. Internal helper to
+# package_managers::yarn::_handle_yarn_classic_install_failure; not meant to be called directly.
+function package_managers::yarn::_extract_error_detail() {
+	local log_file="${1}"
+	grep -iE '^error ' "${log_file}" \
+		| head -n 1 \
+		| sed -E 's/^error //I' \
+		|| true
 }
 
 function package_managers::yarn::yarn2_install_dependencies() {
