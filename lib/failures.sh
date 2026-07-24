@@ -55,6 +55,24 @@ function failure::emit() {
 	fail
 }
 
+# Emits a buildpack-classified failure for the case where the tool inside a `tool | tee log`
+# pipeline exited 0 but a downstream stage (typically `tee` writing to the log) failed — for
+# example the build ran out of disk space. Callers pass a stable failure id, the PIPESTATUS
+# array joined as a string (typically "${pipe_status[*]}") for observability, and the
+# user-facing message. Records classification=buildpack and detail=PIPESTATUS=[...].
+function failure::handle_pipefail() {
+	local id="${1}"
+	local pipe_status="${2}"
+	local message="${3}"
+	local -A failure=(
+		[id]="${id}"
+		[classification]="buildpack"
+		[detail]="PIPESTATUS=[${pipe_status}]"
+		[message]="${message}"
+	)
+	failure::emit failure
+}
+
 # Restore the sourcing shell's original options (see preamble) so strict mode doesn't leak
 # into un-migrated callers. errexit/nounset come from the saved `$-`; pipefail from its own
 # saved `set +o` line.
