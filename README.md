@@ -27,13 +27,22 @@ It's suggested that you use the latest version of the release buildpack. You can
 heroku buildpacks:set heroku/nodejs
 ```
 
-Your builds will always used the latest published release of the buildpack.
+Your builds will always use the latest published release of the buildpack.
 
 If you need to use the git url, you can use the `latest` tag to make sure you always have the latest release. **The `main` branch will always have the latest buildpack updates, but it does not correspond with a numbered release.**
 
 ```sh
 heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#latest -a my-app
 ```
+
+> **Note:** `buildpacks:set` replaces the buildpack at position 1 in your app's
+> buildpack list. If your app already uses other buildpacks, use
+> `buildpacks:add --index 1` instead so this buildpack runs first without
+> overwriting an existing one:
+>
+> ```sh
+> heroku buildpacks:add --index 1 heroku/nodejs -a my-app
+> ```
 
 ## Locking to a buildpack version
 
@@ -44,8 +53,13 @@ First, find the version you want from
 Then, specify that version with `buildpacks:set`:
 
 ```
-heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#v176 -a my-app
+heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#v358 -a my-app
 ```
+
+If your app already has a Node.js buildpack entry (for example `heroku/nodejs`),
+target its position with `--index` so the pinned URL replaces it rather than
+being added alongside it. Use `heroku buildpacks` to see the current list and
+its positions.
 
 ### Chain Node with multiple buildpacks
 
@@ -66,8 +80,8 @@ Having trouble? Dig it? Feature request?
 For local development, you may need the following tools:
 
 - [Docker](https://hub.docker.com/search?type=edition&offering=community)
-- [Go 1.14](https://golang.org/doc/install#install)
-- [upx](https://upx.github.io/)
+- [Rust](https://www.rust-lang.org/tools/install) (for building the version resolver in `resolve-version/`)
+- The `x86_64-unknown-linux-musl` cross-compilation target and linker (used by `make build-resolvers`)
 
 ### Deploying an app with a fork or branch
 
@@ -85,16 +99,6 @@ heroku buildpacks:set <your-github-url>
 # You can also use a git branch!
 heroku buildpacks:set <your-github-url>#your-branch
 ```
-
-### Downloading Plugins
-
-In order to download the latest plugins that have been released, run the following:
-
-```
-plugin/download.sh v$VERSION
-```
-
-Make sure the version is in the format `v#`, ie. `v7`.
 
 ## Tests
 
@@ -118,6 +122,18 @@ make heroku-26-build
 The tests are run via the vendored
 [shunit2](https://github.com/kward/shunit2)
 test framework.
+
+To run just the unit tests (in Docker):
+
+```
+make unit
+```
+
+To lint and check formatting of the shell scripts:
+
+```
+make lint
+```
 
 ### Debugging
 
