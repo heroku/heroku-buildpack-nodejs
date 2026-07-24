@@ -44,24 +44,10 @@ heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#latest -
 > heroku buildpacks:add --index 1 heroku/nodejs -a my-app
 > ```
 
-## Locking to a buildpack version
+For more on managing an app's buildpacks, see
+[Managing Buildpacks](https://devcenter.heroku.com/articles/managing-buildpacks).
 
-Even though it's suggested to use the latest release, you may want to lock dependencies - including buildpacks - to a specific version.
-
-First, find the version you want from
-[the list of buildpack versions](https://github.com/heroku/heroku-buildpack-nodejs/tags).
-Then, specify that version with `buildpacks:set`:
-
-```
-heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#v358 -a my-app
-```
-
-If your app already has a Node.js buildpack entry (for example `heroku/nodejs`),
-target its position with `--index` so the pinned URL replaces it rather than
-being added alongside it. Use `heroku buildpacks` to see the current list and
-its positions.
-
-### Chain Node with multiple buildpacks
+## Chain Node with multiple buildpacks
 
 This buildpack automatically exports node, npm, and any node_modules binaries
 into the `$PATH` for easy use in subsequent buildpacks.
