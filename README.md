@@ -29,23 +29,10 @@ heroku buildpacks:set heroku/nodejs
 
 Your builds will always use the latest published release of the buildpack.
 
-If you need to use the git url, you can use the `latest` tag to make sure you always have the latest release. **The `main` branch will always have the latest buildpack updates, but it does not correspond with a numbered release.**
-
-```sh
-heroku buildpacks:set https://github.com/heroku/heroku-buildpack-nodejs#latest -a my-app
-```
-
-> **Note:** `buildpacks:set` replaces the buildpack at position 1 in your app's
-> buildpack list. If your app already uses other buildpacks, use
-> `buildpacks:add --index 1` instead so this buildpack runs first without
-> overwriting an existing one:
->
-> ```sh
-> heroku buildpacks:add --index 1 heroku/nodejs -a my-app
-> ```
-
-For more on managing an app's buildpacks, see
-[Managing Buildpacks](https://devcenter.heroku.com/articles/managing-buildpacks).
+> **Note:** `buildpacks:set` replaces the buildpack at position 1. If your app
+> already uses other buildpacks, use `buildpacks:add --index 1 heroku/nodejs`
+> instead so this one isn't overwritten. See
+> [Managing Buildpacks](https://devcenter.heroku.com/articles/managing-buildpacks).
 
 ## Chain Node with multiple buildpacks
 
