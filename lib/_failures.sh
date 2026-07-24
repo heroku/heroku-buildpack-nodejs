@@ -618,25 +618,6 @@ log_other_failures() {
     fi
   fi
 
-  # For now, only capture this error if it doesn't happen during the pruning step. This error shouldn't make
-  # it past the initial `npm install` (but it can) and it would be nice to see when this type of error slips through.
-  if grep -q "npm error code ERESOLVE" "$log_file" && [[ "$(build_data::get_current "build_step")" != "prune-dependencies" ]]; then
-    build_data::set_string "failure" "npm-peer-dependency-conflict"
-    warn "Conflict detected in requested npm dependencies
-
-       An \`ERESOLVE\` error during installation of npm dependencies means your app contains two or more conflicting
-       versions of the same dependency. This is typically caused by peer dependency requirements of requested dependencies.
-       The error above should contain more detail about which dependencies are in conflict. Use tools like \`npm info <package-name>\`
-       to get details about a package, including it's peer dependencies.
-
-       The best way to address this issue is to regularly update your dependency versions to prevent conflicts from happening.
-
-       If that is not possible, a temporary solution is to set a config var with \`heroku set config npm_config_legacy_peer_deps=true\`.
-       This should be used with caution as ignoring peer dependency conflicts can lead to unexpected runtime errors.
-    "
-    fail
-  fi
-
   if grep -q "ERR_OSSL_EVP_UNSUPPORTED" "$log_file"; then
     local solution
     local help_url

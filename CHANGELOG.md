@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Removed the unused `lib/features.sh` A/B rollout module. ([#1719](https://github.com/heroku/heroku-buildpack-nodejs/pull/1719))
+- Migrated the npm peer-dependency-conflict (`ERESOLVE`) build error onto the call-site failure-classification framework. ([#1720](https://github.com/heroku/heroku-buildpack-nodejs/pull/1720))
 
 ## [v358] - 2026-07-09
 

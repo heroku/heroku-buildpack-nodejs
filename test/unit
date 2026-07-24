@@ -541,6 +541,20 @@ testHandleNpmInstallAllowRemoteBlocked() {
   assertContains "${result[message]}" "remote URL"
 }
 
+testHandleNpmInstallEresolve() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eresolve.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # The legacy failure id is preserved verbatim so the `failure` build-data key stays continuous
+  # for downstream metrics.
+  assertEquals "npm-peer-dependency-conflict" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ERESOLVE:"
+  assertContains "${result[detail]}" "could not resolve"
+  # The migrated message still surfaces the legacy_peer_deps workaround verbatim.
+  assertContains "${result[message]}" "npm_config_legacy_peer_deps=true"
+}
+
 testHandleNpmInstallNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful install; the classifier should not match and should leave the
