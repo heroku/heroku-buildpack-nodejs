@@ -603,6 +603,46 @@ testHandleNpmInstallNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testHandleYarnInstallLockfileNeedsUpdate() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/lockfile-needs-update.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertEquals "outdated-yarn-lockfile" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Your lockfile needs to be updated"
+  assertContains "${result[message]}" "Outdated Yarn lockfile"
+  assertContains "${result[message]}" "yarn install"
+}
+
+testHandleYarnInstallNoMatchReturnsNonZero() {
+  local -A result
+  if package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleYarnInstallPipefail() {
+  # The yarn-specific pipefail wrapper owns the failure id and the user-facing message;
+  # verify both plus the buildpack classification and PIPESTATUS detail inherited from
+  # failure::handle_pipefail.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::_handle_install_pipefail "0 1" 2>&1 || true
+  )
+
+  assertContains "$out" "Unable to capture the yarn install log output"
+  assertContains "$out" "ran out of disk space"
+  assertContains "$(cat "$capture")" "failure=yarn-install-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
 # npm 12 removed --unsafe-perm; the gate helper decides whether callers may pass it. Stub `npm`
 # in a subshell so `version_major` reads a controlled version without a real npm install.
 testSupportsUnsafePermForNpm11() {
