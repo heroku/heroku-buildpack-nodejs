@@ -141,7 +141,8 @@ function package_managers::yarn::install_dependencies() {
 	build_data::set_duration "install_dependencies_time" "${start}"
 }
 
-# Emits the yarn-install pipefail failure for the yarn 1.x install path. Wraps
+# Emits the yarn-install pipefail failure for the yarn install paths (yarn 1.x classic and
+# yarn 2+ Berry share this wrapper — the user-facing wording is flag-agnostic). Wraps
 # `failure::handle_pipefail` with the yarn-specific id and message so callers pass only the
 # joined PIPESTATUS string.
 function package_managers::yarn::_handle_install_pipefail() {
@@ -231,7 +232,120 @@ function package_managers::yarn::yarn2_install_dependencies() {
 	echo "Running 'yarn install' with yarn.lock"
 	cd "${build_dir}" || return
 
-	monitor "install_dependencies" yarn install --immutable 2>&1
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Berry writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
+	# merged stream through `tee` for classification. Indentation is applied by the enclosing
+	# `build_dependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
+	# every yarn line would be indented twice.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { yarn install --immutable 2>&1 | tee "${log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local yarn_exit="${pipe_status[0]}"
+		build_data::set_duration "install_dependencies_time" "${start}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${yarn_exit}" -eq 0 ]]; then
+			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the Berry classifier. Reuses the
+			# shared yarn pipefail wrapper — the user-facing wording covers both yarn 1 and Berry.
+			package_managers::yarn::_handle_install_pipefail "${pipe_status[*]}"
+		elif package_managers::yarn::_handle_yarn_berry_install_failure "${log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		fi
+
+		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
+		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
+		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
+		# failure from $LOG_FILE — covering the Berry YN codes (e.g. YN0001, YN0018) not yet
+		# migrated here, instead of masking them with a generic message.
+		return "${yarn_exit}"
+	fi
+
+	build_data::set_duration "install_dependencies_time" "${start}"
+}
+
+# Pure classifier for yarn 2+ (Berry) dependency-install failures. Yarn 1.x (classic) has a
+# separate install path (`install_dependencies`) with its own error surface and is not handled
+# here.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed yarn command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
+# the array untouched otherwise. Has no side effects: it does not write build data, print to
+# the build log, or exit. Detail is set to the Berry YN-code plus the first descriptive
+# framed error line, giving observability a precise discriminator within each failure bucket.
+function package_managers::yarn::_handle_yarn_berry_install_failure() {
+	local log_file="${1}"
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure="${2}"
+
+	# YN0028 — Berry refuses to modify yarn.lock under `--immutable`. Emitted from
+	# @yarnpkg/core's install report when the resolution step would have written a new
+	# lockfile (see yarnpkg/berry sources/Report.ts + install command).
+	if grep -qi 'YN0028' "${log_file}"; then
+		__failure["id"]="yarn-lockfile-out-of-sync"
+		__failure["classification"]="user"
+		__failure["detail"]="YN0028: $(package_managers::yarn::_extract_berry_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Yarn lockfile is not in sync
+
+				Your application's yarn.lock does not match the dependencies in
+				package.json, and yarn install was run with --immutable so it refused
+				to modify the lockfile. The build fails when the two drift apart to
+				prevent subtle bugs and security issues.
+
+				This commonly happens when another tool modifies package.json without
+				running yarn install — for example, using npm to add a dependency, or
+				editing a version requirement by hand.
+
+				To fix, run yarn install in your project directory and commit the
+				updated yarn.lock:
+
+				\$ yarn install
+				\$ git add yarn.lock
+				\$ git commit -m "Updated Yarn lockfile"
+				\$ git push heroku main
+			EOF
+		)
+		return 0
+	fi
+
+	# TODO: classify additional Berry YN codes currently handled by the legacy trap in
+	# follow-up migrations (e.g. YN0001 internal error, YN0018 checksum mismatch).
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
+}
+
+# Returns the first descriptive Berry error line for use as failure detail: Berry emits
+# progress and errors as `➤ YN####: <message>` (often with box-drawing framing when inside a
+# report group). Skip YN0000 (informational bookkeeping — "Yarn X.Y.Z", "Resolution step",
+# etc.), grab the first real code line, and strip the arrow/code prefix and box-drawing so the
+# detail carries just the descriptive text alongside the code prefix set by callers. Internal
+# helper to package_managers::yarn::_handle_yarn_berry_install_failure; not meant to be called
+# directly.
+function package_managers::yarn::_extract_berry_error_detail() {
+	local log_file="${1}"
+	grep -aE 'YN[0-9]{4}:' "${log_file}" \
+		| grep -av 'YN0000:' \
+		| head -n 1 \
+		| sed -E 's/.*YN[0-9]{4}:[[:space:]]*//' \
+		| sed -E 's/^[│├└┌─┐┘[:space:]]+//' \
+		|| true
 }
 
 function package_managers::yarn::prune_devdependencies() {
