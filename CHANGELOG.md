@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v359] - 2026-07-27
+
 - Removed the unused `lib/features.sh` A/B rollout module. ([#1719](https://github.com/heroku/heroku-buildpack-nodejs/pull/1719))
 - Migrated the npm peer-dependency-conflict (`ERESOLVE`) build error onto the call-site failure-classification framework. ([#1720](https://github.com/heroku/heroku-buildpack-nodejs/pull/1720))
 - Migrated the Yarn 1.x outdated-yarn-lockfile build error onto the call-site failure-classification framework. ([#1721](https://github.com/heroku/heroku-buildpack-nodejs/pull/1721))
@@ -1376,7 +1379,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v358...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v359...main
+[v359]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v358...v359
 [v358]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v357...v358
 [v357]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v356...v357
 [v356]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v355...v356
