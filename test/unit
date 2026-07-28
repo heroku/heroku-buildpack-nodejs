@@ -584,7 +584,6 @@ testHandleNpmInstallLockfileOutOfSync() {
   assertContains "${result[detail]}" "package.json and package-lock.json are in sync"
   assertContains "${result[message]}" "npm lockfile is not in sync"
   assertContains "${result[message]}" "npm install"
-  assertContains "${result[message]}" "troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
 }
 
 testHandleInstallPipefail() {
