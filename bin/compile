@@ -48,8 +48,6 @@ source "$BP_DIR/lib/cache.sh"
 source "$BP_DIR/lib/dependencies.sh"
 # shellcheck source=lib/package_manager.sh
 source "$BP_DIR/lib/package_manager.sh"
-# shellcheck source=lib/plugin.sh
-source "$BP_DIR/lib/plugin.sh"
 # shellcheck source=lib/builddata.sh
 source "$BP_DIR/lib/builddata.sh"
 # shellcheck source=lib/yarn-2.sh
@@ -580,7 +578,7 @@ summarize_build() {
 }
 
 build_data::set_string "build_step" "install-metrics-plugin"
-install_plugin "$BP_DIR" "$BUILD_DIR"
+runtimes::nodejs::install_metrics_plugin "$BP_DIR" "$BUILD_DIR"
 
 build_data::set_string "build_step" "summarize"
 summarize_build | output "$LOG_FILE"
