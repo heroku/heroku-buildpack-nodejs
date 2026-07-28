@@ -623,6 +623,31 @@ testHandleYarnInstallNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testHandleYarnBerryInstallLockfileOutOfSync() {
+  local -A result
+  package_managers::yarn::_handle_yarn_berry_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/berry-lockfile-out-of-sync.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertEquals "yarn-lockfile-out-of-sync" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  # Detail carries the Berry code plus the framed error line's descriptive text.
+  assertContains "${result[detail]}" "YN0028:"
+  assertContains "${result[detail]}" "The lockfile would have been modified"
+  assertContains "${result[message]}" "Yarn lockfile is not in sync"
+  assertContains "${result[message]}" "--immutable"
+  assertContains "${result[message]}" "yarn install"
+}
+
+testHandleYarnBerryInstallNoMatchReturnsNonZero() {
+  local -A result
+  # The yarn 1.x clean fixture has no YN codes at all, which is enough to exercise the
+  # no-match path for the Berry classifier.
+  if package_managers::yarn::_handle_yarn_berry_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
 testHandleYarnInstallPipefail() {
   # The yarn-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from

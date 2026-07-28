@@ -520,8 +520,7 @@ testExecWithYarnAndEngine() {
 testErrorYarnLockfileOutOfSync() {
   cache_dir=$(mktmpdir)
   compile "error-yarn-lockfile-out-of-sync" "${cache_dir}"
-  assertCaptured "Yarn lockfile is not in sync"
-  assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+  assertCapturedStderr "Yarn lockfile is not in sync"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "yarn-lockfile-out-of-sync"
 }
