@@ -474,6 +474,31 @@ testFailuresLibDoesNotLeakErrexit() {
   assertEquals "errexit should remain on after sourcing" "on" "${errexit_after}"
 }
 
+testPackageManagerLibDoesNotLeakShellOptions() {
+  # Same guard as testFailuresLibDoesNotLeakShellOptions, for the migrated package_manager lib:
+  # sourcing it must restore the caller's nounset rather than leaving `set -u` on.
+  local nounset_after
+  nounset_after=$(
+    set +u
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/package_manager.sh"
+    set -o | awk '$1 == "nounset" { print $2 }'
+  )
+  assertEquals "nounset should be restored to off after sourcing" "off" "${nounset_after}"
+}
+
+testPackageManagerLibDoesNotLeakErrexit() {
+  # Same errexit-restoration guard as testFailuresLibDoesNotLeakErrexit, for the package_manager lib.
+  local errexit_after
+  errexit_after=$(
+    set -e
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/package_manager.sh"
+    case "$-" in *e*) echo "on" ;; *) echo "off" ;; esac
+  )
+  assertEquals "errexit should remain on after sourcing" "on" "${errexit_after}"
+}
+
 testYarnLibDoesNotLeakShellOptions() {
   # Same guard as testFailuresLibDoesNotLeakShellOptions, for the migrated yarn lib: sourcing
   # it must restore the caller's nounset rather than leaving `set -u` on.
@@ -923,6 +948,7 @@ source "$(pwd)"/lib/environment.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/json.sh
 source "$(pwd)"/lib/failures.sh
+source "$(pwd)"/lib/package_manager.sh
 source "$(pwd)"/lib/package_managers/npm.sh
 source "$(pwd)"/lib/package_managers/pnpm.sh
 source "$(pwd)"/lib/package_managers/yarn.sh
