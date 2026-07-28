@@ -403,6 +403,35 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm EUSAGE code — set broadly by npm's `usageError()` (lib/base-cmd.js, stable since v7.6.2),
+	# so gate on the specific "Please update your lock file" message emitted only from
+	# `npm ci` when `validateLockfile()` fails (lib/commands/ci.js, stable since v8.4.1). The
+	# outer EUSAGE match with the discriminator line is what isolates the lockfile-out-of-sync
+	# case from every other EUSAGE sub-case (arg-validation, audit/diff/sbom/etc.), which the
+	# legacy matcher (`_failures.sh:582-596`) also handled this way. Only `install_dependencies`
+	# runs `npm ci`, but this classifier is shared with `rebuild_dependencies` — the latter
+	# only ever runs `npm install`, so it cannot emit this mode; the matcher simply won't fire
+	# there.
+	if grep -qiE 'npm (ERR!|error) code EUSAGE($| )' "${log_file}" \
+		&& grep -qi 'Please update your lock file' "${log_file}"; then
+		__failure["id"]="npm-lockfile-out-of-sync"
+		__failure["classification"]="user"
+		__failure["detail"]="EUSAGE: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: npm lockfile is not in sync.
+
+				This error occurs when the contents of \`package.json\` contains a different
+				set of dependencies than the contents of \`package-lock.json\`. This can happen
+				when a package is added, modified, or removed but the lockfile was not updated.
+
+				To fix this, run \`npm install\` locally in your app directory to regenerate the
+				lockfile, commit the changes to \`package-lock.json\`, and redeploy.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
 	# e.g. ETARGET (no matching version), ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.

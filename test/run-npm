@@ -416,8 +416,7 @@ testUseNpm10() {
 testErrorNpmLockfileOutOfSync() {
   cache_dir=$(mktmpdir)
   compile "error-npm-lockfile-out-of-sync" "${cache_dir}"
-  assertCaptured "npm lockfile is not in sync"
-  assertCaptured "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+  assertCapturedStderr "npm lockfile is not in sync"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "npm-lockfile-out-of-sync"
 }

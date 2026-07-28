@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Migrated the Yarn 2+ (Berry) lockfile-out-of-sync (`YN0028`) build error onto the call-site failure-classification framework. ([#1726](https://github.com/heroku/heroku-buildpack-nodejs/pull/1726))
+- Migrated the npm lockfile-out-of-sync (`EUSAGE`) build error onto the call-site failure-classification framework. ([#1727](https://github.com/heroku/heroku-buildpack-nodejs/pull/1727))
 
 ## [v359] - 2026-07-27
 
