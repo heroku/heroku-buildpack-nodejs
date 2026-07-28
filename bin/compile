@@ -46,6 +46,8 @@ source "$BP_DIR/lib/yaml.sh"
 source "$BP_DIR/lib/cache.sh"
 # shellcheck source=lib/dependencies.sh
 source "$BP_DIR/lib/dependencies.sh"
+# shellcheck source=lib/package_manager.sh
+source "$BP_DIR/lib/package_manager.sh"
 # shellcheck source=lib/plugin.sh
 source "$BP_DIR/lib/plugin.sh"
 # shellcheck source=lib/uuid.sh
@@ -509,11 +511,11 @@ build_dependencies() {
 
   build_data::set_string "build_step" "build-script"
   header "Build"
-  run_build_script "$BUILD_DIR"
+  package_manager::run_build_script "$BUILD_DIR"
 }
 
 build_data::set_string "build_step" "prebuild-script"
-run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
+package_manager::run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
 
 header "Installing dependencies" | output "$LOG_FILE"
 build_data::set_string "build_step" "install-dependencies"
@@ -571,7 +573,7 @@ else
 fi
 
 build_data::set_string "build_step" "cleanup-script"
-run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
+package_manager::run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
 
 summarize_build() {
   if $NODE_VERBOSE; then
