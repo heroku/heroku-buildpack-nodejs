@@ -579,22 +579,6 @@ log_other_failures() {
     fail
   fi
 
-  if grep -q "npm error code EUSAGE" "$log_file"; then
-    if grep -q "Please update your lock file" "$log_file"; then
-      build_data::set_string "failure" "npm-lockfile-out-of-sync"
-      warn "npm lockfile is not in sync
-
-       This error occurs when the contents of \`package.json\` contains a different
-       set of dependencies that the contents of \`package-lock.json\`. This can happen
-       when a package is added, modified, or removed but the lockfile was not updated.
-
-       To fix this, run \`npm install\` locally in your app directory to regenerate the
-       lockfile, commit the changes to \`package-lock.json\`, and redeploy.
-      " "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
-      fail
-    fi
-  fi
-
   if grep -q "ERR_OSSL_EVP_UNSUPPORTED" "$log_file"; then
     local solution
     local help_url

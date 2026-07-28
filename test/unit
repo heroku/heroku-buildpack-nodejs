@@ -573,6 +573,20 @@ testHandleNpmInstallEresolve() {
   assertContains "${result[message]}" "npm_config_legacy_peer_deps=true"
 }
 
+testHandleNpmInstallLockfileOutOfSync() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/eusage.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertEquals "npm-lockfile-out-of-sync" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "EUSAGE:"
+  assertContains "${result[detail]}" "package.json and package-lock.json are in sync"
+  assertContains "${result[message]}" "npm lockfile is not in sync"
+  assertContains "${result[message]}" "npm install"
+  assertContains "${result[message]}" "troubleshooting-node-deploys#make-sure-that-the-lockfile-is-up-to-date"
+}
+
 testHandleInstallPipefail() {
   # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from

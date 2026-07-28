@@ -1,0 +1,12 @@
+npm error code EUSAGE
+npm error
+npm error `npm ci` can only install packages when your package.json and package-lock.json are in sync. Please update your lock file with `npm install` before continuing.
+npm error
+npm error Invalid: lock file's abbrev@1.0.4 does not satisfy abbrev@1.1.1
+npm error
+npm error Clean install a project
+npm error
+npm error Usage:
+npm error npm ci
+npm error
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log
