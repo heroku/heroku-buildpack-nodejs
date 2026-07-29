@@ -50,8 +50,6 @@ source "$BP_DIR/lib/dependencies.sh"
 source "$BP_DIR/lib/package_manager.sh"
 # shellcheck source=lib/builddata.sh
 source "$BP_DIR/lib/builddata.sh"
-# shellcheck source=lib/yarn-2.sh
-source "$BP_DIR/lib/yarn-2.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
@@ -112,7 +110,7 @@ trap 'handle_failure' ERR
 [ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
 [ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
 [ -f "$BUILD_DIR/pnpm-lock.yaml" ] && PNPM=true || PNPM=false
-YARN_2=$(detect_yarn_2 "$YARN" "$BUILD_DIR")
+YARN_2=$(package_managers::yarn::detect_berry "$YARN" "$BUILD_DIR")
 
 ### Failures that should be caught immediately
 
@@ -159,19 +157,19 @@ if [[ "$YARN_2" == "true" ]]; then
   # runtime; the cache must live in /app (not /tmp) so that dependencies are
   # persisted. When using zero-install, /app/.yarn/cache will include all
   # dependencies which yarn should reuse.
-  if use_yarn_app_cache "$BUILD_DIR"; then
+  if package_managers::yarn::berry_use_app_cache "$BUILD_DIR"; then
     YARN_CACHE_FOLDER=${YARN_CACHE_FOLDER:-"$BUILD_DIR/.yarn/cache"}
   fi
 
   # When in zero-install mode, use --immutable-cache to verify that the cache
   # is pristine. Cache mutation is expected in nonzero installs.
-  if has_yarn_cache "$BUILD_DIR"; then
+  if package_managers::yarn::berry_has_cache "$BUILD_DIR"; then
     YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
     YARN_ZERO_INSTALL=true
   fi
 
   ### Configure Yarn 2+
-  YARN_MAJOR_VERSION=$(get_yarn_major_version "$BUILD_DIR")
+  YARN_MAJOR_VERSION=$(package_managers::yarn::get_major_version "$BUILD_DIR")
 
   # if we're installing yarn via packageManager or engines.yarn we don't need to fail
   # on the yarn path configuration or vendored script
@@ -183,13 +181,13 @@ if [[ "$YARN_2" == "true" ]]; then
     1|"")
       # This ensures we check for a vendored Yarn if we're using Yarn 1 to bootstrap
       fail_missing_yarnrc_yml "$BUILD_DIR"
-      VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
+      VENDOR_PATH=$(package_managers::yarn::berry_get_path "$BUILD_DIR")
       fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
       ;;
     *)
       # no need to require a vendored yarnPath (though one may still be configured)
       if [[ -f "$BUILD_DIR/.yarnrc.yml" ]]; then
-        VENDOR_PATH=$(get_yarn_path "$BUILD_DIR")
+        VENDOR_PATH=$(package_managers::yarn::berry_get_path "$BUILD_DIR")
       fi
       ;;
   esac
@@ -270,10 +268,10 @@ install_bins() {
 		EOF
   fi
 
-  if has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
+  if package_managers::yarn::berry_has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
     showed_warning=true
     local release_script
-    release_script="$(get_yarn_path "$BUILD_DIR")"
+    release_script="$(package_managers::yarn::berry_get_path "$BUILD_DIR")"
     output::warning <<-EOF
 			Yarn release script may conflict with "packageManager"
 
@@ -304,7 +302,7 @@ install_bins() {
   build_data::set_string "build_step" "install-npm"
   package_managers::npm::install_binary "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
 
-  if ! has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
+  if ! package_managers::yarn::berry_has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
     build_data::set_string "build_step" "install-yarn"
     yarn_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "#" -f 1)"
     install_start=$(build_data::current_unix_realtime)

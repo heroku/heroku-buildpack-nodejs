@@ -378,7 +378,7 @@ function package_managers::yarn::prune_devdependencies() {
 		export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
 		monitor "prune_dev_dependencies" yarn heroku prune
 		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a false result just skips the cache cleanup
-		if node_modules_enabled "${build_dir}"; then
+		if package_managers::yarn::_berry_node_modules_enabled "${build_dir}"; then
 			echo "Removing local yarn cache to reduce slug size"
 			rm -rf "${build_dir}/.yarn/cache"
 		fi
@@ -388,6 +388,93 @@ function package_managers::yarn::prune_devdependencies() {
 		monitor "prune_dev_dependencies" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
 		build_data::set_raw "skipped_prune" "false"
 	fi
+}
+
+function package_managers::yarn::detect_berry() {
+	local uses_yarn="${1}"
+	local build_dir="${2}"
+	local yml_metadata
+	local version
+
+	yml_metadata=$(read_yaml "${build_dir}/yarn.lock" '.__metadata' 2>/dev/null)
+
+	# grep for version in case the output is a parsing error
+	version=$(echo "${yml_metadata}" | grep version)
+
+	if [[ "${uses_yarn}" == "true" && "${version}" != "" ]]; then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
+function package_managers::yarn::berry_has_release_script() {
+	local build_dir="${1}"
+	local yarn_path
+	yarn_path=$(read_yaml "${build_dir}/.yarnrc.yml" '.yarnPath' 2>/dev/null)
+	[[ -n "${yarn_path}" && "${yarn_path}" != "null" ]] && [[ -f "${build_dir}/${yarn_path}" ]]
+}
+
+function package_managers::yarn::berry_has_cache() {
+	local build_dir="${1}"
+	local yarn_cache="${build_dir}/.yarn/cache"
+	# shellcheck disable=SC2312 # the boolean test only cares whether the directory is non-empty; masking ls's exit is intentional (matches pre-migration behavior)
+	[[ -d "${yarn_cache}" ]] && [[ -n "$(ls -A "${yarn_cache}")" ]]
+}
+
+function package_managers::yarn::berry_get_path() {
+	local build_dir="${1}"
+	local yarn_path
+	yarn_path=$(read_yaml "${build_dir}/.yarnrc.yml" '.yarnPath' 2>/dev/null)
+	if [[ -n "${yarn_path}" && "${yarn_path}" != "null" ]]; then
+		echo "${yarn_path}"
+	fi
+}
+
+function package_managers::yarn::berry_use_app_cache() {
+	local build_dir="${1}"
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside (matches pre-migration behavior)
+	if package_managers::yarn::berry_has_cache "${build_dir}" || ! package_managers::yarn::_berry_node_modules_enabled "${build_dir}"; then
+		return
+	fi
+	false
+}
+
+function package_managers::yarn::_berry_node_modules_enabled() {
+	local build_dir="${1}"
+	local node_linker
+
+	node_linker=$(read_yaml "${build_dir}/.yarnrc.yml" '.nodeLinker' 2>/dev/null)
+
+	[[ "${node_linker}" == "node-modules" ]]
+}
+
+function package_managers::yarn::get_major_version() {
+	local build_dir="${1}"
+	local package_manager yarn_engine version_string
+
+	# Check packageManager field first (e.g., "yarn@4.0.0")
+	package_manager=$(read_json "${build_dir}/package.json" ".packageManager")
+	if [[ "${package_manager}" == yarn@* ]]; then
+		version_string="${package_manager#yarn@}"
+		# Extract major version (e.g., "4.0.0" -> "4", "4.0.0+sha256.abc" -> "4")
+		echo "${version_string}" | cut -d "." -f 1
+		return
+	fi
+
+	# Check engines.yarn field (e.g., "4.x", "^4.0.0", ">=4.0.0")
+	yarn_engine=$(read_json "${build_dir}/package.json" ".engines.yarn")
+	if [[ -n "${yarn_engine}" ]]; then
+		# Extract major version, ignoring any non-numeric prefix
+		version_string=$(echo "${yarn_engine}" | sed -E 's/^[^0-9]*([0-9]+)\.?.*/\1/')
+		if [[ -n "${version_string}" ]]; then
+			echo "${version_string}"
+			return
+		fi
+	fi
+
+	# If we can't determine version, return empty string
+	echo ""
 }
 
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
