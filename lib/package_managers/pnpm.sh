@@ -196,6 +196,25 @@ function package_managers::pnpm::install_binary() {
 	echo "Using pnpm $(pnpm --version)"
 }
 
+# Runs a named lifecycle script with pnpm. Spells the pnpm-specific command (`pnpm run
+# --if-present <script>`, forwarding NODE_BUILD_FLAGS after a `--` separator) and hands execution
+# to the shared coordinator runner, which captures output and routes failures. `build_flags` is
+# the optional NODE_BUILD_FLAGS string (empty for prebuild/postbuild/cleanup scripts).
+function package_managers::pnpm::run_script() {
+	local script_name=${1}
+	local build_flags=${2:-}
+
+	echo "Running ${script_name}"
+
+	local command=(pnpm run --if-present "${script_name}")
+	if [[ -n "${build_flags}" ]]; then
+		echo "Running with ${build_flags} flags"
+		command+=(-- "${build_flags}")
+	fi
+
+	package_manager::run_script_command "${command[@]}"
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__pnpm_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
