@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.5.1 (linux-amd64)
+- Added Node.js 24.18.1 (linux-amd64)
+- Added Node.js 22.23.2 (linux-amd64)
 - Migrated the Yarn 2+ (Berry) lockfile-out-of-sync (`YN0028`) build error onto the call-site failure-classification framework. ([#1726](https://github.com/heroku/heroku-buildpack-nodejs/pull/1726))
 - Migrated the npm lockfile-out-of-sync (`EUSAGE`) build error onto the call-site failure-classification framework. ([#1727](https://github.com/heroku/heroku-buildpack-nodejs/pull/1727))
 
