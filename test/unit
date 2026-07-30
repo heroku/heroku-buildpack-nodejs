@@ -678,6 +678,63 @@ testHandleYarnInstallPipefail() {
   rm -f "$capture"
 }
 
+testHandlePnpmInstallLockfileOutOfSync() {
+  local -A result
+  package_managers::pnpm::_handle_install_failure "$(pwd)/test/unit-fixtures/pnpm-failures/outdated-lockfile.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "pnpm-lockfile-out-of-sync" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  # Detail carries the pnpm code plus the first descriptive error line.
+  assertContains "${result[detail]}" "ERR_PNPM_OUTDATED_LOCKFILE:"
+  assertContains "${result[detail]}" "is not up to date"
+  assertContains "${result[message]}" "pnpm lockfile is not in sync"
+  assertContains "${result[message]}" "pnpm install"
+}
+
+testHandlePnpmInstallNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install; the classifier should not match and should leave the
+  # array empty. Guard the call so set -e (if active) doesn't abort on the expected non-zero.
+  if package_managers::pnpm::_handle_install_failure "$(pwd)/test/unit-fixtures/pnpm-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandlePnpmInstallPipefail() {
+  # The pnpm-specific pipefail wrapper owns the failure id and the user-facing message;
+  # verify both plus the buildpack classification and PIPESTATUS detail inherited from
+  # failure::handle_pipefail.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::pnpm::_handle_install_pipefail "0 1" 2>&1 || true
+  )
+
+  assertContains "$out" "Unable to capture the pnpm install log output"
+  assertContains "$out" "ran out of disk space"
+  assertContains "$(cat "$capture")" "failure=pnpm-install-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
+testPnpmExtractErrorDetailReturnsFirstDescriptiveLine() {
+  # Strips the leading `[ERR_PNPM_<CODE>] ` bracket prefix from the rendered summary line.
+  local detail
+  detail=$(package_managers::pnpm::_extract_error_detail "$(pwd)/test/unit-fixtures/pnpm-failures/outdated-lockfile.log")
+  assertEquals "Cannot install with \"frozen-lockfile\" because pnpm-lock.yaml is not up to date with <ROOT>/package.json" "$detail"
+}
+
+testPnpmExtractErrorDetailEmptyWhenNoDescriptiveLine() {
+  # A log with no `[ERR_PNPM_...]` summary line yields empty detail without erroring.
+  local detail
+  detail=$(package_managers::pnpm::_extract_error_detail "$(pwd)/test/unit-fixtures/pnpm-failures/clean.log")
+  assertEquals "" "$detail"
+}
+
 # npm 12 removed --unsafe-perm; the gate helper decides whether callers may pass it. Stub `npm`
 # in a subshell so `version_major` reads a controlled version without a real npm install.
 testSupportsUnsafePermForNpm11() {

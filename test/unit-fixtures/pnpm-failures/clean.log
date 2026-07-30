@@ -1,0 +1,10 @@
+Scope: all 3 workspace projects
+Lockfile is up to date, resolution step is skipped
+Packages: +142
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 142, reused 142, downloaded 0, added 142, done
+
+dependencies:
++ lodash 4.17.21
+
+Done in 3.2s
