@@ -44,8 +44,6 @@ source "$BP_DIR/lib/json.sh"
 source "$BP_DIR/lib/yaml.sh"
 # shellcheck source=lib/cache.sh
 source "$BP_DIR/lib/cache.sh"
-# shellcheck source=lib/dependencies.sh
-source "$BP_DIR/lib/dependencies.sh"
 # shellcheck source=lib/package_manager.sh
 source "$BP_DIR/lib/package_manager.sh"
 # shellcheck source=lib/builddata.sh
@@ -571,7 +569,7 @@ package_manager::run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
 
 summarize_build() {
   if $NODE_VERBOSE; then
-    list_dependencies "$BUILD_DIR"
+    package_manager::list_dependencies "$BUILD_DIR"
   fi
 }
 

@@ -334,6 +334,15 @@ function package_managers::pnpm::run_script() {
 	package_manager::run_script_command "${command[@]}"
 }
 
+# Lists installed top-level dependencies for the verbose build summary. Wrapped in `|| true` and
+# `2>/dev/null` so a listing failure never aborts the summary.
+function package_managers::pnpm::list_dependencies() {
+	local build_dir=${1:-}
+
+	cd "${build_dir}" || return
+	(pnpm list --depth=0 || true) 2>/dev/null
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__pnpm_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
