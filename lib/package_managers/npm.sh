@@ -597,6 +597,25 @@ function package_managers::npm::prune_devdependencies() {
 	fi
 }
 
+# Runs a named lifecycle script with npm. Spells the npm-specific command (`npm run <script>
+# --if-present`, forwarding NODE_BUILD_FLAGS after a `--` separator) and hands execution to the
+# shared coordinator runner, which captures output and routes failures. `build_flags` is the
+# optional NODE_BUILD_FLAGS string (empty for prebuild/postbuild/cleanup scripts).
+function package_managers::npm::run_script() {
+	local script_name=${1}
+	local build_flags=${2:-}
+
+	echo "Running ${script_name}"
+
+	local command=(npm run "${script_name}" --if-present)
+	if [[ -n "${build_flags}" ]]; then
+		echo "Running with ${build_flags} flags"
+		command+=(-- "${build_flags}")
+	fi
+
+	package_manager::run_script_command "${command[@]}"
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__npm_saved_flags}" in *e*) set -e ;; *) set +e ;; esac

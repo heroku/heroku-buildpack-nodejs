@@ -911,6 +911,114 @@ testExtractErrorDetailEmptyWhenNoDescriptiveLine() {
   assertEquals "" "$detail"
 }
 
+# Each PM module spells its own `run <script>` command; stub the tool binary as a function that
+# echoes its argv so we can assert the exact command (and flag placement) the module builds. The
+# command is streamed through the shared `package_manager::run_script_command` runner.
+
+testNpmRunScript() {
+  local out
+  out=$(
+    npm() { echo "TOOL: npm $*"; }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Running build"
+  assertContains "$out" "TOOL: npm run build --if-present"
+}
+
+testNpmRunScriptWithBuildFlags() {
+  # npm forwards NODE_BUILD_FLAGS after a `--` separator.
+  local out
+  out=$(
+    npm() { echo "TOOL: npm $*"; }
+    package_managers::npm::run_script "build" "--prod --optimize" 2>&1
+  )
+  assertContains "$out" "Running with --prod --optimize flags"
+  assertContains "$out" "TOOL: npm run build --if-present -- --prod --optimize"
+}
+
+testPnpmRunScript() {
+  local out
+  out=$(
+    pnpm() { echo "TOOL: pnpm $*"; }
+    package_managers::pnpm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Running build"
+  assertContains "$out" "TOOL: pnpm run --if-present build"
+}
+
+testPnpmRunScriptWithBuildFlags() {
+  # pnpm forwards NODE_BUILD_FLAGS after a `--` separator.
+  local out
+  out=$(
+    pnpm() { echo "TOOL: pnpm $*"; }
+    package_managers::pnpm::run_script "build" "--prod" 2>&1
+  )
+  assertContains "$out" "Running with --prod flags"
+  assertContains "$out" "TOOL: pnpm run --if-present build -- --prod"
+}
+
+testYarnRunScript() {
+  local build_dir out
+  build_dir=$(mktemp -d)
+  echo '{"scripts":{"build":"webpack"}}' > "$build_dir/package.json"
+  out=$(
+    yarn() { echo "TOOL: yarn $*"; }
+    package_managers::yarn::run_script "$build_dir" "build" 2>&1
+  )
+  assertContains "$out" "Running build (yarn)"
+  assertContains "$out" "TOOL: yarn run build"
+  rm -rf "$build_dir"
+}
+
+testYarnRunScriptWithBuildFlags() {
+  # yarn takes NODE_BUILD_FLAGS as a trailing argument (no `--` separator).
+  local build_dir out
+  build_dir=$(mktemp -d)
+  echo '{"scripts":{"build":"webpack"}}' > "$build_dir/package.json"
+  out=$(
+    yarn() { echo "TOOL: yarn $*"; }
+    package_managers::yarn::run_script "$build_dir" "build" "--prod --optimize" 2>&1
+  )
+  assertContains "$out" "Running with --prod --optimize flags"
+  assertContains "$out" "TOOL: yarn run build --prod --optimize"
+  rm -rf "$build_dir"
+}
+
+testYarnRunScriptSkipsEmptyScript() {
+  # yarn errors on an empty script body, so an empty script is announced but never run.
+  local build_dir out
+  build_dir=$(mktemp -d)
+  echo '{"scripts":{"build":""}}' > "$build_dir/package.json"
+  out=$(
+    yarn() { echo "TOOL: yarn $*"; }
+    package_managers::yarn::run_script "$build_dir" "build" 2>&1
+  )
+  assertContains "$out" "Running build (yarn)"
+  if [[ "$out" == *"TOOL: yarn"* ]]; then
+    fail "yarn should not be invoked for an empty script body"
+  fi
+  rm -rf "$build_dir"
+}
+
+testHandleScriptPipefail() {
+  # The build-script pipefail handler owns the failure id and user-facing message, plus the
+  # buildpack classification and PIPESTATUS detail inherited from failure::handle_pipefail. It
+  # fires when the script exits 0 but a downstream pipe stage (tee) fails.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_manager::_handle_script_pipefail "0 1" 2>&1 || true
+  )
+  assertContains "$out" "Unable to capture the build script log output"
+  assertContains "$out" "ran out of disk space"
+  assertContains "$(cat "$capture")" "failure=build-script-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested

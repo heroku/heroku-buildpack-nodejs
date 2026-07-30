@@ -477,6 +477,34 @@ function package_managers::yarn::get_major_version() {
 	echo ""
 }
 
+# Runs a named lifecycle script with yarn. Spells the yarn-specific command (`yarn run <script>`,
+# forwarding NODE_BUILD_FLAGS as a trailing argument — yarn takes no `--` separator) and hands
+# execution to the shared coordinator runner, which captures output and routes failures.
+# `build_flags` is the optional NODE_BUILD_FLAGS string (empty for prebuild/postbuild/cleanup
+# scripts). Unlike npm/pnpm, yarn errors on an empty script string, so a script whose body is
+# empty is announced but not run (yarn has no `--if-present` equivalent).
+function package_managers::yarn::run_script() {
+	local build_dir=${1}
+	local script_name=${2}
+	local build_flags=${3:-}
+	local script
+
+	echo "Running ${script_name} (yarn)"
+
+	script=$(read_json "${build_dir}/package.json" ".scripts[\"${script_name}\"]")
+	if [[ -z "${script}" ]]; then
+		return 0
+	fi
+
+	local command=(yarn run "${script_name}")
+	if [[ -n "${build_flags}" ]]; then
+		echo "Running with ${build_flags} flags"
+		command+=("${build_flags}")
+	fi
+
+	package_manager::run_script_command "${command[@]}"
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__yarn_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
