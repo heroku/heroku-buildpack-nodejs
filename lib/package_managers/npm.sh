@@ -592,9 +592,56 @@ function package_managers::npm::prune_devdependencies() {
 		return 0
 	else
 		cd "${build_dir}" || return
-		monitor "prune_dev_dependencies" npm prune --userconfig "${build_dir}/.npmrc" 2>&1
+
+		local log_file
+		log_file=$(mktemp)
+
+		local start
+		start=$(build_data::current_unix_realtime)
+
+		# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+		if ! { npm prune --userconfig "${build_dir}/.npmrc" 2>&1 | tee "${log_file}"; }; then
+			# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+			# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+			local pipe_status=("${PIPESTATUS[@]}")
+			local npm_exit="${pipe_status[0]}"
+			build_data::set_duration "prune_dev_dependencies_time" "${start}"
+
+			if [[ "${npm_exit}" -eq 0 ]]; then
+				# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+				# disk). Buildpack-side, so don't blame the app.
+				package_managers::npm::_handle_prune_pipefail "${pipe_status[*]}"
+			fi
+
+			# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
+			# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
+			# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
+			# failure — there is no migrated npm-prune tool-error classifier to add here yet.
+			return "${npm_exit}"
+		fi
+
+		build_data::set_duration "prune_dev_dependencies_time" "${start}"
 		build_data::set_raw "skipped_prune" "false"
 	fi
+}
+
+# Emits the npm-prune pipefail failure. `prune_devdependencies` runs
+# `npm prune 2>&1 | tee log`, and a tee-side failure (typically the build ran out of disk
+# space) classifies as buildpack-side rather than blaming the app's dependencies.
+function package_managers::npm::_handle_prune_pipefail() {
+	local pipe_status_str="${1}"
+	local message
+	message=$(
+		cat <<-EOF
+			Error: Unable to capture the npm prune log output.
+
+			The dependency prune ran, but writing its log to disk failed (for example,
+			the build ran out of disk space). This is not a problem with your
+			dependencies. Please try again.
+		EOF
+	)
+	failure::handle_pipefail "npm-prune-pipefail" "${pipe_status_str}" "${message}"
 }
 
 # Runs a named lifecycle script with npm. Spells the npm-specific command (`npm run <script>

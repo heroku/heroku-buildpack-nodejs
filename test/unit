@@ -603,6 +603,26 @@ testHandleInstallPipefail() {
   rm -f "$capture"
 }
 
+testHandlePrunePipefail() {
+  # The npm-specific prune pipefail wrapper owns the failure id and the user-facing message;
+  # verify both plus the buildpack classification and PIPESTATUS detail inherited from
+  # failure::handle_pipefail.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::npm::_handle_prune_pipefail "0 1" 2>&1 || true
+  )
+
+  assertContains "$out" "Unable to capture the npm prune log output"
+  assertContains "$out" "ran out of disk space"
+  assertContains "$(cat "$capture")" "failure=npm-prune-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
 testHandleNpmInstallNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful install; the classifier should not match and should leave the
