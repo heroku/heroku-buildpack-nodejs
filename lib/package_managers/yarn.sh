@@ -118,12 +118,18 @@ function package_managers::yarn::install_dependencies() {
 		build_data::set_duration "install_dependencies_time" "${start}"
 
 		local -A failure
+		# The installed yarn is old but functional; capture its version here (where yarn is on
+		# PATH) so the pure classifier can name it in the outdated-yarn message without running a
+		# subprocess itself. `|| true` keeps a --version hiccup from tripping errexit on the
+		# already-failing path.
+		local yarn_version
+		yarn_version="$(yarn --version 2>/dev/null || true)"
 		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${yarn_exit}" -eq 0 ]]; then
 			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the yarn classifier.
 			package_managers::yarn::_handle_install_pipefail "${pipe_status[*]}"
-		elif package_managers::yarn::_handle_yarn_classic_install_failure "${log_file}" failure; then
+		elif package_managers::yarn::_handle_yarn_classic_install_failure "${log_file}" failure "${yarn_version}"; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
@@ -133,8 +139,8 @@ function package_managers::yarn::install_dependencies() {
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
 		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the yarn 1.x cases (fail_yarn_outdated) not yet
-		# migrated here, instead of masking them with a generic message.
+		# failure from $LOG_FILE — covering the yarn 1.x cases still matched there, instead of
+		# masking them with a generic message.
 		return "${yarn_exit}"
 	fi
 
@@ -167,6 +173,8 @@ function package_managers::yarn::_handle_install_pipefail() {
 # Input:
 #   $1  path to a log file containing the captured output of the failed yarn command
 #   $2  name of an associative array to fill (see failure::emit for its fields)
+#   $3  installed yarn version (captured by the caller where yarn is on PATH), named in the
+#       outdated-yarn message
 # Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
 # the array untouched otherwise. Has no side effects: it does not write build data, print to
 # the build log, or exit. Yarn 1 has no numeric error codes, so detail carries the first
@@ -175,6 +183,8 @@ function package_managers::yarn::_handle_yarn_classic_install_failure() {
 	local log_file="${1}"
 	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
 	local -n __failure="${2}"
+	# Only the outdated-yarn branch names the version; other failure modes may omit it.
+	local yarn_version="${3:-}"
 
 	# Yarn 1.x emits this literal line from src/cli/commands/install.js when --frozen-lockfile
 	# detects a mismatch between package.json and yarn.lock.
@@ -207,8 +217,35 @@ function package_managers::yarn::_handle_yarn_classic_install_failure() {
 		return 0
 	fi
 
-	# TODO: classify additional yarn 1.x failures currently handled by the legacy trap
-	# (fail_yarn_outdated) in a follow-up migration.
+	# Yarn <0.19 emits this error when --frozen-lockfile is used (the flag wasn't added until
+	# 0.19). The app's engines.yarn controls which version is installed. The caller passes the
+	# installed version (captured where yarn is on PATH) so this message can name it, matching
+	# the legacy handler's wording, while the classifier itself stays subprocess-free.
+	if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "${log_file}"; then
+		__failure["id"]="outdated-yarn"
+		__failure["classification"]="user"
+		__failure["detail"]="$(package_managers::yarn::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Outdated Yarn version: ${yarn_version}
+
+				Your application is specifying a requirement on an old version of Yarn (${yarn_version})
+				which does not support the --frozen-lockfile option. Please upgrade to a
+				newer version, at least 0.19, by updating your requirement in the 'engines'
+				field in your package.json.
+
+				"engines": {
+				  "yarn": "1.3.2"
+				}
+
+				https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version
+			EOF
+		)
+		return 0
+	fi
+
+	# TODO: classify additional yarn 1.x failures still matched by the legacy trap's
+	# `log_other_failures` in a follow-up migration.
 
 	# No known failure mode recognised — signal no match so the caller can fall through.
 	return 1

@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the Yarn classic outdated-yarn build error onto the call-site failure-classification framework. ([#1743](https://github.com/heroku/heroku-buildpack-nodejs/pull/1743))
 
 ## [v362] - 2026-08-07
 
