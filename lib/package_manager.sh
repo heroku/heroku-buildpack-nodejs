@@ -113,7 +113,7 @@ function package_manager::_run_if_present() {
 	local script_name=${2:-}
 	local has_script_name
 
-	has_script_name=$(has_script "${build_dir}/package.json" "${script_name}")
+	has_script_name=$(utils::package_json::has_script "${build_dir}/package.json" "${script_name}")
 
 	if [[ "${has_script_name}" == "true" ]]; then
 		package_manager::_dispatch_run_script "${build_dir}" "${script_name}"
@@ -126,8 +126,8 @@ function package_manager::_run_build_if_present() {
 	local has_script_name
 	local script
 
-	has_script_name=$(has_script "${build_dir}/package.json" "${script_name}")
-	script=$(read_json "${build_dir}/package.json" ".scripts[\"${script_name}\"]")
+	has_script_name=$(utils::package_json::has_script "${build_dir}/package.json" "${script_name}")
+	script=$(utils::json::read "${build_dir}/package.json" ".scripts[\"${script_name}\"]")
 
 	if [[ "${script}" == "ng build" ]]; then
 		warn "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags. See https://devcenter.heroku.com/articles/nodejs-support#build-flags"
@@ -145,7 +145,7 @@ function package_manager::run_prebuild_script() {
 	local build_dir=${1:-}
 	local has_heroku_prebuild_script
 
-	has_heroku_prebuild_script=$(has_script "${build_dir}/package.json" "heroku-prebuild")
+	has_heroku_prebuild_script=$(utils::package_json::has_script "${build_dir}/package.json" "heroku-prebuild")
 
 	if [[ "${has_heroku_prebuild_script}" == "true" ]]; then
 		header "Prebuild"
@@ -157,8 +157,8 @@ function package_manager::run_build_script() {
 	local build_dir=${1:-}
 	local has_build_script has_heroku_build_script
 
-	has_build_script=$(has_script "${build_dir}/package.json" "build")
-	has_heroku_build_script=$(has_script "${build_dir}/package.json" "heroku-postbuild")
+	has_build_script=$(utils::package_json::has_script "${build_dir}/package.json" "build")
+	has_heroku_build_script=$(utils::package_json::has_script "${build_dir}/package.json" "heroku-postbuild")
 	if [[ "${has_heroku_build_script}" == "true" ]] && [[ "${has_build_script}" == "true" ]]; then
 		echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
 		package_manager::_run_if_present "${build_dir}" 'heroku-postbuild'
@@ -173,7 +173,7 @@ function package_manager::run_cleanup_script() {
 	local build_dir=${1:-}
 	local has_heroku_cleanup_script
 
-	has_heroku_cleanup_script=$(has_script "${build_dir}/package.json" "heroku-cleanup")
+	has_heroku_cleanup_script=$(utils::package_json::has_script "${build_dir}/package.json" "heroku-cleanup")
 
 	if [[ "${has_heroku_cleanup_script}" == "true" ]]; then
 		header "Cleanup"
