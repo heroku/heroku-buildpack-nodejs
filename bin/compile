@@ -20,6 +20,8 @@ BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 # shellcheck source=lib/output.sh
 source "$BP_DIR/lib/output.sh"
+# shellcheck source=lib/_output.sh
+source "$BP_DIR/lib/_output.sh"
 # shellcheck source=lib/monitor.sh
 source "$BP_DIR/lib/monitor.sh"
 # shellcheck source=lib/environment.sh
@@ -46,8 +48,8 @@ source "$BP_DIR/lib/yaml.sh"
 source "$BP_DIR/lib/cache.sh"
 # shellcheck source=lib/package_manager.sh
 source "$BP_DIR/lib/package_manager.sh"
-# shellcheck source=lib/builddata.sh
-source "$BP_DIR/lib/builddata.sh"
+# shellcheck source=lib/build_data.sh
+source "$BP_DIR/lib/build_data.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
