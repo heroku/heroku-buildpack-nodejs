@@ -31,6 +31,26 @@ function package_manager::_dispatch_run_script() {
 	fi
 }
 
+# Lists installed top-level dependencies for the verbose build summary. Coordinator: picks the
+# active package manager and delegates to its module (mirrors package_manager::_dispatch_run_script).
+# Frames the listing in blank lines to set it off from the surrounding build log; the per-PM
+# modules stay presentation-free and only spell their native listing command.
+function package_manager::list_dependencies() {
+	local build_dir=${1:-}
+
+	echo ""
+	# YARN, YARN_2, and PNPM are globals exported by the caller (bin/compile).
+	# shellcheck disable=SC2154 # set by the caller (bin/compile)
+	if ${YARN} || ${YARN_2}; then
+		package_managers::yarn::list_dependencies "${build_dir}"
+	elif ${PNPM}; then
+		package_managers::pnpm::list_dependencies "${build_dir}"
+	else
+		package_managers::npm::list_dependencies "${build_dir}"
+	fi
+	echo ""
+}
+
 # Runs a lifecycle-script command built by a package-manager module, capturing its merged
 # output for classification. This is the shared execution + failure-routing layer for all
 # package managers (the per-PM modules only spell the command). The captured log is where a
