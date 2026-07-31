@@ -227,41 +227,6 @@ fail_yarn_outdated() {
   fi
 }
 
-fail_yarn_install() {
-  local yarn_engine
-  local log_file="$1"
-  local build_dir="$2"
-
-  if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
-    yarn_engine=$(utils::json::read "$build_dir/package.json" ".engines.yarn")
-    build_data::set_string "failure" "invalid-yarn-version"
-    echo ""
-    warn "No matching version found for Yarn: $yarn_engine
-
-       Heroku supports most versions of Yarn published on npm, however you have
-       specified a version in package.json ($yarn_engine) that does not correspond
-       to any published version of Yarn. You can see a list of all published
-       versions of Yarn with the following command:
-
-       $ yarn info yarn versions
-
-       You should always specify a Yarn version that matches the version
-       you’re developing and testing with. To find your version locally:
-
-       $ yarn --version
-       1.12.3
-
-       Use the engines section of your package.json to specify the version of
-       Yarn to use on Heroku.
-
-       \"engines\": {
-         \"yarn\": \"1.x\"
-       }
-    " https://help.heroku.com/8MEL050H
-    fail
-  fi
-}
-
 # Yarn 2 failures
 
 fail_using_yarn2_with_yarn_production_environment_variable_set() {
