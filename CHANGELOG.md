@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Migrated the pnpm lockfile-out-of-sync (`ERR_PNPM_OUTDATED_LOCKFILE`) build error onto the call-site failure-classification framework. ([#1735](https://github.com/heroku/heroku-buildpack-nodejs/pull/1735))
+
 
 ## [v360] - 2026-07-29
 

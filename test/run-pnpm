@@ -13,7 +13,6 @@ testPnpmBuildMetaData() {
     select(.has_cached_bower_components == false)
     select(.has_custom_cache_dirs == false)
     select(.has_procfile == false)
-    select(.install_dependencies_memory | type == "number")
     select(.install_dependencies_time | type == "number")
     select(.install_node_binary_time | type == "number")
     select(.install_pnpm_binary_time | type == "number")

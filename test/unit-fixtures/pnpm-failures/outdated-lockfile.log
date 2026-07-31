@@ -1,0 +1,8 @@
+Scope: all 3 workspace projects
+ WARN  Ignoring not compatible lockfile at /tmp/build/pnpm-lock.yaml
+[ERR_PNPM_OUTDATED_LOCKFILE] Cannot install with "frozen-lockfile" because pnpm-lock.yaml is not up to date with <ROOT>/package.json
+
+Note that in CI environments this setting is true by default. If you still need to run install in such cases, use "pnpm install --no-frozen-lockfile"
+
+  Failure reason:
+  specifiers in the lockfile ({"lodash":"^4.17.20"}) don't match specs in package.json ({"lodash":"^4.17.21"})
