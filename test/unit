@@ -645,6 +645,23 @@ testHandleYarnInstallLockfileNeedsUpdate() {
   assertContains "${result[message]}" "yarn install"
 }
 
+testHandleYarnInstallOutdatedYarn() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/outdated-yarn.log" result "0.16.1"
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertEquals "outdated-yarn" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "install"
+  assertContains "${result[detail]}" "has been replaced with"
+  assertContains "${result[message]}" "Outdated Yarn version"
+  assertContains "${result[message]}" "does not support the --frozen-lockfile option"
+  assertContains "${result[message]}" "at least 0.19"
+  # The caller-supplied version is interpolated into the message (title + parenthetical).
+  assertContains "${result[message]}" "Outdated Yarn version: 0.16.1"
+  assertContains "${result[message]}" "Yarn (0.16.1)"
+}
+
 testHandleYarnInstallNoMatchReturnsNonZero() {
   local -A result
   if package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/clean.log" result; then
