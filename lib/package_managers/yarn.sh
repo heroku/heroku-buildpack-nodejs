@@ -352,8 +352,10 @@ function package_managers::yarn::prune_devdependencies() {
 	local build_dir=${1:-}
 	local buildpack_dir=${2:-}
 
-	# NODE_ENV, YARN_PRODUCTION, YARN_2, and YARN2_SKIP_PRUNING are globals exported by the
-	# caller (bin/compile via lib/environment.sh / the app's config vars).
+	# NODE_ENV, YARN_PRODUCTION, and YARN_2 are globals exported by the caller (bin/compile via
+	# lib/environment.sh / the app's config vars). The NODE_ENV and YARN_PRODUCTION skip gates
+	# apply to both yarn flavors; each per-flavor worker owns its prune command, failure handling,
+	# and any flavor-specific skip (e.g. YARN2_SKIP_PRUNING).
 	# shellcheck disable=SC2154 # set by the caller (bin/compile)
 	if [[ "${NODE_ENV}" == "test" ]]; then
 		echo "Skipping because NODE_ENV is 'test'"
@@ -368,26 +370,206 @@ function package_managers::yarn::prune_devdependencies() {
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif ${YARN_2}; then
-		if [[ "${YARN2_SKIP_PRUNING}" == "true" ]]; then
-			echo "Skipping because YARN2_SKIP_PRUNING is '${YARN2_SKIP_PRUNING}'"
-			build_data::set_raw "skipped_prune" "true"
-			return 0
-		fi
-		cd "${build_dir}" || return
-		echo "Running 'yarn heroku prune'"
-		export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
-		monitor "prune_dev_dependencies" yarn heroku prune
-		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a false result just skips the cache cleanup
-		if package_managers::yarn::_berry_node_modules_enabled "${build_dir}"; then
-			echo "Removing local yarn cache to reduce slug size"
-			rm -rf "${build_dir}/.yarn/cache"
-		fi
-		build_data::set_raw "skipped_prune" "false"
+		package_managers::yarn::_prune_berry_devdependencies "${build_dir}" "${buildpack_dir}"
 	else
-		cd "${build_dir}" || return
-		monitor "prune_dev_dependencies" yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1
-		build_data::set_raw "skipped_prune" "false"
+		package_managers::yarn::_prune_classic_devdependencies "${build_dir}"
 	fi
+}
+
+# Runs the yarn 1.x (classic) devDependency prune (`yarn install --frozen-lockfile` against the
+# production dependency set). Yarn 2+ (Berry) has a separate prune path
+# (`_prune_berry_devdependencies`) with its own error surface. The shared NODE_ENV/YARN_PRODUCTION
+# skip gates are handled by the `prune_devdependencies` entry point before dispatch.
+function package_managers::yarn::_prune_classic_devdependencies() {
+	local build_dir="${1}"
+
+	cd "${build_dir}" || return
+
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Yarn 1 writes progress and errors across stdout+stderr; merge them with `2>&1` and pass
+	# the merged stream through `tee` for classification. Indentation is applied by the
+	# enclosing `prune_devdependencies | output "$LOG_FILE"` pipe in bin/compile — do not
+	# re-indent here or every yarn line would be indented twice.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1 | tee "${log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local yarn_exit="${pipe_status[0]}"
+		build_data::set_duration "prune_dev_dependencies_time" "${start}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${yarn_exit}" -eq 0 ]]; then
+			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the prune classifier.
+			package_managers::yarn::_handle_prune_pipefail "${pipe_status[*]}"
+		elif package_managers::yarn::_handle_yarn_classic_prune_failure "${log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		fi
+
+		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the
+		# pipeline that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails
+		# under errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies
+		# the failure from $LOG_FILE — today unrecognised prune failures fall through to its
+		# `unknown-prune-dependencies-error` catch-all, instead of being masked with a generic
+		# message.
+		return "${yarn_exit}"
+	fi
+
+	build_data::set_duration "prune_dev_dependencies_time" "${start}"
+	build_data::set_raw "skipped_prune" "false"
+}
+
+# Emits the yarn-prune pipefail failure for the devDependency-prune paths (yarn 1.x classic and
+# yarn 2+ Berry share this wrapper — the user-facing wording is flag-agnostic). Wraps
+# `failure::handle_pipefail` with the prune-specific id and message so callers pass only the
+# joined PIPESTATUS string.
+function package_managers::yarn::_handle_prune_pipefail() {
+	local pipe_status_str="${1}"
+	local message
+	message=$(
+		cat <<-EOF
+			Error: Unable to capture the yarn prune log output.
+
+			The devDependency prune ran, but writing its log to disk failed (for example,
+			the build ran out of disk space). This is not a problem with your
+			dependencies. Please try again.
+		EOF
+	)
+	failure::handle_pipefail "yarn-prune-pipefail" "${pipe_status_str}" "${message}"
+}
+
+# Pure classifier for yarn 1.x (classic) devDependency-prune failures. Yarn 2+ (Berry) has a
+# separate prune path (`_prune_berry_devdependencies`) with its own classifier. No prune-specific
+# failure mode is recognised today: the only yarn-prune-associated legacy matcher
+# (yarn2-with-yarn-production-env-set) actually fires at the Berry *install* step, not here — the
+# prune step returns early when YARN_PRODUCTION is set — so it stays on the legacy trap (see
+# lib/_failures.sh). This stub always returns 1 so the caller bubbles the raw exit code to the
+# legacy trap; it is kept for symmetry with the classic install classifier and as the home for any
+# future yarn 1.x prune matcher.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed yarn prune command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
+# the array untouched otherwise. Has no side effects.
+function package_managers::yarn::_handle_yarn_classic_prune_failure() {
+	# shellcheck disable=SC2034 # $1 (log_file) is unused today; kept to match the classifier signature for future matchers
+	local log_file="${1}"
+	# shellcheck disable=SC2178,SC2034 # nameref to the caller's array; unused until a matcher fills it
+	local -n __failure="${2}"
+
+	# TODO: classify yarn 1.x prune-specific failures here if any surface (none known today).
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
+}
+
+# Runs the yarn 2+ (Berry) devDependency prune (`yarn heroku prune` via the bundled plugin). Yarn
+# 1.x (classic) has a separate prune path (`_prune_classic_devdependencies`) with its own error
+# surface. Honors the Berry-only YARN2_SKIP_PRUNING escape hatch, then removes the local Yarn
+# cache when the node-modules linker is in use to keep the slug small. The shared
+# NODE_ENV/YARN_PRODUCTION skip gates are handled by the `prune_devdependencies` entry point
+# before dispatch.
+function package_managers::yarn::_prune_berry_devdependencies() {
+	local build_dir="${1}"
+	local buildpack_dir="${2}"
+
+	# shellcheck disable=SC2154 # YARN2_SKIP_PRUNING is a global set by the caller (bin/compile)
+	if [[ "${YARN2_SKIP_PRUNING}" == "true" ]]; then
+		echo "Skipping because YARN2_SKIP_PRUNING is '${YARN2_SKIP_PRUNING}'"
+		build_data::set_raw "skipped_prune" "true"
+		return 0
+	fi
+
+	cd "${build_dir}" || return
+	echo "Running 'yarn heroku prune'"
+	export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
+
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Berry writes progress and errors across stdout+stderr; merge them with `2>&1` and pass
+	# the merged stream through `tee` for classification. Indentation is applied by the
+	# enclosing `prune_devdependencies | output "$LOG_FILE"` pipe in bin/compile — do not
+	# re-indent here or every yarn line would be indented twice.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { yarn heroku prune 2>&1 | tee "${log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local yarn_exit="${pipe_status[0]}"
+		build_data::set_duration "prune_dev_dependencies_time" "${start}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${yarn_exit}" -eq 0 ]]; then
+			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the Berry prune classifier. Reuses the
+			# shared yarn-prune pipefail wrapper — the user-facing wording covers both flavors.
+			package_managers::yarn::_handle_prune_pipefail "${pipe_status[*]}"
+		elif package_managers::yarn::_handle_yarn_berry_prune_failure "${log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		fi
+
+		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the
+		# pipeline that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails
+		# under errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies
+		# the failure from $LOG_FILE — today unrecognised prune failures fall through to its
+		# `unknown-prune-dependencies-error` catch-all, instead of being masked with a generic
+		# message.
+		return "${yarn_exit}"
+	fi
+
+	build_data::set_duration "prune_dev_dependencies_time" "${start}"
+
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a false result just skips the cache cleanup
+	if package_managers::yarn::_berry_node_modules_enabled "${build_dir}"; then
+		echo "Removing local yarn cache to reduce slug size"
+		rm -rf "${build_dir}/.yarn/cache"
+	fi
+	build_data::set_raw "skipped_prune" "false"
+}
+
+# Pure classifier for yarn 2+ (Berry) devDependency-prune failures. Yarn 1.x (classic) has a
+# separate prune path (`_prune_classic_devdependencies`) with its own classifier. No prune-specific
+# failure mode is recognised today (see the classic prune classifier's note on
+# yarn2-with-yarn-production-env-set, which belongs to the Berry install step, not prune). This
+# stub always returns 1 so the caller bubbles the raw exit code to the legacy trap; it is kept for
+# symmetry with the Berry install classifier and as the home for any future Berry prune matcher.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed yarn prune command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
+# the array untouched otherwise. Has no side effects.
+function package_managers::yarn::_handle_yarn_berry_prune_failure() {
+	# shellcheck disable=SC2034 # $1 (log_file) is unused today; kept to match the classifier signature for future matchers
+	local log_file="${1}"
+	# shellcheck disable=SC2178,SC2034 # nameref to the caller's array; unused until a matcher fills it
+	local -n __failure="${2}"
+
+	# TODO: classify Berry prune-specific failures here if any surface (none known today).
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
 }
 
 function package_managers::yarn::detect_berry() {
