@@ -133,8 +133,8 @@ function package_managers::yarn::install_dependencies() {
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
 		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the yarn 1.x cases (fail_yarn_outdated, fail_yarn_install)
-		# not yet migrated here, instead of masking them with a generic message.
+		# failure from $LOG_FILE — covering the yarn 1.x cases (fail_yarn_outdated) not yet
+		# migrated here, instead of masking them with a generic message.
 		return "${yarn_exit}"
 	fi
 
@@ -208,7 +208,7 @@ function package_managers::yarn::_handle_yarn_classic_install_failure() {
 	fi
 
 	# TODO: classify additional yarn 1.x failures currently handled by the legacy trap
-	# (fail_yarn_outdated, fail_yarn_install) in a follow-up migration.
+	# (fail_yarn_outdated) in a follow-up migration.
 
 	# No known failure mode recognised — signal no match so the caller can fall through.
 	return 1

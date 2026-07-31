@@ -92,7 +92,6 @@ handle_failure() {
     header "Build failed"
     fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
     fail_yarn_outdated "$LOG_FILE"
-    fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
     log_other_failures "$LOG_FILE"
     warn_untracked_dependencies "$LOG_FILE"
     warn_angular_resolution "$LOG_FILE"
