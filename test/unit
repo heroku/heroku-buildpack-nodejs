@@ -496,6 +496,31 @@ testYarnLibDoesNotLeakErrexit() {
   assertEquals "errexit should remain on after sourcing" "on" "${errexit_after}"
 }
 
+testPnpmLibDoesNotLeakShellOptions() {
+  # Same guard as testFailuresLibDoesNotLeakShellOptions, for the migrated pnpm lib: sourcing
+  # it must restore the caller's nounset rather than leaving `set -u` on.
+  local nounset_after
+  nounset_after=$(
+    set +u
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/package_managers/pnpm.sh"
+    set -o | awk '$1 == "nounset" { print $2 }'
+  )
+  assertEquals "nounset should be restored to off after sourcing" "off" "${nounset_after}"
+}
+
+testPnpmLibDoesNotLeakErrexit() {
+  # Same errexit-restoration guard as testFailuresLibDoesNotLeakErrexit, for the pnpm lib.
+  local errexit_after
+  errexit_after=$(
+    set -e
+    # shellcheck source=/dev/null
+    source "$(pwd)/lib/package_managers/pnpm.sh"
+    case "$-" in *e*) echo "on" ;; *) echo "off" ;; esac
+  )
+  assertEquals "errexit should remain on after sourcing" "on" "${errexit_after}"
+}
+
 testHandleNpmInstallEbadplatform() {
   local -A result
   package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/ebadplatform.log" result
@@ -736,6 +761,26 @@ testHandlePnpmInstallPipefail() {
   assertContains "$out" "Unable to capture the pnpm install log output"
   assertContains "$out" "ran out of disk space"
   assertContains "$(cat "$capture")" "failure=pnpm-install-pipefail"
+  assertContains "$(cat "$capture")" "failure_classification=buildpack"
+  assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
+testHandlePnpmPrunePipefail() {
+  # The pnpm-prune pipefail wrapper owns the failure id and the user-facing message; verify
+  # both plus the buildpack classification and PIPESTATUS detail inherited from
+  # failure::handle_pipefail. Both prune paths share this wrapper.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::pnpm::_handle_prune_pipefail "0 1" 2>&1 || true
+  )
+
+  assertContains "$out" "Unable to capture the pnpm prune log output"
+  assertContains "$out" "ran out of disk space"
+  assertContains "$(cat "$capture")" "failure=pnpm-prune-pipefail"
   assertContains "$(cat "$capture")" "failure_classification=buildpack"
   assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
   rm -f "$capture"
