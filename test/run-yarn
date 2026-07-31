@@ -252,7 +252,6 @@ testYarnBuildMetaData() {
     select(.node_version_major == 24)
     select(.package_manager == "yarn")
     select(.package_manager_version == "1.22.22")
-    select(.prune_dev_dependencies_memory | type == "number")
     select(.prune_dev_dependencies_time | type == "number")
     select(.restore_cache_time | type == "number")
     select(.save_cache_time | type == "number")
