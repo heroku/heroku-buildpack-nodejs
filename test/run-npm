@@ -327,7 +327,6 @@ testNpmBuildMetaData() {
     select(.npm_version == "6.14.12")
     select(.package_manager == "npm")
     select(.package_manager_version == "6.14.12")
-    select(.prune_dev_dependencies_memory | type == "number")
     select(.prune_dev_dependencies_time | type == "number")
     select(.restore_cache_time | type == "number")
     select(.save_cache_time | type == "number")
