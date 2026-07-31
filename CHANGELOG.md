@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the Yarn classic outdated-yarn build error onto the call-site failure-classification framework. ([#1743](https://github.com/heroku/heroku-buildpack-nodejs/pull/1743))
 - Migrated the pnpm lockfile-out-of-sync (`ERR_PNPM_OUTDATED_LOCKFILE`) build error onto the call-site failure-classification framework. ([#1735](https://github.com/heroku/heroku-buildpack-nodejs/pull/1735))
 - Added pnpm to verbose build-summary dependency listing. ([#1737](https://github.com/heroku/heroku-buildpack-nodejs/pull/1737))
 
