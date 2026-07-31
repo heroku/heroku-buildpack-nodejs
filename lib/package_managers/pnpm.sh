@@ -118,6 +118,70 @@ function package_managers::pnpm::_handle_install_pipefail() {
 	failure::handle_pipefail "pnpm-install-pipefail" "${pipe_status_str}" "${message}"
 }
 
+# Emits the pnpm-prune pipefail failure. Both prune paths (`pnpm install --prod` for workspaces
+# and `pnpm prune --prod` otherwise) run `pnpm 2>&1 | tee log`, and a tee-side failure (typically
+# the build ran out of disk space) classifies as buildpack-side rather than blaming the app's
+# dependencies. Callers pass only the joined PIPESTATUS string.
+function package_managers::pnpm::_handle_prune_pipefail() {
+	local pipe_status_str="${1}"
+	local message
+	message=$(
+		cat <<-EOF
+			Error: Unable to capture the pnpm prune log output.
+
+			The dependency prune ran, but writing its log to disk failed (for example,
+			the build ran out of disk space). This is not a problem with your
+			dependencies. Please try again.
+		EOF
+	)
+	failure::handle_pipefail "pnpm-prune-pipefail" "${pipe_status_str}" "${message}"
+}
+
+# Runs a pnpm dev-dependency prune command with call-site failure classification. Shared by both
+# prune strategies: the workspace path (`pnpm install --prod --frozen-lockfile`, a production
+# reinstall) and the non-workspace path (`pnpm prune --prod [--ignore-scripts]`). Both record the
+# same `prune_dev_dependencies_time` metric and have the same failure surface — a tee-side pipe
+# failure is buildpack-side; any pnpm tool failure bubbles to the legacy trap — so the two paths
+# differ only in the command, which the caller passes as arguments.
+function package_managers::pnpm::_run_prune() {
+	local prune_command=("$@")
+
+	local log_file
+	log_file=$(mktemp)
+
+	local start
+	start=$(build_data::current_unix_realtime)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# pnpm writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
+	# merged stream through `tee` for classification. Indentation is applied by the enclosing
+	# `prune_devdependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
+	# every pnpm line would be indented twice.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { "${prune_command[@]}" 2>&1 | tee "${log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `pnpm 2>&1 | tee`, so [0] is pnpm's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local pnpm_exit="${pipe_status[0]}"
+		build_data::set_duration "prune_dev_dependencies_time" "${start}"
+
+		if [[ "${pnpm_exit}" -eq 0 ]]; then
+			# pnpm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't blame the app.
+			package_managers::pnpm::_handle_prune_pipefail "${pipe_status[*]}"
+		fi
+
+		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
+		# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
+		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
+		# failure — there is no migrated pnpm-prune tool-error classifier to add here yet.
+		return "${pnpm_exit}"
+	fi
+
+	build_data::set_duration "prune_dev_dependencies_time" "${start}"
+	build_data::set_raw "skipped_prune" "false"
+}
+
 # Pure classifier for pnpm dependency-install failures.
 #
 # Input:
@@ -223,8 +287,7 @@ function package_managers::pnpm::prune_devdependencies() {
 			rm -rf "${project_path}/node_modules"
 		done
 		# Reinstall with production-only dependencies
-		monitor "prune_dev_dependencies" pnpm install --prod --frozen-lockfile 2>&1
-		build_data::set_raw "skipped_prune" "false"
+		package_managers::pnpm::_run_prune pnpm install --prod --frozen-lockfile
 		return 0
 	fi
 
@@ -253,9 +316,7 @@ function package_managers::pnpm::prune_devdependencies() {
 		pnpm_prune_args+=("--ignore-scripts")
 	fi
 
-	monitor "prune_dev_dependencies" pnpm "${pnpm_prune_args[@]}" 2>&1
-
-	build_data::set_raw "skipped_prune" "false"
+	package_managers::pnpm::_run_prune pnpm "${pnpm_prune_args[@]}"
 }
 
 function package_managers::pnpm::_workspace_configured() {
