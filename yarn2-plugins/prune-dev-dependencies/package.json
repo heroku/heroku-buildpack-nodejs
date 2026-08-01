@@ -4,15 +4,15 @@
   "packageManager": "npm@8.15.0",
   "main": "./src/index.ts",
   "dependencies": {
-    "@yarnpkg/builder": "^4.2.3",
+    "@yarnpkg/builder": "^4.2.4",
     "@yarnpkg/core": "^4.9.0",
     "clipanion": "^3.2.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.2",
+    "@biomejs/biome": "^2.5.6",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.1.0",
-    "fs-extra": "^11.3.6",
+    "@types/node": "^26.1.2",
+    "fs-extra": "^11.4.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   },
