@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.6.0 (linux-amd64)
+- Added Node.js 24.19.0 (linux-amd64)
 - Migrated the pnpm lockfile-out-of-sync (`ERR_PNPM_OUTDATED_LOCKFILE`) build error onto the call-site failure-classification framework. ([#1735](https://github.com/heroku/heroku-buildpack-nodejs/pull/1735))
 - Added pnpm to verbose build-summary dependency listing. ([#1737](https://github.com/heroku/heroku-buildpack-nodejs/pull/1737))
 
