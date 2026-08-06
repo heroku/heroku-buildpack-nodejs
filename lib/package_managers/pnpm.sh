@@ -327,7 +327,7 @@ function package_managers::pnpm::_workspace_configured() {
 	if [[ -f "${workspace_file}" ]]; then
 		# prior to pnpm 10.5.0, the `packages` key was mandatory, but now, you can store
 		# other pnpm-related config settings in `pnpm-workspace.yaml`.
-		result=$(read_yaml "${workspace_file}" '.packages')
+		result=$(utils::yaml::read "${workspace_file}" '.packages')
 
 		if [[ -n "${result}" && "${result}" != "null" ]]; then
 			echo "true"

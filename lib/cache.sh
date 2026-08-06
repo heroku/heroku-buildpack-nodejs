@@ -34,8 +34,8 @@ get_cache_status() {
 get_cache_directories() {
   local build_dir="$1"
   local dirs1 dirs2
-  dirs1=$(read_json "$build_dir/package.json" ".cacheDirectories | .[]?")
-  dirs2=$(read_json "$build_dir/package.json" ".cache_directories | .[]?")
+  dirs1=$(utils::json::read "$build_dir/package.json" ".cacheDirectories | .[]?")
+  dirs2=$(utils::json::read "$build_dir/package.json" ".cache_directories | .[]?")
 
   if [ -n "$dirs1" ]; then
     echo "$dirs1"
