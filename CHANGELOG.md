@@ -9,6 +9,7 @@
 - Added Node.js 24.19.0 (linux-amd64)
 - Migrated the pnpm lockfile-out-of-sync (`ERR_PNPM_OUTDATED_LOCKFILE`) build error onto the call-site failure-classification framework. ([#1735](https://github.com/heroku/heroku-buildpack-nodejs/pull/1735))
 - Added pnpm to verbose build-summary dependency listing. ([#1737](https://github.com/heroku/heroku-buildpack-nodejs/pull/1737))
+- Removed the unreachable `fail_yarn_install` build-error matcher, which only matched output from the inventory-based Yarn resolver removed in [#1420](https://github.com/heroku/heroku-buildpack-nodejs/pull/1420). ([#1742](https://github.com/heroku/heroku-buildpack-nodejs/pull/1742))
 
 ## [v360] - 2026-07-29
 
