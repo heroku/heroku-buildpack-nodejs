@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the io.js unsupported (`iojs-unsupported`) build error onto the call-site failure-classification framework. ([#1757](https://github.com/heroku/heroku-buildpack-nodejs/pull/1757))
 
 ## [v362] - 2026-08-07
 

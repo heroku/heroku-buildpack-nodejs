@@ -1075,6 +1075,23 @@ testFailUnsupportedChecksumEmitsDetailedMessage() {
   rm -f "$capture"
 }
 
+testFailIojsUnsupportedEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_iojs_unsupported "3.3.1"
+
+  # The message names io.js, echoes the requested version, and gives the fix instruction.
+  assertContains "$out" "Error: io.js is no longer supported."
+  assertContains "$out" '"iojs": "3.3.1"'
+  assertContains "$out" 'remove the "iojs" entry under "engines" in your package.json'
+  # The historical failure id is preserved for metric continuity; app-controlled input.
+  assertContains "$(cat "$capture")" "failure=iojs-unsupported"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  assertContains "$(cat "$capture")" "failure_detail=3.3.1"
+  rm -f "$capture"
+}
+
 testExtractErrorDetailReturnsFirstDescriptiveLine() {
   # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
   # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).

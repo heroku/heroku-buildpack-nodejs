@@ -77,34 +77,6 @@ fail_dot_heroku_node() {
   fi
 }
 
-fail_iojs_unsupported() {
-  local build_dir="$1"
-  local iojs_engine
-  iojs_engine=$(utils::json::read "$build_dir/package.json" ".engines.iojs")
-
-  if [ -n "$iojs_engine" ]; then
-    build_data::set_string "failure" "iojs-unsupported"
-    warn "io.js no longer supported
-
-       You are specifying an io.js version in your package.json:
-
-       \"engines\": {
-         ...
-         \"iojs\": \"${iojs_engine}\"
-       }
-
-       io.js merged back into Nodejs.org in 2015 and has been unsupported
-       for many years. It is likely to contain several large security
-       vulnerabilities that have been patched in Node.
-
-       You can update your app to use the official Node.js release by
-       removing the version specfication under \"engines\" in your
-       package.json.
-       "
-    fail
-  fi
-}
-
 # Builds the "keep one, remove the rest" fix instructions for a multiple-lockfiles error.
 # Given the detected package manager names as arguments (e.g. "npm" "pnpm" "Yarn"), it prints
 # one block per package manager listing the exact `git rm` command needed to remove the other
