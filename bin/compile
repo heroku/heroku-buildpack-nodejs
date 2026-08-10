@@ -38,10 +38,12 @@ source "$BP_DIR/lib/_failures.sh"
 source "$BP_DIR/lib/runtimes/nodejs.sh"
 # shellcheck source=lib/utils/command.sh
 source "$BP_DIR/lib/utils/command.sh"
-# shellcheck source=lib/json.sh
-source "$BP_DIR/lib/json.sh"
-# shellcheck source=lib/yaml.sh
-source "$BP_DIR/lib/yaml.sh"
+# shellcheck source=lib/utils/json.sh
+source "$BP_DIR/lib/utils/json.sh"
+# shellcheck source=lib/utils/yaml.sh
+source "$BP_DIR/lib/utils/yaml.sh"
+# shellcheck source=lib/utils/package_json.sh
+source "$BP_DIR/lib/utils/package_json.sh"
 # shellcheck source=lib/cache.sh
 source "$BP_DIR/lib/cache.sh"
 # shellcheck source=lib/package_manager.sh
@@ -76,8 +78,8 @@ build_data::set_raw "has_procfile" "$(test -f "$BUILD_DIR/Procfile" && echo "tru
 
 # capture scripts from package.json
 for script in heroku-prebuild heroku-postbuild build heroku-cleanup start postinstall; do
-  if [[ "$(has_script "$BUILD_DIR/package.json" "$script")" == "true" ]]; then
-    build_data::set_string "${script//[^[:alnum:]]/_}_script" "$(read_json "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
+  if [[ "$(utils::package_json::has_script "$BUILD_DIR/package.json" "$script")" == "true" ]]; then
+    build_data::set_string "${script//[^[:alnum:]]/_}_script" "$(utils::json::read "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
   fi
 done
 
@@ -205,11 +207,11 @@ export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 install_bins() {
   local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
 
-  node_engine=$(read_json "$BUILD_DIR/package.json" ".engines.node")
-  npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
-  yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
-  pnpm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")
-  package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
+  node_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.node")
+  npm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.npm")
+  yarn_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.yarn")
+  pnpm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.pnpm")
+  package_manager=$(utils::json::read "$BUILD_DIR/package.json" ".packageManager")
 
   [ -n "$node_engine" ] && build_data::set_string "node_version_request" "$node_engine"
   [ -n "$npm_engine" ] && build_data::set_string "npm_version_request" "$npm_engine"

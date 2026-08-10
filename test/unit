@@ -99,10 +99,25 @@ testWebConcurrencyProfileScript() {
 
 testHasScript() {
   local file="$(pwd)/test/fixtures/has-script-fixtures/package.json"
-  assertEquals "true" "$(has_script "$file" "build")"
-  assertEquals "true" "$(has_script "$file" "heroku-postbuild")"
-  assertEquals "false" "$(has_script "$file" "postinstall")"
-  assertEquals "true" "$(has_script "$file" "random-script-name")"
+  assertEquals "true" "$(utils::package_json::has_script "$file" "build")"
+  assertEquals "true" "$(utils::package_json::has_script "$file" "heroku-postbuild")"
+  assertEquals "false" "$(utils::package_json::has_script "$file" "postinstall")"
+  assertEquals "true" "$(utils::package_json::has_script "$file" "random-script-name")"
+  assertEquals "false" "$(utils::package_json::has_script "$(pwd)/test/fixtures/does-not-exist.json" "build")"
+}
+
+testReadJson() {
+  local file="$(pwd)/test/fixtures/has-script-fixtures/package.json"
+  assertEquals "10.x" "$(utils::json::read "$file" ".engines.node")"
+  assertEquals "" "$(utils::json::read "$file" ".engines.does_not_exist")"
+  assertEquals "" "$(utils::json::read "$(pwd)/test/fixtures/does-not-exist.json" ".engines.node")"
+}
+
+testJsonValid() {
+  assertTrue "well-formed JSON is valid" \
+    "utils::json::is_valid '$(pwd)/test/fixtures/has-script-fixtures/package.json'"
+  assertFalse "malformed JSON is invalid" \
+    "utils::json::is_valid '$(pwd)/test/fixtures/bad-json/package.json'"
 }
 
 testAssertMetricsBasicQueries() {
@@ -1188,8 +1203,9 @@ BP_DIR="$(pwd)"
 # the modules to be tested
 
 source "$(pwd)"/lib/environment.sh
-source "$(pwd)"/lib/json.sh
-source "$(pwd)"/lib/json.sh
+source "$(pwd)"/lib/utils/json.sh
+source "$(pwd)"/lib/utils/yaml.sh
+source "$(pwd)"/lib/utils/package_json.sh
 source "$(pwd)"/lib/failures.sh
 source "$(pwd)"/lib/package_manager.sh
 source "$(pwd)"/lib/package_managers/npm.sh

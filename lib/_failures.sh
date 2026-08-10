@@ -38,11 +38,7 @@ failure_message() {
 }
 
 fail_invalid_package_json() {
-  local is_invalid
-
-  is_invalid=$(is_invalid_json_file "${1:-}/package.json")
-
-  if "$is_invalid"; then
+  if ! utils::json::is_valid "${1:-}/package.json"; then
     error "Unable to parse package.json"
     build_data::set_string "failure" "invalid-package-json"
     header "Build failed"
@@ -84,7 +80,7 @@ fail_dot_heroku_node() {
 fail_iojs_unsupported() {
   local build_dir="$1"
   local iojs_engine
-  iojs_engine=$(read_json "$build_dir/package.json" ".engines.iojs")
+  iojs_engine=$(utils::json::read "$build_dir/package.json" ".engines.iojs")
 
   if [ -n "$iojs_engine" ]; then
     build_data::set_string "failure" "iojs-unsupported"
@@ -237,7 +233,7 @@ fail_yarn_install() {
   local build_dir="$2"
 
   if grep -qi 'Could not find Yarn version corresponding to version requirement' "$log_file"; then
-    yarn_engine=$(read_json "$build_dir/package.json" ".engines.yarn")
+    yarn_engine=$(utils::json::read "$build_dir/package.json" ".engines.yarn")
     build_data::set_string "failure" "invalid-yarn-version"
     echo ""
     warn "No matching version found for Yarn: $yarn_engine
@@ -750,7 +746,7 @@ warn_missing_devdeps() {
   if grep -qi 'cannot find module' "$log_file"; then
     warning "A module may be missing from 'dependencies' in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
     if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
-      dev_deps=$(read_json "$build_dir/package.json" ".devDependencies")
+      dev_deps=$(utils::json::read "$build_dir/package.json" ".devDependencies")
       if [ "$dev_deps" != "" ]; then
         warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
       fi
@@ -763,7 +759,7 @@ warn_no_start() {
   local build_dir="$1"
 
   if ! [ -e "$build_dir/Procfile" ]; then
-    start_script=$(read_json "$build_dir/package.json" ".scripts.start")
+    start_script=$(utils::json::read "$build_dir/package.json" ".scripts.start")
     if [ "$start_script" == "" ]; then
       if ! [ -e "$build_dir/server.js" ]; then
         warn "This app may not specify any way to start a node process" "https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type"
@@ -822,10 +818,10 @@ fail_conflicting_package_manager_metadata() {
   declare -A package_managers
   declare -a fields_detected
 
-  npm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.npm")
-  yarn_engine=$(read_json "$BUILD_DIR/package.json" ".engines.yarn")
-  pnpm_engine=$(read_json "$BUILD_DIR/package.json" ".engines.pnpm")
-  package_manager=$(read_json "$BUILD_DIR/package.json" ".packageManager")
+  npm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.npm")
+  yarn_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.yarn")
+  pnpm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.pnpm")
+  package_manager=$(utils::json::read "$BUILD_DIR/package.json" ".packageManager")
 
   if [ -n "$npm_engine" ]; then
     package_managers["npm"]=0
