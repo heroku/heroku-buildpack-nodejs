@@ -348,6 +348,8 @@ testFailMultipleLockfilesEmitsDetailedMessage() {
   assertContains "$out" "add them to your .gitignore file."
   assertContains "$(cat "$capture")" "failure=multiple-lock-files"
   assertContains "$(cat "$capture")" "failure_classification=user"
+  # The colliding managers are recorded (sorted) for observability.
+  assertContains "$(cat "$capture")" "failure_detail=npm,Yarn"
   rm -rf "$build_dir"
   rm -f "$capture"
 }
@@ -373,8 +375,31 @@ testFailShrinkwrapConflictEmitsDetailedMessage() {
   assertContains "$out" "add them to your .gitignore file."
   assertContains "$(cat "$capture")" "failure=shrinkwrap-lock-file-conflict"
   assertContains "$(cat "$capture")" "failure_classification=user"
+  # The modern lockfile conflicting with npm-shrinkwrap.json is recorded for observability.
+  assertContains "$(cat "$capture")" "failure_detail=Yarn"
   rm -rf "$build_dir"
   rm -f "$capture"
+}
+
+testFailMultipleLockfilesPassesCleanForValidLayouts() {
+  # The common, valid layouts must NOT emit a failure: zero lockfiles, exactly one modern
+  # lockfile, or npm-shrinkwrap.json on its own. Guards against a future regression in the
+  # `>1` threshold or the has_modern_lockfile default silently failing normal builds.
+  local build_dir out capture layout
+  for layout in "none" "package-lock.json" "yarn.lock" "pnpm-lock.yaml" "npm-shrinkwrap.json"; do
+    build_dir=$(mktemp -d)
+    capture=$(mktemp)
+    [ "$layout" = "none" ] || : > "$build_dir/$layout"
+
+    _capture_node_fail out "$capture" \
+      package_manager::fail_multiple_lockfiles "$build_dir"
+
+    # No message emitted and no failure recorded in build data.
+    assertEquals "layout '$layout' should not emit a failure message" "" "$out"
+    assertEquals "layout '$layout' should not record a failure" "" "$(cat "$capture")"
+    rm -rf "$build_dir"
+    rm -f "$capture"
+  done
 }
 
 testFailureEmitRendersAndRecords() {

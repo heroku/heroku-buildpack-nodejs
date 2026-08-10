@@ -206,17 +206,21 @@ function package_manager::fail_multiple_lockfiles() {
 		fi
 	done
 
-	if ((${#detected_package_managers[*]} > 1)); then
-		# Sort case-insensitively so the reported list and per-manager fix steps have a stable
-		# order (npm, pnpm, Yarn) regardless of associative-array iteration order.
-		local -a package_managers_sorted
+	# Sort the detected managers case-insensitively so the reported list, per-manager fix steps,
+	# and the recorded failure_detail all have a stable order (npm, pnpm, Yarn) regardless of
+	# associative-array iteration order.
+	local -a package_managers_sorted=()
+	if ((${#detected_package_managers[*]} > 0)); then
 		# shellcheck disable=SC2312 # sort orders the NUL-delimited names; masking its exit is intentional (matches pre-migration behavior)
 		readarray -td '' package_managers_sorted < <(printf '%s\0' "${detected_package_managers[@]}" | sort -z --ignore-case)
+	fi
+
+	if ((${#package_managers_sorted[*]} > 1)); then
 		package_manager::_fail_multiple_lockfiles "${package_managers_sorted[@]}"
 	fi
 
 	if ${has_modern_lockfile} && [[ -f "${build_dir}/npm-shrinkwrap.json" ]]; then
-		package_manager::_fail_shrinkwrap_conflict
+		package_manager::_fail_shrinkwrap_conflict "${package_managers_sorted[@]}"
 	fi
 }
 
@@ -248,6 +252,7 @@ function package_manager::_fail_multiple_lockfiles() {
 	local -A failure
 	failure["id"]="multiple-lock-files"
 	failure["classification"]="user"
+	failure["detail"]="${pm_list}"
 	failure["message"]=$(
 		cat <<-EOF
 			Error: Multiple lockfiles found.
@@ -274,12 +279,23 @@ function package_manager::_fail_multiple_lockfiles() {
 }
 
 # Emits the classified failure for a modern lockfile present alongside npm-shrinkwrap.json and
-# exits. See runtimes::nodejs::_fail_node_download for the direct-emit rationale. Keeps the
-# historical `shrinkwrap-lock-file-conflict` failure id for metric continuity.
+# exits. See runtimes::nodejs::_fail_node_download for the direct-emit rationale. Receives the
+# detected package-manager names (already sorted) so the recorded detail names which modern
+# lockfile(s) conflicted with the shrinkwrap file. Keeps the historical
+# `shrinkwrap-lock-file-conflict` failure id for metric continuity.
 function package_manager::_fail_shrinkwrap_conflict() {
+	local -a package_managers_sorted=("$@")
+
+	local pm_list
+	pm_list=$(
+		IFS=','
+		printf '%s' "${package_managers_sorted[*]}"
+	)
+
 	local -A failure
 	failure["id"]="shrinkwrap-lock-file-conflict"
 	failure["classification"]="user"
+	failure["detail"]="${pm_list}"
 	failure["message"]=$(
 		cat <<-EOF
 			Error: Multiple lockfiles conflicting with npm-shrinkwrap.json.
