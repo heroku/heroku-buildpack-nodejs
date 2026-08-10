@@ -368,13 +368,6 @@ log_other_failures() {
     return 0
   fi
 
-  # "notarget No matching version found for" = npm
-  # "error Couldn't find any versions for" = yarn
-  if grep -q -e "notarget No matching version found for" -e "error Couldn't find any versions for" "$log_file"; then
-    build_data::set_string "failure" "bad-version-for-dependency"
-    return 0
-  fi
-
   if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
     build_data::set_string "failure" "node-9-npm-issue"
     return 0

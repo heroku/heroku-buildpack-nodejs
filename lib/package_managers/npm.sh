@@ -432,8 +432,32 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm ETARGET code — stable npm v3–v11. Thrown by npm-pick-manifest when no published version
+	# satisfies the requested range; error-message.js (case 'ETARGET') surfaces the code on the
+	# `npm error code ETARGET` summary line and renders the message under a `notarget` heading.
+	# Matched on the code (like the npm code matchers above) rather than the `notarget` message
+	# text — the code is the stable discriminator. E403 (policy-forbidden) is thrown from the same
+	# npm-pick-manifest path with a distinct code, so this will not over-match it. The legacy
+	# failure id (`bad-version-for-dependency`) is preserved verbatim so the `failure` build-data
+	# key stays continuous for downstream metrics.
+	if grep -qiE 'npm (ERR!|error) code ETARGET($| )' "${log_file}"; then
+		__failure["id"]="bad-version-for-dependency"
+		__failure["classification"]="user"
+		__failure["detail"]="ETARGET: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				One of your dependencies requests a package version that does not exist
+				in the npm registry. Check the log output above for the offending package
+				and version range, and update it to a version that has been published.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
-	# e.g. ETARGET (no matching version), ENOSPC (disk full).
+	# e.g. ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.
 
 	# No known failure mode recognised — signal no match so the caller can fall through.

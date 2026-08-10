@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the bad-version-for-dependency build error for npm and Yarn classic onto the call-site failure-classification framework. ([#1763](https://github.com/heroku/heroku-buildpack-nodejs/pull/1763))
 
 ## [v362] - 2026-08-07
 

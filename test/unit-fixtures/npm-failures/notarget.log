@@ -1,0 +1,5 @@
+npm error code ETARGET
+npm error notarget No matching version found for left-pad@^99.0.0.
+npm error notarget In most cases you or one of your dependencies are requesting
+npm error notarget a package version that doesn't exist.
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log

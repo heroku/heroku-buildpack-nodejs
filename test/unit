@@ -600,6 +600,18 @@ testHandleNpmInstallLockfileOutOfSync() {
   assertContains "${result[message]}" "npm install"
 }
 
+testHandleNpmInstallBadVersion() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/notarget.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so downstream metrics stay continuous.
+  assertEquals "bad-version-for-dependency" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ETARGET:"
+  assertContains "${result[detail]}" "No matching version found"
+  assertContains "${result[message]}" "does not exist"
+}
+
 testHandleInstallPipefail() {
   # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from
@@ -660,6 +672,17 @@ testHandleYarnInstallLockfileNeedsUpdate() {
   assertContains "${result[detail]}" "Your lockfile needs to be updated"
   assertContains "${result[message]}" "Outdated Yarn lockfile"
   assertContains "${result[message]}" "yarn install"
+}
+
+testHandleYarnInstallBadVersion() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/no-matching-version.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so downstream metrics stay continuous.
+  assertEquals "bad-version-for-dependency" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Couldn't find any versions for"
+  assertContains "${result[message]}" "does not exist"
 }
 
 testHandleYarnInstallNoMatchReturnsNonZero() {
