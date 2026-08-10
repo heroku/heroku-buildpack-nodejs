@@ -3,7 +3,9 @@
 # source of truth for what gets linted/formatted (CI invokes these targets, it does
 # not maintain its own list).
 MIGRATED_FILES = \
+	lib/build_data.sh \
 	lib/failures.sh \
+	lib/output.sh \
 	lib/package_manager.sh \
 	lib/package_managers/npm.sh \
 	lib/package_managers/pnpm.sh \
