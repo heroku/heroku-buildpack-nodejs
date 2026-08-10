@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the conflicting package manager metadata (`multiple-package-managers`) build error onto the call-site failure-classification framework. ([#1760](https://github.com/heroku/heroku-buildpack-nodejs/pull/1760))
 
 ## [v362] - 2026-08-07
 
