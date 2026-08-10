@@ -1,28 +1,5 @@
 #!/usr/bin/env bash
 
-# testing monitor_memory_usage
-
-# allocate ~14 mb of memory and wait a bit
-use_memory() {
-  for index in $(seq 10); do
-    value=$(seq -w -s '' $index $(($index + 100000)))
-    eval array$index=$value
-  done
-  sleep 0.5
-}
-
-# print each argument to a separate line on stdout
-print_args() {
-  while (( "$#" )); do
-    echo $1
-    shift
-  done
-}
-
-print_number_args() {
-  echo "$#"
-}
-
 testOutput() {
   local stdout
 
@@ -1212,7 +1189,6 @@ source "$(pwd)"/lib/package_managers/npm.sh
 source "$(pwd)"/lib/package_managers/pnpm.sh
 source "$(pwd)"/lib/package_managers/yarn.sh
 source "$(pwd)"/lib/runtimes/nodejs.sh
-source "$(pwd)"/lib/monitor.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/_output.sh
 source "$(pwd)"/lib/_failures.sh
