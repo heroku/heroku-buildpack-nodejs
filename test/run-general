@@ -188,12 +188,12 @@ testCacheWithPrebuild() {
 testErrorYarnAndNpmLockfiles() {
   compile "yarn-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Multiple lockfiles found"
-  assertCaptured "Multiple package managers (npm,Yarn) have created lockfiles for this application"
-  assertCaptured "If you use npm:"
-  assertCaptured "git rm yarn.lock"
-  assertCaptured "If you use Yarn:"
-  assertCaptured "git rm package-lock.json"
+  assertCapturedStderr "Multiple lockfiles found"
+  assertCapturedStderr "Multiple package managers (npm,Yarn) have created lockfiles for this application"
+  assertCapturedStderr "If you use npm:"
+  assertCapturedStderr "git rm yarn.lock"
+  assertCapturedStderr "If you use Yarn:"
+  assertCapturedStderr "git rm package-lock.json"
   assertCapturedError
 }
 
@@ -201,7 +201,7 @@ testErrorYarnAndNpmLockfiles() {
 testErrorYarnAndNpmShrinkwrap() {
   compile "yarn-and-shrinkwrap-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Multiple lockfiles conflicting with npm-shrinkwrap.json"
+  assertCapturedStderr "Multiple lockfiles conflicting with npm-shrinkwrap.json"
   assertCapturedError
 }
 
@@ -209,10 +209,10 @@ testErrorYarnAndNpmShrinkwrap() {
 testErrorYarnAndPnpmAndNpmLockfiles() {
   compile "yarn-pnpm-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Multiple lockfiles found"
-  assertCaptured "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
-  assertCaptured "If you use pnpm:"
-  assertCaptured "git rm package-lock.json yarn.lock"
+  assertCapturedStderr "Multiple lockfiles found"
+  assertCapturedStderr "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
+  assertCapturedStderr "If you use pnpm:"
+  assertCapturedStderr "git rm package-lock.json yarn.lock"
   assertCapturedError
 }
 
