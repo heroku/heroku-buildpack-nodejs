@@ -37,16 +37,6 @@ failure_message() {
   echo ""
 }
 
-fail_invalid_package_json() {
-  if ! utils::json::is_valid "${1:-}/package.json"; then
-    error "Unable to parse package.json"
-    build_data::set_string "failure" "invalid-package-json"
-    header "Build failed"
-    failure_message
-    fail
-  fi
-}
-
 fail_dot_heroku() {
   if [ -f "${1:-}/.heroku" ]; then
     build_data::set_string "failure" "dot-heroku"

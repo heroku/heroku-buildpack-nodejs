@@ -97,6 +97,45 @@ testJsonValid() {
     "utils::json::is_valid '$(pwd)/test/fixtures/bad-json/package.json'"
 }
 
+testFailInvalidPackageJsonEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    utils::package_json::_fail_invalid
+
+  # The message names package.json and gives concrete syntax-error fix guidance.
+  assertContains "$out" "Error: Unable to parse your package.json."
+  assertContains "$out" "invalid JSON"
+  assertContains "$out" "jq . package.json"
+  # The historical failure id is preserved for metric continuity; app-controlled input.
+  assertContains "$(cat "$capture")" "failure=invalid-package-json"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailInvalidPackageJsonGuardEmitsOnMalformedJson() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    utils::package_json::fail_invalid "$(pwd)/test/fixtures/bad-json"
+
+  assertContains "$out" "Error: Unable to parse your package.json."
+  assertContains "$(cat "$capture")" "failure=invalid-package-json"
+  rm -f "$capture"
+}
+
+testFailInvalidPackageJsonGuardDoesNotEmitOnValidJson() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    utils::package_json::fail_invalid "$(pwd)/test/fixtures/has-script-fixtures"
+
+  # Valid JSON: the guard never reaches the emit helper, so nothing is printed or recorded.
+  assertNull "valid package.json should not emit a failure message" "$out"
+  assertEquals "valid package.json should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
 testAssertMetricsBasicQueries() {
   local cache_dir=$(mktemp -d)
   local metrics_dir="${cache_dir}/build-data"

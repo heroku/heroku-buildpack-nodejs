@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the invalid package.json (`invalid-package-json`) build error onto the call-site failure-classification framework. ([#1758](https://github.com/heroku/heroku-buildpack-nodejs/pull/1758))
 
 ## [v362] - 2026-08-07
 
