@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the checked-in `.heroku` / `.heroku/node` file build error onto the call-site failure-classification framework. ([#1761](https://github.com/heroku/heroku-buildpack-nodejs/pull/1761))
 
 ## [v362] - 2026-08-07
 

@@ -47,36 +47,6 @@ fail_invalid_package_json() {
   fi
 }
 
-fail_dot_heroku() {
-  if [ -f "${1:-}/.heroku" ]; then
-    build_data::set_string "failure" "dot-heroku"
-    header "Build failed"
-    warn "The directory .heroku could not be created
-
-       It looks like a .heroku file is checked into this project.
-       The Node.js buildpack uses the hidden directory .heroku to store
-       binaries like the node runtime and npm. You should remove the
-       .heroku file or ignore it by adding it to .slugignore
-       "
-    fail
-  fi
-}
-
-fail_dot_heroku_node() {
-  if [ -f "${1:-}/.heroku/node" ]; then
-    build_data::set_string "failure" "dot-heroku-node"
-    header "Build failed"
-    warn "The directory .heroku/node could not be created
-
-       It looks like a .heroku file is checked into this project.
-       The Node.js buildpack uses the hidden directory .heroku to store
-       binaries like the node runtime and npm. You should remove the
-       .heroku file or ignore it by adding it to .slugignore
-       "
-    fail
-  fi
-}
-
 fail_iojs_unsupported() {
   local build_dir="$1"
   local iojs_engine

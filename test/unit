@@ -1052,6 +1052,78 @@ testFailUnsupportedChecksumEmitsDetailedMessage() {
   rm -f "$capture"
 }
 
+testFailDotHerokuEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_dot_heroku ".heroku" "dot-heroku"
+
+  assertContains "$out" "Error: The directory .heroku could not be created."
+  assertContains "$out" "a .heroku file is checked into this project"
+  # The historical failure id is preserved for metric continuity.
+  assertContains "$(cat "$capture")" "failure=dot-heroku"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailDotHerokuNodeEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_dot_heroku ".heroku/node" "dot-heroku-node"
+
+  assertContains "$out" "Error: The directory .heroku/node could not be created."
+  assertContains "$out" "a .heroku file is checked into this project"
+  assertContains "$(cat "$capture")" "failure=dot-heroku-node"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testGuardDotHerokuEmitsWhenFilePresent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  touch "$build_dir/.heroku"
+
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::fail_dot_heroku "$build_dir"
+
+  assertContains "$out" "Error: The directory .heroku could not be created."
+  assertContains "$(cat "$capture")" "failure=dot-heroku"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testGuardDotHerokuNoopWhenFileAbsent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::fail_dot_heroku "$build_dir"
+
+  assertEquals "no message should be emitted when .heroku is absent" "" "$out"
+  assertEquals "no classified failure should be recorded" "" "$(cat "$capture")"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testGuardDotHerokuNodeEmitsWhenFilePresent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  mkdir -p "$build_dir/.heroku"
+  touch "$build_dir/.heroku/node"
+
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::fail_dot_heroku "$build_dir"
+
+  assertContains "$out" "Error: The directory .heroku/node could not be created."
+  assertContains "$(cat "$capture")" "failure=dot-heroku-node"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
 testExtractErrorDetailReturnsFirstDescriptiveLine() {
   # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
   # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
