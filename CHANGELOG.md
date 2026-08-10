@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the Yarn 2+ (Berry) `YARN_PRODUCTION` build error onto the call-site failure-classification framework. The buildpack now detects the unsupported configuration before running any Yarn command and fails with a clearer message. ([#1756](https://github.com/heroku/heroku-buildpack-nodejs/pull/1756))
 
 ## [v362] - 2026-08-07
 

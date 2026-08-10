@@ -94,7 +94,6 @@ handle_failure() {
   # specific message emit already printed. Migrated failures are self-contained by design.
   if [[ ! -e "${FAILURE_EMITTED_MARKER:-}" ]]; then
     header "Build failed"
-    fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
     fail_yarn_outdated "$LOG_FILE"
     fail_yarn_install "$LOG_FILE" "$BUILD_DIR"
     log_other_failures "$LOG_FILE"
@@ -147,6 +146,11 @@ create_build_env
 export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
+  # Fail fast before any yarn command runs: YARN_PRODUCTION aborts Berry's config load, so
+  # whichever yarn invocation runs first (install, prune, or a `yarn run` script hook) would
+  # otherwise blow up mid-build with an opaque clipanion error.
+  package_managers::yarn::fail_if_yarn_production_env_set_on_berry "${YARN_PRODUCTION:-}"
+
   if [[ -f "$BUILD_DIR/.npmrc" ]]; then
     warn "There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
   fi

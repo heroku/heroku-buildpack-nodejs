@@ -59,6 +59,52 @@ function package_managers::yarn::install_binary() {
 	fi
 }
 
+# Fails fast when a Yarn 2+ (Berry) build has the legacy yarn 1.x `YARN_PRODUCTION` variable set.
+# Berry maps it to the unregistered `production` setting and aborts config load — with a strict
+# clipanion UsageError — on EVERY yarn invocation (install, prune, and `yarn run <script>` for the
+# prebuild/build/cleanup hooks). Detecting the condition here, before any yarn command runs, fails
+# once with actionable guidance instead of letting whichever yarn command happens to run first
+# blow up partway through the build. Emits directly (the cause is known locally, so there is no log
+# to classify); a no-op when the variable is unset, so the caller can invoke it unconditionally.
+function package_managers::yarn::fail_if_yarn_production_env_set_on_berry() {
+	local yarn_production="${1:-}"
+
+	if [[ -z "${yarn_production}" ]]; then
+		return 0
+	fi
+
+	# Preserve the legacy matcher's value-sensitive guidance: YARN_PRODUCTION=true meant the app
+	# wanted production-only installs (prune devDependencies), so the equivalent Berry setting keeps
+	# pruning (YARN2_SKIP_PRUNING=false); any other value meant keep devDependencies, so it skips
+	# pruning (YARN2_SKIP_PRUNING=true). Hardcoding one value would invert intent for the common
+	# YARN_PRODUCTION=true case, leaving devDependencies in the slug.
+	local skip_pruning
+	if [[ "${yarn_production}" == "true" ]]; then
+		skip_pruning="false"
+	else
+		skip_pruning="true"
+	fi
+
+	local -A failure
+	failure["id"]="yarn2-with-yarn-production-env-set"
+	failure["classification"]="user"
+	failure["message"]=$(
+		cat <<-EOF
+			Unsupported Yarn configuration: YARN_PRODUCTION
+
+			Yarn 2+ (Berry) does not support the YARN_PRODUCTION environment
+			variable and stops the build while loading its configuration.
+
+			To fix, remove YARN_PRODUCTION and use YARN2_SKIP_PRUNING to control
+			whether devDependencies are pruned after the build:
+
+			\$ heroku config:unset YARN_PRODUCTION
+			\$ heroku config:set YARN2_SKIP_PRUNING=${skip_pruning}
+		EOF
+	)
+	failure::emit failure
+}
+
 # Yarn 2+ (aka: "berry") is hosted under a different npm package so we need to do some
 # extra checking to determine the correct package name.
 function package_managers::yarn::_determine_package_name() {
@@ -451,12 +497,9 @@ function package_managers::yarn::_handle_prune_pipefail() {
 
 # Pure classifier for yarn 1.x (classic) devDependency-prune failures. Yarn 2+ (Berry) has a
 # separate prune path (`_prune_berry_devdependencies`) with its own classifier. No prune-specific
-# failure mode is recognised today: the only yarn-prune-associated legacy matcher
-# (yarn2-with-yarn-production-env-set) actually fires at the Berry *install* step, not here — the
-# prune step returns early when YARN_PRODUCTION is set — so it stays on the legacy trap (see
-# lib/_failures.sh). This stub always returns 1 so the caller bubbles the raw exit code to the
-# legacy trap; it is kept for symmetry with the classic install classifier and as the home for any
-# future yarn 1.x prune matcher.
+# failure mode is recognised today. This stub always returns 1 so the caller bubbles the raw exit
+# code to the legacy trap; it is kept for symmetry with the classic install classifier and as the
+# home for any future yarn 1.x prune matcher.
 #
 # Input:
 #   $1  path to a log file containing the captured output of the failed yarn prune command
@@ -550,10 +593,9 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 
 # Pure classifier for yarn 2+ (Berry) devDependency-prune failures. Yarn 1.x (classic) has a
 # separate prune path (`_prune_classic_devdependencies`) with its own classifier. No prune-specific
-# failure mode is recognised today (see the classic prune classifier's note on
-# yarn2-with-yarn-production-env-set, which belongs to the Berry install step, not prune). This
-# stub always returns 1 so the caller bubbles the raw exit code to the legacy trap; it is kept for
-# symmetry with the Berry install classifier and as the home for any future Berry prune matcher.
+# failure mode is recognised today. This stub always returns 1 so the caller bubbles the raw exit
+# code to the legacy trap; it is kept for symmetry with the Berry install classifier and as the
+# home for any future Berry prune matcher.
 #
 # Input:
 #   $1  path to a log file containing the captured output of the failed yarn prune command
