@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Migrated the Yarn 2+ (Berry) vendoring pre-flight build errors (`missing-yarnrc-yml`, `missing-yarn-path`, `missing-yarn-vendor`) onto the call-site failure-classification framework. ([#1762](https://github.com/heroku/heroku-buildpack-nodejs/pull/1762))
 
 ## [v362] - 2026-08-07
 

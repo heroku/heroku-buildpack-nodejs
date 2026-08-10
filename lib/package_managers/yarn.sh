@@ -613,6 +613,113 @@ function package_managers::yarn::berry_get_path() {
 	fi
 }
 
+# Emits the classified failure for a missing Yarn 2+ (Berry) `.yarnrc.yml` during the vendoring
+# pre-flight and exits. Keeps the existing validate-then-emit guard so bin/compile's control flow
+# is unchanged: on a missing file it fills a local failure array and calls failure::emit (which
+# prints, records build data, sets the marker, and exits); otherwise it returns cleanly. Preserves
+# the historical `missing-yarnrc-yml` failure id for metric continuity. See
+# runtimes::nodejs::_fail_node_download for the direct-emit-at-site rationale.
+function package_managers::yarn::fail_missing_yarnrc_yml() {
+	local build_dir="${1}"
+
+	if [[ ! -f "${build_dir}/.yarnrc.yml" ]]; then
+		local -A failure
+		failure["id"]="missing-yarnrc-yml"
+		failure["classification"]="user"
+		failure["detail"]="${build_dir}/.yarnrc.yml"
+		failure["message"]=$(
+			cat <<-EOF
+				The 'yarnrc.yml' file is not found
+
+				It looks like the 'yarnrc.yml' file is missing from this project. Please
+				make sure this file is checked into version control and made available to
+				Heroku.
+
+				To generate 'yarnrc.yml', make sure Yarn 2 is installed on your local
+				machine and set the version in your project directory with:
+
+				 \$ yarn set version berry
+
+				Read more at the Yarn docs: https://yarnpkg.com/getting-started/install#per-project-install
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
+		)
+		failure::emit failure
+	fi
+}
+
+# Emits the classified failure when the `yarnPath` value could not be read from `.yarnrc.yml`
+# during the Yarn 2+ (Berry) vendoring pre-flight and exits. Keeps the existing validate-then-emit
+# guard (an empty yarn_path) so bin/compile's control flow is unchanged. Preserves the historical
+# `missing-yarn-path` failure id for metric continuity. See
+# runtimes::nodejs::_fail_node_download for the direct-emit-at-site rationale.
+function package_managers::yarn::fail_missing_yarn_path() {
+	local build_dir="${1}"
+	local yarn_path="${2}"
+
+	if [[ "${yarn_path}" == "" ]]; then
+		local -A failure
+		failure["id"]="missing-yarn-path"
+		failure["classification"]="user"
+		failure["detail"]="${build_dir}/.yarnrc.yml"
+		failure["message"]=$(
+			cat <<-EOF
+				The 'yarnPath' could not be read from the 'yarnrc.yml' file
+
+				It looks like 'yarnrc.yml' is missing the 'yarnPath' value, which is needed
+				to identify the location of yarn for this build.
+
+				To regenerate 'yarnrc.yml' with the 'yarnPath' value set, make sure Yarn 2
+				is installed on your local machine and set the version in your project
+				directory with:
+
+				 \$ yarn set version berry
+
+				Read more at the Yarn docs: https://yarnpkg.com/getting-started/install#per-project-install
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
+		)
+		failure::emit failure
+	fi
+}
+
+# Emits the classified failure when the vendored Yarn release referenced by `yarnPath` is missing
+# from the app during the Yarn 2+ (Berry) vendoring pre-flight and exits. Keeps the existing
+# validate-then-emit guard so bin/compile's control flow is unchanged. Preserves the historical
+# `missing-yarn-vendor` failure id for metric continuity, and records the offending path in detail.
+# See runtimes::nodejs::_fail_node_download for the direct-emit-at-site rationale.
+function package_managers::yarn::fail_missing_yarn_vendor() {
+	local build_dir="${1}"
+	local yarn_path="${2}"
+
+	if [[ ! -f "${build_dir}/${yarn_path}" ]]; then
+		local -A failure
+		failure["id"]="missing-yarn-vendor"
+		failure["classification"]="user"
+		failure["detail"]="${yarn_path}"
+		failure["message"]=$(
+			cat <<-EOF
+				Yarn was not found
+
+				It looks like yarn is missing from ${yarn_path}, which is needed to continue
+				this build on Heroku. Yarn 2 recommends vendoring Yarn under the '.yarn/releases'
+				directory, so remember to check the '.yarn' directory into version control
+				to use during builds.
+
+				To generate the '.yarn' directory correctly, make sure Yarn 2 is installed
+				on your local machine and run the following in your project directory:
+
+				 \$ yarn install
+				 \$ yarn set version berry
+
+				Read more at the Yarn docs: https://yarnpkg.com/getting-started/install#per-project-install
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
+		)
+		failure::emit failure
+	fi
+}
+
 function package_managers::yarn::berry_use_app_cache() {
 	local build_dir="${1}"
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside (matches pre-migration behavior)
