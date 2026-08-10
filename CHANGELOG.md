@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Migrated the multiple-lockfiles and npm-shrinkwrap-conflict pre-flight build errors onto the call-site failure-classification framework. ([#XXXX](https://github.com/heroku/heroku-buildpack-nodejs/pull/XXXX))
+- Migrated the multiple-lockfiles and npm-shrinkwrap-conflict pre-flight build errors onto the call-site failure-classification framework. ([#1759](https://github.com/heroku/heroku-buildpack-nodejs/pull/1759))
 
 ## [v362] - 2026-08-07
 
