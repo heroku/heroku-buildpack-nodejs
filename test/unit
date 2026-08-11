@@ -1450,6 +1450,80 @@ testHandleScriptPipefail() {
   rm -f "$capture"
 }
 
+testFailConflictingMetadataEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    package_manager::_fail_conflicting_metadata \
+    "npm version detected in engines.npm (10.x)" \
+    "pnpm version declared in packageManager (pnpm@9.9.0)"
+
+  # The message preserves the existing wording and lists each detected declaration.
+  assertContains "$out" "Multiple package managers declared in package.json"
+  assertContains "$out" "Only one of the following fields should be used, all others should be removed"
+  assertContains "$out" "- npm version detected in engines.npm (10.x)"
+  assertContains "$out" "- pnpm version declared in packageManager (pnpm@9.9.0)"
+  # The historical failure id is preserved for metric continuity; app-controlled input.
+  assertContains "$(cat "$capture")" "failure=multiple-package-managers"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # Detail records the conflicting fields detected.
+  assertContains "$(cat "$capture")" "failure_detail=npm version detected in engines.npm (10.x)"
+  assertContains "$(cat "$capture")" "pnpm version declared in packageManager (pnpm@9.9.0)"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardEmitsWhenMultipleDeclared() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/conflicting-package-manager-metadata"
+
+  assertContains "$out" "Multiple package managers declared in package.json"
+  assertContains "$(cat "$capture")" "failure=multiple-package-managers"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardDoesNotEmitWhenSingleDeclared() {
+  local out capture
+  capture=$(mktemp)
+  # error-prune declares only engines.npm — a single package manager, so the guard never
+  # reaches the emit helper and nothing is printed or recorded.
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/error-prune"
+
+  assertNull "single package manager should not emit a failure message" "$out"
+  assertEquals "single package manager should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardDoesNotEmitWhenNoneDeclared() {
+  local out capture
+  capture=$(mktemp)
+  # has-script-fixtures declares only engines.node (no npm/yarn/pnpm and no packageManager), so
+  # no package manager is detected and the guard never reaches the emit helper.
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/has-script-fixtures"
+
+  assertNull "no package manager declared should not emit a failure message" "$out"
+  assertEquals "no package manager declared should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardDoesNotEmitWhenSameManagerDeclaredTwice() {
+  local out capture
+  capture=$(mktemp)
+  # pnpm-with-corepack-and-engine declares pnpm in BOTH engines.pnpm and packageManager. These
+  # name the same package manager, so they dedupe to a single key and the guard must not emit —
+  # guards the packageManager-field detection branch against a false conflict.
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/pnpm-with-corepack-and-engine"
+
+  assertNull "same package manager declared twice should not emit a failure message" "$out"
+  assertEquals "same package manager declared twice should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested

@@ -957,11 +957,13 @@ testWarningNode_22_5_0() {
 
 testConflictingPackageManagerMetadata() {
   compile "conflicting-package-manager-metadata"
-  assertCaptured "Multiple package managers declared in package.json"
-  assertCaptured "- npm version detected in engines.npm (10.x)"
-  assertCaptured "- yarn version declared in engines.yarn (4.x)"
-  assertCaptured "- pnpm version declared in engines.pnpm (9.x)"
-  assertCaptured "- pnpm version declared in packageManager (pnpm@9.9.0)"
+  # The migrated conflicting-metadata guard renders the failure via failure::emit, which writes
+  # the message and every detected-field line to stderr through output::error.
+  assertCapturedStderr "Multiple package managers declared in package.json"
+  assertCapturedStderr "- npm version detected in engines.npm (10.x)"
+  assertCapturedStderr "- yarn version declared in engines.yarn (4.x)"
+  assertCapturedStderr "- pnpm version declared in engines.pnpm (9.x)"
+  assertCapturedStderr "- pnpm version declared in packageManager (pnpm@9.9.0)"
   assertCapturedError
 }
 

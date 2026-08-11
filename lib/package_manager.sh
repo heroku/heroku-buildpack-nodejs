@@ -278,6 +278,85 @@ function package_manager::_fail_multiple_lockfiles() {
 	failure::emit failure
 }
 
+# Pre-flight guard: fails the build when the app declares more than one package manager in
+# package.json, via the engines.npm/engines.yarn/engines.pnpm fields and/or the packageManager
+# field. Installing dependencies with the wrong package manager can cause missing packages or
+# subtle production bugs, so exactly one may be declared. Collects the distinct package managers
+# named (associative-array keys dedupe them) alongside a human-readable descriptor of each
+# declaration; if more than one distinct manager is named, hands off to the emit-at-site helper
+# (which prints the message, records build data, and exits).
+function package_manager::fail_conflicting_metadata() {
+	local build_dir="${1}"
+
+	local npm_engine yarn_engine pnpm_engine package_manager
+	npm_engine=$(utils::json::read "${build_dir}/package.json" ".engines.npm")
+	yarn_engine=$(utils::json::read "${build_dir}/package.json" ".engines.yarn")
+	pnpm_engine=$(utils::json::read "${build_dir}/package.json" ".engines.pnpm")
+	package_manager=$(utils::json::read "${build_dir}/package.json" ".packageManager")
+
+	local -A package_managers
+	local -a fields_detected=()
+
+	if [[ -n "${npm_engine}" ]]; then
+		package_managers["npm"]=1
+		fields_detected+=("npm version detected in engines.npm (${npm_engine})")
+	fi
+
+	if [[ -n "${yarn_engine}" ]]; then
+		package_managers["yarn"]=1
+		fields_detected+=("yarn version declared in engines.yarn (${yarn_engine})")
+	fi
+
+	if [[ -n "${pnpm_engine}" ]]; then
+		package_managers["pnpm"]=1
+		fields_detected+=("pnpm version declared in engines.pnpm (${pnpm_engine})")
+	fi
+
+	if [[ "${package_manager}" == yarn* ]]; then
+		package_managers["yarn"]=1
+		fields_detected+=("yarn version declared in packageManager (${package_manager})")
+	elif [[ "${package_manager}" == pnpm* ]]; then
+		package_managers["pnpm"]=1
+		fields_detected+=("pnpm version declared in packageManager (${package_manager})")
+	fi
+
+	if ((${#package_managers[@]} > 1)); then
+		package_manager::_fail_conflicting_metadata "${fields_detected[@]}"
+	fi
+}
+
+# Emits the classified failure for an app that declares more than one package manager in
+# package.json. Keeps the historical `multiple-package-managers` failure id for metric
+# continuity. Classified `user` — the app controls package.json. Receives one descriptor per
+# detected declaration (from the guard above) and renders them into both the message and the
+# build-data detail. See runtimes::nodejs::_fail_node_download for why this emits directly at
+# the call site.
+function package_manager::_fail_conflicting_metadata() {
+	local fields_detected=("$@")
+
+	local fields_block
+	fields_block=$(printf -- '- %s\n' "${fields_detected[@]}")
+
+	local -A failure
+	failure["id"]="multiple-package-managers"
+	failure["classification"]="user"
+	failure["detail"]=$(
+		IFS=,
+		echo "${fields_detected[*]}"
+	)
+	failure["message"]=$(
+		cat <<-EOF
+			Multiple package managers declared in package.json
+
+			Installing dependencies using the wrong package manager can result in missing packages or subtle bugs
+			in production. Only one of the following fields should be used, all others should be removed:
+
+			${fields_block}
+		EOF
+	)
+	failure::emit failure
+}
+
 # Emits the classified failure for a modern lockfile present alongside npm-shrinkwrap.json and
 # exits. See runtimes::nodejs::_fail_node_download for the direct-emit rationale. Receives the
 # detected package-manager names (already sorted) so the recorded detail names which modern
