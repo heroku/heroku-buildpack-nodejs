@@ -181,6 +181,175 @@ function package_manager::run_cleanup_script() {
 	fi
 }
 
+# Pre-flight guard run before any package manager is selected: fails the build when the
+# application has committed lockfiles for more than one package manager, or a modern lockfile
+# alongside npm-shrinkwrap.json. Reads the filesystem directly and, when it detects a problem,
+# delegates to the emit-at-site helper for that case (mirrors runtimes::nodejs::_fail_*). Both
+# cases are the app's fault (classification=user).
+function package_manager::fail_multiple_lockfiles() {
+	local build_dir="${1:-}"
+	local has_modern_lockfile=false
+
+	local -A lockfiles=(
+		["npm"]="package-lock.json"
+		["pnpm"]="pnpm-lock.yaml"
+		["Yarn"]="yarn.lock"
+	)
+
+	local package_manager lockfile
+	local detected_package_managers=()
+	for package_manager in "${!lockfiles[@]}"; do
+		lockfile="${lockfiles["${package_manager}"]}"
+		if [[ -f "${build_dir}/${lockfile}" ]]; then
+			has_modern_lockfile=true
+			detected_package_managers+=("${package_manager}")
+		fi
+	done
+
+	# Sort the detected managers case-insensitively so the reported list, per-manager fix steps,
+	# and the recorded failure_detail all have a stable order (npm, pnpm, Yarn) regardless of
+	# associative-array iteration order.
+	local -a package_managers_sorted=()
+	if ((${#detected_package_managers[*]} > 0)); then
+		# shellcheck disable=SC2312 # sort orders the NUL-delimited names; masking its exit is intentional (matches pre-migration behavior)
+		readarray -td '' package_managers_sorted < <(printf '%s\0' "${detected_package_managers[@]}" | sort -z --ignore-case)
+	fi
+
+	if ((${#package_managers_sorted[*]} > 1)); then
+		package_manager::_fail_multiple_lockfiles "${package_managers_sorted[@]}"
+	fi
+
+	if ${has_modern_lockfile} && [[ -f "${build_dir}/npm-shrinkwrap.json" ]]; then
+		package_manager::_fail_shrinkwrap_conflict "${package_managers_sorted[@]}"
+	fi
+}
+
+# Emits the classified failure for multiple modern lockfiles present at once and exits. Called
+# directly at the failure site (see runtimes::nodejs::_fail_node_download for the direct-emit
+# rationale). Receives the detected package-manager names, already sorted, and interpolates them
+# into both the reported list and the per-manager `git rm` fix steps. Keeps the historical
+# `multiple-lock-files` failure id for metric continuity.
+function package_manager::_fail_multiple_lockfiles() {
+	local -a package_managers_sorted=("$@")
+
+	local -A lockfiles=(
+		["npm"]="package-lock.json"
+		["pnpm"]="pnpm-lock.yaml"
+		["Yarn"]="yarn.lock"
+	)
+
+	local pm_list
+	pm_list=$(
+		IFS=','
+		printf '%s' "${package_managers_sorted[*]}"
+	)
+
+	# Build the per-manager fix steps once here (rather than inline in the heredoc) so the
+	# subshell's exit code isn't masked by the surrounding command substitution.
+	local fix_steps
+	fix_steps=$(package_manager::_multiple_lockfiles_fix_steps "${package_managers_sorted[@]}")
+
+	local -A failure
+	failure["id"]="multiple-lock-files"
+	failure["classification"]="user"
+	failure["detail"]="${pm_list}"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: Multiple lockfiles found.
+
+			Multiple package managers (${pm_list}) have created lockfiles for this application,
+			but only one can be used to install dependencies. This usually happens when a project standardizes on one
+			package manager, but a dependency is later added with a different one and the extra lockfile is committed.
+			Installing dependencies with the wrong package manager can result in missing packages or subtle, hard to
+			debug bugs in production.
+
+			Only one of the following package manager lockfiles is supported at a time:
+			- ${lockfiles["npm"]} (npm)
+			- ${lockfiles["Yarn"]} (Yarn)
+			- ${lockfiles["pnpm"]} (pnpm)
+
+			Keep the lockfile for the package manager you use and delete the rest, then commit and redeploy:
+
+			${fix_steps}
+
+			To stop the extra lockfiles from being committed again, add them to your .gitignore file.
+		EOF
+	)
+	failure::emit failure
+}
+
+# Emits the classified failure for a modern lockfile present alongside npm-shrinkwrap.json and
+# exits. See runtimes::nodejs::_fail_node_download for the direct-emit rationale. Receives the
+# detected package-manager names (already sorted) so the recorded detail names which modern
+# lockfile(s) conflicted with the shrinkwrap file. Keeps the historical
+# `shrinkwrap-lock-file-conflict` failure id for metric continuity.
+function package_manager::_fail_shrinkwrap_conflict() {
+	local -a package_managers_sorted=("$@")
+
+	local pm_list
+	pm_list=$(
+		IFS=','
+		printf '%s' "${package_managers_sorted[*]}"
+	)
+
+	local -A failure
+	failure["id"]="shrinkwrap-lock-file-conflict"
+	failure["classification"]="user"
+	failure["detail"]="${pm_list}"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: Multiple lockfiles conflicting with npm-shrinkwrap.json.
+
+			Your application has multiple lockfiles defined which conflicts with the
+			shrinkwrap file you've been using. Only one lockfile can be used
+			to install dependencies. Installing dependencies using the wrong lockfile
+			can result in missing packages or subtle bugs in production.
+
+			Please make sure there is only one of the following files in your
+			application directory, then commit and redeploy:
+
+			- yarn.lock
+			- pnpm-lock.yaml
+			- package-lock.json
+			- npm-shrinkwrap.json
+
+			To stop the extra lockfiles from being committed again, add them to your .gitignore file.
+		EOF
+	)
+	failure::emit failure
+}
+
+# Builds the "keep one, remove the rest" fix instructions for a multiple-lockfiles error.
+# Given the detected package manager names as arguments (e.g. "npm" "pnpm" "Yarn"), it prints
+# one block per package manager listing the exact `git rm` command needed to remove the other
+# lockfiles, so the advice is specific to the lockfiles actually present in the application.
+# Pure helper (no side effects); the output order follows the caller-passed argument order.
+function package_manager::_multiple_lockfiles_fix_steps() {
+	local managers=("$@")
+
+	local -A lockfiles=(
+		["npm"]="package-lock.json"
+		["pnpm"]="pnpm-lock.yaml"
+		["Yarn"]="yarn.lock"
+	)
+
+	local keep other remove
+	for keep in "${managers[@]}"; do
+		remove=()
+		for other in "${managers[@]}"; do
+			if [[ "${other}" != "${keep}" ]]; then
+				remove+=("${lockfiles["${other}"]}")
+			fi
+		done
+
+		echo "       If you use ${keep}:"
+		echo "       \$ git rm ${remove[*]}"
+		echo "       \$ git commit -m \"Remove unused lockfiles\""
+		echo "       \$ git push heroku main"
+		echo ""
+	done
+}
+
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
 # saved `$-`; pipefail from its own saved `set +o` line.
 case "${__package_manager_saved_flags}" in *e*) set -e ;; *) set +e ;; esac

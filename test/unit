@@ -337,7 +337,7 @@ testMultipleLockfilesFixStepsTwoManagers() {
 EOF
 )"
 
-  assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm Yarn)"
+  assertEquals "$expected" "$(package_manager::_multiple_lockfiles_fix_steps npm Yarn)"
 }
 
 testMultipleLockfilesFixStepsThreeManagers() {
@@ -361,7 +361,84 @@ testMultipleLockfilesFixStepsThreeManagers() {
 EOF
 )"
 
-  assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm pnpm Yarn)"
+  assertEquals "$expected" "$(package_manager::_multiple_lockfiles_fix_steps npm pnpm Yarn)"
+}
+
+testFailMultipleLockfilesEmitsDetailedMessage() {
+  # The pre-flight guard detects two modern lockfiles on disk and emits the multiple-lock-files
+  # failure with the per-manager `git rm` fix steps and the .gitignore advice.
+  local build_dir out capture
+  build_dir=$(mktemp -d)
+  capture=$(mktemp)
+  : > "$build_dir/package-lock.json"
+  : > "$build_dir/yarn.lock"
+
+  _capture_node_fail out "$capture" \
+    package_manager::fail_multiple_lockfiles "$build_dir"
+
+  assertContains "$out" "Error: Multiple lockfiles found."
+  # Reported list is sorted case-insensitively (npm before Yarn).
+  assertContains "$out" "Multiple package managers (npm,Yarn)"
+  # Per-manager git rm fix steps interpolated from the detected lockfiles.
+  assertContains "$out" "If you use npm:"
+  assertContains "$out" "\$ git rm yarn.lock"
+  assertContains "$out" "If you use Yarn:"
+  assertContains "$out" "\$ git rm package-lock.json"
+  assertContains "$out" "add them to your .gitignore file."
+  assertContains "$(cat "$capture")" "failure=multiple-lock-files"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # The colliding managers are recorded (sorted) for observability.
+  assertContains "$(cat "$capture")" "failure_detail=npm,Yarn"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testFailShrinkwrapConflictEmitsDetailedMessage() {
+  # A single modern lockfile alongside npm-shrinkwrap.json trips the shrinkwrap branch, which
+  # emits the shrinkwrap-lock-file-conflict failure with the 4-file list and .gitignore advice.
+  local build_dir out capture
+  build_dir=$(mktemp -d)
+  capture=$(mktemp)
+  : > "$build_dir/yarn.lock"
+  : > "$build_dir/npm-shrinkwrap.json"
+
+  _capture_node_fail out "$capture" \
+    package_manager::fail_multiple_lockfiles "$build_dir"
+
+  assertContains "$out" "Error: Multiple lockfiles conflicting with npm-shrinkwrap.json."
+  # The full 4-file conflict list is preserved.
+  assertContains "$out" "- yarn.lock"
+  assertContains "$out" "- pnpm-lock.yaml"
+  assertContains "$out" "- package-lock.json"
+  assertContains "$out" "- npm-shrinkwrap.json"
+  assertContains "$out" "add them to your .gitignore file."
+  assertContains "$(cat "$capture")" "failure=shrinkwrap-lock-file-conflict"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # The modern lockfile conflicting with npm-shrinkwrap.json is recorded for observability.
+  assertContains "$(cat "$capture")" "failure_detail=Yarn"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testFailMultipleLockfilesPassesCleanForValidLayouts() {
+  # The common, valid layouts must NOT emit a failure: zero lockfiles, exactly one modern
+  # lockfile, or npm-shrinkwrap.json on its own. Guards against a future regression in the
+  # `>1` threshold or the has_modern_lockfile default silently failing normal builds.
+  local build_dir out capture layout
+  for layout in "none" "package-lock.json" "yarn.lock" "pnpm-lock.yaml" "npm-shrinkwrap.json"; do
+    build_dir=$(mktemp -d)
+    capture=$(mktemp)
+    [ "$layout" = "none" ] || : > "$build_dir/$layout"
+
+    _capture_node_fail out "$capture" \
+      package_manager::fail_multiple_lockfiles "$build_dir"
+
+    # No message emitted and no failure recorded in build data.
+    assertEquals "layout '$layout' should not emit a failure message" "" "$out"
+    assertEquals "layout '$layout' should not record a failure" "" "$(cat "$capture")"
+    rm -rf "$build_dir"
+    rm -f "$capture"
+  done
 }
 
 testFailureEmitRendersAndRecords() {
