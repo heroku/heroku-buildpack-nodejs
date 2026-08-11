@@ -164,29 +164,6 @@ $(multiple_lockfiles_fix_steps "${package_managers_sorted[@]}")
   fi
 }
 
-fail_yarn_outdated() {
-  local yarn_engine
-  local log_file="$1"
-
-  if grep -qi 'error .install. has been replaced with .add. to add new dependencies' "$log_file"; then
-    yarn_engine=$(yarn --version)
-    build_data::set_string "failure" "outdated-yarn"
-    echo ""
-    warn "Outdated Yarn version: $yarn_engine
-
-       Your application is specifying a requirement on an old version of Yarn ($yarn_engine)
-       which does not support the --frozen-lockfile option. Please upgrade to a
-       newer version, at least 0.19, by updating your requirement in the 'engines'
-       field in your package.json.
-
-       \"engines\": {
-         \"yarn\": \"1.3.2\"
-       }
-    " https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version
-    fail
-  fi
-}
-
 # Yarn 2 failures
 
 fail_using_yarn2_with_yarn_production_environment_variable_set() {

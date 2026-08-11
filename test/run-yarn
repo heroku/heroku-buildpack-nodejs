@@ -96,10 +96,13 @@ testOldYarn() {
   compile "yarn-old-deprecated-version"
   assertCaptured "Downloading and installing yarn (~0.16"
   assertCaptured "Installed yarn 0.16."
+  # yarn's own progress output still lands on stdout via `tee` in the migrated install path
   assertCaptured "error \`install\` has been replaced with \`add\`"
-  assertCaptured "Outdated Yarn version"
-  assertCaptured "Your application is specifying a requirement on an old version of Yarn"
-  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version"
+  # The migrated failure message is emitted via output::error, which writes to stderr and
+  # bypasses the outer `output` pipe that shapes stdout.
+  assertCapturedStderr "Outdated Yarn version"
+  assertCapturedStderr "Your application is specifying a requirement on an old version of Yarn"
+  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-yarn-version"
   assertCapturedError
 }
 
