@@ -304,8 +304,9 @@ testUntrackedDependencies() {
 testBadJson() {
   compile "bad-json"
   assertCaptured "Build failed"
-  assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Installing binaries"
+  # The migrated invalid-package-json path renders the failure via failure::emit, which writes
+  # the message to stderr and suppresses the legacy handle_failure footer.
   assertCapturedError 1 "Unable to parse"
 }
 

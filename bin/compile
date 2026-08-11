@@ -115,7 +115,7 @@ YARN_2=$(package_managers::yarn::detect_berry "$YARN" "$BUILD_DIR")
 
 fail_dot_heroku "$BUILD_DIR"
 fail_dot_heroku_node "$BUILD_DIR"
-fail_invalid_package_json "$BUILD_DIR"
+utils::package_json::fail_invalid "$BUILD_DIR"
 fail_multiple_lockfiles "$BUILD_DIR"
 fail_conflicting_package_manager_metadata "$BUILD_DIR"
 fail_iojs_unsupported "$BUILD_DIR"
