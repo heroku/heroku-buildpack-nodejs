@@ -290,6 +290,26 @@ function package_managers::yarn::_handle_yarn_classic_install_failure() {
 		return 0
 	fi
 
+	# Yarn 1.x emits this literal line from its package resolver (src/package-request.js) when no
+	# published version satisfies the requested range. Keyed on the message text because yarn 1 has
+	# no numeric error codes. The legacy failure id (`bad-version-for-dependency`) is preserved
+	# verbatim so the `failure` build-data key stays continuous for downstream metrics.
+	if grep -qi "error Couldn't find any versions for" "${log_file}"; then
+		__failure["id"]="bad-version-for-dependency"
+		__failure["classification"]="user"
+		__failure["detail"]="$(package_managers::yarn::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using Yarn.
+
+				One of your dependencies requests a package version that does not exist
+				in the npm registry. Check the log output above for the offending package
+				and version range, and update it to a version that has been published.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional yarn 1.x failures still matched by the legacy trap's
 	# `log_other_failures` in a follow-up migration.
 
