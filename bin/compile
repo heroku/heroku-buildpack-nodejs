@@ -181,9 +181,9 @@ if [[ "$YARN_2" == "true" ]]; then
     # Yarn 1 in engines.yarn or packageManager to use a specific version for bootstrapping.
     1|"")
       # This ensures we check for a vendored Yarn if we're using Yarn 1 to bootstrap
-      fail_missing_yarnrc_yml "$BUILD_DIR"
+      package_managers::yarn::fail_missing_yarnrc_yml "$BUILD_DIR"
       VENDOR_PATH=$(package_managers::yarn::berry_get_path "$BUILD_DIR")
-      fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
+      package_managers::yarn::fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
       ;;
     *)
       # no need to require a vendored yarnPath (though one may still be configured)
@@ -195,7 +195,7 @@ if [[ "$YARN_2" == "true" ]]; then
 
   # Always validate vendored script exists if yarnPath is defined
   if [[ -n "$VENDOR_PATH" ]]; then
-    fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
+    package_managers::yarn::fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
   fi
 fi
 

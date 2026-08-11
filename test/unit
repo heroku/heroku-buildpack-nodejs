@@ -1020,6 +1020,115 @@ testHandleYarnPrunePipefail() {
   rm -f "$capture"
 }
 
+# The Yarn 2+ (Berry) vendoring pre-flight checks emit their classified failure directly at the
+# call site: each takes a build_dir (and, for two of them, a yarn_path), checks the filesystem,
+# and calls failure::emit on the failing branch. These tests drive each function against a temp
+# BUILD_DIR set up with/without the relevant file to exercise both the fail and no-fail paths.
+# The emit-at-site path reuses the generic _capture_node_fail helper (defined below); the no-fail
+# path stubs `fail`/`build_data::set_string` in a subshell and asserts nothing was emitted.
+
+testFailMissingYarnrcYmlEmitsMessageWhenAbsent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  _capture_node_fail out "$capture" \
+    package_managers::yarn::fail_missing_yarnrc_yml "$build_dir"
+
+  assertContains "$out" "The 'yarnrc.yml' file is not found"
+  assertContains "$out" "yarn set version berry"
+  assertContains "$out" "https://yarnpkg.com/getting-started/install#per-project-install"
+  # The legacy warn() helper appended this default docs URL on its own line; preserve it.
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertContains "$(cat "$capture")" "failure=missing-yarnrc-yml"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnrcYmlNoEmitWhenPresent() {
+  local capture build_dir out
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  touch "$build_dir/.yarnrc.yml"
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::fail_missing_yarnrc_yml "$build_dir" 2>&1
+    echo "returned:$?"
+  )
+  assertContains "the guard should pass and the function should return cleanly" "$out" "returned:0"
+  assertEquals "nothing should be written to build data" "" "$(cat "$capture")"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnPathEmitsMessageWhenEmpty() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  _capture_node_fail out "$capture" \
+    package_managers::yarn::fail_missing_yarn_path "$build_dir" ""
+
+  assertContains "$out" "The 'yarnPath' could not be read from the 'yarnrc.yml' file"
+  assertContains "$out" "yarn set version berry"
+  assertContains "$out" "https://yarnpkg.com/getting-started/install#per-project-install"
+  # The legacy warn() helper appended this default docs URL on its own line; preserve it.
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support"
+  assertContains "$(cat "$capture")" "failure=missing-yarn-path"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnPathNoEmitWhenSet() {
+  local capture build_dir out
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::fail_missing_yarn_path "$build_dir" ".yarn/releases/yarn-4.0.0.cjs" 2>&1
+    echo "returned:$?"
+  )
+  assertContains "a non-empty yarn_path should pass the guard" "$out" "returned:0"
+  assertEquals "nothing should be written to build data" "" "$(cat "$capture")"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnVendorEmitsMessageWhenAbsent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  _capture_node_fail out "$capture" \
+    package_managers::yarn::fail_missing_yarn_vendor "$build_dir" ".yarn/releases/yarn-4.0.0.cjs"
+
+  assertContains "$out" "Yarn was not found"
+  assertContains "$out" ".yarn/releases/yarn-4.0.0.cjs"
+  assertContains "$out" "https://yarnpkg.com/getting-started/install#per-project-install"
+  # The legacy warn() helper appended this default docs URL on its own line; preserve it.
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support"
+  assertContains "$(cat "$capture")" "failure=missing-yarn-vendor"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # The offending vendored path is recorded in detail for observability.
+  assertContains "$(cat "$capture")" "failure_detail=.yarn/releases/yarn-4.0.0.cjs"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnVendorNoEmitWhenPresent() {
+  local capture build_dir out
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  mkdir -p "$build_dir/.yarn/releases"
+  touch "$build_dir/.yarn/releases/yarn-4.0.0.cjs"
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::fail_missing_yarn_vendor "$build_dir" ".yarn/releases/yarn-4.0.0.cjs" 2>&1
+    echo "returned:$?"
+  )
+  assertContains "a vendored release that exists should pass the guard" "$out" "returned:0"
+  assertEquals "nothing should be written to build data" "" "$(cat "$capture")"
+  rm -rf "$capture" "$build_dir"
+}
+
 # npm 12 removed --unsafe-perm; the gate helper decides whether callers may pass it. Stub `npm`
 # in a subshell so `version_major` reads a controlled version without a real npm install.
 testSupportsUnsafePermForNpm11() {
