@@ -365,6 +365,44 @@ function runtimes::nodejs::_fail_resolve() {
 	failure::emit failure
 }
 
+# Preflight guard: fails the build when a `.heroku` or `.heroku/node` file is checked into the
+# app. The buildpack creates the hidden `.heroku` (and `.heroku/node`) directory to install
+# binaries into, so a checked-in file at either path blocks the build. The two conditions are
+# mutually exclusive — a regular `.heroku` file precludes a `.heroku/node` path and vice versa —
+# so a single check routes to the matching failure id. The guard checks the condition; the paired
+# _fail_* helper emits (see the emit-at-site rationale on runtimes::nodejs::_fail_node_download).
+function runtimes::nodejs::fail_dot_heroku() {
+	local build_dir="${1:?}"
+	if [[ -f "${build_dir}/.heroku" ]]; then
+		runtimes::nodejs::_fail_dot_heroku ".heroku" "dot-heroku"
+	elif [[ -f "${build_dir}/.heroku/node" ]]; then
+		runtimes::nodejs::_fail_dot_heroku ".heroku/node" "dot-heroku-node"
+	fi
+}
+
+# Emits the classified failure for a checked-in `.heroku`-family file and exits. Classified
+# `user` because the app checked the file into source control. Takes the offending path and the
+# historical failure id (`dot-heroku` or `dot-heroku-node`), which is preserved for metric
+# continuity.
+function runtimes::nodejs::_fail_dot_heroku() {
+	local path="${1:?}"
+	local id="${2:?}"
+	local -A failure
+	failure["id"]="${id}"
+	failure["classification"]="user"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: The directory ${path} could not be created.
+
+			It looks like a .heroku file is checked into this project. The Node.js
+			buildpack uses the hidden directory .heroku to store binaries like the
+			node runtime and npm. You should remove the .heroku file or ignore it
+			by adding it to .slugignore.
+		EOF
+	)
+	failure::emit failure
+}
+
 function runtimes::nodejs::install_metrics_plugin() {
 	local major minor
 	local bp_dir="$1"

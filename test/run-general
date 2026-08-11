@@ -262,21 +262,21 @@ testWarningsOnFailure() {
 
 testDotHerokuCollision() {
   compile "dot-heroku-collision"
-  assertCaptured "The directory .heroku could not be created"
-  assertCaptured ".heroku file is checked into this project"
+  assertCapturedStderr "The directory .heroku could not be created"
+  assertCapturedStderr ".heroku file is checked into this project"
   assertNotCaptured "please submit a ticket"
   assertCapturedError
 
   compile "dot-heroku-collision-2"
-  assertNotCaptured ".heroku file is checked into this project"
+  assertNotCapturedStderr ".heroku file is checked into this project"
   assertCapturedSuccessWithWarnings
 }
 
 
 testDotHerokuNodeCollision() {
   compile "dot-heroku-node-collision"
-  assertCaptured "The directory .heroku/node could not be created"
-  assertCaptured ".heroku file is checked into this project"
+  assertCapturedStderr "The directory .heroku/node could not be created"
+  assertCapturedStderr ".heroku file is checked into this project"
   assertNotCaptured "please submit a ticket"
   assertCapturedError
 }
