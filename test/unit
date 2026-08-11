@@ -771,6 +771,59 @@ testHandleYarnInstallPipefail() {
   rm -f "$capture"
 }
 
+testFailProductionEnvSetPrunesWhenProductionTrue() {
+  # YARN_PRODUCTION=true meant "production install" under yarn 1.x, so the migration guidance keeps
+  # pruning by recommending YARN2_SKIP_PRUNING=false.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    package_managers::yarn::fail_if_yarn_production_env_set_on_berry "true" 2>&1 || true
+  )
+
+  assertContains "$out" "Unsupported Yarn configuration: YARN_PRODUCTION"
+  assertContains "$out" "heroku config:unset YARN_PRODUCTION"
+  assertContains "$out" "heroku config:set YARN2_SKIP_PRUNING=false"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertContains "$(cat "$capture")" "failure=yarn2-with-yarn-production-env-set"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailProductionEnvSetSkipsPruneForOtherValues() {
+  # Any non-"true" value meant "keep devDependencies", so the guidance skips pruning
+  # (YARN2_SKIP_PRUNING=true).
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    package_managers::yarn::fail_if_yarn_production_env_set_on_berry "false" 2>&1 || true
+  )
+
+  assertContains "$out" "heroku config:set YARN2_SKIP_PRUNING=true"
+  assertContains "$(cat "$capture")" "failure=yarn2-with-yarn-production-env-set"
+  rm -f "$capture"
+}
+
+testFailProductionEnvSetIsNoOpWhenUnset() {
+  # The guard is invoked unconditionally from bin/compile, so an unset YARN_PRODUCTION must not
+  # emit or fail — it returns 0 with no output and no build-data writes.
+  local out capture rc
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    package_managers::yarn::fail_if_yarn_production_env_set_on_berry "" 2>&1
+  ) && rc=0 || rc=$?
+
+  assertEquals "guard should return 0 when YARN_PRODUCTION is unset" "0" "${rc}"
+  assertEquals "guard should emit nothing when YARN_PRODUCTION is unset" "" "$out"
+  assertEquals "guard should not write build data when YARN_PRODUCTION is unset" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
 testHandlePnpmInstallLockfileOutOfSync() {
   local -A result
   package_managers::pnpm::_handle_install_failure "$(pwd)/test/unit-fixtures/pnpm-failures/outdated-lockfile.log" result

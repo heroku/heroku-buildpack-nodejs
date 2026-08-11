@@ -327,8 +327,8 @@ testYarn2WithYarnProductionSetCapturesAndReportsError() {
    env_dir=$(mktmpdir)
    echo "false" > $env_dir/YARN_PRODUCTION
    compile "yarn-2" "$(mktmpdir)" $env_dir
-   assertCaptured "Legacy Yarn 1.x configuration present"
-   assertCapturedError
+   assertCapturedError "Unsupported Yarn configuration: YARN_PRODUCTION"
+   assertCapturedStderr "YARN2_SKIP_PRUNING=true"
  }
 
 
