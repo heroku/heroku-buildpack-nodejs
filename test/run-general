@@ -460,8 +460,7 @@ testDetectWithoutPackageJson() {
 
 testIoJs() {
   compile "iojs"
-  assertCaptured "io.js no longer supported"
-  assertCapturedError
+  assertCapturedError 1 "io.js is no longer supported"
 }
 
 ###

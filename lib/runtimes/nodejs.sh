@@ -58,6 +58,20 @@ function runtimes::nodejs::install() {
 	build_data::set_string "bundled_npm_version" "${bundled_npm_version}"
 }
 
+# Pre-flight guard: fails the build when the app requests an io.js version via
+# `engines.iojs` in package.json. io.js merged back into Node.js in 2015 and is long
+# unsupported. Reads the requested version and, if present, hands off to the emit-at-site
+# helper (which prints the message, records build data, and exits).
+function runtimes::nodejs::fail_iojs_unsupported() {
+	local build_dir="${1}"
+	local iojs_engine
+	iojs_engine=$(utils::json::read "${build_dir}/package.json" ".engines.iojs")
+
+	if [[ -n "${iojs_engine}" ]]; then
+		runtimes::nodejs::_fail_iojs_unsupported "${iojs_engine}"
+	fi
+}
+
 function runtimes::nodejs::_install() {
 	local requested_version="${1:-}"
 	local dir="${2:?}"
@@ -398,6 +412,35 @@ function runtimes::nodejs::_fail_dot_heroku() {
 			buildpack uses the hidden directory .heroku to store binaries like the
 			node runtime and npm. You should remove the .heroku file or ignore it
 			by adding it to .slugignore.
+		EOF
+	)
+	failure::emit failure
+}
+
+# Emits the classified failure for an app that requests an io.js version via `engines.iojs`
+# in package.json. Keeps the historical `iojs-unsupported` failure id for metric continuity.
+# Classified `user` — the app controls this entry. See runtimes::nodejs::_fail_node_download
+# for why this emits directly at the call site.
+function runtimes::nodejs::_fail_iojs_unsupported() {
+	local iojs_engine="${1}"
+	local -A failure
+	failure["id"]="iojs-unsupported"
+	failure["classification"]="user"
+	failure["detail"]="${iojs_engine}"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: io.js is no longer supported.
+
+			Your package.json requests an io.js version:
+
+			"engines": {
+			  "iojs": "${iojs_engine}"
+			}
+
+			io.js merged back into Node.js in 2015 and has been unsupported for many years.
+			It likely contains security vulnerabilities that have since been patched in Node.js.
+
+			To fix this, remove the "iojs" entry under "engines" in your package.json.
 		EOF
 	)
 	failure::emit failure
