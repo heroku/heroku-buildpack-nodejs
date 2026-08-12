@@ -304,10 +304,8 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
-	# npm E404 code — stable npm v3–v11 (lib/utils/error-message.js). The second pattern matches
-	# Yarn's 404 wording, carried over from the legacy log_other_failures matcher.
-	if grep -qiE -e 'npm (ERR!|error) code E404($| )' \
-		-e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "${log_file}"; then
+	# npm E404 code — stable npm v3–v11 (lib/utils/error-message.js).
+	if grep -qiE 'npm (ERR!|error) code E404($| )' "${log_file}"; then
 
 		# The flatmap-stream malware case is a more specific instance of a 404.
 		if grep -qi "flatmap-stream" "${log_file}"; then

@@ -315,6 +315,11 @@ function package_managers::yarn::_handle_yarn_classic_install_failure() {
 		return 0
 	fi
 
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if package_managers::yarn::_match_classic_registry_404 "${log_file}" __failure; then
+		return 0
+	fi
+
 	# TODO: classify additional yarn 1.x failures still matched by the legacy trap's
 	# `log_other_failures` in a follow-up migration.
 
@@ -332,6 +337,66 @@ function package_managers::yarn::_extract_error_detail() {
 		| head -n 1 \
 		| sed -E 's/^error //I' \
 		|| true
+}
+
+# Pure classifier for the yarn 1.x (classic) registry-404 failure. Yarn's reporter prints this
+# distinct wording (no numeric error code) rather than npm's `code E404` summary line, so it needs
+# its own matcher — but it fills the SAME failure id/classification as npm's E404 branch
+# (package_managers::npm::_handle_npm_install_failure in npm.sh) so the `module-404` /
+# `flatmap-stream-404` metric stays unified across package managers regardless of which one hit
+# the 404. Shared by both the classic install and classic prune (reinstall) classifiers, since
+# either can re-fetch a package and hit the same registry response.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed yarn command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when the yarn-classic 404 wording is recognised; returns 1 and
+# leaves the array untouched otherwise. Has no side effects.
+function package_managers::yarn::_match_classic_registry_404() {
+	local log_file="${1}"
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure404="${2}"
+
+	# Yarn 1.x reporter (src/reporters/console/console-reporter.js) wraps any thrown request
+	# error as `error An unexpected error occurred: "<message>".`, where <message> is the
+	# request wrapper's `Request failed "404 Not Found"` for a registry 404.
+	if grep -qiE 'error An unexpected error occurred: .* Request failed "404 Not Found"' "${log_file}"; then
+		# The flatmap-stream malware case is a more specific instance of a 404.
+		if grep -qi "flatmap-stream" "${log_file}"; then
+			__failure404["id"]="flatmap-stream-404"
+			__failure404["classification"]="user"
+			__failure404["detail"]="$(package_managers::yarn::_extract_error_detail "${log_file}")"
+			__failure404["message"]=$(
+				cat <<-EOF
+					Error: The flatmap-stream module has been removed from the npm registry.
+
+					On November 26th (2018), npm was notified of a malicious package that had made
+					its way into event-stream, a popular npm package. npm responded by removing
+					flatmap-stream and event-stream@3.3.6 from the registry.
+
+					Docs: https://help.heroku.com/4OM7X18J
+				EOF
+			)
+			return 0
+		fi
+
+		__failure404["id"]="module-404"
+		__failure404["classification"]="user"
+		__failure404["detail"]="$(package_managers::yarn::_extract_error_detail "${log_file}")"
+		__failure404["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using Yarn.
+
+				A package could not be found in the npm registry (404). Check the log
+				output above for the package name and verify it exists and is spelled
+				correctly.
+			EOF
+		)
+		return 0
+	fi
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
 }
 
 function package_managers::yarn::yarn2_install_dependencies() {
@@ -568,9 +633,9 @@ function package_managers::yarn::_handle_prune_pipefail() {
 
 # Pure classifier for yarn 1.x (classic) devDependency-prune failures. Yarn 2+ (Berry) has a
 # separate prune path (`_prune_berry_devdependencies`) with its own classifier. No prune-specific
-# failure mode is recognised today. This stub always returns 1 so the caller bubbles the raw exit
-# code to the legacy trap; it is kept for symmetry with the classic install classifier and as the
-# home for any future yarn 1.x prune matcher.
+# failure mode is recognised today beyond the shared registry-404 matcher — the prune reinstall
+# (`yarn install --frozen-lockfile`) can re-fetch a package and hit the same 404 as a fresh
+# install — so this is kept as the home for any future yarn 1.x prune-specific matcher.
 #
 # Input:
 #   $1  path to a log file containing the captured output of the failed yarn prune command
@@ -578,10 +643,14 @@ function package_managers::yarn::_handle_prune_pipefail() {
 # Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
 # the array untouched otherwise. Has no side effects.
 function package_managers::yarn::_handle_yarn_classic_prune_failure() {
-	# shellcheck disable=SC2034 # $1 (log_file) is unused today; kept to match the classifier signature for future matchers
 	local log_file="${1}"
-	# shellcheck disable=SC2178,SC2034 # nameref to the caller's array; unused until a matcher fills it
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
 	local -n __failure="${2}"
+
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if package_managers::yarn::_match_classic_registry_404 "${log_file}" __failure; then
+		return 0
+	fi
 
 	# TODO: classify yarn 1.x prune-specific failures here if any surface (none known today).
 

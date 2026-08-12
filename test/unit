@@ -911,6 +911,52 @@ testHandleYarnInstallNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testMatchClassicRegistry404() {
+  local -A result
+  package_managers::yarn::_match_classic_registry_404 "$(pwd)/test/unit-fixtures/yarn-failures/e404.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Reuses npm's E404 id/classification (package_managers::npm::_handle_npm_install_failure) so
+  # the metric is unified across tools regardless of which one hit the 404.
+  assertEquals "module-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Request failed"
+  assertContains "${result[message]}" "Unable to install dependencies using Yarn"
+}
+
+testMatchClassicRegistry404FlatmapStream() {
+  local -A result
+  package_managers::yarn::_match_classic_registry_404 "$(pwd)/test/unit-fixtures/yarn-failures/flatmap-stream.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "flatmap-stream-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Request failed"
+  assertContains "${result[message]}" "flatmap-stream module has been removed"
+}
+
+testMatchClassicRegistry404NoMatchReturnsNonZero() {
+  local -A result
+  if package_managers::yarn::_match_classic_registry_404 "$(pwd)/test/unit-fixtures/yarn-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleYarnInstall404() {
+  local -A result
+  # Verifies the shared registry-404 matcher is wired into the classic install classifier.
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/e404.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "module-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+}
+
+testHandleYarnInstallFlatmapStream() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/flatmap-stream.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "flatmap-stream-404" "${result[id]}"
+}
+
 testHandleYarnBerryInstallLockfileOutOfSync() {
   local -A result
   package_managers::yarn::_handle_yarn_berry_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/berry-lockfile-out-of-sync.log" result
@@ -1086,11 +1132,21 @@ testPnpmExtractErrorDetailEmptyWhenNoDescriptiveLine() {
   assertEquals "" "$detail"
 }
 
+testHandleYarnClassicPrune404() {
+  local -A result
+  # Verifies the shared registry-404 matcher is also wired into the classic prune classifier, so
+  # a re-fetch during `yarn install --frozen-lockfile` (prune's reinstall) is caught the same way
+  # as a fresh install.
+  package_managers::yarn::_handle_yarn_classic_prune_failure "$(pwd)/test/unit-fixtures/yarn-failures/e404.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "module-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+}
+
 testHandleYarnClassicPruneNoMatchReturnsNonZero() {
   local -A result
-  # No yarn 1.x prune failure mode is classified today; the classifier must always return non-zero
-  # (so the caller bubbles the raw exit code to the legacy trap) and leave the array empty. The
-  # clean fixture stands in for any unrecognised prune output.
+  # The clean fixture matches none of the classifier's failure modes (including the shared
+  # registry-404 matcher), so the classifier must return non-zero and leave the array empty.
   if package_managers::yarn::_handle_yarn_classic_prune_failure "$(pwd)/test/unit-fixtures/yarn-prune-devdependencies-failures/clean.log" result; then
     fail "expected classic prune classifier to return non-zero for an unrecognised log"
   fi
