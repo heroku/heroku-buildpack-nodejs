@@ -103,10 +103,40 @@ function package_managers::npm::rebuild_dependencies() {
 
 	cd "${build_dir}"
 	echo "Rebuilding any native modules"
-	# `npm rebuild` runs unwrapped: its failure surface is native-module compile errors, not
-	# resolution/registry failures, so the npm-install classifier below does not apply. If it
-	# fails, errexit fires and the legacy trap classifies from the shared log.
-	npm rebuild 2>&1
+
+	local native_rebuild_log_file
+	native_rebuild_log_file=$(mktemp)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Shares the classifier chain with the install step below (`_handle_npm_install_failure`) —
+	# a native-module compile failure (e.g. via node-gyp) surfaces through the same npm error
+	# codes as an install failure.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { npm rebuild 2>&1 | tee "${native_rebuild_log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local npm_exit="${pipe_status[0]}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${npm_exit}" -eq 0 ]]; then
+			# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the npm classifier.
+			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif package_managers::npm::_handle_npm_install_failure "${native_rebuild_log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		fi
+
+		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
+		# that runs this rebuild (`build_dependencies | output "$LOG_FILE"`) then fails under
+		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
+		# failure from $LOG_FILE.
+		return "${npm_exit}"
+	fi
 
 	if [[ -e "${build_dir}/npm-shrinkwrap.json" ]]; then
 		echo "Installing any new modules (package.json + shrinkwrap)"
