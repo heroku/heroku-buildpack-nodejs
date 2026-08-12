@@ -78,13 +78,6 @@ log_other_failures() {
 
   # Typescript errors
 
-  # /. means that the error is for a file that's a relative require
-  # Ex: Error: Cannot find module './lib/utils'
-  if grep -q "Error: Cannot find module '\." "$log_file"; then
-    build_data::set_string "failure" "missing-module-local-relative"
-    return 0
-  fi
-
   if grep -qi "econnreset" "$log_file"; then
     build_data::set_string "failure" "econnreset"
     return 0
