@@ -26,7 +26,7 @@ testBuildScriptBehavior() {
 
 testNgBuildScriptWarning() {
   compile "ng-build-script"
-  assertCaptured "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
+  assertCapturedStderr "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
 }
 
 
@@ -219,8 +219,8 @@ testErrorYarnAndPnpmAndNpmLockfiles() {
 
 testWarnNoStart() {
   compile "no-start"
-  assertCaptured "may not specify any way to start"
-  assertCapturedSuccess
+  assertCapturedStderr "may not specify any way to start"
+  assertCapturedSuccessWithWarnings
   compile "no-version"
   assertNotCaptured "may not specify any way to start"
   assertCapturedSuccess
@@ -778,7 +778,7 @@ testPluginInstallationRunTimeNodeScriptWhenLegacyPluginIsRequested() {
   local env_dir=$(mktmpdir)
   echo "true" > $env_dir/HEROKU_LEGACY_NODE_PLUGIN
   compile "node-14" "$(mktmpdir)" $env_dir
-  assertCaptured "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+  assertCapturedStderr "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
 
   # by default $NODE_OPTIONS is unmodified
   executeStartup $env_dir

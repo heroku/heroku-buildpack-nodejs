@@ -457,7 +457,11 @@ function runtimes::nodejs::install_metrics_plugin() {
 		runtimes::nodejs::_install_native_metrics_plugin "${bp_dir}" "${build_dir}" "${major}"
 	else
 		if [[ -n "${HEROKU_LEGACY_NODE_PLUGIN}" ]] && ((major < 21)); then
-			warn "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+			output::warning <<-EOF
+				The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector.
+
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
 			runtimes::nodejs::_install_native_metrics_plugin "${bp_dir}" "${build_dir}" "${major}"
 		else
 			runtimes::nodejs::_install_script_metrics_plugin "${bp_dir}" "${build_dir}"

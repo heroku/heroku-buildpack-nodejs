@@ -20,17 +20,6 @@ function fail() {
 	exit 1
 }
 
-# Prints a non-fatal, advisory warning: a " !     <tip>" line, a doc-link line, and a trailing
-# blank line. Shared by bin/compile and the package-manager libs for issues that should not
-# fail the build.
-function warn() {
-	local tip="${1:-}"
-	local url="${2:-https://devcenter.heroku.com/articles/nodejs-support}"
-	echo " !     ${tip}" || true
-	echo "       ${url}" || true
-	echo ""
-}
-
 # Records a failure in build data, prints its message, and exits the build. This is the only
 # side-effecting layer; its callers — the per-call-site classifiers (e.g.
 # package_managers::npm::_handle_npm_install_failure) and the generic ERR-trap fallback

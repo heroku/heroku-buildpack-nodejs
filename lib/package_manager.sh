@@ -245,7 +245,11 @@ function package_manager::_run_build_if_present() {
 	script=$(utils::json::read "${build_dir}/package.json" ".scripts[\"${script_name}\"]")
 
 	if [[ "${script}" == "ng build" ]]; then
-		warn "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags. See https://devcenter.heroku.com/articles/nodejs-support#build-flags"
+		output::warning <<-EOF
+			"ng build" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags. See https://devcenter.heroku.com/articles/nodejs-support#build-flags
+
+			https://devcenter.heroku.com/articles/nodejs-support
+		EOF
 	fi
 
 	if [[ "${has_script_name}" == "true" ]]; then

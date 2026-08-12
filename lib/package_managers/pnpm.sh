@@ -310,19 +310,20 @@ function package_managers::pnpm::prune_devdependencies() {
 		for project_path in "${project_paths[@]}"; do
 			# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 			if package_managers::pnpm::_has_lifecycle_script "${project_path}/package.json"; then
-				echo "
-! Pruning skipped due to presence of lifecycle scripts
+				output::warning <<-EOF
+					Pruning skipped due to presence of lifecycle scripts
 
-Lifecycle scripts were detected in the \`package.json\` file at \`${project_path}\`. Due to how
-workspace pruning in pnpm operates, it will execute the following lifecycle scripts declared
-in package.json during reinstallation of prod dependencies which can cause build failures:
-- pnpm:devPreinstall
-- preinstall
-- install
-- postinstall
-- prepare
+					Lifecycle scripts were detected in the \`package.json\` file at \`${project_path}\`. Due to how
+					workspace pruning in pnpm operates, it will execute the following lifecycle scripts declared
+					in package.json during reinstallation of prod dependencies which can cause build failures:
+					- pnpm:devPreinstall
+					- preinstall
+					- install
+					- postinstall
+					- prepare
 
-Since pruning can't be done safely for your build, it will be skipped."
+					Since pruning can't be done safely for your build, it will be skipped.
+				EOF
 				build_data::set_raw "skipped_prune" "true"
 				return 0
 			fi
@@ -352,18 +353,22 @@ Since pruning can't be done safely for your build, it will be skipped."
 		|| ((pnpm_major_version == 8 && pnpm_minor_version == 15 && pnpm_patch_version < 6)); then
 		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 		if package_managers::pnpm::_has_lifecycle_script "${build_dir}/package.json"; then
-			warn "Pruning skipped due to presence of lifecycle scripts
+			output::warning <<-EOF
+				Pruning skipped due to presence of lifecycle scripts
 
-       The version of pnpm used (${pnpm_version}) will execute the following lifecycle scripts
-       declared in package.json during pruning which can cause build failures:
-       - pnpm:devPreinstall
-       - preinstall
-       - install
-       - postinstall
-       - prepare
+				The version of pnpm used (${pnpm_version}) will execute the following lifecycle scripts
+				declared in package.json during pruning which can cause build failures:
+				- pnpm:devPreinstall
+				- preinstall
+				- install
+				- postinstall
+				- prepare
 
-       Since pruning can't be done safely for your build, it will be skipped. To fix this you
-       must upgrade your version of pnpm to 8.15.6 or higher."
+				Since pruning can't be done safely for your build, it will be skipped. To fix this you
+				must upgrade your version of pnpm to 8.15.6 or higher.
+
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
 			build_data::set_raw "skipped_prune" "true"
 			return
 		fi
