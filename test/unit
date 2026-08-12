@@ -548,6 +548,27 @@ testHandleGitAuthNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testHandleEconnreset() {
+  local -A result
+  failure::handle_econnreset "$(pwd)/test/unit-fixtures/econnreset-failures/econnreset.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "econnreset" "${result[id]}"
+  assertEquals "upstream" "${result[classification]}"
+  assertContains "${result[message]}" "ECONNRESET"
+}
+
+testHandleEconnresetNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install with no ECONNRESET line; the classifier should not
+  # match and should leave the array empty. Guard the call so set -e (if active) doesn't abort
+  # on the expected non-zero.
+  if failure::handle_econnreset "$(pwd)/test/unit-fixtures/econnreset-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
 testFailuresLibDoesNotLeakShellOptions() {
   # Source the lib in a fresh subshell that does NOT have nounset enabled, and confirm
   # nounset is still off afterwards (i.e. the lib restored our options instead of leaving
@@ -1747,6 +1768,109 @@ testRunScriptCommandClassifiesGitAuthFailure() {
   assertContains "$out" "Unable to install a git dependency over SSH"
   assertContains "$(cat "$capture")" "failure=private-git-dependency-without-auth"
   assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesEconnreset() {
+  # A build-script lifecycle hook can hit an ECONNRESET the same way a fresh install can. Drive
+  # the failure through the real dispatch path (package_managers::npm::run_script ->
+  # package_manager::run_script_command), not the classifier directly, so a reintroduced
+  # nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/econnreset-failures/econnreset.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "ECONNRESET"
+  assertContains "$(cat "$capture")" "failure=econnreset"
+  assertContains "$(cat "$capture")" "failure_classification=upstream"
+  rm -f "$capture"
+}
+
+testInstallDependenciesEconnresetRetryNoiseDoesNotMaskNpmSpecificFailure() {
+  # A build that retries past a transient ECONNRESET and then fails for an unrelated, permanent
+  # reason (npm EBADPLATFORM) must surface the specific npm failure, not "just retry" — the
+  # econnreset classifier is checked last, as a fallback, specifically so retry noise like this
+  # can't shadow a real, permanent failure. Drive it through the real call site
+  # (package_managers::npm::install_dependencies), not the classifier directly, so a
+  # reintroduced ordering regression at this call site would be caught.
+  local fixture build_dir out capture
+  fixture="$(pwd)/test/unit-fixtures/econnreset-failures/retry-noise-with-ebadplatform.log"
+  build_dir=$(mktemp -d)
+  echo '{}' >"${build_dir}/package.json"
+  capture=$(mktemp)
+  out=$(
+    # install_dependencies classifies from PIPESTATUS[0] (npm's exit code), which only survives
+    # the `npm | tee` pipeline under pipefail; enable it here to match bin/compile, which sets
+    # it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_raw() { :; }
+    build_data::set_duration() { :; }
+    build_data::current_unix_realtime() { echo 0; }
+    build_data::set_string() { echo "$1=$2" >>"${capture}"; }
+    npm() {
+      if [[ "$1" == "--version" ]]; then
+        echo "10.0.0"
+        return 0
+      fi
+      cat "${fixture}"
+      return 1
+    }
+    package_managers::npm::install_dependencies "${build_dir}" 2>&1
+  )
+  assertContains "$out" "Unable to install dependencies using npm"
+  assertContains "$(cat "$capture")" "failure=npm-ebadplatform"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  if [[ "$(cat "$capture")" == *"failure=econnreset"* ]]; then
+    fail "transient ECONNRESET retry noise should not shadow the permanent npm-specific failure"
+  fi
+  rm -rf "${build_dir}"
+  rm -f "$capture"
+}
+
+testInstallDependenciesClassifiesTerminalEconnreset() {
+  # A terminal ECONNRESET (retries exhausted, no other error code present) must still be
+  # classified as econnreset even though it is now checked last, as a fallback, after the
+  # npm-specific matcher. Drive it through the real call site
+  # (package_managers::npm::install_dependencies), not the classifier directly; complements
+  # testHandleEconnreset, which stays green as the direct-classifier check.
+  local fixture build_dir out capture
+  fixture="$(pwd)/test/unit-fixtures/econnreset-failures/econnreset.log"
+  build_dir=$(mktemp -d)
+  echo '{}' >"${build_dir}/package.json"
+  capture=$(mktemp)
+  out=$(
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_raw() { :; }
+    build_data::set_duration() { :; }
+    build_data::current_unix_realtime() { echo 0; }
+    build_data::set_string() { echo "$1=$2" >>"${capture}"; }
+    npm() {
+      if [[ "$1" == "--version" ]]; then
+        echo "10.0.0"
+        return 0
+      fi
+      cat "${fixture}"
+      return 1
+    }
+    package_managers::npm::install_dependencies "${build_dir}" 2>&1
+  )
+  assertContains "$out" "ECONNRESET"
+  assertContains "$(cat "$capture")" "failure=econnreset"
+  assertContains "$(cat "$capture")" "failure_classification=upstream"
+  rm -rf "${build_dir}"
   rm -f "$capture"
 }
 

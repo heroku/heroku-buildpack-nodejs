@@ -68,11 +68,6 @@ log_other_failures() {
 
   # Typescript errors
 
-  if grep -qi "econnreset" "$log_file"; then
-    build_data::set_string "failure" "econnreset"
-    return 0
-  fi
-
   if grep -q "ERR_OSSL_EVP_UNSUPPORTED" "$log_file"; then
     local solution
     local help_url

@@ -81,6 +81,12 @@ function package_managers::npm::install_dependencies() {
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# npm-specific matcher above: a transient ECONNRESET retry can appear in the same log
+			# as an unrelated, permanent npm failure, and the specific code should win.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
@@ -139,6 +145,11 @@ function package_managers::npm::rebuild_dependencies() {
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${native_rebuild_log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# npm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
@@ -191,6 +202,10 @@ function package_managers::npm::rebuild_dependencies() {
 			# Shared git+ssh host-key failure classifier — checked before the npm-specific matcher.
 			failure::emit failure
 		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
+			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# Shared network-reset classifier — checked last, as a fallback after the npm-specific
+			# matcher.
 			failure::emit failure
 		fi
 

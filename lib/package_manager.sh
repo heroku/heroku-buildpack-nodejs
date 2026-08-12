@@ -86,6 +86,12 @@ function package_manager::run_script_command() {
 			# install. This is a cross-cutting git-layer failure (every package manager shells out
 			# to git), so it is classified before bubbling to the legacy trap.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A build-script lifecycle hook can hit a network reset the same way the main
+			# install can (e.g. installing something itself, or shelling out to a registry).
+			# This is a cross-cutting network-layer failure, so it is classified before bubbling
+			# to the legacy trap.
+			failure::emit failure
 		fi
 
 		# No other known build-script failure mode is classified at this call site yet (OSSL, OOM,

@@ -134,6 +134,62 @@ function failure::_extract_git_auth_detail() {
 		|| true
 }
 
+# Pure classifier for a network connection reset while communicating with a remote server
+# (ECONNRESET). This is a cross-cutting network-layer failure, not a single package-manager
+# error code: npm, yarn (classic and Berry), and pnpm can all hit it while installing,
+# rebuilding, or pruning dependencies, or while running a build-script lifecycle hook. It is
+# therefore shared across every call site rather than living in a per-manager classifier.
+# Mirrors failure::handle_git_auth_failure. Checked as a LAST-RESORT fallback at every call
+# site — after the site's tool-specific classifier — because a transient ECONNRESET retry can
+# appear in the same log as an unrelated, permanent failure the tool-specific classifier owns.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when a TERMINAL ECONNRESET is recognised (not a retry-warning
+# line); returns 1 and leaves the array untouched otherwise. Has no side effects: it does not
+# write build data, print to the build log, or exit.
+function failure::handle_econnreset() {
+	local log_file="${1}"
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure="${2}"
+
+	# Match only a TERMINAL/fatal ECONNRESET, not the retry-warning noise every tool logs while
+	# it is still retrying a request. A bare `grep -qi "econnreset"` also matches those retry
+	# lines, so a build that retries past a transient reset and then fails for an unrelated,
+	# permanent reason (e.g. npm EBADPLATFORM) would be misclassified as "just retry" instead of
+	# surfacing the real cause.
+	#
+	# Each alternative below is a tool's TERMINAL form, not its retry form:
+	#   - npm: the `npm ERR!`/`npm error` summary line (`code ECONNRESET`, npm <=7/>=8) or its
+	#     `network` block, which only prints once retries are exhausted. Excludes `npm warn` and
+	#     `npm http fetch ... attempt N ...` retry noise (neither is ERR!/error-prefixed).
+	#   - yarn classic: an `error `-prefixed line (the same severity prefix yarn uses for other
+	#     fatal failures; see failure::_extract_git_auth_detail).
+	#   - yarn Berry: a `YN####:` report line (Berry has no separate retry-warning line format
+	#     for a network reset).
+	#   - pnpm: an `ERR_PNPM_*` error code, or a line whose severity marker at the START of the
+	#     line is `ERROR`. Anchoring to the start of the line excludes pnpm's
+	#     `WARN  GET ... error (ECONNRESET), will retry` line, which only has "error" as prose
+	#     inside the message, not as its severity marker.
+	if grep -qiE '^npm (ERR!|error) (code ECONNRESET|network.*ECONNRESET)|^error .*ECONNRESET|YN[0-9]{4}:.*ECONNRESET|ERR_PNPM_[A-Z_]+.*ECONNRESET|^[[:space:]]*ERROR[[:space:]].*ECONNRESET' "${log_file}"; then
+		__failure["id"]="econnreset"
+		__failure["classification"]="upstream"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: A network connection was reset while communicating with a remote server (ECONNRESET).
+
+				This is usually a transient upstream or registry issue — retrying the build often
+				resolves it.
+			EOF
+		)
+		return 0
+	fi
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
+}
+
 # Restore the sourcing shell's original options (see preamble) so strict mode doesn't leak
 # into un-migrated callers. errexit/nounset come from the saved `$-`; pipefail from its own
 # saved `set +o` line.

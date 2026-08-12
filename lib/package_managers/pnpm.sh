@@ -67,6 +67,11 @@ package_managers::pnpm::install_dependencies() {
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# pnpm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
@@ -182,6 +187,11 @@ function package_managers::pnpm::_run_prune() {
 			# hit this — it re-fetches dependencies and can re-trigger a git+ssh host-key failure.
 			# The non-workspace `pnpm prune` path never touches git, so this simply never matches
 			# there.
+			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# Only the workspace reinstall variant can re-fetch dependencies and hit a network
+			# reset the same way a fresh install can; the non-workspace `pnpm prune` path never
+			# hits the network, so this simply never matches there.
 			failure::emit failure
 		fi
 

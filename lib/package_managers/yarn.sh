@@ -185,6 +185,11 @@ function package_managers::yarn::install_dependencies() {
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# yarn-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
@@ -441,6 +446,11 @@ function package_managers::yarn::yarn2_install_dependencies() {
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# Berry-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
@@ -596,6 +606,11 @@ function package_managers::yarn::_prune_classic_devdependencies() {
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# The classic prune path reinstalls with `yarn install --frozen-lockfile`, which can
+			# re-fetch a dependency and hit the same network-reset failure as a fresh install.
+			# Checked last, as a fallback after the yarn-specific matcher above.
 			failure::emit failure
 		fi
 
