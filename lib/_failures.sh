@@ -54,11 +54,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "sh: 1: .*: not found" "$log_file"; then
-    build_data::set_string "failure" "dev-dependency-tool-not-installed"
-    return 0
-  fi
-
   if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "$log_file"; then
     build_data::set_string "failure" "npm-ebadplatform"
     return 0
