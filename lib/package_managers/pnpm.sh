@@ -57,6 +57,11 @@ package_managers::pnpm::install_dependencies() {
 			# pnpm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the pnpm classifier.
 			package_managers::pnpm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it is
+			# classified before the pnpm-specific matcher below.
+			failure::emit failure
 		elif package_managers::pnpm::_handle_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
@@ -141,8 +146,9 @@ function package_managers::pnpm::_handle_prune_pipefail() {
 # prune strategies: the workspace path (`pnpm install --prod --frozen-lockfile`, a production
 # reinstall) and the non-workspace path (`pnpm prune --prod [--ignore-scripts]`). Both record the
 # same `prune_dev_dependencies_time` metric and have the same failure surface — a tee-side pipe
-# failure is buildpack-side; any pnpm tool failure bubbles to the legacy trap — so the two paths
-# differ only in the command, which the caller passes as arguments.
+# failure is buildpack-side, and a git+ssh host-key failure is classified generically (see below);
+# any other pnpm tool failure bubbles to the legacy trap — so the two paths differ only in the
+# command, which the caller passes as arguments.
 function package_managers::pnpm::_run_prune() {
 	local prune_command=("$@")
 
@@ -165,10 +171,18 @@ function package_managers::pnpm::_run_prune() {
 		local pnpm_exit="${pipe_status[0]}"
 		build_data::set_duration "prune_dev_dependencies_time" "${start}"
 
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${pnpm_exit}" -eq 0 ]]; then
 			# pnpm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't blame the app.
 			package_managers::pnpm::_handle_prune_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# Only the workspace reinstall variant (`pnpm install --prod --frozen-lockfile`) can
+			# hit this — it re-fetches dependencies and can re-trigger a git+ssh host-key failure.
+			# The non-workspace `pnpm prune` path never touches git, so this simply never matches
+			# there.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline

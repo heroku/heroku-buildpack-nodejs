@@ -100,11 +100,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "Host key verification failed" "$log_file"; then
-    build_data::set_string "failure" "private-git-dependency-without-auth"
-    return 0
-  fi
-
   if grep -qi "Line \d*:  '.*' is not defined" "$log_file"; then
     build_data::set_string "failure" "undefined-variable-lint"
     return 0

@@ -1,0 +1,10 @@
+npm warn cli npm v11.18.0 does not support Node.js v18.0.0.
+npm error code 128
+npm error An unknown git error occurred
+npm error command git --no-replace-objects ls-remote ssh://git@github.com/acme/private-dep.git
+npm error Host key verification failed.
+npm error fatal: Could not read from remote repository.
+npm error
+npm error Please make sure you have the correct access rights
+npm error and the repository exists.
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-08-10T00_00_00_000Z-debug-0.log

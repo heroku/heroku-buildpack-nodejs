@@ -175,6 +175,11 @@ function package_managers::yarn::install_dependencies() {
 			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the yarn classifier.
 			package_managers::yarn::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it
+			# is classified before the yarn-specific matcher below.
+			failure::emit failure
 		elif package_managers::yarn::_handle_yarn_classic_install_failure "${log_file}" failure "${yarn_version}"; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
@@ -361,6 +366,11 @@ function package_managers::yarn::yarn2_install_dependencies() {
 			# disk). Buildpack-side, so don't run it through the Berry classifier. Reuses the
 			# shared yarn pipefail wrapper — the user-facing wording covers both yarn 1 and Berry.
 			package_managers::yarn::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it
+			# is classified before the Berry-specific matcher below.
+			failure::emit failure
 		elif package_managers::yarn::_handle_yarn_berry_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
@@ -513,6 +523,10 @@ function package_managers::yarn::_prune_classic_devdependencies() {
 			# yarn succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the prune classifier.
 			package_managers::yarn::_handle_prune_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# The classic prune path reinstalls with `yarn install --frozen-lockfile`, which can
+			# re-fetch a git+ssh dependency and hit the same host-key failure as a fresh install.
+			failure::emit failure
 		elif package_managers::yarn::_handle_yarn_classic_prune_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a

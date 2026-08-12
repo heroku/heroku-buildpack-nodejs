@@ -71,6 +71,11 @@ function package_managers::npm::install_dependencies() {
 			# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the npm classifier.
 			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it is
+			# classified before the npm-specific matcher below.
+			failure::emit failure
 		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
@@ -124,6 +129,11 @@ function package_managers::npm::rebuild_dependencies() {
 			# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the npm classifier.
 			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${native_rebuild_log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it is
+			# classified before the npm-specific matcher below.
+			failure::emit failure
 		elif package_managers::npm::_handle_npm_install_failure "${native_rebuild_log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
@@ -177,6 +187,9 @@ function package_managers::npm::rebuild_dependencies() {
 		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${npm_exit}" -eq 0 ]]; then
 			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# Shared git+ssh host-key failure classifier — checked before the npm-specific matcher.
+			failure::emit failure
 		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
 			failure::emit failure
 		fi
