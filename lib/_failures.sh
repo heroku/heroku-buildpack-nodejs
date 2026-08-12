@@ -76,11 +76,6 @@ log_other_failures() {
 
   # Webpack Errors
 
-  if grep -qi "Module not found: Error: Can't resolve" "$log_file"; then
-    build_data::set_string "failure" "webpack-module-not-found"
-    return 0
-  fi
-
   # Typescript errors
 
   if grep -qi "Property '.*' does not exist on type '.*'" "$log_file"; then
