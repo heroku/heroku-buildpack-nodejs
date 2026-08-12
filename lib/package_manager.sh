@@ -104,11 +104,10 @@ function package_manager::run_script_command() {
 			failure::emit failure
 		fi
 
-		# No other known build-script failure mode is classified at this call site yet (OOM and
-		# the other build-script matchers still live in the legacy `log_other_failures` trap,
-		# which classifies from $LOG_FILE). Bubble the tool's exit code so the pipeline that runs
-		# this script fails under errexit/pipefail, the legacy ERR trap fires, and it classifies
-		# the failure — instead of masking it with a generic message.
+		# No known failure mode recognised. Bubble up the tool's exit code so the pipeline that
+		# runs this script fails under errexit/pipefail, the legacy ERR trap fires, and
+		# `log_other_failures` classifies it from $LOG_FILE — covering the failure modes not yet
+		# migrated here, instead of masking them with a generic message.
 		return "${tool_exit}"
 	fi
 }
@@ -188,6 +187,35 @@ that uses deprecated or unsupported cryptographic algorithms to use modern, secu
 			__failure["message"]="${__failure["message"]}
 ${help_url}"
 		fi
+		return 0
+	fi
+
+	# Node.js heap exhaustion — most commonly hit during asset-bundler steps (Webpack, Vite,
+	# Rollup) running with excessive concurrency for the dyno's available memory.
+	if grep -q "JavaScript heap out of memory" "${log_file}"; then
+		__failure["id"]="node-out-of-memory"
+		__failure["classification"]="user"
+		__failure["message"]=$(
+			cat <<-EOF
+				Node.js Out-Of-Memory (OOM)
+
+				This error can occur due to several reasons (large data handling, memory leaks, etc.) but the most
+				common reason during a build is excessive concurrent operations from asset bundlers like
+				Webpack, Vite, or Rollup. Your asset bundler configuration may include plugins to perform tasks such
+				as minification or compilation using multiple parallel processes. In containerized environments,
+				default settings for these tools may not be appropriate.
+
+				If you are getting this error during asset compilation, check which plugins you have enabled and
+				consult their documentation for configuration related to concurrent or parallel operations and
+				either disable or set lower limits.
+
+				As a temporary workaround, it's also possible to increase the memory limits of your Node.js process
+				by prepending \`NODE_OPTIONS="--max-old-space-size=VALUE_IN_MB"\` to the failing script.
+				For example, \`NODE_OPTIONS="--max-old-space-size=4096"\` would set a limit of 4GB. This should
+				be done with caution as it doesn't solve the underlying issue of why this build requires higher
+				memory limits.
+			EOF
+		)
 		return 0
 	fi
 

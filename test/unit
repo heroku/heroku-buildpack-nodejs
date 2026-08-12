@@ -618,6 +618,17 @@ testHandleBuildScriptFailureOpensslUnsupportedAlgorithmWebpack() {
   assertContains "${result[message]}" "https://webpack.js.org/configuration/output/#outputhashfunction"
 }
 
+testHandleBuildScriptFailureNodeOutOfMemory() {
+  local -A result
+  package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/node-out-of-memory.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "node-out-of-memory" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Node.js Out-Of-Memory (OOM)"
+  assertContains "${result[message]}" "NODE_OPTIONS=\"--max-old-space-size=VALUE_IN_MB\""
+}
+
 testHandleBuildScriptFailureNoMatchReturnsNonZero() {
   local -A result
   # `clean.log` is a successful build with no OSSL error; the classifier should not match and
@@ -2003,6 +2014,29 @@ testRunScriptCommandClassifiesOpensslUnsupportedAlgorithmWebpack() {
   )
   assertContains "$out" "output.hashFunction"
   assertContains "$(cat "$capture")" "failure=openssl-unsupported-algorithm-webpack"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesNodeOutOfMemory() {
+  # The build script (e.g. asset bundling via Webpack/Vite/Rollup) can exhaust the Node.js heap.
+  # Drive the failure through the real dispatch path (package_managers::npm::run_script ->
+  # package_manager::run_script_command), not the classifier directly, so a reintroduced
+  # nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/build-script-failures/node-out-of-memory.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Node.js Out-Of-Memory (OOM)"
+  assertContains "$(cat "$capture")" "failure=node-out-of-memory"
   assertContains "$(cat "$capture")" "failure_classification=user"
   rm -f "$capture"
 }
