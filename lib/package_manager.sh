@@ -55,8 +55,8 @@ function package_manager::list_dependencies() {
 # output for classification. This is the shared execution + failure-routing layer for all
 # package managers (the per-PM modules only spell the command). Cross-cutting failures
 # (git-auth, econnreset, libc6 incompatibility) and build-script-specific failures (e.g. the
-# OpenSSL unsupported-algorithm error) are classified here; any other failure bubbles up so the
-# legacy ERR trap's `log_other_failures` classifies it from $LOG_FILE.
+# OpenSSL unsupported-algorithm error) are classified here; any other failure bubbles up to the
+# generic failure::handle_uncaught ERR trap, which records failure=internal-error.
 function package_manager::run_script_command() {
 	local command=("$@")
 
@@ -84,7 +84,7 @@ function package_manager::run_script_command() {
 			# A heroku-prebuild/build/heroku-postbuild/heroku-cleanup script can shell out to git
 			# for a git+ssh:// dependency and hit the same SSH host-key failure as the main
 			# install. This is a cross-cutting git-layer failure (every package manager shells out
-			# to git), so it is classified before bubbling to the legacy trap.
+			# to git), so it is classified before bubbling to the generic ERR-trap fallback.
 			failure::emit failure
 		elif package_manager::_handle_build_script_failure "${log_file}" failure; then
 			# Build-script-specific failures (not tied to a particular package manager, since the
@@ -105,9 +105,9 @@ function package_manager::run_script_command() {
 		fi
 
 		# No known failure mode recognised. Bubble up the tool's exit code so the pipeline that
-		# runs this script fails under errexit/pipefail, the legacy ERR trap fires, and
-		# `log_other_failures` classifies it from $LOG_FILE — covering the failure modes not yet
-		# migrated here, instead of masking them with a generic message.
+		# runs this script fails under errexit/pipefail and the generic failure::handle_uncaught
+		# ERR trap records it as failure=internal-error — covering the failure modes not yet
+		# migrated here.
 		return "${tool_exit}"
 	fi
 }

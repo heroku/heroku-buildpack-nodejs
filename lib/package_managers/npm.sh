@@ -96,9 +96,9 @@ function package_managers::npm::install_dependencies() {
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the codes (ERESOLVE, ETARGET, ENOSPC, …) not yet
-		# migrated here, instead of masking them with a generic message.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — covering the codes (ERESOLVE, ETARGET, ENOSPC, …) not yet
+		# migrated here.
 		return "${npm_exit}"
 	fi
 
@@ -164,8 +164,8 @@ function package_managers::npm::rebuild_dependencies() {
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
 		# that runs this rebuild (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error.
 		return "${npm_exit}"
 	fi
 
@@ -556,7 +556,7 @@ function package_managers::npm::_handle_npm_install_failure() {
 	# npm ENOENT code — stable npm v3–v12 (lib/utils/error-message.js). npm sets this when it
 	# cannot find a file or path referenced during install — most often a local file: dependency
 	# or a script path in package.json that does not exist in the deployed source. App-controlled,
-	# so classified as a user error. The legacy log_other_failures matcher keyed off the `enoent
+	# so classified as a user error. The removed legacy fallback keyed off the `enoent
 	# ENOENT: no such file or directory` summary line; here we key off the `code ENOENT` summary
 	# line for consistency with the sibling code-based matchers above. Covers install and rebuild
 	# (both share this classifier).
@@ -793,8 +793,8 @@ function package_managers::npm::prune_devdependencies() {
 
 			# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
 			# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
-			# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-			# failure — there is no migrated npm-prune tool-error classifier to add here yet.
+			# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+			# failure=internal-error — there is no migrated npm-prune tool-error classifier to add here yet.
 			return "${npm_exit}"
 		fi
 

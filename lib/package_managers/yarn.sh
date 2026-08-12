@@ -199,9 +199,8 @@ function package_managers::yarn::install_dependencies() {
 
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the yarn 1.x cases still matched there, instead of
-		# masking them with a generic message.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — covering the yarn 1.x cases not yet migrated here.
 		return "${yarn_exit}"
 	fi
 
@@ -330,8 +329,8 @@ function package_managers::yarn::_handle_yarn_classic_install_failure() {
 		return 0
 	fi
 
-	# TODO: classify additional yarn 1.x failures still matched by the legacy trap's
-	# `log_other_failures` in a follow-up migration.
+	# TODO: classify additional yarn 1.x failures that currently fall through to the generic
+	# failure::handle_uncaught ERR trap (recorded as failure=internal-error) in a follow-up migration.
 
 	# No known failure mode recognised — signal no match so the caller can fall through.
 	return 1
@@ -465,9 +464,9 @@ function package_managers::yarn::yarn2_install_dependencies() {
 
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the Berry YN codes (e.g. YN0001, YN0018) not yet
-		# migrated here, instead of masking them with a generic message.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — covering the Berry YN codes (e.g. YN0001, YN0018) not yet
+		# migrated here.
 		return "${yarn_exit}"
 	fi
 
@@ -522,7 +521,7 @@ function package_managers::yarn::_handle_yarn_berry_install_failure() {
 		return 0
 	fi
 
-	# TODO: classify additional Berry YN codes currently handled by the legacy trap in
+	# TODO: classify additional Berry YN codes currently handled by the generic ERR-trap fallback in
 	# follow-up migrations (e.g. YN0001 internal error, YN0018 checksum mismatch).
 
 	# No known failure mode recognised — signal no match so the caller can fall through.
@@ -631,10 +630,8 @@ function package_managers::yarn::_prune_classic_devdependencies() {
 
 		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the
 		# pipeline that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails
-		# under errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies
-		# the failure from $LOG_FILE — today unrecognised prune failures fall through to its
-		# `unknown-prune-dependencies-error` catch-all, instead of being masked with a generic
-		# message.
+		# under errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — no migrated yarn-prune tool-error classifier exists here yet.
 		return "${yarn_exit}"
 	fi
 
@@ -744,10 +741,8 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 
 		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the
 		# pipeline that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails
-		# under errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies
-		# the failure from $LOG_FILE — today unrecognised prune failures fall through to its
-		# `unknown-prune-dependencies-error` catch-all, instead of being masked with a generic
-		# message.
+		# under errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — no migrated yarn-prune tool-error classifier exists here yet.
 		return "${yarn_exit}"
 	fi
 
@@ -764,7 +759,7 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 # Pure classifier for yarn 2+ (Berry) devDependency-prune failures. Yarn 1.x (classic) has a
 # separate prune path (`_prune_classic_devdependencies`) with its own classifier. No prune-specific
 # failure mode is recognised today. This stub always returns 1 so the caller bubbles the raw exit
-# code to the legacy trap; it is kept for symmetry with the Berry install classifier and as the
+# code to the generic ERR-trap fallback; it is kept for symmetry with the Berry install classifier and as the
 # home for any future Berry prune matcher.
 #
 # Input:

@@ -81,9 +81,8 @@ package_managers::pnpm::install_dependencies() {
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the pnpm codes not yet migrated here, instead of
-		# masking them with a generic message.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — covering the pnpm codes not yet migrated here.
 		return "${pnpm_exit}"
 	fi
 
@@ -157,7 +156,7 @@ function package_managers::pnpm::_handle_prune_pipefail() {
 # reinstall) and the non-workspace path (`pnpm prune --prod [--ignore-scripts]`). Both record the
 # same `prune_dev_dependencies_time` metric and have the same failure surface — a tee-side pipe
 # failure is buildpack-side, and a git+ssh host-key failure is classified generically (see below);
-# any other pnpm tool failure bubbles to the legacy trap — so the two paths differ only in the
+# any other pnpm tool failure bubbles to the generic ERR-trap fallback — so the two paths differ only in the
 # command, which the caller passes as arguments.
 function package_managers::pnpm::_run_prune() {
 	local prune_command=("$@")
@@ -207,8 +206,8 @@ function package_managers::pnpm::_run_prune() {
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
 		# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure — there is no migrated pnpm-prune tool-error classifier to add here yet.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — there is no migrated pnpm-prune tool-error classifier to add here yet.
 		return "${pnpm_exit}"
 	fi
 

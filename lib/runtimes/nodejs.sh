@@ -42,8 +42,8 @@ function runtimes::nodejs::install() {
 		local install_exit="${PIPESTATUS[0]}"
 		build_data::set_duration "install_node_binary_time" "${start}"
 
-		# Nothing emitted a classified failure. Bubble up so the legacy ERR trap reports it as a
-		# generic internal error while matchers not yet migrated here still get handled.
+		# Nothing emitted a classified failure. Bubble up so the generic ERR-trap fallback (failure::handle_uncaught) reports it as a
+		# generic internal error for observability.
 		return "${install_exit}"
 	fi
 
