@@ -87,6 +87,11 @@ function package_managers::npm::install_dependencies() {
 			# npm-specific matcher above: a transient ECONNRESET retry can appear in the same log
 			# as an unrelated, permanent npm failure, and the specific code should win.
 			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not an npm error code). Checked last, as a
+			# fallback after the npm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
@@ -150,6 +155,11 @@ function package_managers::npm::rebuild_dependencies() {
 			# (every package manager can hit it). Checked last, as a fallback after the
 			# npm-specific matcher above.
 			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${native_rebuild_log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not an npm error code). Checked last, as a
+			# fallback after the npm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
@@ -206,6 +216,10 @@ function package_managers::npm::rebuild_dependencies() {
 		elif failure::handle_econnreset "${log_file}" failure; then
 			# Shared network-reset classifier — checked last, as a fallback after the npm-specific
 			# matcher.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# Shared glibc-incompatibility classifier — checked last, as a fallback after the
+			# npm-specific matcher.
 			failure::emit failure
 		fi
 

@@ -190,6 +190,48 @@ function failure::handle_econnreset() {
 	return 1
 }
 
+# Pure classifier for a Node.js binary that is not compatible with the current stack's glibc
+# (the dynamic linker reports a missing `GLIBC_x.y` version). This is a cross-cutting
+# runtime-layer failure, not a single package-manager error code: it can surface from any
+# package manager's install/rebuild/prune, or from a build-script lifecycle hook, since it's
+# the Node.js binary itself (not the package manager) that fails to even start. It is therefore
+# shared across every call site rather than living in a per-manager classifier. Mirrors
+# failure::handle_git_auth_failure.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed command
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when the glibc incompatibility is recognised; returns 1 and
+# leaves the array untouched otherwise. Has no side effects: it does not write build data,
+# print to the build log, or exit.
+function failure::handle_libc6_incompatibility() {
+	local log_file="${1}"
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure="${2}"
+
+	# Preserve the legacy `libc6-incompatibility` build-data id and message verbatim for
+	# observability and user-facing continuity.
+	if grep -qP "version \`GLIBC_\d+\.\d+' not found" "${log_file}"; then
+		__failure["id"]="libc6-incompatibility"
+		__failure["classification"]="user"
+		__failure["message"]=$(
+			cat <<-EOF
+				This Node.js version is not compatible with the current stack.
+
+				For Node.js versions 18 and greater, heroku-22 or newer is required.
+				Consider updating to a stack that is compatible with the Node.js version
+				or pinning the Node.js version to be compatible with the current
+				stack.
+				https://help.heroku.com/R7DTSTD0
+			EOF
+		)
+		return 0
+	fi
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
+}
+
 # Restore the sourcing shell's original options (see preamble) so strict mode doesn't leak
 # into un-migrated callers. errexit/nounset come from the saved `$-`; pipefail from its own
 # saved `set +o` line.

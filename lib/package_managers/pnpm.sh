@@ -72,6 +72,11 @@ package_managers::pnpm::install_dependencies() {
 			# (every package manager can hit it). Checked last, as a fallback after the
 			# pnpm-specific matcher above.
 			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not a pnpm error code). Checked last, as a
+			# fallback after the pnpm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
@@ -192,6 +197,11 @@ function package_managers::pnpm::_run_prune() {
 			# Only the workspace reinstall variant can re-fetch dependencies and hit a network
 			# reset the same way a fresh install can; the non-workspace `pnpm prune` path never
 			# hits the network, so this simply never matches there.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. Unlike the
+			# git-auth/econnreset checks above, this can surface on either prune path (it's the
+			# Node.js binary invoked by pnpm that fails to start, not a re-fetch).
 			failure::emit failure
 		fi
 

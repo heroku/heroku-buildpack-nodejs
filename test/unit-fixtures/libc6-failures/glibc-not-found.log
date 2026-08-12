@@ -1,0 +1,1 @@
+/app/.heroku/node/bin/node: /lib/x86_64-linux-gnu/libc.so.6: version `GLIBC_2.28' not found (required by /app/.heroku/node/bin/node)

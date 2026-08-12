@@ -190,6 +190,11 @@ function package_managers::yarn::install_dependencies() {
 			# (every package manager can hit it). Checked last, as a fallback after the
 			# yarn-specific matcher above.
 			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not a yarn error code). Checked last, as a
+			# fallback after the yarn-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
@@ -451,6 +456,11 @@ function package_managers::yarn::yarn2_install_dependencies() {
 			# (every package manager can hit it). Checked last, as a fallback after the
 			# Berry-specific matcher above.
 			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not a yarn error code). Checked last, as a
+			# fallback after the Berry-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
@@ -611,6 +621,11 @@ function package_managers::yarn::_prune_classic_devdependencies() {
 			# The classic prune path reinstalls with `yarn install --frozen-lockfile`, which can
 			# re-fetch a dependency and hit the same network-reset failure as a fresh install.
 			# Checked last, as a fallback after the yarn-specific matcher above.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not a yarn error code). Checked last, as a
+			# fallback after the yarn-specific matcher above.
 			failure::emit failure
 		fi
 

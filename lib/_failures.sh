@@ -42,18 +42,6 @@ failure_message() {
 log_other_failures() {
   local log_file="$1"
 
-  if grep -qP "version \`GLIBC_\d+\.\d+' not found" "$log_file"; then
-    build_data::set_string "failure" "libc6-incompatibility"
-    warn "This Node.js version is not compatible with the current stack.
-
-       For Node.js versions 18 and greater, heroku-22 or newer is required.
-       Consider updating to a stack that is compatible with the Node.js version
-       or pinning the Node.js version to be compatible with the current
-       stack." https://help.heroku.com/R7DTSTD0
-
-    return 0
-  fi
-
   if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "$log_file"; then
     build_data::set_string "failure" "npm-ebadplatform"
     return 0

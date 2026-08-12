@@ -92,6 +92,11 @@ function package_manager::run_script_command() {
 			# This is a cross-cutting network-layer failure, so it is classified before bubbling
 			# to the legacy trap.
 			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure, so it is classified before bubbling to the
+			# legacy trap.
+			failure::emit failure
 		fi
 
 		# No other known build-script failure mode is classified at this call site yet (OSSL, OOM,
