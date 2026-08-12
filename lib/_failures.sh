@@ -142,13 +142,6 @@ log_other_failures() {
     return 0
   fi
 
-  # [^/C] means that the error is not for a file expected to be found on a C: drive
-  # Ex: Error: Cannot find module 'C:\Users...'
-  if grep -q "Error: Cannot find module 'C:" "$log_file"; then
-    build_data::set_string "failure" "missing-module-local-windows"
-    return 0
-  fi
-
   if grep -qi "econnreset" "$log_file"; then
     build_data::set_string "failure" "econnreset"
     return 0
