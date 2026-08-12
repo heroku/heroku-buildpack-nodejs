@@ -78,13 +78,6 @@ log_other_failures() {
 
   # Typescript errors
 
-  # [^/C] means that the error is not for a file expected to be within the project
-  # Ex: Error: Cannot find module 'chalk'
-  if grep -q "Error: Cannot find module '[^/C\.]" "$log_file"; then
-    build_data::set_string "failure" "missing-module-npm"
-    return 0
-  fi
-
   # / means that the error is for a file expected within the local project
   # Ex: Error: Cannot find module '/tmp/build_{hash}/...'
   if grep -q "Error: Cannot find module '/" "$log_file"; then
