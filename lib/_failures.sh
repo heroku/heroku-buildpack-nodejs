@@ -78,11 +78,6 @@ log_other_failures() {
 
   # Typescript errors
 
-  if grep -qi "error TS2307: Cannot find module '.*'" "$log_file"; then
-    build_data::set_string "failure" "typescript-missing-module"
-    return 0
-  fi
-
   if grep -qi "error TS2688: Cannot find type definition file for '.*'" "$log_file"; then
     build_data::set_string "failure" "typescript-missing-type-definition"
     return 0
