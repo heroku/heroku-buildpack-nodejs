@@ -53,10 +53,10 @@ function package_manager::list_dependencies() {
 
 # Runs a lifecycle-script command built by a package-manager module, capturing its merged
 # output for classification. This is the shared execution + failure-routing layer for all
-# package managers (the per-PM modules only spell the command). The captured log is where a
-# future call-site classifier will inspect known build-script failures (e.g. the OpenSSL
-# unsupported-algorithm error); today the only handled case is a pipe failure, and every other
-# failure bubbles up so the legacy ERR trap's `log_other_failures` classifies it from $LOG_FILE.
+# package managers (the per-PM modules only spell the command). Cross-cutting failures
+# (git-auth, econnreset, libc6 incompatibility) and build-script-specific failures (e.g. the
+# OpenSSL unsupported-algorithm error) are classified here; any other failure bubbles up so the
+# legacy ERR trap's `log_other_failures` classifies it from $LOG_FILE.
 function package_manager::run_script_command() {
 	local command=("$@")
 
@@ -86,21 +86,26 @@ function package_manager::run_script_command() {
 			# install. This is a cross-cutting git-layer failure (every package manager shells out
 			# to git), so it is classified before bubbling to the legacy trap.
 			failure::emit failure
+		elif package_manager::_handle_build_script_failure "${log_file}" failure; then
+			# Build-script-specific failures (not tied to a particular package manager, since the
+			# command run here is the app's own script). Checked before the cross-cutting network
+			# and runtime fallbacks below so a specific build-script cause wins.
+			failure::emit failure
 		elif failure::handle_econnreset "${log_file}" failure; then
 			# A build-script lifecycle hook can hit a network reset the same way the main
 			# install can (e.g. installing something itself, or shelling out to a registry).
-			# This is a cross-cutting network-layer failure, so it is classified before bubbling
-			# to the legacy trap.
+			# This is a cross-cutting network-layer failure; checked last, as a fallback after
+			# the build-script-specific matcher above.
 			failure::emit failure
 		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
 			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
-			# cross-cutting runtime-layer failure, so it is classified before bubbling to the
-			# legacy trap.
+			# cross-cutting runtime-layer failure; checked last, as a fallback after the
+			# build-script-specific matcher above.
 			failure::emit failure
 		fi
 
-		# No other known build-script failure mode is classified at this call site yet (OSSL, OOM,
-		# and the other build-script matchers still live in the legacy `log_other_failures` trap,
+		# No other known build-script failure mode is classified at this call site yet (OOM and
+		# the other build-script matchers still live in the legacy `log_other_failures` trap,
 		# which classifies from $LOG_FILE). Bubble the tool's exit code so the pipeline that runs
 		# this script fails under errexit/pipefail, the legacy ERR trap fires, and it classifies
 		# the failure — instead of masking it with a generic message.
@@ -125,6 +130,69 @@ function package_manager::_handle_script_pipefail() {
 		EOF
 	)
 	failure::handle_pipefail "build-script-pipefail" "${pipe_status_str}" "${message}"
+}
+
+# Pure classifier for build-script failures that aren't tied to a particular package manager —
+# the command run at this call site is the app's own heroku-prebuild/build/heroku-postbuild/
+# heroku-cleanup script, so these matchers key on Node.js/tool-level signals rather than a
+# package-manager error code.
+#
+# Input:
+#   $1  path to a log file containing the captured output of the failed script
+#   $2  name of an associative array to fill (see failure::emit for its fields)
+# Returns 0 and fills the array when a known failure mode is recognised; returns 1 and leaves
+# the array untouched otherwise. Has no side effects: it does not write build data, print to
+# the build log, or exit.
+function package_manager::_handle_build_script_failure() {
+	local log_file="${1}"
+	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
+	local -n __failure="${2}"
+
+	# ERR_OSSL_EVP_UNSUPPORTED — thrown by OpenSSL 3 (Node.js >=17, statically linked) when app
+	# or dependency code uses a cryptographic algorithm/digest OpenSSL 3 no longer supports by
+	# default.
+	if grep -q "ERR_OSSL_EVP_UNSUPPORTED" "${log_file}"; then
+		local solution help_url=""
+
+		# Webpack's default chunk/module id hash function is one such unsupported algorithm, so
+		# this more specific case gets its own id and fix.
+		if grep -q "\[webpack-cli\] Error" "${log_file}"; then
+			__failure["id"]="openssl-unsupported-algorithm-webpack"
+			solution="If this app uses Webpack 5.54.0+, you can change the Webpack configuration to use a different
+\`output.hashFunction\` like \`xxhash64\`. Older versions of Webpack should configure a custom
+\`output.hashFunction\` that uses supported cryptographic algorithms."
+			help_url="https://webpack.js.org/configuration/output/#outputhashfunction"
+		else
+			__failure["id"]="openssl-unsupported-algorithm"
+			solution="To fix this, update any dependencies that may be causing the issue and identify and update application code
+that uses deprecated or unsupported cryptographic algorithms to use modern, secure alternatives."
+		fi
+
+		__failure["classification"]="user"
+		__failure["message"]=$(
+			cat <<-EOF
+				Unsupported cryptographic algorithm used
+
+				This error frequently occurs in apps upgrading from older versions of Node.js (<17.x) which is statically
+				compiled against OpenSSL v1 to newer versions of Node.js (>=17.x) which is statically compiled against
+				OpenSSL v3.
+
+				${solution}
+
+				If this is not possible, a temporary workaround can be done by setting a config var that re-enables support
+				for legacy algorithms using \`heroku config set NODE_OPTIONS=--openssl-legacy-provider\`. Please note, this
+				is not recommended for production environments.
+			EOF
+		)
+		if [[ -n "${help_url}" ]]; then
+			__failure["message"]="${__failure["message"]}
+${help_url}"
+		fi
+		return 0
+	fi
+
+	# No known failure mode recognised — signal no match so the caller can fall through.
+	return 1
 }
 
 function package_manager::_run_if_present() {

@@ -591,6 +591,44 @@ testHandleLibc6IncompatibilityNoMatchReturnsNonZero() {
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
+testHandleBuildScriptFailureOpensslUnsupportedAlgorithm() {
+  local -A result
+  package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "openssl-unsupported-algorithm" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Unsupported cryptographic algorithm used"
+  assertContains "${result[message]}" "update any dependencies that may be causing the issue"
+  assertContains "${result[message]}" "NODE_OPTIONS=--openssl-legacy-provider"
+  if [[ "${result[message]}" == *"webpack"* ]]; then
+    fail "base OSSL message should not mention Webpack"
+  fi
+}
+
+testHandleBuildScriptFailureOpensslUnsupportedAlgorithmWebpack() {
+  local -A result
+  package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm-webpack.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "openssl-unsupported-algorithm-webpack" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Unsupported cryptographic algorithm used"
+  assertContains "${result[message]}" "output.hashFunction"
+  assertContains "${result[message]}" "https://webpack.js.org/configuration/output/#outputhashfunction"
+}
+
+testHandleBuildScriptFailureNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful build with no OSSL error; the classifier should not match and
+  # should leave the array empty. Guard the call so set -e (if active) doesn't abort on the
+  # expected non-zero.
+  if package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
 testFailuresLibDoesNotLeakShellOptions() {
   # Source the lib in a fresh subshell that does NOT have nounset enabled, and confirm
   # nounset is still off afterwards (i.e. the lib restored our options instead of leaving
@@ -1919,6 +1957,52 @@ testRunScriptCommandClassifiesLibc6Incompatibility() {
   )
   assertContains "$out" "This Node.js version is not compatible with the current stack."
   assertContains "$(cat "$capture")" "failure=libc6-incompatibility"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesOpensslUnsupportedAlgorithm() {
+  # The build script (e.g. `node build.js`) can hit OpenSSL 3's dropped support for an
+  # algorithm/digest. Drive the failure through the real dispatch path
+  # (package_managers::npm::run_script -> package_manager::run_script_command), not the
+  # classifier directly, so a reintroduced nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Unsupported cryptographic algorithm used"
+  assertContains "$(cat "$capture")" "failure=openssl-unsupported-algorithm"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesOpensslUnsupportedAlgorithmWebpack() {
+  # The webpack-cli sub-case gets a more specific id and fix instructions.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm-webpack.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "output.hashFunction"
+  assertContains "$(cat "$capture")" "failure=openssl-unsupported-algorithm-webpack"
   assertContains "$(cat "$capture")" "failure_classification=user"
   rm -f "$capture"
 }
