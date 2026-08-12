@@ -69,11 +69,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "console.error(\`a bug known to break npm" "$log_file"; then
-    build_data::set_string "failure" "old-node-new-npm"
-    return 0
-  fi
-
   if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
     build_data::set_string "failure" "build-out-of-memory-error"
     return 0
