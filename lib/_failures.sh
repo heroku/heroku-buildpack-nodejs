@@ -99,11 +99,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "sass-loader/lib/loader.js:3:14" "$log_file"; then
-    build_data::set_string "failure" "webpack-sass-loader-error"
-    return 0
-  fi
-
   # Typescript errors
 
   if grep -qi "Property '.*' does not exist on type '.*'" "$log_file"; then
