@@ -64,11 +64,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "Cannot read property '0' of undefined" "$log_file"; then
-    build_data::set_string "failure" "npm-property-zero-issue"
-    return 0
-  fi
-
   if grep -qi "npm is known not to run on Node.js v\d.\d.\d" "$log_file"; then
     build_data::set_string "failure" "npm-known-bad-version"
     return 0
