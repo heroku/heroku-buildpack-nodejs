@@ -59,11 +59,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
-    build_data::set_string "failure" "build-out-of-memory-error"
-    return 0
-  fi
-
   if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
     build_data::set_string "failure" "uglifyjs"
     return 0
