@@ -64,11 +64,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "You are likely using a version of node-tar or npm that is incompatible with this version of Node.js" "$log_file"; then
-    build_data::set_string "failure" "node-9-npm-issue"
-    return 0
-  fi
-
   if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
     build_data::set_string "failure" "build-out-of-memory-error"
     return 0
