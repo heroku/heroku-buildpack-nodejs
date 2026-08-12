@@ -12,9 +12,10 @@ __failures_saved_flags="$-"
 __failures_saved_pipefail="$(set +o | grep pipefail)"
 set -euo pipefail
 
-# Records a classified failure in build data, prints its message, and exits the build. This is
-# the only side-effecting layer; classifiers (e.g. package_managers::npm::_handle_npm_install_failure) stay pure
-# by filling an associative array that is passed here by name.
+# Records a failure in build data, prints its message, and exits the build. This is the only
+# side-effecting layer; its callers — the per-call-site classifiers (e.g.
+# package_managers::npm::_handle_npm_install_failure) and the generic ERR-trap fallback
+# failure::handle_uncaught — stay pure by filling an associative array that is passed here by name.
 #
 # The named array may define:
 #   [id]              build_data `failure` value          (required)
@@ -79,32 +80,30 @@ function failure::handle_uncaught() {
 		done
 	)
 
-	header "Build failed"
-	output::error <<-EOF
-		An unexpected error occurred while building your app.
-
-		Review the build log above for the cause. If this looks like a bug in the
-		buildpack rather than your app, open a support ticket:
-		https://help.heroku.com/
-
-		Failing command:
-		${failing_command}
-
-		Stack trace:
-		${stack_trace}
-	EOF
-
-	# Record a generic failure reason for observability. The classification is intentionally left
+	# Route through `failure::emit` like every other failure path so the message, build-data
+	# writes, marker, and exit all happen in one place. The classification is intentionally left
 	# unset: this handler fires for any unclassified failure, so we can't attribute it to the
 	# user, the buildpack, or upstream.
-	build_data::set_string "failure" "internal-error"
-	build_data::set_string "failure_detail" "${failing_command}"
+	local -A failure=(
+		[id]="internal-error"
+		[detail]="${failing_command}"
+		[message]=$(
+			cat <<-EOF
+				An unexpected error occurred while building your app.
 
-	# Write the marker then call `fail`, exactly like `failure::emit`, so `build_time` is recorded
-	# on every failure path and the build always exits non-zero.
-	[[ -n "${FAILURE_EMITTED_MARKER:-}" ]] && : >"${FAILURE_EMITTED_MARKER}"
+				Review the build log above for the cause. If this looks like a bug in the
+				buildpack rather than your app, open a support ticket:
+				https://help.heroku.com/
 
-	fail
+				Failing command:
+				${failing_command}
+
+				Stack trace:
+				${stack_trace}
+			EOF
+		)
+	)
+	failure::emit failure
 }
 
 # Emits a buildpack-classified failure for the case where the tool inside a `tool | tee log`
