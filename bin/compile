@@ -32,8 +32,6 @@ source "$BP_DIR/lib/package_managers/npm.sh"
 source "$BP_DIR/lib/package_managers/pnpm.sh"
 # shellcheck source=lib/package_managers/yarn.sh
 source "$BP_DIR/lib/package_managers/yarn.sh"
-# shellcheck source=lib/_failures.sh
-source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/runtimes/nodejs.sh
 source "$BP_DIR/lib/runtimes/nodejs.sh"
 # shellcheck source=lib/utils/command.sh
@@ -194,7 +192,7 @@ fi
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
+  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine npm_version
 
   node_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.npm")
@@ -352,7 +350,15 @@ install_bins() {
     build_data::set_string "npm_version" "$(npm --version)"
   fi
 
-  warn_old_npm
+  npm_version="$(npm --version)"
+  if [ "$(package_managers::npm::version_major)" -lt "2" ]; then
+    # Emit immediately via output::warning so this surfaces during the build.
+    output::warning <<-EOF
+			This version of npm ($npm_version) has several known issues. Please update your npm version in package.json.
+
+			https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
+		EOF
+  fi
 
   if [[ $YARN_2 == true ]]; then
     YARN=false
@@ -569,8 +575,24 @@ build_data::set_string "build_step" "summarize"
 summarize_build | output "$LOG_FILE"
 build_data::set_duration "build_time" "$build_start_time"
 
-warn_no_start "$BUILD_DIR"
-warn_unmet_dep "$LOG_FILE"
-warn_old_npm_lockfile "$NPM_LOCK"
+if ! [ -e "$BUILD_DIR/Procfile" ]; then
+  start_script=$(utils::json::read "$BUILD_DIR/package.json" ".scripts.start")
+  if [ "$start_script" == "" ]; then
+    if ! [ -e "$BUILD_DIR/server.js" ]; then
+      warn "This app may not specify any way to start a node process" "https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type"
+    fi
+  fi
+fi
+
+package_manager=$(case $YARN in true) echo "yarn";; *) echo "npm";; esac)
+if grep -qi 'unmet dependency' "$LOG_FILE" || grep -qi 'unmet peer dependency' "$LOG_FILE"; then
+  warn "Unmet dependencies don't fail $package_manager install but may cause runtime issues" "https://github.com/npm/npm/issues/7494"
+fi
+
+npm_version="$(npm --version)"
+if $NPM_LOCK && [ "$(package_managers::npm::version_major)" -lt "5" ]; then
+  warn "This version of npm ($npm_version) does not support package-lock.json. Please
+       update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+fi
 
 build_data::set_string "build_step" "finished"

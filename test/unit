@@ -2174,7 +2174,6 @@ source "$(pwd)"/lib/package_managers/yarn.sh
 source "$(pwd)"/lib/runtimes/nodejs.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/_output.sh
-source "$(pwd)"/lib/_failures.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
