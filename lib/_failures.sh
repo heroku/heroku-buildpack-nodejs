@@ -64,11 +64,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "sh: 1: cd: can't cd to" "$log_file"; then
-    build_data::set_string "failure" "cd-command-fail"
-    return 0
-  fi
-
   # Webpack Errors
 
   # Typescript errors
