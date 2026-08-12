@@ -1723,6 +1723,33 @@ testHandleScriptPipefail() {
   rm -f "$capture"
 }
 
+testRunScriptCommandClassifiesGitAuthFailure() {
+  # A heroku-prebuild/build/heroku-postbuild/heroku-cleanup script can shell out to git for a
+  # git+ssh:// dependency and hit the same SSH host-key failure as the main install. Drive the
+  # failure through the real dispatch path (package_managers::npm::run_script ->
+  # package_manager::run_script_command), not the classifier directly, so a reintroduced nameref
+  # collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/git-auth-failures/host-key-verification-failed.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Unable to install a git dependency over SSH"
+  assertContains "$(cat "$capture")" "failure=private-git-dependency-without-auth"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
 testFailConflictingMetadataEmitsDetailedMessage() {
   local out capture
   capture=$(mktemp)

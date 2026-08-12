@@ -74,14 +74,22 @@ function package_manager::run_script_command() {
 		local pipe_status=("${PIPESTATUS[@]}")
 		local tool_exit="${pipe_status[0]}"
 
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${tool_exit}" -eq 0 ]]; then
 			# The script succeeded but the pipeline failed (tee couldn't write the log — e.g. out
 			# of disk). Buildpack-side, so report it directly rather than blaming the app.
 			package_manager::_handle_script_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A heroku-prebuild/build/heroku-postbuild/heroku-cleanup script can shell out to git
+			# for a git+ssh:// dependency and hit the same SSH host-key failure as the main
+			# install. This is a cross-cutting git-layer failure (every package manager shells out
+			# to git), so it is classified before bubbling to the legacy trap.
+			failure::emit failure
 		fi
 
-		# No known build-script failure mode is classified at this call site yet (OSSL, OOM, and
-		# the other build-script matchers still live in the legacy `log_other_failures` trap,
+		# No other known build-script failure mode is classified at this call site yet (OSSL, OOM,
+		# and the other build-script matchers still live in the legacy `log_other_failures` trap,
 		# which classifies from $LOG_FILE). Bubble the tool's exit code so the pipeline that runs
 		# this script fails under errexit/pipefail, the legacy ERR trap fires, and it classifies
 		# the failure — instead of masking it with a generic message.
