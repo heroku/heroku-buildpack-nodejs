@@ -551,6 +551,37 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm git dependency error, code 128. A package.json git dependency (direct or transitive)
+	# whose git operation failed: @npmcli/git raises GitUnknownError ("An unknown git error
+	# occurred") and git's own fatal exit code (128) surfaces on npm's `npm error code 128`
+	# summary line. Gate on both the code-128 line AND the unknown-git-error line so this stays
+	# scoped to the git-dependency case (git code 128 is generic). Covers install and rebuild
+	# (both share this classifier).
+	#
+	# Excluded: a missing-auth failure ("Host key verification failed") is also a GitUnknownError
+	# with git exit 128, but that case is caught earlier at the call site by the generic
+	# failure::handle_git_auth_failure classifier (checked before this classifier runs at all), so
+	# the exclusion here is a defensive no-op rather than something this matcher relies on.
+	if grep -qiE 'npm (ERR!|error) code 128($| )' "${log_file}" \
+		&& grep -qi 'An unknown git error occurred' "${log_file}" \
+		&& ! grep -qi 'Host key verification failed' "${log_file}"; then
+		__failure["id"]="npm-install-git-dependency"
+		__failure["classification"]="user"
+		__failure["detail"]="128: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				npm Git dependency error (code 128)
+
+				This error indicates an issue related to Git operations when attempting to install
+				an npm package specified as a Git dependency in \`package.json\`.
+
+				The error details above should contain more information about which package is causing the
+				issue during dependency installation as well as the specific problem that Git encountered.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
 	# e.g. ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.

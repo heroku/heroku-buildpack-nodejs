@@ -420,7 +420,7 @@ testErrorNpmLockfileOutOfSync() {
 testErrorNpmGitDependency() {
   cache_dir=$(mktmpdir)
   compile "error-npm-git-error" "${cache_dir}"
-  assertCaptured "npm Git dependency error (code 128)"
+  assertCapturedStderr "npm Git dependency error (code 128)"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "npm-install-git-dependency"
 }

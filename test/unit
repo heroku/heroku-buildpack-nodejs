@@ -788,6 +788,31 @@ testHandleNpmInstallEnoent() {
   assertContains "${result[message]}" "npm could not find a file or directory"
 }
 
+testHandleNpmInstallGitDependency() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/git-dependency.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb/build-data metrics stay continuous.
+  assertEquals "npm-install-git-dependency" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "128:"
+  assertContains "${result[message]}" "npm Git dependency error (code 128)"
+}
+
+testHandleNpmInstallGitDependencyHostKeyGuardIsNoOp() {
+  # A missing-auth failure ("Host key verification failed") is also a GitUnknownError with git
+  # exit 128, so this matcher excludes it defensively — but in practice the exclusion never
+  # matters: at every call site, failure::handle_git_auth_failure runs first (elif, before the
+  # npm-specific classifier) and claims host-key failures before this matcher is ever reached.
+  # This test bypasses that call-site ordering by invoking the npm classifier directly, so the
+  # exclusion is exercised here even though it is a no-op in the real control flow.
+  local -A result
+  if package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/git-dependency-host-key.log" result; then
+    fail "expected classifier to return non-zero for a host-key (missing-auth) git failure"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
 testHandleInstallPipefail() {
   # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from
