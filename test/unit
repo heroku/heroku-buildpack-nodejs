@@ -505,6 +505,49 @@ testFailureEmitWritesMarkerWhenSet() {
   rm -f "$marker"
 }
 
+testFailureHandleUncaughtRendersAndRecords() {
+  # After an unclassified command fails, the generic ERR-trap handler must render the
+  # internal-error message with a stack trace and record failure=internal-error plus a
+  # failure_detail for observability. Run in a subshell with stubs so `fail` doesn't kill the
+  # test runner and build_data writes are captured to a temp file.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    unset FAILURE_EMITTED_MARKER
+    false || true
+    failure::handle_uncaught 2>&1 || true
+  )
+
+  assertContains "$out" "An unexpected error occurred"
+  assertContains "should render the Failing command label" "$out" "Failing command:"
+  assertContains "should render the Stack trace label" "$out" "Stack trace:"
+  assertContains "should print a stack-trace line" "$out" " @ "
+  assertContains "$(cat "$capture")" "failure=internal-error"
+  assertContains "$(cat "$capture")" "failure_detail="
+  rm -f "$capture"
+}
+
+testFailureHandleUncaughtSkipsWhenMarkerPresent() {
+  # When the marker file exists a migrated path already reported the failure, so the generic
+  # handler must stay quiet: print nothing and record no build data.
+  local out capture marker
+  capture=$(mktemp)
+  marker=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    export FAILURE_EMITTED_MARKER="$marker"
+    false || true
+    failure::handle_uncaught 2>&1 || true
+  )
+
+  assertEquals "handler must print nothing when the marker exists" "" "$out"
+  assertEquals "handler must record no build data when the marker exists" "" "$(cat "$capture")"
+  rm -f "$capture" "$marker"
+}
+
 testFailureHandlePipefail() {
   # The generic pipefail helper hard-codes classification=buildpack and encodes the
   # PIPESTATUS array into failure_detail for observability. Callers pass the id and message.

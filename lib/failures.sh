@@ -55,6 +55,58 @@ function failure::emit() {
 	fail
 }
 
+# Generic, last-resort ERR-trap handler for any non-zero exit that no migrated code path
+# classified — including a user's own build script failing. Modelled on the fully-migrated
+# Python buildpack's `utils::err_trap`: it renders a neutral "internal error" message with a
+# stack trace, records a generic failure reason for observability, and terminates the build.
+# Because this repo does not enable `errtrace`, a command failing inside this handler will not
+# re-trigger the ERR trap, so no recursion guard beyond the marker check below is needed.
+function failure::handle_uncaught() {
+	# A migrated code path may have already classified, rendered, and recorded this failure via
+	# `failure::emit` (which writes this marker). If so, stay quiet so it isn't reported twice.
+	[[ -e "${FAILURE_EMITTED_MARKER:-}" ]] && return
+
+	# Capture the failing command from BASH_COMMAND before the work below overwrites it. The
+	# marker guard above is a bare `[[ ]]` test, so it does not disturb BASH_COMMAND.
+	local failing_command="${BASH_COMMAND}"
+
+	local stack_trace
+	stack_trace=$(
+		local frame=0
+		while read -r line_number function_name source_file < <(caller "${frame}" || true); do
+			echo "${function_name} @ ${source_file}:${line_number}"
+			((++frame))
+		done
+	)
+
+	header "Build failed"
+	output::error <<-EOF
+		An unexpected error occurred while building your app.
+
+		Review the build log above for the cause. If this looks like a bug in the
+		buildpack rather than your app, open a support ticket:
+		https://help.heroku.com/
+
+		Failing command:
+		${failing_command}
+
+		Stack trace:
+		${stack_trace}
+	EOF
+
+	# Record a generic failure reason for observability. The classification is intentionally left
+	# unset: this handler fires for any unclassified failure, so we can't attribute it to the
+	# user, the buildpack, or upstream.
+	build_data::set_string "failure" "internal-error"
+	build_data::set_string "failure_detail" "${failing_command}"
+
+	# Write the marker then call `fail`, exactly like `failure::emit`, so `build_time` is recorded
+	# on every failure path and the build always exits non-zero.
+	[[ -n "${FAILURE_EMITTED_MARKER:-}" ]] && : >"${FAILURE_EMITTED_MARKER}"
+
+	fail
+}
+
 # Emits a buildpack-classified failure for the case where the tool inside a `tool | tee log`
 # pipeline exited 0 but a downstream stage (typically `tee` writing to the log) failed — for
 # example the build ran out of disk space. Callers pass a stable failure id, the PIPESTATUS
