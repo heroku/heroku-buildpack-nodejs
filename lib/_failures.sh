@@ -59,11 +59,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
-    build_data::set_string "failure" "ng-cli-version-issue"
-    return 0
-  fi
-
   if grep -qi "CALL_AND_RETRY_LAST Allocation failed" "$log_file"; then
     build_data::set_string "failure" "build-out-of-memory-error"
     return 0
