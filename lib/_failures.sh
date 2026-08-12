@@ -78,11 +78,6 @@ log_other_failures() {
 
   # Typescript errors
 
-  if grep -qi "Property '.*' is private and only accessible within class '.*'" "$log_file"; then
-    build_data::set_string "failure" "typescript-private-property"
-    return 0
-  fi
-
   if grep -qi "error TS2307: Cannot find module '.*'" "$log_file"; then
     build_data::set_string "failure" "typescript-missing-module"
     return 0
