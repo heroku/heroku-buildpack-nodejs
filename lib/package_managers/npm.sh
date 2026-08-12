@@ -486,6 +486,33 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm ELIFECYCLE code — a dependency's install/lifecycle script failed, frequently a
+	# native-module compile via node-gyp. Gate on both the code and the "Failed at the <pkg>
+	# install script" summary line (lib/utils/error-message.js) emitted for the failing package,
+	# for the same code+message robustness as the EUSAGE lockfile matcher above. This must stay
+	# LAST so the more specific `npm ... code EXXX` matchers above keep precedence. Covers install
+	# and rebuild (both share this classifier) now that rebuild_dependencies wraps `npm rebuild`
+	# output. No bcrypt exclusion: bcrypt install-script failures have no error code or user text
+	# of their own beyond this generic signal, so they match here like any other native-addon
+	# build failure.
+	if grep -qiE 'npm (ERR!|error) code ELIFECYCLE($| )' "${log_file}" \
+		&& grep -qiE 'Failed at the [^ ]+ install script' "${log_file}"; then
+		__failure["id"]="dependency-failed-to-build"
+		__failure["classification"]="user"
+		__failure["detail"]="ELIFECYCLE: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				The install script for one of your dependencies failed. This most often
+				happens when a package with a native component (compiled on install via
+				node-gyp) fails to build. Check the log output above for the offending
+				package and the underlying compile error.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
 	# e.g. ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.

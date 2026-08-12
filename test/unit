@@ -728,6 +728,29 @@ testHandleNpmInstallBadVersion() {
   assertContains "${result[message]}" "does not exist"
 }
 
+testHandleNpmInstallDependencyFailedToBuild() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/dependency-failed-to-build.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # The legacy failure id is preserved verbatim so the `failure` build-data key stays continuous.
+  assertEquals "dependency-failed-to-build" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ELIFECYCLE:"
+  assertContains "${result[message]}" "install script for one of your dependencies failed"
+}
+
+testHandleNpmInstallBcryptMatchesGenericDependencyFailedToBuild() {
+  local -A result
+  # bcrypt install-script failures have no error code or user text of their own beyond the
+  # generic ELIFECYCLE "Failed at the <pkg> install script" signal, so they are not migrated as
+  # a distinct matcher — they classify under the same generic dependency-failed-to-build id as
+  # any other native-addon build failure.
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/bcrypt-install-script.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "dependency-failed-to-build" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+}
+
 testHandleInstallPipefail() {
   # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from

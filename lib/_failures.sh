@@ -59,11 +59,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "Failed at the bcrypt@\d.\d.\d install script" "$log_file"; then
-    build_data::set_string "failure" "bcrypt-permissions-issue"
-    return 0
-  fi
-
   if grep -qi "Versions of @angular/compiler-cli and typescript could not be determined" "$log_file"; then
     build_data::set_string "failure" "ng-cli-version-issue"
     return 0
@@ -112,17 +107,6 @@ log_other_failures() {
 
   if grep -qi "Host key verification failed" "$log_file"; then
     build_data::set_string "failure" "private-git-dependency-without-auth"
-    return 0
-  fi
-
-  # same as the next test, but isolate bcyrpt specifically
-  if grep -qi "Failed at the bcrypt@\d\.\d\.\d install" "$log_file"; then
-    build_data::set_string "failure" "bcrypt-failed-to-build"
-    return 0
-  fi
-
-  if grep -qi "Failed at the [^ ]* install script" "$log_file"; then
-    build_data::set_string "failure" "dependency-failed-to-build"
     return 0
   fi
 
