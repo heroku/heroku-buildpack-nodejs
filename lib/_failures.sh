@@ -42,16 +42,6 @@ failure_message() {
 log_other_failures() {
   local log_file="$1"
 
-  if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "$log_file"; then
-    build_data::set_string "failure" "npm-ebadplatform"
-    return 0
-  fi
-
-  if grep -qiE 'npm (ERR!|error) code EINVALIDPACKAGENAME' "$log_file"; then
-    build_data::set_string "failure" "npm-package-name-typo"
-    return 0
-  fi
-
   # Webpack Errors
 
   # Typescript errors
