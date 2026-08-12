@@ -59,11 +59,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "Line \d*:  '.*' is not defined" "$log_file"; then
-    build_data::set_string "failure" "undefined-variable-lint"
-    return 0
-  fi
-
   if grep -qiE 'npm (ERR!|error) code EBADPLATFORM' "$log_file"; then
     build_data::set_string "failure" "npm-ebadplatform"
     return 0
