@@ -59,11 +59,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
-    build_data::set_string "failure" "uglifyjs"
-    return 0
-  fi
-
   # https://github.com/angular/angular-cli/issues/4551
   if grep -qi "Module not found: Error: Can't resolve '\.\/\$\$_gendir\/app\/app\.module\.ngfactory'" "$log_file"; then
     build_data::set_string "failure" "ng-cli-issue-4551"
