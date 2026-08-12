@@ -1,0 +1,8 @@
+npm error code ENOENT
+npm error syscall open
+npm error path /tmp/build_a1b2c3d4/packages/local-lib/package.json
+npm error errno -2
+npm error enoent ENOENT: no such file or directory, open '/tmp/build_a1b2c3d4/packages/local-lib/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log

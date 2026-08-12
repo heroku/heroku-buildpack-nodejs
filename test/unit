@@ -751,6 +751,18 @@ testHandleNpmInstallBcryptMatchesGenericDependencyFailedToBuild() {
   assertEquals "user" "${result[classification]}"
 }
 
+testHandleNpmInstallEnoent() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/enoent.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so downstream metrics stay continuous.
+  assertEquals "npm-enoent" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ENOENT:"
+  assertContains "${result[detail]}" "syscall open"
+  assertContains "${result[message]}" "npm could not find a file or directory"
+}
+
 testHandleInstallPipefail() {
   # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from

@@ -489,8 +489,8 @@ function package_managers::npm::_handle_npm_install_failure() {
 	# npm ELIFECYCLE code — a dependency's install/lifecycle script failed, frequently a
 	# native-module compile via node-gyp. Gate on both the code and the "Failed at the <pkg>
 	# install script" summary line (lib/utils/error-message.js) emitted for the failing package,
-	# for the same code+message robustness as the EUSAGE lockfile matcher above. This must stay
-	# LAST so the more specific `npm ... code EXXX` matchers above keep precedence. Covers install
+	# for the same code+message robustness as the EUSAGE lockfile matcher above. Kept below the
+	# more specific `npm ... code EXXX` matchers above so they keep precedence. Covers install
 	# and rebuild (both share this classifier) now that rebuild_dependencies wraps `npm rebuild`
 	# output. No bcrypt exclusion: bcrypt install-script failures have no error code or user text
 	# of their own beyond this generic signal, so they match here like any other native-addon
@@ -508,6 +508,31 @@ function package_managers::npm::_handle_npm_install_failure() {
 				happens when a package with a native component (compiled on install via
 				node-gyp) fails to build. Check the log output above for the offending
 				package and the underlying compile error.
+			EOF
+		)
+		return 0
+	fi
+
+	# npm ENOENT code — stable npm v3–v12 (lib/utils/error-message.js). npm sets this when it
+	# cannot find a file or path referenced during install — most often a local file: dependency
+	# or a script path in package.json that does not exist in the deployed source. App-controlled,
+	# so classified as a user error. The legacy log_other_failures matcher keyed off the `enoent
+	# ENOENT: no such file or directory` summary line; here we key off the `code ENOENT` summary
+	# line for consistency with the sibling code-based matchers above. Covers install and rebuild
+	# (both share this classifier).
+	if grep -qiE 'npm (ERR!|error) code ENOENT($| )' "${log_file}"; then
+		__failure["id"]="npm-enoent"
+		__failure["classification"]="user"
+		__failure["detail"]="ENOENT: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				npm could not find a file or directory it expected while installing your
+				dependencies. This usually means a local (\`file:\`) dependency or a path
+				referenced in your package.json does not exist in the deployed source. Check
+				the log output above for the missing path, and make sure it is committed and
+				spelled correctly.
 			EOF
 		)
 		return 0

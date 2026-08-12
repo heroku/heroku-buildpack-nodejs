@@ -89,11 +89,6 @@ log_other_failures() {
     return 0
   fi
 
-  if grep -qi "enoent ENOENT: no such file or directory" "$log_file"; then
-    build_data::set_string "failure" "npm-enoent"
-    return 0
-  fi
-
   if grep -qi "ERROR in [^ ]* from UglifyJs" "$log_file"; then
     build_data::set_string "failure" "uglifyjs"
     return 0
