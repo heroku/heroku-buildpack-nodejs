@@ -57,10 +57,10 @@ LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
 # Marker written by `failure::emit` (lib/failures.sh) when a migrated code path has already
-# classified, rendered, and recorded a failure. The global ERR trap checks for it and skips
-# the legacy classification matchers so the same failure isn't reported twice. It is a file
-# (not a shell variable) because `failure::emit` runs inside the `build_dependencies | output`
-# pipe's subshell, where a variable assignment would be invisible to the trap in the parent.
+# classified, rendered, and recorded a failure. The generic `failure::handle_uncaught` ERR trap
+# checks for it and stays quiet so the same failure isn't reported twice. It is a file (not a
+# shell variable) because `failure::emit` runs inside the `build_dependencies | output` pipe's
+# subshell, where a variable assignment would be invisible to the trap in the parent.
 export FAILURE_EMITTED_MARKER="${LOG_FILE}.emitted"
 
 build_start_time=$(build_data::current_unix_realtime)
@@ -85,21 +85,11 @@ done
 
 ### Handle errors
 
-handle_failure() {
-  # A migrated code path may have already classified and rendered this failure via
-  # `failure::emit`. If so, skip the entire legacy handler — its classification matchers would
-  # re-report the failure, and its generic warnings/troubleshooting footer would bury the
-  # specific message emit already printed. Migrated failures are self-contained by design.
-  if [[ ! -e "${FAILURE_EMITTED_MARKER:-}" ]]; then
-    header "Build failed"
-    log_other_failures "$LOG_FILE"
-    warn_untracked_dependencies "$LOG_FILE"
-    warn_angular_resolution "$LOG_FILE"
-    warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
-    failure_message | output "$LOG_FILE"
-  fi
-}
-trap 'handle_failure' ERR
+# Any non-zero exit that no migrated code path classified bubbles up to this generic handler,
+# which prints an "internal error" message with a stack trace and records failure=internal-error
+# for observability. It stays quiet when FAILURE_EMITTED_MARKER exists so a failure already
+# reported by `failure::emit` isn't reported twice.
+trap 'failure::handle_uncaught' ERR
 
 ### Check initial state
 
@@ -116,8 +106,6 @@ utils::package_json::fail_invalid "$BUILD_DIR"
 package_manager::fail_multiple_lockfiles "$BUILD_DIR"
 package_manager::fail_conflicting_metadata "$BUILD_DIR"
 runtimes::nodejs::fail_iojs_unsupported "$BUILD_DIR"
-warn_prebuilt_modules "$BUILD_DIR"
-warn_missing_package_json "$BUILD_DIR"
 
 ### Compile
 
@@ -234,8 +222,6 @@ install_bins() {
   if [ -n "$package_manager" ]; then
     echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
-
-  warn_node_engine "$node_engine"
 
   local showed_warning=false
 

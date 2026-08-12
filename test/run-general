@@ -227,14 +227,6 @@ testWarnNoStart() {
 }
 
 
-testWarnDevDeps() {
-  compile "missing-devdeps-1"
-  assertCaptured "A module may be missing"
-  assertNotCaptured "This module may be specified"
-  assertCapturedError
-}
-
-
 testEnvBlacklist() {
   local cache=$(mktmpdir)
   local env_dir=$(mktmpdir)
@@ -250,7 +242,7 @@ testEnvBlacklist() {
 testWarningsOnFailure() {
   compile "many-warnings"
   # The npm 404 install failure is now classified by failure::emit, which renders a specific
-  # message to stderr and skips the legacy troubleshooting footer. The old-npm warning is
+  # message to stderr; no generic troubleshooting footer is printed. The old-npm warning is
   # emitted at detection via output::warning (also stderr).
   assertCapturedStderr "A package could not be found in the npm registry"
   assertCapturedStderr "has several known issues"
@@ -294,19 +286,12 @@ testMultipleRuns() {
 }
 
 
-testUntrackedDependencies() {
-  compile "missing-grunt"
-  assertCaptured "Grunt may not be tracked in package.json"
-  assertCapturedError
-}
-
-
 testBadJson() {
   compile "bad-json"
   assertCaptured "Build failed"
   assertNotCaptured "Installing binaries"
   # The migrated invalid-package-json path renders the failure via failure::emit, which writes
-  # the message to stderr and suppresses the legacy handle_failure footer.
+  # the message to stderr; no generic failure footer is printed.
   assertCapturedError 1 "Unable to parse"
 }
 
@@ -493,10 +478,12 @@ testUnstableVersion() {
 
 testFailingBuild() {
   compile "failing-build"
+  # The failing heroku-postbuild script is unclassified, so it bubbles to the generic
+  # failure::handle_uncaught ERR trap: "Build failed" prints to stdout and the internal-error
+  # message goes to stderr via output::error.
   assertCaptured "Build failed"
-  assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Checking startup method"
-  assertCapturedError 1 ""
+  assertCapturedError 1 "An unexpected error occurred"
 }
 
 
@@ -506,24 +493,6 @@ testInfoEmpty() {
   assertCaptured "engines.npm (package.json):    unspecified"
   assertCaptured "Installing node modules (package.json)"
   assertCapturedSuccess
-}
-
-
-testDangerousRangeStar() {
-  compile "dangerous-range-star"
-  assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version *"
-  assertCaptured "Downloading and installing node"
-  assertCapturedError
-}
-
-
-testDangerousRangeGreaterThan() {
-  compile "dangerous-range-greater-than"
-  assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version >0.4"
-  assertCaptured "Downloading and installing node"
-  assertCapturedError
 }
 
 

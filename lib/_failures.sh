@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-warnings=$(mktemp -t heroku-buildpack-nodejs-XXXX)
-
 detect_package_manager() {
   case $YARN in
     true) echo "yarn";;
@@ -14,58 +12,6 @@ fail() {
   exit 1
 }
 
-failure_message() {
-  local warn
-
-  warn="$(cat "$warnings")"
-
-  echo ""
-  echo "We're sorry this build is failing! You can troubleshoot common issues here:"
-  echo "https://devcenter.heroku.com/articles/troubleshooting-node-deploys"
-  echo ""
-  if [ "$warn" != "" ]; then
-    echo "Some possible problems:"
-    echo ""
-    echo "$warn"
-  else
-    echo "If you're stuck, please submit a ticket so we can help:"
-    echo "https://help.heroku.com/"
-  fi
-  echo ""
-  echo "Love,"
-  echo "Heroku"
-  echo ""
-}
-
-log_other_failures() {
-  local log_file="$1"
-
-  # matches the subsequent lines of a stacktrace
-  if grep -q 'at [^ ]* \([^ ]*:\d*\d*\)' "$log_file"; then
-    build_data::set_string "failure" "unknown-stacktrace"
-    return 0
-  fi
-
-  # If we've made it this far it's not an error we've added detection for yet
-  # so classify by build step (if set) or default to unknown
-  build_step=$(build_data::get_current "build_step")
-  if [[ -n "$build_step" ]]; then
-    build_data::set_string "failure" "unknown-$build_step-error"
-  else
-    build_data::set_string "failure" "unknown"
-  fi
-}
-
-warning() {
-  local tip=${1:-}
-  local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}
-  {
-  echo "- $tip"
-  echo "  $url"
-  echo ""
-  } >> "$warnings"
-}
-
 warn() {
   local tip=${1:-}
   local url=${2:-https://devcenter.heroku.com/articles/nodejs-support}
@@ -74,40 +20,13 @@ warn() {
   echo ""
 }
 
-warn_node_engine() {
-  local node_engine=${1:-}
-  if [ "$node_engine" == "" ]; then
-    warning "Node version not specified in package.json" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
-  elif [ "$node_engine" == "*" ]; then
-    warning "Dangerous semver range (*) in engines.node" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
-  elif [ "${node_engine:0:1}" == ">" ]; then
-    warning "Dangerous semver range (>) in engines.node" "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
-  fi
-}
-
-warn_prebuilt_modules() {
-  local build_dir=${1:-}
-  if [ -e "$build_dir/node_modules" ]; then
-    warning "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
-  fi
-}
-
-warn_missing_package_json() {
-  local build_dir=${1:-}
-  if ! [ -e "$build_dir/package.json" ]; then
-    warning "No package.json found"
-  fi
-}
-
 warn_old_npm() {
   local npm_version latest_npm
 
   npm_version="$(npm --version)"
 
   if [ "$(package_managers::npm::version_major)" -lt "2" ]; then
-    # Emit immediately rather than via warning(), whose $warnings buffer is only flushed by
-    # failure_message on a failed build — so a migrated failure that bypasses the legacy
-    # handler, or a successful build, would never surface this warning.
+    # Emit immediately via output::warning so this surfaces during the build.
     output::warning <<-EOF
 			This version of npm ($npm_version) has several known issues. Please update your npm version in package.json.
 
@@ -125,42 +44,6 @@ warn_old_npm_lockfile() {
   if $npm_lock && [ "$(package_managers::npm::version_major)" -lt "5" ]; then
     warn "This version of npm ($npm_version) does not support package-lock.json. Please
        update your npm version in package.json." "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-  fi
-}
-
-warn_untracked_dependencies() {
-  local log_file="$1"
-  if grep -qi 'gulp: not found' "$log_file" || grep -qi 'gulp: command not found' "$log_file"; then
-    warning "Gulp may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-  fi
-  if grep -qi 'grunt: not found' "$log_file" || grep -qi 'grunt: command not found' "$log_file"; then
-    warning "Grunt may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-  fi
-  if grep -qi 'bower: not found' "$log_file" || grep -qi 'bower: command not found' "$log_file"; then
-    warning "Bower may not be tracked in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-  fi
-}
-
-warn_angular_resolution() {
-  local log_file="$1"
-  if grep -qi 'Unable to find suitable version for angular' "$log_file"; then
-    warning "Bower may need a resolution hint for angular" "https://github.com/bower/bower/issues/1746"
-  fi
-}
-
-warn_missing_devdeps() {
-  local dev_deps
-  local log_file="$1"
-  local build_dir="$2"
-
-  if grep -qi 'cannot find module' "$log_file"; then
-    warning "A module may be missing from 'dependencies' in package.json" "https://devcenter.heroku.com/articles/troubleshooting-node-deploys#ensure-you-aren-t-relying-on-untracked-dependencies"
-    if [ "$NPM_CONFIG_PRODUCTION" == "true" ]; then
-      dev_deps=$(utils::json::read "$build_dir/package.json" ".devDependencies")
-      if [ "$dev_deps" != "" ]; then
-        warning "This module may be specified in 'devDependencies' instead of 'dependencies'" "https://devcenter.heroku.com/articles/nodejs-support#devdependencies"
-      fi
-    fi
   fi
 }
 
