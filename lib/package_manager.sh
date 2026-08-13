@@ -102,13 +102,14 @@ function package_manager::run_script_command() {
 			# cross-cutting runtime-layer failure; checked last, as a fallback after the
 			# build-script-specific matcher above.
 			failure::emit failure
+		else
+			# No specific classifier matched. The command run here is the app's own lifecycle
+			# script, so an unrecognised non-zero exit is the app's failure — classify it `user`
+			# and emit an app-troubleshooting message rather than letting it bubble to
+			# failure::handle_uncaught, which (until errtrace is enabled) would mislabel it as an
+			# internal buildpack error with a misleading "Failing command" line.
+			package_manager::_handle_unknown_build_script_failure "${command[*]}" "${tool_exit}"
 		fi
-
-		# No known failure mode recognised. Bubble up the tool's exit code so the pipeline that
-		# runs this script fails under errexit/pipefail and the generic failure::handle_uncaught
-		# ERR trap records it as failure=internal-error — covering the failure modes not yet
-		# migrated here.
-		return "${tool_exit}"
 	fi
 }
 
@@ -129,6 +130,35 @@ function package_manager::_handle_script_pipefail() {
 		EOF
 	)
 	failure::handle_pipefail "build-script-pipefail" "${pipe_status_str}" "${message}"
+}
+
+# Emits the catch-all failure for an app lifecycle script (heroku-prebuild/build/
+# heroku-postbuild/heroku-cleanup) that exited non-zero for a reason none of the classifiers at
+# the call site recognised. The script is the app's own code, so this is classified `user`; the
+# failing command and exit code are recorded as detail for observability.
+function package_manager::_handle_unknown_build_script_failure() {
+	local failing_command="${1}"
+	local exit_code="${2}"
+
+	local -A failure
+	failure["id"]="unknown-build-script-error"
+	failure["classification"]="user"
+	failure["detail"]="exit ${exit_code}: ${failing_command}"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: A build script exited with a non-zero exit code.
+
+			One of your app's lifecycle scripts (heroku-prebuild, build, heroku-postbuild,
+			or heroku-cleanup) failed. This is usually caused by your application code or its
+			build configuration — a failing test, a compilation or bundler error, a missing
+			dependency — rather than a problem with the buildpack.
+
+			Review the build log above for the underlying error, fix it, and redeploy.
+
+			https://devcenter.heroku.com/articles/troubleshooting-node-deploys
+		EOF
+	)
+	failure::emit failure
 }
 
 # Pure classifier for build-script failures that aren't tied to a particular package manager —

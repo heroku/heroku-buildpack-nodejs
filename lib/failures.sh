@@ -65,36 +65,24 @@ function failure::emit() {
 }
 
 # Generic, last-resort ERR-trap handler for any non-zero exit that no migrated code path
-# classified — including a user's own build script failing. Modelled on the fully-migrated
-# Python buildpack's `utils::err_trap`: it renders a neutral "internal error" message with a
-# stack trace, records a generic failure reason for observability, and terminates the build.
-# Because this repo does not enable `errtrace`, a command failing inside this handler will not
-# re-trigger the ERR trap, so no recursion guard beyond the marker check below is needed.
+# classified — including a user's own build script failing. Modelled on the
+# Python buildpack's `utils::err_trap`: it renders a neutral "internal error" message, records a
+# generic failure reason for observability, and terminates the build.
 function failure::handle_uncaught() {
 	# A migrated code path may have already classified, rendered, and recorded this failure via
 	# `failure::emit` (which writes this marker). If so, stay quiet so it isn't reported twice.
 	[[ -e "${FAILURE_EMITTED_MARKER:-}" ]] && return
 
-	# Capture the failing command from BASH_COMMAND before the work below overwrites it. The
-	# marker guard above is a bare `[[ ]]` test, so it does not disturb BASH_COMMAND.
-	local failing_command="${BASH_COMMAND}"
-
-	local stack_trace
-	stack_trace=$(
-		local frame=0
-		while read -r line_number function_name source_file < <(caller "${frame}" || true); do
-			echo "${function_name} @ ${source_file}:${line_number}"
-			((++frame))
-		done
-	)
-
-	# Route through `failure::emit` like every other failure path so the message, build-data
-	# writes, marker, and exit all happen in one place. The classification is intentionally left
-	# unset: this handler fires for any unclassified failure, so we can't attribute it to the
-	# user, the buildpack, or upstream.
+	# No [detail] or [classification]: this handler fires for any unclassified failure. And
+	# because this repo does not yet enable `errtrace`, the ERR trap fires at the top-level
+	# pipeline *after* it unwinds, so BASH_COMMAND and the `caller` stack would point at the
+	# buildpack's log formatter (`output "$LOG_FILE"`) / bin/compile's top frame — not the real
+	# failure. Rather than present that misleading data as fact, we omit it. When errtrace is
+	# adopted, reinstate an accurate "Failing command"/"Stack
+	# trace" block here, and disarm the trap on entry (`trap - ERR`) so a failure inside this
+	# handler can't re-enter it.
 	local -A failure=(
 		[id]="internal-error"
-		[detail]="${failing_command}"
 		[message]=$(
 			cat <<-EOF
 				An unexpected error occurred while building your app.
@@ -102,12 +90,6 @@ function failure::handle_uncaught() {
 				Review the build log above for the cause. If this looks like a bug in the
 				buildpack rather than your app, open a support ticket:
 				https://help.heroku.com/
-
-				Failing command:
-				${failing_command}
-
-				Stack trace:
-				${stack_trace}
 			EOF
 		)
 	)

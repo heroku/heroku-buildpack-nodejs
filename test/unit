@@ -506,10 +506,11 @@ testFailureEmitWritesMarkerWhenSet() {
 }
 
 testFailureHandleUncaughtRendersAndRecords() {
-  # After an unclassified command fails, the generic ERR-trap handler must render the
-  # internal-error message with a stack trace and record failure=internal-error plus a
-  # failure_detail for observability. Run in a subshell with stubs so `fail` doesn't kill the
-  # test runner and build_data writes are captured to a temp file.
+  # After an unclassified command fails, the generic ERR-trap handler renders the internal-error
+  # message and records failure=internal-error. Because this repo does not enable errtrace,
+  # BASH_COMMAND/caller can't identify the real failure site, so the handler must NOT print a
+  # (misleading) "Failing command"/"Stack trace" block or record a failure_detail. Run in a
+  # subshell with stubs so `fail` doesn't kill the test runner and build_data writes are captured.
   local out capture
   capture=$(mktemp)
   out=$(
@@ -521,11 +522,10 @@ testFailureHandleUncaughtRendersAndRecords() {
   )
 
   assertContains "$out" "An unexpected error occurred"
-  assertContains "should render the Failing command label" "$out" "Failing command:"
-  assertContains "should render the Stack trace label" "$out" "Stack trace:"
-  assertContains "should print a stack-trace line" "$out" " @ "
+  assertNotContains "must not render a misleading Failing command block without errtrace" "$out" "Failing command:"
+  assertNotContains "must not render a misleading Stack trace block without errtrace" "$out" "Stack trace:"
   assertContains "$(cat "$capture")" "failure=internal-error"
-  assertContains "$(cat "$capture")" "failure_detail="
+  assertNotContains "must not record a misleading failure_detail without errtrace" "$(cat "$capture")" "failure_detail="
   rm -f "$capture"
 }
 

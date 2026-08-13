@@ -477,9 +477,9 @@ function package_managers::npm::_handle_npm_install_failure() {
 	# so gate on the specific "Please update your lock file" message emitted only from
 	# `npm ci` when `validateLockfile()` fails (lib/commands/ci.js, stable since v8.4.1). The
 	# outer EUSAGE match with the discriminator line is what isolates the lockfile-out-of-sync
-	# case from every other EUSAGE sub-case (arg-validation, audit/diff/sbom/etc.), which the
-	# legacy matcher (`_failures.sh:582-596`) also handled this way. Only `install_dependencies`
-	# runs `npm ci`, but this classifier is shared with `rebuild_dependencies` — the latter
+	# case from every other EUSAGE sub-case (arg-validation, audit/diff/sbom/etc.). Only
+	# `install_dependencies` runs `npm ci`, but this classifier is shared with
+	# `rebuild_dependencies` — the latter
 	# only ever runs `npm install`, so it cannot emit this mode; the matcher simply won't fire
 	# there.
 	if grep -qiE 'npm (ERR!|error) code EUSAGE($| )' "${log_file}" \

@@ -942,28 +942,32 @@ testConflictingPackageManagerMetadata() {
 testErrorPrebuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-prebuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
 testErrorBuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-build-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
 testErrorPostbuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-postbuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
 testErrorCleanupScript() {
   cache_dir=$(mktmpdir)
   compile "error-cleanup-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
