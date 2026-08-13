@@ -600,15 +600,6 @@ if ! [ -e "$BUILD_DIR/Procfile" ]; then
   fi
 fi
 
-package_manager=$(case $YARN in true) echo "yarn";; *) echo "npm";; esac)
-if grep -qi 'unmet dependency' "$LOG_FILE" || grep -qi 'unmet peer dependency' "$LOG_FILE"; then
-  output::warning <<-EOF
-			Unmet dependencies don't fail $package_manager install but may cause runtime issues
-
-			https://github.com/npm/npm/issues/7494
-		EOF
-fi
-
 npm_version="$(npm --version)"
 if $NPM_LOCK && [ "$(package_managers::npm::version_major)" -lt "5" ]; then
   output::warning <<-EOF
