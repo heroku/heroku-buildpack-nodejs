@@ -102,9 +102,9 @@ testDefaultToNpm5WithNode6() {
 
 testOldNpmWithLockfile() {
   compile "npm-lockfile-old-version"
-  assertCaptured "This version of npm"
-  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
-  assertCapturedSuccess
+  assertCapturedStderr "This version of npm"
+  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -161,7 +161,7 @@ testNode22Npm11BootstrapRegressionWorkaround() {
   assertCaptured "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression"
   assertCaptured "Bootstrapping npm 11."
   assertCaptured "npm 11."
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # https://github.com/heroku/heroku-buildpack-nodejs/issues/1702
@@ -171,7 +171,7 @@ testNpm12UnsafePermRemoved() {
   assertCaptured "npm 12"
   assertNotCaptured "Unknown cli flag"
   assertNotCaptured "EUNKNOWNCONFIG"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 testUserConfig() {

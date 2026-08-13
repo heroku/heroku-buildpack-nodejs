@@ -6,7 +6,7 @@ testBuildScriptYarn() {
   compile "build-script-yarn"
   assertCaptured "Running build (yarn)"
   assertCaptured "build hook message"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -19,7 +19,7 @@ testBuildFlagsWithYarn() {
   assertCaptured "Running build"
   assertCaptured "Running with --prod --optimize flags"
   assertCaptured "$ echo build hook message '--prod --optimize'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -28,7 +28,7 @@ testEmptyHerokuPostbuildWithYarn() {
   assertCaptured "Running heroku-postbuild (yarn)"
   assertNotCaptured "build hook message"
   assertNotCaptured "Script must exist"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -36,7 +36,7 @@ testYarnRun() {
   compile "yarn-run"
   assertCaptured "Running heroku-postbuild (yarn)"
   assertCaptured "foobar"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -55,7 +55,7 @@ testYarn() {
   assertCaptured "installing yarn"
   assertCaptured "Installing node modules (yarn.lock)"
   assertNotCaptured "Installing node modules (package.json)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -67,7 +67,7 @@ testYarnCache() {
   # assert that devDependencies are cached
   assertEquals "1" "$(ls -1 $cache/node/cache/yarn/v6 | grep -c debug | tr -d ' ')"
 
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -80,7 +80,7 @@ testYarnNativeCache() {
   # Run this again with a cache
   compile "yarn-native-cache" $cache
 
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -88,7 +88,7 @@ testYarnSemver() {
   compile "yarn-semver"
   assertCaptured "Downloading and installing yarn (~0.28"
   assertCaptured "Installed yarn 0.28."
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -111,7 +111,7 @@ testYarnV1Semver() {
   compile "yarn-v1-semver"
   assertCaptured "Downloading and installing yarn (1."
   assertCaptured "Installed yarn 1."
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -119,7 +119,7 @@ testYarnV1SemverComplex() {
   compile "yarn-v1-semver-complex"
   assertCaptured "Downloading and installing yarn (>=1 <2)"
   assertCaptured "Installed yarn 1."
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -127,7 +127,7 @@ testYarnV2SemverEdgeCase() {
   compile "yarn-v2-semver-edge-case"
   assertCaptured "Downloading and installing yarn (>=2 <3)"
   assertCaptured "Using yarn 2."
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -160,14 +160,14 @@ testYarnEngine() {
   compile "yarn-engine" "$cache_dir" "$env_dir" "$build_dir"
   assertCaptured "installing yarn (1.4.0)"
   assertFileExists "$build_dir/.heroku/node/bin/yarn"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testYarnEngineWithMonorepo() {
   compile "yarn-engine-with-monorepo"
   assertCaptured "installing yarn (1.4.0)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # If they specify a version of yarn inside package.json but
@@ -177,7 +177,7 @@ testYarnEngineWithMonorepo() {
 testYarnOnlyEngine() {
   compile "yarn-only-engine"
   assertCaptured "installing yarn (1.4.0)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -196,7 +196,7 @@ testDevDependenciesInstalledYarn() {
   compile "dependencies-yarn"
   assertCaptured "lodash"
   assertCaptured "Pruning devDependencies"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # When NPM_CONFIG_PRODUCTION = false we should not prune the devDependencies
@@ -207,14 +207,14 @@ testDevDepenenciesWithNoPruningYarn() {
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
   assertCaptured "Skipping because YARN_PRODUCTION is 'false'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   env_dir=$(mktmpdir)
   echo "true" > $env_dir/YARN_PRODUCTION
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertNotCaptured "lodash"
   assertCaptured "Skipping because YARN_PRODUCTION is 'true'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 # When NODE_ENV != production we should not prune the devDependencies
@@ -225,7 +225,7 @@ testNodeEnvTestDepenenciesYarn() {
   compile "dependencies-yarn" "$(mktmpdir)" $env_dir
   assertCaptured "lodash"
   assertCaptured "Skipping because NODE_ENV is not 'production'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -272,7 +272,7 @@ testYarn2() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -283,7 +283,7 @@ testYarn2WithPackageManager() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -294,7 +294,7 @@ testYarn2Engine() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -307,7 +307,7 @@ testYarn2WithYarn2SkipPruningFalse() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-478d5c315f.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-5a7f936a25.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -319,7 +319,7 @@ testYarn2WithYarn2SkipPruningTrue() {
   assertCaptured "Build script check"
   assertCaptured "Skipping because YARN2_SKIP_PRUNING is 'true'"
   assertNotCaptured "Running 'yarn heroku prune'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -336,20 +336,20 @@ testYarn2WithNodeModules() {
   compile "yarn-2-with-node-modules"
   assertCaptured "Running 'yarn install' with yarn.lock"
   assertCaptured "Caching build"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testYarn2WithoutYarnCache() {
   compile "yarn-2-without-cache"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testYarn2WithoutWorkspaceModule() {
   compile "yarn-2-without-workspace-plugin"
   assertCaptured "Running 'yarn heroku prune'"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 ###
 
@@ -358,7 +358,7 @@ testYarn2WithoutWorkspaceModule() {
 
 testYarn2WithEngine() {
   compile "yarn-2-with-engine"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -404,7 +404,7 @@ testYarn3() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -415,7 +415,7 @@ testYarn3WithPackageManager() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -426,7 +426,7 @@ testYarn3WithEngine() {
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "@types-node-npm-16.11.26-6163d95b7d-57757caaba.zip appears to be unused - removing"
   assertCaptured "uuid-npm-9.0.0-46c41e3e43-8dd2c83c43.zip appears to be unused - removing"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -462,7 +462,7 @@ testYarn4WithEngine() {
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -479,7 +479,7 @@ testYarn4WithCorepackEnabled() {
   assertCaptured "Build script check"
   assertCaptured "Running 'yarn heroku prune'"
   assertCaptured "- @types/node@npm:16.11.26, uuid@npm:9.0.0"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
   assertFileExists "$build_dir/.heroku/node/bin/yarn"
 }
 

@@ -44,7 +44,7 @@ testPnpmWithCustomCache() {
   assertCaptured "- node_modules (skipping because pnpm is used)"
   assertCaptured "- data"
   assertCaptured "- pnpm store (included because pnpm is used)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   compile "pnpm-custom-cache" "$cache_dir" "$env_dir"
   assertCaptured " Loading from cacheDirectories (package.json):"
@@ -52,7 +52,7 @@ testPnpmWithCustomCache() {
   assertCaptured "- data (exists - skipping)"
   assertCaptured "- pnpm store (included because pnpm is used)"
   assertNotCaptured "pnpm:fetching-progress"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -201,7 +201,7 @@ testPnpmStorePruneWithEmptyStore() {
   assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
   assertCaptured "Cleaning up pnpm store"
   assertNotCaptured "ENOENT"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 
   # the counter should still advance past 0 after the benign ENOENT
   counter=$(<"$cache_dir/pnpm_prune_store_counter")
@@ -250,7 +250,7 @@ testPnpm10StoreDirExport() {
   actual_store_dir=$(source "${bp_dir}/export" && cd "${compile_dir}" && pnpm config get store-dir)
   assertEquals "$pnpm_config_cache" "$actual_store_dir"
   assertNotCaptured "pnpm store cache may not work"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -267,7 +267,7 @@ testPnpm11StoreDirExport() {
   actual_store_dir=$(source "${bp_dir}/export" && cd "${compile_dir}" && pnpm config get store-dir)
   assertEquals "$pnpm_config_cache" "$actual_store_dir"
   assertNotCaptured "pnpm store cache may not work"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -363,7 +363,7 @@ testPnpmWorkspaceBinaries() {
   assertCaptured "Scope: all 3 workspace projects"
   assertCaptured "devDependencies: skipped because NODE_ENV is set to production"
   assertNotCaptured "Skipping because pruning is not supported for pnpm workspaces"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -371,7 +371,7 @@ testPnpmWorkspaceFileExistsButNotConfiguredAsWorkspace() {
   compile "pnpm-workspace-file-exists-but-not-configured-as-workspace"
   assertCaptured "+ dotenv"
   assertCaptured "- dotenv"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 

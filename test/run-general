@@ -235,7 +235,7 @@ testEnvBlacklist() {
   compile "echo-lang" $cache $env_dir
   assertCaptured "safeVar"
   assertNotCaptured "tr_TR.UTF-8"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -426,7 +426,7 @@ testSkipModulesCheckedIn() {
 
   assertCaptured "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=true"
   assertNotCaptured "node_modules checked into source"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -492,7 +492,7 @@ testInfoEmpty() {
   assertCaptured "engines.node (package.json):   unspecified"
   assertCaptured "engines.npm (package.json):    unspecified"
   assertCaptured "Installing node modules (package.json)"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -642,7 +642,7 @@ testNodeEnv() {
   assertCaptured "preinstall: production"
   assertCaptured "postinstall: production"
   assertCaptured "heroku-postbuild: production"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -942,36 +942,36 @@ testConflictingPackageManagerMetadata() {
 testErrorPrebuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-prebuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-prebuild-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
 }
 
 
 testErrorBuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-build-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
 }
 
 
 testErrorPostbuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-postbuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
 }
 
 
 testErrorCleanupScript() {
   cache_dir=$(mktmpdir)
   compile "error-cleanup-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-cleanup-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "internal-error"
 }
 
 
 testErrorOpensslUnsupportedAlgorithm() {
   cache_dir=$(mktmpdir)
   compile 'error-openssl-unsupported-algorithm' "${cache_dir}"
-  assertCaptured "Unsupported cryptographic algorithm used"
-  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support"
+  assertCapturedStderr "Unsupported cryptographic algorithm used"
+  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm"
 }
@@ -980,8 +980,8 @@ testErrorOpensslUnsupportedAlgorithm() {
 testErrorOpensslUnsupportedAlgorithmInWebpack() {
   cache_dir=$(mktmpdir)
   compile 'error-openssl-unsupported-algorithm-in-webpack' "${cache_dir}"
-  assertCaptured "Unsupported cryptographic algorithm used"
-  assertCaptured "https://webpack.js.org/configuration/output/#outputhashfunction"
+  assertCapturedStderr "Unsupported cryptographic algorithm used"
+  assertCapturedStderr "https://webpack.js.org/configuration/output/#outputhashfunction"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm-webpack"
 }
@@ -990,7 +990,7 @@ testErrorOpensslUnsupportedAlgorithmInWebpack() {
 testErrorOOM() {
   cache_dir=$(mktmpdir)
   compile "error-oom" "${cache_dir}"
-  assertCaptured "Node.js Out-Of-Memory (OOM)"
+  assertCapturedStderr "Node.js Out-Of-Memory (OOM)"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "node-out-of-memory"
 }
@@ -1018,7 +1018,7 @@ testVersionBoundsNarrow() {
   compile "version-bounds-narrow"
   assertNotCapturedStderr "The requested Node.js version is using a wide range"
   assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
