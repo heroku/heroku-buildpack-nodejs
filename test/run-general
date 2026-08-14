@@ -478,12 +478,13 @@ testUnstableVersion() {
 
 testFailingBuild() {
   compile "failing-build"
-  # The failing heroku-postbuild script is unclassified, so it bubbles to the generic
-  # failure::handle_uncaught ERR trap: "Build failed" prints to stdout and the internal-error
-  # message goes to stderr via output::error.
+  # The failing heroku-postbuild script matches no specific classifier, so run_script_command's
+  # build-script catch-all classifies it as unknown-build-script-error (classification=user):
+  # "Build failed" prints to stdout and the app-troubleshooting message goes to stderr via
+  # output::error.
   assertCaptured "Build failed"
   assertNotCaptured "Checking startup method"
-  assertCapturedError 1 "An unexpected error occurred"
+  assertCapturedError 1 "A build script exited with a non-zero exit code"
 }
 
 
