@@ -1,0 +1,4 @@
+yarn install v1.22.22
+[1/4] Resolving packages...
+error An unexpected error occurred: GET https://registry.yarnpkg.com/flatmap-stream: Request failed "404 Not Found".
+info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.

@@ -1,0 +1,5 @@
+npm error code 128
+npm error An unknown git error occurred
+npm error command git --no-replace-objects ls-remote ssh://git@github.com/ccasey/not-a-repository.git
+npm error fatal: could not read Username for 'https://github.com': No such device or address
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-06-16T00_00_00_000Z-debug-0.log

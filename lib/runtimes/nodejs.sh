@@ -42,8 +42,8 @@ function runtimes::nodejs::install() {
 		local install_exit="${PIPESTATUS[0]}"
 		build_data::set_duration "install_node_binary_time" "${start}"
 
-		# Nothing emitted a classified failure. Bubble up so the legacy ERR trap reports it as a
-		# generic internal error while matchers not yet migrated here still get handled.
+		# Nothing emitted a classified failure. Bubble up so the generic ERR-trap fallback (failure::handle_uncaught) reports it as a
+		# generic internal error for observability.
 		return "${install_exit}"
 	fi
 
@@ -56,6 +56,20 @@ function runtimes::nodejs::install() {
 	build_data::set_string "node_version" "${node_version}"
 	build_data::set_raw "node_version_major" "${node_version_major}"
 	build_data::set_string "bundled_npm_version" "${bundled_npm_version}"
+}
+
+# Pre-flight guard: fails the build when the app requests an io.js version via
+# `engines.iojs` in package.json. io.js merged back into Node.js in 2015 and is long
+# unsupported. Reads the requested version and, if present, hands off to the emit-at-site
+# helper (which prints the message, records build data, and exits).
+function runtimes::nodejs::fail_iojs_unsupported() {
+	local build_dir="${1}"
+	local iojs_engine
+	iojs_engine=$(utils::json::read "${build_dir}/package.json" ".engines.iojs")
+
+	if [[ -n "${iojs_engine}" ]]; then
+		runtimes::nodejs::_fail_iojs_unsupported "${iojs_engine}"
+	fi
 }
 
 function runtimes::nodejs::_install() {
@@ -365,6 +379,73 @@ function runtimes::nodejs::_fail_resolve() {
 	failure::emit failure
 }
 
+# Preflight guard: fails the build when a `.heroku` or `.heroku/node` file is checked into the
+# app. The buildpack creates the hidden `.heroku` (and `.heroku/node`) directory to install
+# binaries into, so a checked-in file at either path blocks the build. The two conditions are
+# mutually exclusive — a regular `.heroku` file precludes a `.heroku/node` path and vice versa —
+# so a single check routes to the matching failure id. The guard checks the condition; the paired
+# _fail_* helper emits (see the emit-at-site rationale on runtimes::nodejs::_fail_node_download).
+function runtimes::nodejs::fail_dot_heroku() {
+	local build_dir="${1:?}"
+	if [[ -f "${build_dir}/.heroku" ]]; then
+		runtimes::nodejs::_fail_dot_heroku ".heroku" "dot-heroku"
+	elif [[ -f "${build_dir}/.heroku/node" ]]; then
+		runtimes::nodejs::_fail_dot_heroku ".heroku/node" "dot-heroku-node"
+	fi
+}
+
+# Emits the classified failure for a checked-in `.heroku`-family file and exits. Classified
+# `user` because the app checked the file into source control. Takes the offending path and the
+# historical failure id (`dot-heroku` or `dot-heroku-node`), which is preserved for metric
+# continuity.
+function runtimes::nodejs::_fail_dot_heroku() {
+	local path="${1:?}"
+	local id="${2:?}"
+	local -A failure
+	failure["id"]="${id}"
+	failure["classification"]="user"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: The directory ${path} could not be created.
+
+			It looks like a .heroku file is checked into this project. The Node.js
+			buildpack uses the hidden directory .heroku to store binaries like the
+			node runtime and npm. You should remove the .heroku file or ignore it
+			by adding it to .slugignore.
+		EOF
+	)
+	failure::emit failure
+}
+
+# Emits the classified failure for an app that requests an io.js version via `engines.iojs`
+# in package.json. Keeps the historical `iojs-unsupported` failure id for metric continuity.
+# Classified `user` — the app controls this entry. See runtimes::nodejs::_fail_node_download
+# for why this emits directly at the call site.
+function runtimes::nodejs::_fail_iojs_unsupported() {
+	local iojs_engine="${1}"
+	local -A failure
+	failure["id"]="iojs-unsupported"
+	failure["classification"]="user"
+	failure["detail"]="${iojs_engine}"
+	failure["message"]=$(
+		cat <<-EOF
+			Error: io.js is no longer supported.
+
+			Your package.json requests an io.js version:
+
+			"engines": {
+			  "iojs": "${iojs_engine}"
+			}
+
+			io.js merged back into Node.js in 2015 and has been unsupported for many years.
+			It likely contains security vulnerabilities that have since been patched in Node.js.
+
+			To fix this, remove the "iojs" entry under "engines" in your package.json.
+		EOF
+	)
+	failure::emit failure
+}
+
 function runtimes::nodejs::install_metrics_plugin() {
 	local major minor
 	local bp_dir="$1"
@@ -376,7 +457,11 @@ function runtimes::nodejs::install_metrics_plugin() {
 		runtimes::nodejs::_install_native_metrics_plugin "${bp_dir}" "${build_dir}" "${major}"
 	else
 		if [[ -n "${HEROKU_LEGACY_NODE_PLUGIN}" ]] && ((major < 21)); then
-			warn "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+			output::warning <<-EOF
+				The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector.
+
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
 			runtimes::nodejs::_install_native_metrics_plugin "${bp_dir}" "${build_dir}" "${major}"
 		else
 			runtimes::nodejs::_install_script_metrics_plugin "${bp_dir}" "${build_dir}"

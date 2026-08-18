@@ -26,7 +26,7 @@ testBuildScriptBehavior() {
 
 testNgBuildScriptWarning() {
   compile "ng-build-script"
-  assertCaptured "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
+  assertCapturedStderr "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
 }
 
 
@@ -188,12 +188,12 @@ testCacheWithPrebuild() {
 testErrorYarnAndNpmLockfiles() {
   compile "yarn-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Multiple lockfiles found"
-  assertCaptured "Multiple package managers (npm,Yarn) have created lockfiles for this application"
-  assertCaptured "If you use npm:"
-  assertCaptured "git rm yarn.lock"
-  assertCaptured "If you use Yarn:"
-  assertCaptured "git rm package-lock.json"
+  assertCapturedStderr "Multiple lockfiles found"
+  assertCapturedStderr "Multiple package managers (npm,Yarn) have created lockfiles for this application"
+  assertCapturedStderr "If you use npm:"
+  assertCapturedStderr "git rm yarn.lock"
+  assertCapturedStderr "If you use Yarn:"
+  assertCapturedStderr "git rm package-lock.json"
   assertCapturedError
 }
 
@@ -201,7 +201,7 @@ testErrorYarnAndNpmLockfiles() {
 testErrorYarnAndNpmShrinkwrap() {
   compile "yarn-and-shrinkwrap-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Multiple lockfiles conflicting with npm-shrinkwrap.json"
+  assertCapturedStderr "Multiple lockfiles conflicting with npm-shrinkwrap.json"
   assertCapturedError
 }
 
@@ -209,29 +209,21 @@ testErrorYarnAndNpmShrinkwrap() {
 testErrorYarnAndPnpmAndNpmLockfiles() {
   compile "yarn-pnpm-and-npm-lockfiles"
   assertNotCaptured "Creating runtime environment"
-  assertCaptured "Multiple lockfiles found"
-  assertCaptured "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
-  assertCaptured "If you use pnpm:"
-  assertCaptured "git rm package-lock.json yarn.lock"
+  assertCapturedStderr "Multiple lockfiles found"
+  assertCapturedStderr "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
+  assertCapturedStderr "If you use pnpm:"
+  assertCapturedStderr "git rm package-lock.json yarn.lock"
   assertCapturedError
 }
 
 
 testWarnNoStart() {
   compile "no-start"
-  assertCaptured "may not specify any way to start"
-  assertCapturedSuccess
+  assertCapturedStderr "may not specify any way to start"
+  assertCapturedSuccessWithWarnings
   compile "no-version"
   assertNotCaptured "may not specify any way to start"
   assertCapturedSuccess
-}
-
-
-testWarnDevDeps() {
-  compile "missing-devdeps-1"
-  assertCaptured "A module may be missing"
-  assertNotCaptured "This module may be specified"
-  assertCapturedError
 }
 
 
@@ -243,14 +235,14 @@ testEnvBlacklist() {
   compile "echo-lang" $cache $env_dir
   assertCaptured "safeVar"
   assertNotCaptured "tr_TR.UTF-8"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
 testWarningsOnFailure() {
   compile "many-warnings"
   # The npm 404 install failure is now classified by failure::emit, which renders a specific
-  # message to stderr and skips the legacy troubleshooting footer. The old-npm warning is
+  # message to stderr; no generic troubleshooting footer is printed. The old-npm warning is
   # emitted at detection via output::warning (also stderr).
   assertCapturedStderr "A package could not be found in the npm registry"
   assertCapturedStderr "has several known issues"
@@ -262,21 +254,21 @@ testWarningsOnFailure() {
 
 testDotHerokuCollision() {
   compile "dot-heroku-collision"
-  assertCaptured "The directory .heroku could not be created"
-  assertCaptured ".heroku file is checked into this project"
+  assertCapturedStderr "The directory .heroku could not be created"
+  assertCapturedStderr ".heroku file is checked into this project"
   assertNotCaptured "please submit a ticket"
   assertCapturedError
 
   compile "dot-heroku-collision-2"
-  assertNotCaptured ".heroku file is checked into this project"
+  assertNotCapturedStderr ".heroku file is checked into this project"
   assertCapturedSuccessWithWarnings
 }
 
 
 testDotHerokuNodeCollision() {
   compile "dot-heroku-node-collision"
-  assertCaptured "The directory .heroku/node could not be created"
-  assertCaptured ".heroku file is checked into this project"
+  assertCapturedStderr "The directory .heroku/node could not be created"
+  assertCapturedStderr ".heroku file is checked into this project"
   assertNotCaptured "please submit a ticket"
   assertCapturedError
 }
@@ -294,18 +286,12 @@ testMultipleRuns() {
 }
 
 
-testUntrackedDependencies() {
-  compile "missing-grunt"
-  assertCaptured "Grunt may not be tracked in package.json"
-  assertCapturedError
-}
-
-
 testBadJson() {
   compile "bad-json"
   assertCaptured "Build failed"
-  assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Installing binaries"
+  # The migrated invalid-package-json path renders the failure via failure::emit, which writes
+  # the message to stderr; no generic failure footer is printed.
   assertCapturedError 1 "Unable to parse"
 }
 
@@ -440,7 +426,7 @@ testSkipModulesCheckedIn() {
 
   assertCaptured "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=true"
   assertNotCaptured "node_modules checked into source"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -459,8 +445,7 @@ testDetectWithoutPackageJson() {
 
 testIoJs() {
   compile "iojs"
-  assertCaptured "io.js no longer supported"
-  assertCapturedError
+  assertCapturedError 1 "io.js is no longer supported"
 }
 
 ###
@@ -493,10 +478,13 @@ testUnstableVersion() {
 
 testFailingBuild() {
   compile "failing-build"
+  # The failing heroku-postbuild script matches no specific classifier, so run_script_command's
+  # build-script catch-all classifies it as unknown-build-script-error (classification=user):
+  # "Build failed" prints to stdout and the app-troubleshooting message goes to stderr via
+  # output::error.
   assertCaptured "Build failed"
-  assertCaptured "We're sorry this build is failing"
   assertNotCaptured "Checking startup method"
-  assertCapturedError 1 ""
+  assertCapturedError 1 "A build script exited with a non-zero exit code"
 }
 
 
@@ -505,25 +493,7 @@ testInfoEmpty() {
   assertCaptured "engines.node (package.json):   unspecified"
   assertCaptured "engines.npm (package.json):    unspecified"
   assertCaptured "Installing node modules (package.json)"
-  assertCapturedSuccess
-}
-
-
-testDangerousRangeStar() {
-  compile "dangerous-range-star"
-  assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version *"
-  assertCaptured "Downloading and installing node"
-  assertCapturedError
-}
-
-
-testDangerousRangeGreaterThan() {
-  compile "dangerous-range-greater-than"
-  assertCaptured "Dangerous semver range"
-  assertCaptured "Resolving node version >0.4"
-  assertCaptured "Downloading and installing node"
-  assertCapturedError
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -673,7 +643,7 @@ testNodeEnv() {
   assertCaptured "preinstall: production"
   assertCaptured "postinstall: production"
   assertCaptured "heroku-postbuild: production"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 
@@ -809,7 +779,7 @@ testPluginInstallationRunTimeNodeScriptWhenLegacyPluginIsRequested() {
   local env_dir=$(mktmpdir)
   echo "true" > $env_dir/HEROKU_LEGACY_NODE_PLUGIN
   compile "node-14" "$(mktmpdir)" $env_dir
-  assertCaptured "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+  assertCapturedStderr "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
 
   # by default $NODE_OPTIONS is unmodified
   executeStartup $env_dir
@@ -957,11 +927,13 @@ testWarningNode_22_5_0() {
 
 testConflictingPackageManagerMetadata() {
   compile "conflicting-package-manager-metadata"
-  assertCaptured "Multiple package managers declared in package.json"
-  assertCaptured "- npm version detected in engines.npm (10.x)"
-  assertCaptured "- yarn version declared in engines.yarn (4.x)"
-  assertCaptured "- pnpm version declared in engines.pnpm (9.x)"
-  assertCaptured "- pnpm version declared in packageManager (pnpm@9.9.0)"
+  # The migrated conflicting-metadata guard renders the failure via failure::emit, which writes
+  # the message and every detected-field line to stderr through output::error.
+  assertCapturedStderr "Multiple package managers declared in package.json"
+  assertCapturedStderr "- npm version detected in engines.npm (10.x)"
+  assertCapturedStderr "- yarn version declared in engines.yarn (4.x)"
+  assertCapturedStderr "- pnpm version declared in engines.pnpm (9.x)"
+  assertCapturedStderr "- pnpm version declared in packageManager (pnpm@9.9.0)"
   assertCapturedError
 }
 
@@ -971,7 +943,8 @@ testConflictingPackageManagerMetadata() {
 testErrorPrebuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-prebuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-prebuild-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
@@ -979,6 +952,7 @@ testErrorBuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-build-script" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
@@ -986,21 +960,23 @@ testErrorPostbuildScript() {
   cache_dir=$(mktmpdir)
   compile "error-postbuild-script" "${cache_dir}"
   assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
 testErrorCleanupScript() {
   cache_dir=$(mktmpdir)
   compile "error-cleanup-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-cleanup-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
 
 
 testErrorOpensslUnsupportedAlgorithm() {
   cache_dir=$(mktmpdir)
   compile 'error-openssl-unsupported-algorithm' "${cache_dir}"
-  assertCaptured "Unsupported cryptographic algorithm used"
-  assertCaptured "https://devcenter.heroku.com/articles/nodejs-support"
+  assertCapturedStderr "Unsupported cryptographic algorithm used"
+  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm"
 }
@@ -1009,8 +985,8 @@ testErrorOpensslUnsupportedAlgorithm() {
 testErrorOpensslUnsupportedAlgorithmInWebpack() {
   cache_dir=$(mktmpdir)
   compile 'error-openssl-unsupported-algorithm-in-webpack' "${cache_dir}"
-  assertCaptured "Unsupported cryptographic algorithm used"
-  assertCaptured "https://webpack.js.org/configuration/output/#outputhashfunction"
+  assertCapturedStderr "Unsupported cryptographic algorithm used"
+  assertCapturedStderr "https://webpack.js.org/configuration/output/#outputhashfunction"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm-webpack"
 }
@@ -1019,7 +995,7 @@ testErrorOpensslUnsupportedAlgorithmInWebpack() {
 testErrorOOM() {
   cache_dir=$(mktmpdir)
   compile "error-oom" "${cache_dir}"
-  assertCaptured "Node.js Out-Of-Memory (OOM)"
+  assertCapturedStderr "Node.js Out-Of-Memory (OOM)"
   assertCapturedError
   assertMetricEqualsString "${cache_dir}" "failure" "node-out-of-memory"
 }
@@ -1047,7 +1023,7 @@ testVersionBoundsNarrow() {
   compile "version-bounds-narrow"
   assertNotCapturedStderr "The requested Node.js version is using a wide range"
   assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccess
+  assertCapturedSuccessWithWarnings
 }
 
 

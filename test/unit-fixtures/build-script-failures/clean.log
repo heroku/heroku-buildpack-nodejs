@@ -1,0 +1,5 @@
+> build
+> webpack --mode production
+
+asset main.js 1.2 KiB [emitted]
+webpack 5.94.0 compiled successfully in 234 ms

@@ -1,0 +1,14 @@
+> build
+> webpack --mode production
+
+<--- Last few GCs --->
+
+[123:0x559a1b2b4000]   123456 ms: Mark-sweep 2033.4 (2078.5) -> 2019.8 (2079.0) MB, 987.6 / 0.0 ms
+
+<--- JS stacktrace --->
+
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+npm error code 1
+npm error path /app
+npm error command failed
+npm error command sh -c webpack --mode production

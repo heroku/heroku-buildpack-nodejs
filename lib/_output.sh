@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Legacy, non-namespaced output helpers awaiting migration/elimination. These are still called
-# by un-migrated scripts (`bin/compile`, `lib/_failures.sh`). New code should use the namespaced
+# by un-migrated scripts (`bin/compile`). New code should use the namespaced
 # `output::*` functions in `lib/output.sh` instead. Once every caller has moved off `output` and
 # `header`, this file can be deleted.
 

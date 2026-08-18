@@ -1,0 +1,5 @@
+npm warn cli npm v11.18.0 does not support Node.js v18.0.0.
+npm error code ECONNRESET
+npm error network Invalid response body while trying to fetch https://registry.npmjs.org/some-package: aborted
+npm error network This is a problem related to network connectivity.
+npm error A complete log of this run can be found in: /root/.npm/_logs/2026-08-10T00_00_00_000Z-debug-0.log

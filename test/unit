@@ -97,6 +97,45 @@ testJsonValid() {
     "utils::json::is_valid '$(pwd)/test/fixtures/bad-json/package.json'"
 }
 
+testFailInvalidPackageJsonEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    utils::package_json::_fail_invalid
+
+  # The message names package.json and gives concrete syntax-error fix guidance.
+  assertContains "$out" "Error: Unable to parse your package.json."
+  assertContains "$out" "invalid JSON"
+  assertContains "$out" "jq . package.json"
+  # The historical failure id is preserved for metric continuity; app-controlled input.
+  assertContains "$(cat "$capture")" "failure=invalid-package-json"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailInvalidPackageJsonGuardEmitsOnMalformedJson() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    utils::package_json::fail_invalid "$(pwd)/test/fixtures/bad-json"
+
+  assertContains "$out" "Error: Unable to parse your package.json."
+  assertContains "$(cat "$capture")" "failure=invalid-package-json"
+  rm -f "$capture"
+}
+
+testFailInvalidPackageJsonGuardDoesNotEmitOnValidJson() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    utils::package_json::fail_invalid "$(pwd)/test/fixtures/has-script-fixtures"
+
+  # Valid JSON: the guard never reaches the emit helper, so nothing is printed or recorded.
+  assertNull "valid package.json should not emit a failure message" "$out"
+  assertEquals "valid package.json should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
 testAssertMetricsBasicQueries() {
   local cache_dir=$(mktemp -d)
   local metrics_dir="${cache_dir}/build-data"
@@ -298,7 +337,7 @@ testMultipleLockfilesFixStepsTwoManagers() {
 EOF
 )"
 
-  assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm Yarn)"
+  assertEquals "$expected" "$(package_manager::_multiple_lockfiles_fix_steps npm Yarn)"
 }
 
 testMultipleLockfilesFixStepsThreeManagers() {
@@ -322,7 +361,84 @@ testMultipleLockfilesFixStepsThreeManagers() {
 EOF
 )"
 
-  assertEquals "$expected" "$(multiple_lockfiles_fix_steps npm pnpm Yarn)"
+  assertEquals "$expected" "$(package_manager::_multiple_lockfiles_fix_steps npm pnpm Yarn)"
+}
+
+testFailMultipleLockfilesEmitsDetailedMessage() {
+  # The pre-flight guard detects two modern lockfiles on disk and emits the multiple-lock-files
+  # failure with the per-manager `git rm` fix steps and the .gitignore advice.
+  local build_dir out capture
+  build_dir=$(mktemp -d)
+  capture=$(mktemp)
+  : > "$build_dir/package-lock.json"
+  : > "$build_dir/yarn.lock"
+
+  _capture_node_fail out "$capture" \
+    package_manager::fail_multiple_lockfiles "$build_dir"
+
+  assertContains "$out" "Error: Multiple lockfiles found."
+  # Reported list is sorted case-insensitively (npm before Yarn).
+  assertContains "$out" "Multiple package managers (npm,Yarn)"
+  # Per-manager git rm fix steps interpolated from the detected lockfiles.
+  assertContains "$out" "If you use npm:"
+  assertContains "$out" "\$ git rm yarn.lock"
+  assertContains "$out" "If you use Yarn:"
+  assertContains "$out" "\$ git rm package-lock.json"
+  assertContains "$out" "add them to your .gitignore file."
+  assertContains "$(cat "$capture")" "failure=multiple-lock-files"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # The colliding managers are recorded (sorted) for observability.
+  assertContains "$(cat "$capture")" "failure_detail=npm,Yarn"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testFailShrinkwrapConflictEmitsDetailedMessage() {
+  # A single modern lockfile alongside npm-shrinkwrap.json trips the shrinkwrap branch, which
+  # emits the shrinkwrap-lock-file-conflict failure with the 4-file list and .gitignore advice.
+  local build_dir out capture
+  build_dir=$(mktemp -d)
+  capture=$(mktemp)
+  : > "$build_dir/yarn.lock"
+  : > "$build_dir/npm-shrinkwrap.json"
+
+  _capture_node_fail out "$capture" \
+    package_manager::fail_multiple_lockfiles "$build_dir"
+
+  assertContains "$out" "Error: Multiple lockfiles conflicting with npm-shrinkwrap.json."
+  # The full 4-file conflict list is preserved.
+  assertContains "$out" "- yarn.lock"
+  assertContains "$out" "- pnpm-lock.yaml"
+  assertContains "$out" "- package-lock.json"
+  assertContains "$out" "- npm-shrinkwrap.json"
+  assertContains "$out" "add them to your .gitignore file."
+  assertContains "$(cat "$capture")" "failure=shrinkwrap-lock-file-conflict"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # The modern lockfile conflicting with npm-shrinkwrap.json is recorded for observability.
+  assertContains "$(cat "$capture")" "failure_detail=Yarn"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testFailMultipleLockfilesPassesCleanForValidLayouts() {
+  # The common, valid layouts must NOT emit a failure: zero lockfiles, exactly one modern
+  # lockfile, or npm-shrinkwrap.json on its own. Guards against a future regression in the
+  # `>1` threshold or the has_modern_lockfile default silently failing normal builds.
+  local build_dir out capture layout
+  for layout in "none" "package-lock.json" "yarn.lock" "pnpm-lock.yaml" "npm-shrinkwrap.json"; do
+    build_dir=$(mktemp -d)
+    capture=$(mktemp)
+    [ "$layout" = "none" ] || : > "$build_dir/$layout"
+
+    _capture_node_fail out "$capture" \
+      package_manager::fail_multiple_lockfiles "$build_dir"
+
+    # No message emitted and no failure recorded in build data.
+    assertEquals "layout '$layout' should not emit a failure message" "" "$out"
+    assertEquals "layout '$layout' should not record a failure" "" "$(cat "$capture")"
+    rm -rf "$build_dir"
+    rm -f "$capture"
+  done
 }
 
 testFailureEmitRendersAndRecords() {
@@ -389,6 +505,49 @@ testFailureEmitWritesMarkerWhenSet() {
   rm -f "$marker"
 }
 
+testFailureHandleUncaughtRendersAndRecords() {
+  # After an unclassified command fails, the generic ERR-trap handler renders the internal-error
+  # message and records failure=internal-error. Because this repo does not enable errtrace,
+  # BASH_COMMAND/caller can't identify the real failure site, so the handler must NOT print a
+  # (misleading) "Failing command"/"Stack trace" block or record a failure_detail. Run in a
+  # subshell with stubs so `fail` doesn't kill the test runner and build_data writes are captured.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    unset FAILURE_EMITTED_MARKER
+    false || true
+    failure::handle_uncaught 2>&1 || true
+  )
+
+  assertContains "$out" "An unexpected error occurred"
+  assertNotContains "must not render a misleading Failing command block without errtrace" "$out" "Failing command:"
+  assertNotContains "must not render a misleading Stack trace block without errtrace" "$out" "Stack trace:"
+  assertContains "$(cat "$capture")" "failure=internal-error"
+  assertNotContains "must not record a misleading failure_detail without errtrace" "$(cat "$capture")" "failure_detail="
+  rm -f "$capture"
+}
+
+testFailureHandleUncaughtSkipsWhenMarkerPresent() {
+  # When the marker file exists a migrated path already reported the failure, so the generic
+  # handler must stay quiet: print nothing and record no build data.
+  local out capture marker
+  capture=$(mktemp)
+  marker=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    export FAILURE_EMITTED_MARKER="$marker"
+    false || true
+    failure::handle_uncaught 2>&1 || true
+  )
+
+  assertEquals "handler must print nothing when the marker exists" "" "$out"
+  assertEquals "handler must record no build data when the marker exists" "" "$(cat "$capture")"
+  rm -f "$capture" "$marker"
+}
+
 testFailureHandlePipefail() {
   # The generic pipefail helper hard-codes classification=buildpack and encodes the
   # PIPESTATUS array into failure_detail for observability. Callers pass the id and message.
@@ -405,6 +564,123 @@ testFailureHandlePipefail() {
   assertContains "$(cat "$capture")" "failure_classification=buildpack"
   assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
   rm -f "$capture"
+}
+
+testHandleGitAuthFailure() {
+  local -A result
+  failure::handle_git_auth_failure "$(pwd)/test/unit-fixtures/git-auth-failures/host-key-verification-failed.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "private-git-dependency-without-auth" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  # Assert the exact stripped detail (not a substring) so a regression in
+  # failure::_extract_git_auth_detail's prefix stripping is caught — an unstripped
+  # `npm error Host key verification failed.` would still satisfy a contains check.
+  assertEquals "Host key verification failed." "${result[detail]}"
+  assertContains "${result[message]}" "git dependency over SSH"
+}
+
+testHandleGitAuthNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install with no host-key line; the classifier should not match
+  # and should leave the array empty. Guard the call so set -e (if active) doesn't abort on the
+  # expected non-zero.
+  if failure::handle_git_auth_failure "$(pwd)/test/unit-fixtures/git-auth-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleEconnreset() {
+  local -A result
+  failure::handle_econnreset "$(pwd)/test/unit-fixtures/econnreset-failures/econnreset.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "econnreset" "${result[id]}"
+  assertEquals "upstream" "${result[classification]}"
+  assertContains "${result[message]}" "ECONNRESET"
+}
+
+testHandleEconnresetNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install with no ECONNRESET line; the classifier should not
+  # match and should leave the array empty. Guard the call so set -e (if active) doesn't abort
+  # on the expected non-zero.
+  if failure::handle_econnreset "$(pwd)/test/unit-fixtures/econnreset-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleLibc6Incompatibility() {
+  local -A result
+  failure::handle_libc6_incompatibility "$(pwd)/test/unit-fixtures/libc6-failures/glibc-not-found.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "libc6-incompatibility" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "This Node.js version is not compatible with the current stack."
+  assertContains "${result[message]}" "https://help.heroku.com/R7DTSTD0"
+}
+
+testHandleLibc6IncompatibilityNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful install with no GLIBC line; the classifier should not match and
+  # should leave the array empty. Guard the call so set -e (if active) doesn't abort on the
+  # expected non-zero.
+  if failure::handle_libc6_incompatibility "$(pwd)/test/unit-fixtures/libc6-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleBuildScriptFailureOpensslUnsupportedAlgorithm() {
+  local -A result
+  package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "openssl-unsupported-algorithm" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Unsupported cryptographic algorithm used"
+  assertContains "${result[message]}" "update any dependencies that may be causing the issue"
+  assertContains "${result[message]}" "NODE_OPTIONS=--openssl-legacy-provider"
+  if [[ "${result[message]}" == *"webpack"* ]]; then
+    fail "base OSSL message should not mention Webpack"
+  fi
+}
+
+testHandleBuildScriptFailureOpensslUnsupportedAlgorithmWebpack() {
+  local -A result
+  package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm-webpack.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "openssl-unsupported-algorithm-webpack" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Unsupported cryptographic algorithm used"
+  assertContains "${result[message]}" "output.hashFunction"
+  assertContains "${result[message]}" "https://webpack.js.org/configuration/output/#outputhashfunction"
+}
+
+testHandleBuildScriptFailureNodeOutOfMemory() {
+  local -A result
+  package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/node-out-of-memory.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug verbatim so downstream observability stays continuous.
+  assertEquals "node-out-of-memory" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[message]}" "Node.js Out-Of-Memory (OOM)"
+  assertContains "${result[message]}" "NODE_OPTIONS=\"--max-old-space-size=VALUE_IN_MB\""
+}
+
+testHandleBuildScriptFailureNoMatchReturnsNonZero() {
+  local -A result
+  # `clean.log` is a successful build with no OSSL error; the classifier should not match and
+  # should leave the array empty. Guard the call so set -e (if active) doesn't abort on the
+  # expected non-zero.
+  if package_manager::_handle_build_script_failure "$(pwd)/test/unit-fixtures/build-script-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
 }
 
 testFailuresLibDoesNotLeakShellOptions() {
@@ -600,6 +876,78 @@ testHandleNpmInstallLockfileOutOfSync() {
   assertContains "${result[message]}" "npm install"
 }
 
+testHandleNpmInstallBadVersion() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/notarget.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so downstream metrics stay continuous.
+  assertEquals "bad-version-for-dependency" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ETARGET:"
+  assertContains "${result[detail]}" "No matching version found"
+  assertContains "${result[message]}" "does not exist"
+}
+
+testHandleNpmInstallDependencyFailedToBuild() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/dependency-failed-to-build.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # The legacy failure id is preserved verbatim so the `failure` build-data key stays continuous.
+  assertEquals "dependency-failed-to-build" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ELIFECYCLE:"
+  assertContains "${result[message]}" "install script for one of your dependencies failed"
+}
+
+testHandleNpmInstallBcryptMatchesGenericDependencyFailedToBuild() {
+  local -A result
+  # bcrypt install-script failures have no error code or user text of their own beyond the
+  # generic ELIFECYCLE "Failed at the <pkg> install script" signal, so they are not migrated as
+  # a distinct matcher — they classify under the same generic dependency-failed-to-build id as
+  # any other native-addon build failure.
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/bcrypt-install-script.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "dependency-failed-to-build" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+}
+
+testHandleNpmInstallEnoent() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/enoent.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so downstream metrics stay continuous.
+  assertEquals "npm-enoent" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "ENOENT:"
+  assertContains "${result[detail]}" "syscall open"
+  assertContains "${result[message]}" "npm could not find a file or directory"
+}
+
+testHandleNpmInstallGitDependency() {
+  local -A result
+  package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/git-dependency.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb/build-data metrics stay continuous.
+  assertEquals "npm-install-git-dependency" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "128:"
+  assertContains "${result[message]}" "npm Git dependency error (code 128)"
+}
+
+testHandleNpmInstallGitDependencyHostKeyGuardIsNoOp() {
+  # A missing-auth failure ("Host key verification failed") is also a GitUnknownError with git
+  # exit 128, so this matcher excludes it defensively — but in practice the exclusion never
+  # matters: at every call site, failure::handle_git_auth_failure runs first (elif, before the
+  # npm-specific classifier) and claims host-key failures before this matcher is ever reached.
+  # This test bypasses that call-site ordering by invoking the npm classifier directly, so the
+  # exclusion is exercised here even though it is a no-op in the real control flow.
+  local -A result
+  if package_managers::npm::_handle_npm_install_failure "$(pwd)/test/unit-fixtures/npm-failures/git-dependency-host-key.log" result; then
+    fail "expected classifier to return non-zero for a host-key (missing-auth) git failure"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
 testHandleInstallPipefail() {
   # The npm-specific pipefail wrapper owns the failure id and the user-facing message;
   # verify both plus the buildpack classification and PIPESTATUS detail inherited from
@@ -662,12 +1010,86 @@ testHandleYarnInstallLockfileNeedsUpdate() {
   assertContains "${result[message]}" "yarn install"
 }
 
+testHandleYarnInstallOutdatedYarn() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/outdated-yarn.log" result "0.16.1"
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertEquals "outdated-yarn" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "install"
+  assertContains "${result[detail]}" "has been replaced with"
+  assertContains "${result[message]}" "Outdated Yarn version"
+  assertContains "${result[message]}" "does not support the --frozen-lockfile option"
+  assertContains "${result[message]}" "at least 0.19"
+  # The caller-supplied version is interpolated into the message (title + parenthetical).
+  assertContains "${result[message]}" "Outdated Yarn version: 0.16.1"
+  assertContains "${result[message]}" "Yarn (0.16.1)"
+}
+
+testHandleYarnInstallBadVersion() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/no-matching-version.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Preserve the legacy failure slug so downstream metrics stay continuous.
+  assertEquals "bad-version-for-dependency" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Couldn't find any versions for"
+  assertContains "${result[message]}" "does not exist"
+}
+
 testHandleYarnInstallNoMatchReturnsNonZero() {
   local -A result
   if package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/clean.log" result; then
     fail "expected classifier to return non-zero for an unrecognised log"
   fi
   assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testMatchClassicRegistry404() {
+  local -A result
+  package_managers::yarn::_match_classic_registry_404 "$(pwd)/test/unit-fixtures/yarn-failures/e404.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  # Reuses npm's E404 id/classification (package_managers::npm::_handle_npm_install_failure) so
+  # the metric is unified across tools regardless of which one hit the 404.
+  assertEquals "module-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Request failed"
+  assertContains "${result[message]}" "Unable to install dependencies using Yarn"
+}
+
+testMatchClassicRegistry404FlatmapStream() {
+  local -A result
+  package_managers::yarn::_match_classic_registry_404 "$(pwd)/test/unit-fixtures/yarn-failures/flatmap-stream.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "flatmap-stream-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+  assertContains "${result[detail]}" "Request failed"
+  assertContains "${result[message]}" "flatmap-stream module has been removed"
+}
+
+testMatchClassicRegistry404NoMatchReturnsNonZero() {
+  local -A result
+  if package_managers::yarn::_match_classic_registry_404 "$(pwd)/test/unit-fixtures/yarn-failures/clean.log" result; then
+    fail "expected classifier to return non-zero for an unrecognised log"
+  fi
+  assertEquals "array should be left empty on no match" "" "${result[id]:-}"
+}
+
+testHandleYarnInstall404() {
+  local -A result
+  # Verifies the shared registry-404 matcher is wired into the classic install classifier.
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/e404.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "module-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+}
+
+testHandleYarnInstallFlatmapStream() {
+  local -A result
+  package_managers::yarn::_handle_yarn_classic_install_failure "$(pwd)/test/unit-fixtures/yarn-failures/flatmap-stream.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "flatmap-stream-404" "${result[id]}"
 }
 
 testHandleYarnBerryInstallLockfileOutOfSync() {
@@ -712,6 +1134,59 @@ testHandleYarnInstallPipefail() {
   assertContains "$(cat "$capture")" "failure=yarn-install-pipefail"
   assertContains "$(cat "$capture")" "failure_classification=buildpack"
   assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
+  rm -f "$capture"
+}
+
+testFailProductionEnvSetPrunesWhenProductionTrue() {
+  # YARN_PRODUCTION=true meant "production install" under yarn 1.x, so the migration guidance keeps
+  # pruning by recommending YARN2_SKIP_PRUNING=false.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    package_managers::yarn::fail_if_yarn_production_env_set_on_berry "true" 2>&1 || true
+  )
+
+  assertContains "$out" "Unsupported Yarn configuration: YARN_PRODUCTION"
+  assertContains "$out" "heroku config:unset YARN_PRODUCTION"
+  assertContains "$out" "heroku config:set YARN2_SKIP_PRUNING=false"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertContains "$(cat "$capture")" "failure=yarn2-with-yarn-production-env-set"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailProductionEnvSetSkipsPruneForOtherValues() {
+  # Any non-"true" value meant "keep devDependencies", so the guidance skips pruning
+  # (YARN2_SKIP_PRUNING=true).
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    package_managers::yarn::fail_if_yarn_production_env_set_on_berry "false" 2>&1 || true
+  )
+
+  assertContains "$out" "heroku config:set YARN2_SKIP_PRUNING=true"
+  assertContains "$(cat "$capture")" "failure=yarn2-with-yarn-production-env-set"
+  rm -f "$capture"
+}
+
+testFailProductionEnvSetIsNoOpWhenUnset() {
+  # The guard is invoked unconditionally from bin/compile, so an unset YARN_PRODUCTION must not
+  # emit or fail — it returns 0 with no output and no build-data writes.
+  local out capture rc
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    package_managers::yarn::fail_if_yarn_production_env_set_on_berry "" 2>&1
+  ) && rc=0 || rc=$?
+
+  assertEquals "guard should return 0 when YARN_PRODUCTION is unset" "0" "${rc}"
+  assertEquals "guard should emit nothing when YARN_PRODUCTION is unset" "" "$out"
+  assertEquals "guard should not write build data when YARN_PRODUCTION is unset" "" "$(cat "$capture")"
   rm -f "$capture"
 }
 
@@ -792,11 +1267,21 @@ testPnpmExtractErrorDetailEmptyWhenNoDescriptiveLine() {
   assertEquals "" "$detail"
 }
 
+testHandleYarnClassicPrune404() {
+  local -A result
+  # Verifies the shared registry-404 matcher is also wired into the classic prune classifier, so
+  # a re-fetch during `yarn install --frozen-lockfile` (prune's reinstall) is caught the same way
+  # as a fresh install.
+  package_managers::yarn::_handle_yarn_classic_prune_failure "$(pwd)/test/unit-fixtures/yarn-failures/e404.log" result
+  assertEquals "classifier should return 0 on a match" "0" "$?"
+  assertEquals "module-404" "${result[id]}"
+  assertEquals "user" "${result[classification]}"
+}
+
 testHandleYarnClassicPruneNoMatchReturnsNonZero() {
   local -A result
-  # No yarn 1.x prune failure mode is classified today; the classifier must always return non-zero
-  # (so the caller bubbles the raw exit code to the legacy trap) and leave the array empty. The
-  # clean fixture stands in for any unrecognised prune output.
+  # The clean fixture matches none of the classifier's failure modes (including the shared
+  # registry-404 matcher), so the classifier must return non-zero and leave the array empty.
   if package_managers::yarn::_handle_yarn_classic_prune_failure "$(pwd)/test/unit-fixtures/yarn-prune-devdependencies-failures/clean.log" result; then
     fail "expected classic prune classifier to return non-zero for an unrecognised log"
   fi
@@ -832,6 +1317,115 @@ testHandleYarnPrunePipefail() {
   assertContains "$(cat "$capture")" "failure_classification=buildpack"
   assertContains "$(cat "$capture")" "failure_detail=PIPESTATUS=[0 1]"
   rm -f "$capture"
+}
+
+# The Yarn 2+ (Berry) vendoring pre-flight checks emit their classified failure directly at the
+# call site: each takes a build_dir (and, for two of them, a yarn_path), checks the filesystem,
+# and calls failure::emit on the failing branch. These tests drive each function against a temp
+# BUILD_DIR set up with/without the relevant file to exercise both the fail and no-fail paths.
+# The emit-at-site path reuses the generic _capture_node_fail helper (defined below); the no-fail
+# path stubs `fail`/`build_data::set_string` in a subshell and asserts nothing was emitted.
+
+testFailMissingYarnrcYmlEmitsMessageWhenAbsent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  _capture_node_fail out "$capture" \
+    package_managers::yarn::fail_missing_yarnrc_yml "$build_dir"
+
+  assertContains "$out" "The 'yarnrc.yml' file is not found"
+  assertContains "$out" "yarn set version berry"
+  assertContains "$out" "https://yarnpkg.com/getting-started/install#per-project-install"
+  # The legacy warn() helper appended this default docs URL on its own line; preserve it.
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support"
+  # Preserve the legacy failure slug so Honeycomb dashboards keep working.
+  assertContains "$(cat "$capture")" "failure=missing-yarnrc-yml"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnrcYmlNoEmitWhenPresent() {
+  local capture build_dir out
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  touch "$build_dir/.yarnrc.yml"
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::fail_missing_yarnrc_yml "$build_dir" 2>&1
+    echo "returned:$?"
+  )
+  assertContains "the guard should pass and the function should return cleanly" "$out" "returned:0"
+  assertEquals "nothing should be written to build data" "" "$(cat "$capture")"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnPathEmitsMessageWhenEmpty() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  _capture_node_fail out "$capture" \
+    package_managers::yarn::fail_missing_yarn_path "$build_dir" ""
+
+  assertContains "$out" "The 'yarnPath' could not be read from the 'yarnrc.yml' file"
+  assertContains "$out" "yarn set version berry"
+  assertContains "$out" "https://yarnpkg.com/getting-started/install#per-project-install"
+  # The legacy warn() helper appended this default docs URL on its own line; preserve it.
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support"
+  assertContains "$(cat "$capture")" "failure=missing-yarn-path"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnPathNoEmitWhenSet() {
+  local capture build_dir out
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::fail_missing_yarn_path "$build_dir" ".yarn/releases/yarn-4.0.0.cjs" 2>&1
+    echo "returned:$?"
+  )
+  assertContains "a non-empty yarn_path should pass the guard" "$out" "returned:0"
+  assertEquals "nothing should be written to build data" "" "$(cat "$capture")"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnVendorEmitsMessageWhenAbsent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  _capture_node_fail out "$capture" \
+    package_managers::yarn::fail_missing_yarn_vendor "$build_dir" ".yarn/releases/yarn-4.0.0.cjs"
+
+  assertContains "$out" "Yarn was not found"
+  assertContains "$out" ".yarn/releases/yarn-4.0.0.cjs"
+  assertContains "$out" "https://yarnpkg.com/getting-started/install#per-project-install"
+  # The legacy warn() helper appended this default docs URL on its own line; preserve it.
+  assertContains "$out" "https://devcenter.heroku.com/articles/nodejs-support"
+  assertContains "$(cat "$capture")" "failure=missing-yarn-vendor"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # The offending vendored path is recorded in detail for observability.
+  assertContains "$(cat "$capture")" "failure_detail=.yarn/releases/yarn-4.0.0.cjs"
+  rm -rf "$capture" "$build_dir"
+}
+
+testFailMissingYarnVendorNoEmitWhenPresent() {
+  local capture build_dir out
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  mkdir -p "$build_dir/.yarn/releases"
+  touch "$build_dir/.yarn/releases/yarn-4.0.0.cjs"
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    package_managers::yarn::fail_missing_yarn_vendor "$build_dir" ".yarn/releases/yarn-4.0.0.cjs" 2>&1
+    echo "returned:$?"
+  )
+  assertContains "a vendored release that exists should pass the guard" "$out" "returned:0"
+  assertEquals "nothing should be written to build data" "" "$(cat "$capture")"
+  rm -rf "$capture" "$build_dir"
 }
 
 # npm 12 removed --unsafe-perm; the gate helper decides whether callers may pass it. Stub `npm`
@@ -1052,6 +1646,95 @@ testFailUnsupportedChecksumEmitsDetailedMessage() {
   rm -f "$capture"
 }
 
+testFailDotHerokuEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_dot_heroku ".heroku" "dot-heroku"
+
+  assertContains "$out" "Error: The directory .heroku could not be created."
+  assertContains "$out" "a .heroku file is checked into this project"
+  # The historical failure id is preserved for metric continuity.
+  assertContains "$(cat "$capture")" "failure=dot-heroku"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailDotHerokuNodeEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_dot_heroku ".heroku/node" "dot-heroku-node"
+
+  assertContains "$out" "Error: The directory .heroku/node could not be created."
+  assertContains "$out" "a .heroku file is checked into this project"
+  assertContains "$(cat "$capture")" "failure=dot-heroku-node"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testGuardDotHerokuEmitsWhenFilePresent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  touch "$build_dir/.heroku"
+
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::fail_dot_heroku "$build_dir"
+
+  assertContains "$out" "Error: The directory .heroku could not be created."
+  assertContains "$(cat "$capture")" "failure=dot-heroku"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testGuardDotHerokuNoopWhenFileAbsent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::fail_dot_heroku "$build_dir"
+
+  assertEquals "no message should be emitted when .heroku is absent" "" "$out"
+  assertEquals "no classified failure should be recorded" "" "$(cat "$capture")"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testGuardDotHerokuNodeEmitsWhenFilePresent() {
+  local out capture build_dir
+  capture=$(mktemp)
+  build_dir=$(mktemp -d)
+  mkdir -p "$build_dir/.heroku"
+  touch "$build_dir/.heroku/node"
+
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::fail_dot_heroku "$build_dir"
+
+  assertContains "$out" "Error: The directory .heroku/node could not be created."
+  assertContains "$(cat "$capture")" "failure=dot-heroku-node"
+  rm -rf "$build_dir"
+  rm -f "$capture"
+}
+
+testFailIojsUnsupportedEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    runtimes::nodejs::_fail_iojs_unsupported "3.3.1"
+
+  # The message names io.js, echoes the requested version, and gives the fix instruction.
+  assertContains "$out" "Error: io.js is no longer supported."
+  assertContains "$out" '"iojs": "3.3.1"'
+  assertContains "$out" 'remove the "iojs" entry under "engines" in your package.json'
+  # The historical failure id is preserved for metric continuity; app-controlled input.
+  assertContains "$(cat "$capture")" "failure=iojs-unsupported"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  assertContains "$(cat "$capture")" "failure_detail=3.3.1"
+  rm -f "$capture"
+}
+
 testExtractErrorDetailReturnsFirstDescriptiveLine() {
   # Skips the bare `code <CODE>` line and the "complete log" noise, strips the
   # `npm error `/`npm ERR! ` prefix (but keeps any keyword like `notsup` that follows).
@@ -1175,6 +1858,306 @@ testHandleScriptPipefail() {
   rm -f "$capture"
 }
 
+testRunScriptCommandClassifiesGitAuthFailure() {
+  # A heroku-prebuild/build/heroku-postbuild/heroku-cleanup script can shell out to git for a
+  # git+ssh:// dependency and hit the same SSH host-key failure as the main install. Drive the
+  # failure through the real dispatch path (package_managers::npm::run_script ->
+  # package_manager::run_script_command), not the classifier directly, so a reintroduced nameref
+  # collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/git-auth-failures/host-key-verification-failed.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Unable to install a git dependency over SSH"
+  assertContains "$(cat "$capture")" "failure=private-git-dependency-without-auth"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesEconnreset() {
+  # A build-script lifecycle hook can hit an ECONNRESET the same way a fresh install can. Drive
+  # the failure through the real dispatch path (package_managers::npm::run_script ->
+  # package_manager::run_script_command), not the classifier directly, so a reintroduced
+  # nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/econnreset-failures/econnreset.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "ECONNRESET"
+  assertContains "$(cat "$capture")" "failure=econnreset"
+  assertContains "$(cat "$capture")" "failure_classification=upstream"
+  rm -f "$capture"
+}
+
+testInstallDependenciesEconnresetRetryNoiseDoesNotMaskNpmSpecificFailure() {
+  # A build that retries past a transient ECONNRESET and then fails for an unrelated, permanent
+  # reason (npm EBADPLATFORM) must surface the specific npm failure, not "just retry" — the
+  # econnreset classifier is checked last, as a fallback, specifically so retry noise like this
+  # can't shadow a real, permanent failure. Drive it through the real call site
+  # (package_managers::npm::install_dependencies), not the classifier directly, so a
+  # reintroduced ordering regression at this call site would be caught.
+  local fixture build_dir out capture
+  fixture="$(pwd)/test/unit-fixtures/econnreset-failures/retry-noise-with-ebadplatform.log"
+  build_dir=$(mktemp -d)
+  echo '{}' >"${build_dir}/package.json"
+  capture=$(mktemp)
+  out=$(
+    # install_dependencies classifies from PIPESTATUS[0] (npm's exit code), which only survives
+    # the `npm | tee` pipeline under pipefail; enable it here to match bin/compile, which sets
+    # it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_raw() { :; }
+    build_data::set_duration() { :; }
+    build_data::current_unix_realtime() { echo 0; }
+    build_data::set_string() { echo "$1=$2" >>"${capture}"; }
+    npm() {
+      if [[ "$1" == "--version" ]]; then
+        echo "10.0.0"
+        return 0
+      fi
+      cat "${fixture}"
+      return 1
+    }
+    package_managers::npm::install_dependencies "${build_dir}" 2>&1
+  )
+  assertContains "$out" "Unable to install dependencies using npm"
+  assertContains "$(cat "$capture")" "failure=npm-ebadplatform"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  if [[ "$(cat "$capture")" == *"failure=econnreset"* ]]; then
+    fail "transient ECONNRESET retry noise should not shadow the permanent npm-specific failure"
+  fi
+  rm -rf "${build_dir}"
+  rm -f "$capture"
+}
+
+testInstallDependenciesClassifiesTerminalEconnreset() {
+  # A terminal ECONNRESET (retries exhausted, no other error code present) must still be
+  # classified as econnreset even though it is now checked last, as a fallback, after the
+  # npm-specific matcher. Drive it through the real call site
+  # (package_managers::npm::install_dependencies), not the classifier directly; complements
+  # testHandleEconnreset, which stays green as the direct-classifier check.
+  local fixture build_dir out capture
+  fixture="$(pwd)/test/unit-fixtures/econnreset-failures/econnreset.log"
+  build_dir=$(mktemp -d)
+  echo '{}' >"${build_dir}/package.json"
+  capture=$(mktemp)
+  out=$(
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_raw() { :; }
+    build_data::set_duration() { :; }
+    build_data::current_unix_realtime() { echo 0; }
+    build_data::set_string() { echo "$1=$2" >>"${capture}"; }
+    npm() {
+      if [[ "$1" == "--version" ]]; then
+        echo "10.0.0"
+        return 0
+      fi
+      cat "${fixture}"
+      return 1
+    }
+    package_managers::npm::install_dependencies "${build_dir}" 2>&1
+  )
+  assertContains "$out" "ECONNRESET"
+  assertContains "$(cat "$capture")" "failure=econnreset"
+  assertContains "$(cat "$capture")" "failure_classification=upstream"
+  rm -rf "${build_dir}"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesLibc6Incompatibility() {
+  # A build-script lifecycle hook invokes the Node.js binary itself (e.g. `node ./some-script`
+  # via a package.json script), so it can hit the same glibc incompatibility as the main
+  # install. Drive the failure through the real dispatch path (package_managers::npm::run_script
+  # -> package_manager::run_script_command), not the classifier directly, so a reintroduced
+  # nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/libc6-failures/glibc-not-found.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "This Node.js version is not compatible with the current stack."
+  assertContains "$(cat "$capture")" "failure=libc6-incompatibility"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesOpensslUnsupportedAlgorithm() {
+  # The build script (e.g. `node build.js`) can hit OpenSSL 3's dropped support for an
+  # algorithm/digest. Drive the failure through the real dispatch path
+  # (package_managers::npm::run_script -> package_manager::run_script_command), not the
+  # classifier directly, so a reintroduced nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    # run_script_command classifies from PIPESTATUS[0] (the tool's exit code), which only
+    # survives the `tool | tee` pipeline under pipefail; enable it here to match bin/compile,
+    # which sets it globally for the whole build.
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Unsupported cryptographic algorithm used"
+  assertContains "$(cat "$capture")" "failure=openssl-unsupported-algorithm"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesOpensslUnsupportedAlgorithmWebpack() {
+  # The webpack-cli sub-case gets a more specific id and fix instructions.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/build-script-failures/openssl-unsupported-algorithm-webpack.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "output.hashFunction"
+  assertContains "$(cat "$capture")" "failure=openssl-unsupported-algorithm-webpack"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testRunScriptCommandClassifiesNodeOutOfMemory() {
+  # The build script (e.g. asset bundling via Webpack/Vite/Rollup) can exhaust the Node.js heap.
+  # Drive the failure through the real dispatch path (package_managers::npm::run_script ->
+  # package_manager::run_script_command), not the classifier directly, so a reintroduced
+  # nameref collision between the two would be caught.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    set -o pipefail
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >> "$capture"; }
+    npm() {
+      cat "$(pwd)/test/unit-fixtures/build-script-failures/node-out-of-memory.log"
+      return 1
+    }
+    package_managers::npm::run_script "build" 2>&1
+  )
+  assertContains "$out" "Node.js Out-Of-Memory (OOM)"
+  assertContains "$(cat "$capture")" "failure=node-out-of-memory"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataEmitsDetailedMessage() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    package_manager::_fail_conflicting_metadata \
+    "npm version detected in engines.npm (10.x)" \
+    "pnpm version declared in packageManager (pnpm@9.9.0)"
+
+  # The message preserves the existing wording and lists each detected declaration.
+  assertContains "$out" "Multiple package managers declared in package.json"
+  assertContains "$out" "Only one of the following fields should be used, all others should be removed"
+  assertContains "$out" "- npm version detected in engines.npm (10.x)"
+  assertContains "$out" "- pnpm version declared in packageManager (pnpm@9.9.0)"
+  # The historical failure id is preserved for metric continuity; app-controlled input.
+  assertContains "$(cat "$capture")" "failure=multiple-package-managers"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  # Detail records the conflicting fields detected.
+  assertContains "$(cat "$capture")" "failure_detail=npm version detected in engines.npm (10.x)"
+  assertContains "$(cat "$capture")" "pnpm version declared in packageManager (pnpm@9.9.0)"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardEmitsWhenMultipleDeclared() {
+  local out capture
+  capture=$(mktemp)
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/conflicting-package-manager-metadata"
+
+  assertContains "$out" "Multiple package managers declared in package.json"
+  assertContains "$(cat "$capture")" "failure=multiple-package-managers"
+  assertContains "$(cat "$capture")" "failure_classification=user"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardDoesNotEmitWhenSingleDeclared() {
+  local out capture
+  capture=$(mktemp)
+  # error-prune declares only engines.npm — a single package manager, so the guard never
+  # reaches the emit helper and nothing is printed or recorded.
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/error-prune"
+
+  assertNull "single package manager should not emit a failure message" "$out"
+  assertEquals "single package manager should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardDoesNotEmitWhenNoneDeclared() {
+  local out capture
+  capture=$(mktemp)
+  # has-script-fixtures declares only engines.node (no npm/yarn/pnpm and no packageManager), so
+  # no package manager is detected and the guard never reaches the emit helper.
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/has-script-fixtures"
+
+  assertNull "no package manager declared should not emit a failure message" "$out"
+  assertEquals "no package manager declared should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
+testFailConflictingMetadataGuardDoesNotEmitWhenSameManagerDeclaredTwice() {
+  local out capture
+  capture=$(mktemp)
+  # pnpm-with-corepack-and-engine declares pnpm in BOTH engines.pnpm and packageManager. These
+  # name the same package manager, so they dedupe to a single key and the guard must not emit —
+  # guards the packageManager-field detection branch against a false conflict.
+  _capture_node_fail out "$capture" \
+    package_manager::fail_conflicting_metadata "$(pwd)/test/fixtures/pnpm-with-corepack-and-engine"
+
+  assertNull "same package manager declared twice should not emit a failure message" "$out"
+  assertEquals "same package manager declared twice should not record a failure" "" "$(cat "$capture")"
+  rm -f "$capture"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
@@ -1191,7 +2174,6 @@ source "$(pwd)"/lib/package_managers/yarn.sh
 source "$(pwd)"/lib/runtimes/nodejs.sh
 source "$(pwd)"/lib/output.sh
 source "$(pwd)"/lib/_output.sh
-source "$(pwd)"/lib/_failures.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils

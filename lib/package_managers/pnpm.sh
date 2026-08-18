@@ -57,18 +57,32 @@ package_managers::pnpm::install_dependencies() {
 			# pnpm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the pnpm classifier.
 			package_managers::pnpm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it is
+			# classified before the pnpm-specific matcher below.
+			failure::emit failure
 		elif package_managers::pnpm::_handle_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# pnpm-specific matcher above.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not a pnpm error code). Checked last, as a
+			# fallback after the pnpm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the pnpm codes not yet migrated here, instead of
-		# masking them with a generic message.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — covering the pnpm codes not yet migrated here.
 		return "${pnpm_exit}"
 	fi
 
@@ -141,8 +155,9 @@ function package_managers::pnpm::_handle_prune_pipefail() {
 # prune strategies: the workspace path (`pnpm install --prod --frozen-lockfile`, a production
 # reinstall) and the non-workspace path (`pnpm prune --prod [--ignore-scripts]`). Both record the
 # same `prune_dev_dependencies_time` metric and have the same failure surface — a tee-side pipe
-# failure is buildpack-side; any pnpm tool failure bubbles to the legacy trap — so the two paths
-# differ only in the command, which the caller passes as arguments.
+# failure is buildpack-side, and a git+ssh host-key failure is classified generically (see below);
+# any other pnpm tool failure bubbles to the generic ERR-trap fallback — so the two paths differ only in the
+# command, which the caller passes as arguments.
 function package_managers::pnpm::_run_prune() {
 	local prune_command=("$@")
 
@@ -165,16 +180,34 @@ function package_managers::pnpm::_run_prune() {
 		local pnpm_exit="${pipe_status[0]}"
 		build_data::set_duration "prune_dev_dependencies_time" "${start}"
 
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${pnpm_exit}" -eq 0 ]]; then
 			# pnpm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't blame the app.
 			package_managers::pnpm::_handle_prune_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# Only the workspace reinstall variant (`pnpm install --prod --frozen-lockfile`) can
+			# hit this — it re-fetches dependencies and can re-trigger a git+ssh host-key failure.
+			# The non-workspace `pnpm prune` path never touches git, so this simply never matches
+			# there.
+			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# Only the workspace reinstall variant can re-fetch dependencies and hit a network
+			# reset the same way a fresh install can; the non-workspace `pnpm prune` path never
+			# hits the network, so this simply never matches there.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. Unlike the
+			# git-auth/econnreset checks above, this can surface on either prune path (it's the
+			# Node.js binary invoked by pnpm that fails to start, not a re-fetch).
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
 		# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure — there is no migrated pnpm-prune tool-error classifier to add here yet.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — there is no migrated pnpm-prune tool-error classifier to add here yet.
 		return "${pnpm_exit}"
 	fi
 
@@ -277,7 +310,20 @@ function package_managers::pnpm::prune_devdependencies() {
 		for project_path in "${project_paths[@]}"; do
 			# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 			if package_managers::pnpm::_has_lifecycle_script "${project_path}/package.json"; then
-				warn_skipping_unsafe_pnpm_workspace_prune "${project_path}"
+				output::warning <<-EOF
+					Pruning skipped due to presence of lifecycle scripts
+
+					Lifecycle scripts were detected in the \`package.json\` file at \`${project_path}\`. Due to how
+					workspace pruning in pnpm operates, it will execute the following lifecycle scripts declared
+					in package.json during reinstallation of prod dependencies which can cause build failures:
+					- pnpm:devPreinstall
+					- preinstall
+					- install
+					- postinstall
+					- prepare
+
+					Since pruning can't be done safely for your build, it will be skipped.
+				EOF
 				build_data::set_raw "skipped_prune" "true"
 				return 0
 			fi
@@ -307,7 +353,22 @@ function package_managers::pnpm::prune_devdependencies() {
 		|| ((pnpm_major_version == 8 && pnpm_minor_version == 15 && pnpm_patch_version < 6)); then
 		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 		if package_managers::pnpm::_has_lifecycle_script "${build_dir}/package.json"; then
-			warn_skipping_unsafe_pnpm_prune "${pnpm_version}"
+			output::warning <<-EOF
+				Pruning skipped due to presence of lifecycle scripts
+
+				The version of pnpm used (${pnpm_version}) will execute the following lifecycle scripts
+				declared in package.json during pruning which can cause build failures:
+				- pnpm:devPreinstall
+				- preinstall
+				- install
+				- postinstall
+				- prepare
+
+				Since pruning can't be done safely for your build, it will be skipped. To fix this you
+				must upgrade your version of pnpm to 8.15.6 or higher.
+
+				https://devcenter.heroku.com/articles/nodejs-support
+			EOF
 			build_data::set_raw "skipped_prune" "true"
 			return
 		fi

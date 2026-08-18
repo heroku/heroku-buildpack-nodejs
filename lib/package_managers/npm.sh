@@ -71,18 +71,34 @@ function package_managers::npm::install_dependencies() {
 			# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
 			# disk). Buildpack-side, so don't run it through the npm classifier.
 			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it is
+			# classified before the npm-specific matcher below.
+			failure::emit failure
 		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
 			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
 			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
 			# command substitution runs in a subshell where the nameref updates would be lost.
 			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# npm-specific matcher above: a transient ECONNRESET retry can appear in the same log
+			# as an unrelated, permanent npm failure, and the specific code should win.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not an npm error code). Checked last, as a
+			# fallback after the npm-specific matcher above.
+			failure::emit failure
 		fi
 
 		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
 		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-		# failure from $LOG_FILE — covering the codes (ERESOLVE, ETARGET, ENOSPC, …) not yet
-		# migrated here, instead of masking them with a generic message.
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error — covering the codes (ERESOLVE, ETARGET, ENOSPC, …) not yet
+		# migrated here.
 		return "${npm_exit}"
 	fi
 
@@ -103,10 +119,55 @@ function package_managers::npm::rebuild_dependencies() {
 
 	cd "${build_dir}"
 	echo "Rebuilding any native modules"
-	# `npm rebuild` runs unwrapped: its failure surface is native-module compile errors, not
-	# resolution/registry failures, so the npm-install classifier below does not apply. If it
-	# fails, errexit fires and the legacy trap classifies from the shared log.
-	npm rebuild 2>&1
+
+	local native_rebuild_log_file
+	native_rebuild_log_file=$(mktemp)
+
+	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
+	# Shares the classifier chain with the install step below (`_handle_npm_install_failure`) —
+	# a native-module compile failure (e.g. via node-gyp) surfaces through the same npm error
+	# codes as an install failure.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { npm rebuild 2>&1 | tee "${native_rebuild_log_file}"; }; then
+		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
+		# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+		local pipe_status=("${PIPESTATUS[@]}")
+		local npm_exit="${pipe_status[0]}"
+
+		local -A failure
+		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
+		if [[ "${npm_exit}" -eq 0 ]]; then
+			# npm succeeded but the pipeline failed (tee couldn't write the log — e.g. out of
+			# disk). Buildpack-side, so don't run it through the npm classifier.
+			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${native_rebuild_log_file}" failure; then
+			# A private git+ssh dependency failed SSH host-key verification. This is a
+			# cross-cutting git-layer failure (every package manager shells out to git), so it is
+			# classified before the npm-specific matcher below.
+			failure::emit failure
+		elif package_managers::npm::_handle_npm_install_failure "${native_rebuild_log_file}" failure; then
+			# The classifier fills `failure` by nameref and returns 0 on a match. It is invoked
+			# directly in the `elif` condition (not wrapped in `$(...)`) so its writes survive — a
+			# command substitution runs in a subshell where the nameref updates would be lost.
+			failure::emit failure
+		elif failure::handle_econnreset "${native_rebuild_log_file}" failure; then
+			# A network connection was reset. This is a cross-cutting network-layer failure
+			# (every package manager can hit it). Checked last, as a fallback after the
+			# npm-specific matcher above.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${native_rebuild_log_file}" failure; then
+			# The Node.js binary itself is incompatible with the current stack's glibc. This is a
+			# cross-cutting runtime-layer failure (not an npm error code). Checked last, as a
+			# fallback after the npm-specific matcher above.
+			failure::emit failure
+		fi
+
+		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
+		# that runs this rebuild (`build_dependencies | output "$LOG_FILE"`) then fails under
+		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+		# failure=internal-error.
+		return "${npm_exit}"
+	fi
 
 	if [[ -e "${build_dir}/npm-shrinkwrap.json" ]]; then
 		echo "Installing any new modules (package.json + shrinkwrap)"
@@ -147,7 +208,18 @@ function package_managers::npm::rebuild_dependencies() {
 		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${npm_exit}" -eq 0 ]]; then
 			package_managers::npm::_handle_install_pipefail "${pipe_status[*]}"
+		elif failure::handle_git_auth_failure "${log_file}" failure; then
+			# Shared git+ssh host-key failure classifier — checked before the npm-specific matcher.
+			failure::emit failure
 		elif package_managers::npm::_handle_npm_install_failure "${log_file}" failure; then
+			failure::emit failure
+		elif failure::handle_econnreset "${log_file}" failure; then
+			# Shared network-reset classifier — checked last, as a fallback after the npm-specific
+			# matcher.
+			failure::emit failure
+		elif failure::handle_libc6_incompatibility "${log_file}" failure; then
+			# Shared glibc-incompatibility classifier — checked last, as a fallback after the
+			# npm-specific matcher.
 			failure::emit failure
 		fi
 
@@ -261,10 +333,8 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
-	# npm E404 code — stable npm v3–v11 (lib/utils/error-message.js). The second pattern matches
-	# Yarn's 404 wording, carried over from the legacy log_other_failures matcher.
-	if grep -qiE -e 'npm (ERR!|error) code E404($| )' \
-		-e "error An unexpected error occurred: .* Request failed \"404 Not Found\"" "${log_file}"; then
+	# npm E404 code — stable npm v3–v11 (lib/utils/error-message.js).
+	if grep -qiE 'npm (ERR!|error) code E404($| )' "${log_file}"; then
 
 		# The flatmap-stream malware case is a more specific instance of a 404.
 		if grep -qi "flatmap-stream" "${log_file}"; then
@@ -407,9 +477,9 @@ function package_managers::npm::_handle_npm_install_failure() {
 	# so gate on the specific "Please update your lock file" message emitted only from
 	# `npm ci` when `validateLockfile()` fails (lib/commands/ci.js, stable since v8.4.1). The
 	# outer EUSAGE match with the discriminator line is what isolates the lockfile-out-of-sync
-	# case from every other EUSAGE sub-case (arg-validation, audit/diff/sbom/etc.), which the
-	# legacy matcher (`_failures.sh:582-596`) also handled this way. Only `install_dependencies`
-	# runs `npm ci`, but this classifier is shared with `rebuild_dependencies` — the latter
+	# case from every other EUSAGE sub-case (arg-validation, audit/diff/sbom/etc.). Only
+	# `install_dependencies` runs `npm ci`, but this classifier is shared with
+	# `rebuild_dependencies` — the latter
 	# only ever runs `npm install`, so it cannot emit this mode; the matcher simply won't fire
 	# there.
 	if grep -qiE 'npm (ERR!|error) code EUSAGE($| )' "${log_file}" \
@@ -432,8 +502,115 @@ function package_managers::npm::_handle_npm_install_failure() {
 		return 0
 	fi
 
+	# npm ETARGET code — stable npm v3–v11. Thrown by npm-pick-manifest when no published version
+	# satisfies the requested range; error-message.js (case 'ETARGET') surfaces the code on the
+	# `npm error code ETARGET` summary line and renders the message under a `notarget` heading.
+	# Matched on the code (like the npm code matchers above) rather than the `notarget` message
+	# text — the code is the stable discriminator. E403 (policy-forbidden) is thrown from the same
+	# npm-pick-manifest path with a distinct code, so this will not over-match it. The legacy
+	# failure id (`bad-version-for-dependency`) is preserved verbatim so the `failure` build-data
+	# key stays continuous for downstream metrics.
+	if grep -qiE 'npm (ERR!|error) code ETARGET($| )' "${log_file}"; then
+		__failure["id"]="bad-version-for-dependency"
+		__failure["classification"]="user"
+		__failure["detail"]="ETARGET: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				One of your dependencies requests a package version that does not exist
+				in the npm registry. Check the log output above for the offending package
+				and version range, and update it to a version that has been published.
+			EOF
+		)
+		return 0
+	fi
+
+	# npm ELIFECYCLE code — a dependency's install/lifecycle script failed, frequently a
+	# native-module compile via node-gyp. Gate on both the code and the "Failed at the <pkg>
+	# install script" summary line (lib/utils/error-message.js) emitted for the failing package,
+	# for the same code+message robustness as the EUSAGE lockfile matcher above. Kept below the
+	# more specific `npm ... code EXXX` matchers above so they keep precedence. Covers install
+	# and rebuild (both share this classifier) now that rebuild_dependencies wraps `npm rebuild`
+	# output. No bcrypt exclusion: bcrypt install-script failures have no error code or user text
+	# of their own beyond this generic signal, so they match here like any other native-addon
+	# build failure.
+	if grep -qiE 'npm (ERR!|error) code ELIFECYCLE($| )' "${log_file}" \
+		&& grep -qiE 'Failed at the [^ ]+ install script' "${log_file}"; then
+		__failure["id"]="dependency-failed-to-build"
+		__failure["classification"]="user"
+		__failure["detail"]="ELIFECYCLE: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				The install script for one of your dependencies failed. This most often
+				happens when a package with a native component (compiled on install via
+				node-gyp) fails to build. Check the log output above for the offending
+				package and the underlying compile error.
+			EOF
+		)
+		return 0
+	fi
+
+	# npm ENOENT code — stable npm v3–v12 (lib/utils/error-message.js). npm sets this when it
+	# cannot find a file or path referenced during install — most often a local file: dependency
+	# or a script path in package.json that does not exist in the deployed source. App-controlled,
+	# so classified as a user error. The removed legacy fallback keyed off the `enoent
+	# ENOENT: no such file or directory` summary line; here we key off the `code ENOENT` summary
+	# line for consistency with the sibling code-based matchers above. Covers install and rebuild
+	# (both share this classifier).
+	if grep -qiE 'npm (ERR!|error) code ENOENT($| )' "${log_file}"; then
+		__failure["id"]="npm-enoent"
+		__failure["classification"]="user"
+		__failure["detail"]="ENOENT: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				Error: Unable to install dependencies using npm.
+
+				npm could not find a file or directory it expected while installing your
+				dependencies. This usually means a local (\`file:\`) dependency or a path
+				referenced in your package.json does not exist in the deployed source. Check
+				the log output above for the missing path, and make sure it is committed and
+				spelled correctly.
+			EOF
+		)
+		return 0
+	fi
+
+	# npm git dependency error, code 128. A package.json git dependency (direct or transitive)
+	# whose git operation failed: @npmcli/git raises GitUnknownError ("An unknown git error
+	# occurred") and git's own fatal exit code (128) surfaces on npm's `npm error code 128`
+	# summary line. Gate on both the code-128 line AND the unknown-git-error line so this stays
+	# scoped to the git-dependency case (git code 128 is generic). Covers install and rebuild
+	# (both share this classifier).
+	#
+	# Excluded: a missing-auth failure ("Host key verification failed") is also a GitUnknownError
+	# with git exit 128, but that case is caught earlier at the call site by the generic
+	# failure::handle_git_auth_failure classifier (checked before this classifier runs at all), so
+	# the exclusion here is a defensive no-op rather than something this matcher relies on.
+	if grep -qiE 'npm (ERR!|error) code 128($| )' "${log_file}" \
+		&& grep -qi 'An unknown git error occurred' "${log_file}" \
+		&& ! grep -qi 'Host key verification failed' "${log_file}"; then
+		__failure["id"]="npm-install-git-dependency"
+		__failure["classification"]="user"
+		__failure["detail"]="128: $(package_managers::npm::_extract_error_detail "${log_file}")"
+		__failure["message"]=$(
+			cat <<-EOF
+				npm Git dependency error (code 128)
+
+				This error indicates an issue related to Git operations when attempting to install
+				an npm package specified as a Git dependency in \`package.json\`.
+
+				The error details above should contain more information about which package is causing the
+				issue during dependency installation as well as the specific problem that Git encountered.
+			EOF
+		)
+		return 0
+	fi
+
 	# TODO: classify additional npm codes present in error-message.js but not yet handled here,
-	# e.g. ETARGET (no matching version), ENOSPC (disk full).
+	# e.g. ENOSPC (disk full).
 	# Add each as its own matcher above, verified against npm source per the version-spread loop.
 
 	# No known failure mode recognised — signal no match so the caller can fall through.
@@ -616,8 +793,8 @@ function package_managers::npm::prune_devdependencies() {
 
 			# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
 			# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
-			# errexit/pipefail, the legacy ERR trap fires, and `log_other_failures` classifies the
-			# failure — there is no migrated npm-prune tool-error classifier to add here yet.
+			# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
+			# failure=internal-error — there is no migrated npm-prune tool-error classifier to add here yet.
 			return "${npm_exit}"
 		fi
 

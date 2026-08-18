@@ -32,8 +32,6 @@ source "$BP_DIR/lib/package_managers/npm.sh"
 source "$BP_DIR/lib/package_managers/pnpm.sh"
 # shellcheck source=lib/package_managers/yarn.sh
 source "$BP_DIR/lib/package_managers/yarn.sh"
-# shellcheck source=lib/_failures.sh
-source "$BP_DIR/lib/_failures.sh"
 # shellcheck source=lib/runtimes/nodejs.sh
 source "$BP_DIR/lib/runtimes/nodejs.sh"
 # shellcheck source=lib/utils/command.sh
@@ -57,10 +55,10 @@ LOG_FILE=$(mktemp -t node-build-log.XXXXX)
 echo "" > "$LOG_FILE"
 
 # Marker written by `failure::emit` (lib/failures.sh) when a migrated code path has already
-# classified, rendered, and recorded a failure. The global ERR trap checks for it and skips
-# the legacy classification matchers so the same failure isn't reported twice. It is a file
-# (not a shell variable) because `failure::emit` runs inside the `build_dependencies | output`
-# pipe's subshell, where a variable assignment would be invisible to the trap in the parent.
+# classified, rendered, and recorded a failure. The generic `failure::handle_uncaught` ERR trap
+# checks for it and stays quiet so the same failure isn't reported twice. It is a file (not a
+# shell variable) because `failure::emit` runs inside the `build_dependencies | output` pipe's
+# subshell, where a variable assignment would be invisible to the trap in the parent.
 export FAILURE_EMITTED_MARKER="${LOG_FILE}.emitted"
 
 build_start_time=$(build_data::current_unix_realtime)
@@ -85,23 +83,11 @@ done
 
 ### Handle errors
 
-handle_failure() {
-  # A migrated code path may have already classified and rendered this failure via
-  # `failure::emit`. If so, skip the entire legacy handler — its classification matchers would
-  # re-report the failure, and its generic warnings/troubleshooting footer would bury the
-  # specific message emit already printed. Migrated failures are self-contained by design.
-  if [[ ! -e "${FAILURE_EMITTED_MARKER:-}" ]]; then
-    header "Build failed"
-    fail_using_yarn2_with_yarn_production_environment_variable_set "$LOG_FILE"
-    fail_yarn_outdated "$LOG_FILE"
-    log_other_failures "$LOG_FILE"
-    warn_untracked_dependencies "$LOG_FILE"
-    warn_angular_resolution "$LOG_FILE"
-    warn_missing_devdeps "$LOG_FILE" "$BUILD_DIR"
-    failure_message | output "$LOG_FILE"
-  fi
-}
-trap 'handle_failure' ERR
+# Any non-zero exit that no migrated code path classified bubbles up to this generic handler,
+# which prints an "internal error" message with a stack trace and records failure=internal-error
+# for observability. It stays quiet when FAILURE_EMITTED_MARKER exists so a failure already
+# reported by `failure::emit` isn't reported twice.
+trap 'failure::handle_uncaught' ERR
 
 ### Check initial state
 
@@ -113,14 +99,11 @@ YARN_2=$(package_managers::yarn::detect_berry "$YARN" "$BUILD_DIR")
 
 ### Failures that should be caught immediately
 
-fail_dot_heroku "$BUILD_DIR"
-fail_dot_heroku_node "$BUILD_DIR"
-fail_invalid_package_json "$BUILD_DIR"
-fail_multiple_lockfiles "$BUILD_DIR"
-fail_conflicting_package_manager_metadata "$BUILD_DIR"
-fail_iojs_unsupported "$BUILD_DIR"
-warn_prebuilt_modules "$BUILD_DIR"
-warn_missing_package_json "$BUILD_DIR"
+runtimes::nodejs::fail_dot_heroku "$BUILD_DIR"
+utils::package_json::fail_invalid "$BUILD_DIR"
+package_manager::fail_multiple_lockfiles "$BUILD_DIR"
+package_manager::fail_conflicting_metadata "$BUILD_DIR"
+runtimes::nodejs::fail_iojs_unsupported "$BUILD_DIR"
 
 ### Compile
 
@@ -144,12 +127,25 @@ create_build_env
 export VENDOR_PATH
 
 if [[ "$YARN_2" == "true" ]]; then
+  # Fail fast before any yarn command runs: YARN_PRODUCTION aborts Berry's config load, so
+  # whichever yarn invocation runs first (install, prune, or a `yarn run` script hook) would
+  # otherwise blow up mid-build with an opaque clipanion error.
+  package_managers::yarn::fail_if_yarn_production_env_set_on_berry "${YARN_PRODUCTION:-}"
+
   if [[ -f "$BUILD_DIR/.npmrc" ]]; then
-    warn "There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
+    output::warning <<-EOF
+			There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file.
+
+			https://devcenter.heroku.com/articles/migrating-to-yarn-2
+		EOF
   fi
 
   if [[ -f "$BUILD_DIR/.yarnrc" ]]; then
-    warn "There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file." "https://devcenter.heroku.com/articles/migrating-to-yarn-2"
+    output::warning <<-EOF
+			There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file.
+
+			https://devcenter.heroku.com/articles/migrating-to-yarn-2
+		EOF
   fi
 
   # When in Plug'n'Play mode the yarn cache will include dependencies needed at
@@ -179,9 +175,9 @@ if [[ "$YARN_2" == "true" ]]; then
     # Yarn 1 in engines.yarn or packageManager to use a specific version for bootstrapping.
     1|"")
       # This ensures we check for a vendored Yarn if we're using Yarn 1 to bootstrap
-      fail_missing_yarnrc_yml "$BUILD_DIR"
+      package_managers::yarn::fail_missing_yarnrc_yml "$BUILD_DIR"
       VENDOR_PATH=$(package_managers::yarn::berry_get_path "$BUILD_DIR")
-      fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
+      package_managers::yarn::fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
       ;;
     *)
       # no need to require a vendored yarnPath (though one may still be configured)
@@ -193,7 +189,7 @@ if [[ "$YARN_2" == "true" ]]; then
 
   # Always validate vendored script exists if yarnPath is defined
   if [[ -n "$VENDOR_PATH" ]]; then
-    fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
+    package_managers::yarn::fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
   fi
 fi
 
@@ -204,7 +200,7 @@ fi
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine
+  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine npm_version
 
   node_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.node")
   npm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.npm")
@@ -232,8 +228,6 @@ install_bins() {
   if [ -n "$package_manager" ]; then
     echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
-
-  warn_node_engine "$node_engine"
 
   local showed_warning=false
 
@@ -364,7 +358,15 @@ install_bins() {
     build_data::set_string "npm_version" "$(npm --version)"
   fi
 
-  warn_old_npm
+  npm_version="$(npm --version)"
+  if [ "$(package_managers::npm::version_major)" -lt "2" ]; then
+    # Emit immediately via output::warning so this surfaces during the build.
+    output::warning <<-EOF
+			This version of npm ($npm_version) has several known issues. Please update your npm version in package.json.
+
+			https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
+		EOF
+  fi
 
   if [[ $YARN_2 == true ]]; then
     YARN=false
@@ -441,7 +443,11 @@ restore_cache() {
     if $PREBUILD && [[ "$SKIP_NODE_MODULES_CHECK" == "true" ]]; then
       echo "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
     elif $PREBUILD; then
-      warn "node_modules checked into source control" "https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits"
+      output::warning <<-EOF
+			node_modules checked into source control
+
+			https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
+		EOF
       rm -rf "$BUILD_DIR/node_modules"
     fi
   fi
@@ -581,8 +587,27 @@ build_data::set_string "build_step" "summarize"
 summarize_build | output "$LOG_FILE"
 build_data::set_duration "build_time" "$build_start_time"
 
-warn_no_start "$BUILD_DIR"
-warn_unmet_dep "$LOG_FILE"
-warn_old_npm_lockfile "$NPM_LOCK"
+if ! [ -e "$BUILD_DIR/Procfile" ]; then
+  start_script=$(utils::json::read "$BUILD_DIR/package.json" ".scripts.start")
+  if [ "$start_script" == "" ]; then
+    if ! [ -e "$BUILD_DIR/server.js" ]; then
+      output::warning <<-EOF
+			This app may not specify any way to start a node process
+
+			https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type
+		EOF
+    fi
+  fi
+fi
+
+npm_version="$(npm --version)"
+if $NPM_LOCK && [ "$(package_managers::npm::version_major)" -lt "5" ]; then
+  output::warning <<-EOF
+			This version of npm ($npm_version) does not support package-lock.json. Please
+			update your npm version in package.json.
+
+			https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
+		EOF
+fi
 
 build_data::set_string "build_step" "finished"

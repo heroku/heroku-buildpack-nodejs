@@ -1,0 +1,8 @@
+npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+
+added 142 packages, and audited 143 packages in 3s
+
+23 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities

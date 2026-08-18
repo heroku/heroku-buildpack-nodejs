@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Completed the migration of build-failure classification off the legacy global `ERR` trap onto the call-site failure-classification framework. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
+- Replaced the classifying `ERR` trap in `bin/compile` with a single generic fallback handler. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
+- Removed the post-failure "tip" warnings that ran after any failed build. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
+- Build warnings and failure messages now print to stderr. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
 
 ## [v362] - 2026-08-07
 
