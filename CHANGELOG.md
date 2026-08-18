@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v363] - 2026-08-18
+
 - Completed the migration of build-failure classification off the legacy global `ERR` trap onto the call-site failure-classification framework. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
 - Replaced the classifying `ERR` trap in `bin/compile` with a single generic fallback handler. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
 - Removed the post-failure "tip" warnings that ran after any failed build. ([#1764](https://github.com/heroku/heroku-buildpack-nodejs/pull/1764))
@@ -1402,7 +1405,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v362...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v363...main
+[v363]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v362...v363
 [v362]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v361...v362
 [v361]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v360...v361
 [v360]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v359...v360
