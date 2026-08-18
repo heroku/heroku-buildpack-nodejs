@@ -26,9 +26,9 @@ function package_managers::yarn::install_binary() {
 
 	if [[ -n "${YARN_BINARY_URL}" ]]; then
 		url="${YARN_BINARY_URL}"
-		echo "Downloading and installing yarn from ${url}"
+		output::info "Downloading and installing yarn from ${url}"
 	else
-		echo "Downloading and installing yarn (${version})"
+		output::info "Downloading and installing yarn (${version})"
 		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 		if ! package_name=$(package_managers::yarn::_determine_package_name "${version}"); then
 			build_data::set_string "failure" "yarn-resolve-failed"
@@ -53,9 +53,9 @@ function package_managers::yarn::install_binary() {
 	installed_version="$(yarn --version)"
 	# shellcheck disable=SC2154 # YARN_2 is a global set by the caller (bin/compile)
 	if ${YARN_2}; then
-		echo "Using yarn ${installed_version}"
+		output::info "Using yarn ${installed_version}"
 	else
-		echo "Installed yarn ${installed_version}"
+		output::info "Installed yarn ${installed_version}"
 	fi
 }
 
@@ -141,7 +141,7 @@ function package_managers::yarn::install_dependencies() {
 	local build_dir="${1:-}"
 	local production="${YARN_PRODUCTION:-false}"
 
-	echo "Installing node modules (yarn.lock)"
+	output::info "Installing node modules (yarn.lock)"
 	cd "${build_dir}" || return
 
 	local log_file
@@ -151,14 +151,13 @@ function package_managers::yarn::install_dependencies() {
 	start=$(build_data::current_unix_realtime)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
-	# Yarn 1 writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
-	# merged stream through `tee` for classification. Indentation is applied by the enclosing
-	# `build_dependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
-	# every yarn line would be indented twice.
+	# Yarn 1 writes progress and errors across stdout+stderr; merge them with `2>&1`, pass the
+	# merged stream through `tee` for classification, and indent it with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { yarn install --production="${production}" --frozen-lockfile --ignore-engines --prefer-offline 2>&1 | tee "${log_file}"; }; then
+	if ! { yarn install --production="${production}" --frozen-lockfile --ignore-engines --prefer-offline 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		# The pipeline is `yarn 2>&1 | tee | output::indent`, so [0] is yarn's exit code (tee is
+		# [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local yarn_exit="${pipe_status[0]}"
 		build_data::set_duration "install_dependencies_time" "${start}"
@@ -197,10 +196,10 @@ function package_managers::yarn::install_dependencies() {
 			failure::emit failure
 		fi
 
-		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
-		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — covering the yarn 1.x cases not yet migrated here.
+		# No known failure mode recognised. Bubble up by returning yarn's exit code: the bare
+		# `build_dependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — covering the
+		# yarn 1.x cases not yet migrated here.
 		return "${yarn_exit}"
 	fi
 
@@ -411,7 +410,7 @@ function package_managers::yarn::_match_classic_registry_404() {
 function package_managers::yarn::yarn2_install_dependencies() {
 	local build_dir="${1:-}"
 
-	echo "Running 'yarn install' with yarn.lock"
+	output::info "Running 'yarn install' with yarn.lock"
 	cd "${build_dir}" || return
 
 	local log_file
@@ -421,14 +420,13 @@ function package_managers::yarn::yarn2_install_dependencies() {
 	start=$(build_data::current_unix_realtime)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
-	# Berry writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
-	# merged stream through `tee` for classification. Indentation is applied by the enclosing
-	# `build_dependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
-	# every yarn line would be indented twice.
+	# Berry writes progress and errors across stdout+stderr; merge them with `2>&1`, pass the
+	# merged stream through `tee` for classification, and indent it with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { yarn install --immutable 2>&1 | tee "${log_file}"; }; then
+	if ! { yarn install --immutable 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		# The pipeline is `yarn 2>&1 | tee | output::indent`, so [0] is yarn's exit code (tee is
+		# [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local yarn_exit="${pipe_status[0]}"
 		build_data::set_duration "install_dependencies_time" "${start}"
@@ -462,11 +460,10 @@ function package_managers::yarn::yarn2_install_dependencies() {
 			failure::emit failure
 		fi
 
-		# No known failure mode recognised. Bubble up by returning yarn's exit code: the pipeline
-		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — covering the Berry YN codes (e.g. YN0001, YN0018) not yet
-		# migrated here.
+		# No known failure mode recognised. Bubble up by returning yarn's exit code: the bare
+		# `build_dependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — covering the
+		# Berry YN codes (e.g. YN0001, YN0018) not yet migrated here.
 		return "${yarn_exit}"
 	fi
 
@@ -555,15 +552,15 @@ function package_managers::yarn::prune_devdependencies() {
 	# and any flavor-specific skip (e.g. YARN2_SKIP_PRUNING).
 	# shellcheck disable=SC2154 # set by the caller (bin/compile)
 	if [[ "${NODE_ENV}" == "test" ]]; then
-		echo "Skipping because NODE_ENV is 'test'"
+		output::info "Skipping because NODE_ENV is 'test'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ "${NODE_ENV}" != "production" ]]; then
-		echo "Skipping because NODE_ENV is not 'production'"
+		output::info "Skipping because NODE_ENV is not 'production'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ -n "${YARN_PRODUCTION}" ]]; then
-		echo "Skipping because YARN_PRODUCTION is '${YARN_PRODUCTION}'"
+		output::info "Skipping because YARN_PRODUCTION is '${YARN_PRODUCTION}'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif ${YARN_2}; then
@@ -589,14 +586,13 @@ function package_managers::yarn::_prune_classic_devdependencies() {
 	start=$(build_data::current_unix_realtime)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
-	# Yarn 1 writes progress and errors across stdout+stderr; merge them with `2>&1` and pass
-	# the merged stream through `tee` for classification. Indentation is applied by the
-	# enclosing `prune_devdependencies | output "$LOG_FILE"` pipe in bin/compile — do not
-	# re-indent here or every yarn line would be indented twice.
+	# Yarn 1 writes progress and errors across stdout+stderr; merge them with `2>&1`, pass the
+	# merged stream through `tee` for classification, and indent it with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1 | tee "${log_file}"; }; then
+	if ! { yarn install --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		# The pipeline is `yarn 2>&1 | tee | output::indent`, so [0] is yarn's exit code (tee is
+		# [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local yarn_exit="${pipe_status[0]}"
 		build_data::set_duration "prune_dev_dependencies_time" "${start}"
@@ -628,10 +624,10 @@ function package_managers::yarn::_prune_classic_devdependencies() {
 			failure::emit failure
 		fi
 
-		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the
-		# pipeline that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails
-		# under errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — no migrated yarn-prune tool-error classifier exists here yet.
+		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the bare
+		# `prune_devdependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — no migrated
+		# yarn-prune tool-error classifier exists here yet.
 		return "${yarn_exit}"
 	fi
 
@@ -697,13 +693,13 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 
 	# shellcheck disable=SC2154 # YARN2_SKIP_PRUNING is a global set by the caller (bin/compile)
 	if [[ "${YARN2_SKIP_PRUNING}" == "true" ]]; then
-		echo "Skipping because YARN2_SKIP_PRUNING is '${YARN2_SKIP_PRUNING}'"
+		output::info "Skipping because YARN2_SKIP_PRUNING is '${YARN2_SKIP_PRUNING}'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	fi
 
 	cd "${build_dir}" || return
-	echo "Running 'yarn heroku prune'"
+	output::info "Running 'yarn heroku prune'"
 	export YARN_PLUGINS="${buildpack_dir}/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js"
 
 	local log_file
@@ -713,14 +709,13 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 	start=$(build_data::current_unix_realtime)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
-	# Berry writes progress and errors across stdout+stderr; merge them with `2>&1` and pass
-	# the merged stream through `tee` for classification. Indentation is applied by the
-	# enclosing `prune_devdependencies | output "$LOG_FILE"` pipe in bin/compile — do not
-	# re-indent here or every yarn line would be indented twice.
+	# Berry writes progress and errors across stdout+stderr; merge them with `2>&1`, pass the
+	# merged stream through `tee` for classification, and indent it with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { yarn heroku prune 2>&1 | tee "${log_file}"; }; then
+	if ! { yarn heroku prune 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `yarn 2>&1 | tee`, so [0] is yarn's exit code and [1] is tee's.
+		# The pipeline is `yarn 2>&1 | tee | output::indent`, so [0] is yarn's exit code (tee is
+		# [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local yarn_exit="${pipe_status[0]}"
 		build_data::set_duration "prune_dev_dependencies_time" "${start}"
@@ -739,10 +734,10 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 			failure::emit failure
 		fi
 
-		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the
-		# pipeline that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails
-		# under errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — no migrated yarn-prune tool-error classifier exists here yet.
+		# No known prune failure mode recognised. Bubble up by returning yarn's exit code: the bare
+		# `prune_devdependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — no migrated
+		# yarn-prune tool-error classifier exists here yet.
 		return "${yarn_exit}"
 	fi
 
@@ -750,7 +745,7 @@ function package_managers::yarn::_prune_berry_devdependencies() {
 
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside; a false result just skips the cache cleanup
 	if package_managers::yarn::_berry_node_modules_enabled "${build_dir}"; then
-		echo "Removing local yarn cache to reduce slug size"
+		output::info "Removing local yarn cache to reduce slug size"
 		rm -rf "${build_dir}/.yarn/cache"
 	fi
 	build_data::set_raw "skipped_prune" "false"
@@ -985,7 +980,7 @@ function package_managers::yarn::run_script() {
 	local build_flags=${3:-}
 	local script
 
-	echo "Running ${script_name} (yarn)"
+	output::info "Running ${script_name} (yarn)"
 
 	script=$(utils::json::read "${build_dir}/package.json" ".scripts[\"${script_name}\"]")
 	if [[ -z "${script}" ]]; then
@@ -994,7 +989,7 @@ function package_managers::yarn::run_script() {
 
 	local command=(yarn run "${script_name}")
 	if [[ -n "${build_flags}" ]]; then
-		echo "Running with ${build_flags} flags"
+		output::info "Running with ${build_flags} flags"
 		command+=("${build_flags}")
 	fi
 

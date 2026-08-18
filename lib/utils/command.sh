@@ -22,7 +22,7 @@ function utils::command::suppress_output() {
 
 	"$@" >"${TMP_COMMAND_OUTPUT}" 2>&1 || {
 		local exit_code="$?"
-		cat "${TMP_COMMAND_OUTPUT}"
+		output::indent <"${TMP_COMMAND_OUTPUT}"
 		return "${exit_code}"
 	}
 	return 0

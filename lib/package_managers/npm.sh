@@ -22,7 +22,7 @@ function package_managers::npm::install_dependencies() {
 	local production="${NPM_CONFIG_PRODUCTION:-false}"
 
 	if [[ ! -e "${build_dir}/package.json" ]]; then
-		echo "Skipping (no package.json)"
+		output::info "Skipping (no package.json)"
 		return 0
 	fi
 
@@ -31,16 +31,16 @@ function package_managers::npm::install_dependencies() {
 	local npm_command=(npm)
 	if [[ "${USE_NPM_INSTALL:-true}" == "false" ]]; then
 		build_data::set_raw "use_npm_ci" "true"
-		echo "Installing node modules"
+		output::info "Installing node modules"
 		npm_command+=(ci)
 	else
 		build_data::set_raw "use_npm_ci" "false"
 		if [[ -e "${build_dir}/package-lock.json" ]]; then
-			echo "Installing node modules (package.json + package-lock)"
+			output::info "Installing node modules (package.json + package-lock)"
 		elif [[ -e "${build_dir}/npm-shrinkwrap.json" ]]; then
-			echo "Installing node modules (package.json + shrinkwrap)"
+			output::info "Installing node modules (package.json + shrinkwrap)"
 		else
-			echo "Installing node modules (package.json)"
+			output::info "Installing node modules (package.json)"
 		fi
 		npm_command+=(install)
 	fi
@@ -58,9 +58,9 @@ function package_managers::npm::install_dependencies() {
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { "${npm_command[@]}" 2>&1 | tee "${log_file}"; }; then
+	if ! { "${npm_command[@]}" 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+		# The pipeline is `npm 2>&1 | tee | output::indent`, so [0] is npm's exit code (tee is [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local npm_exit="${pipe_status[0]}"
 		build_data::set_duration "install_dependencies_time" "${start}"
@@ -94,11 +94,10 @@ function package_managers::npm::install_dependencies() {
 			failure::emit failure
 		fi
 
-		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
-		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — covering the codes (ERESOLVE, ETARGET, ENOSPC, …) not yet
-		# migrated here.
+		# No known failure mode recognised. Bubble up by returning npm's exit code: the bare
+		# `build_dependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — covering the
+		# codes (ERESOLVE, ETARGET, ENOSPC, …) not yet migrated here.
 		return "${npm_exit}"
 	fi
 
@@ -113,12 +112,12 @@ function package_managers::npm::rebuild_dependencies() {
 	local production="${NPM_CONFIG_PRODUCTION:-false}"
 
 	if [[ ! -e "${build_dir}/package.json" ]]; then
-		echo "Skipping (no package.json)"
+		output::info "Skipping (no package.json)"
 		return 0
 	fi
 
 	cd "${build_dir}"
-	echo "Rebuilding any native modules"
+	output::info "Rebuilding any native modules"
 
 	local native_rebuild_log_file
 	native_rebuild_log_file=$(mktemp)
@@ -128,9 +127,9 @@ function package_managers::npm::rebuild_dependencies() {
 	# a native-module compile failure (e.g. via node-gyp) surfaces through the same npm error
 	# codes as an install failure.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { npm rebuild 2>&1 | tee "${native_rebuild_log_file}"; }; then
+	if ! { npm rebuild 2>&1 | tee "${native_rebuild_log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+		# The pipeline is `npm 2>&1 | tee | output::indent`, so [0] is npm's exit code (tee is [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local npm_exit="${pipe_status[0]}"
 
@@ -162,17 +161,16 @@ function package_managers::npm::rebuild_dependencies() {
 			failure::emit failure
 		fi
 
-		# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
-		# that runs this rebuild (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error.
+		# No known failure mode recognised. Bubble up by returning npm's exit code: the bare
+		# `build_dependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error.
 		return "${npm_exit}"
 	fi
 
 	if [[ -e "${build_dir}/npm-shrinkwrap.json" ]]; then
-		echo "Installing any new modules (package.json + shrinkwrap)"
+		output::info "Installing any new modules (package.json + shrinkwrap)"
 	else
-		echo "Installing any new modules (package.json)"
+		output::info "Installing any new modules (package.json)"
 	fi
 
 	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
@@ -199,7 +197,7 @@ function package_managers::npm::rebuild_dependencies() {
 	# command, same failure surface. The metric name (`npm_rebuild_time`) is kept distinct
 	# from `install_dependencies_time` so the two paths remain separable in observability.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { "${npm_command[@]}" 2>&1 | tee "${log_file}"; }; then
+	if ! { "${npm_command[@]}" 2>&1 | tee "${log_file}" | output::indent; }; then
 		local pipe_status=("${PIPESTATUS[@]}")
 		local npm_exit="${pipe_status[0]}"
 		build_data::set_duration "npm_rebuild_time" "${start}"
@@ -646,16 +644,16 @@ function package_managers::npm::install_binary() {
 	local npm_version_major
 	npm_version_major="$(package_managers::npm::version_major)"
 	if ${npm_lock} && [[ "${version}" == "" ]] && [[ "${npm_version_major}" -lt "5" ]]; then
-		echo "Detected package-lock.json: defaulting npm to version 5.x.x"
+		output::info "Detected package-lock.json: defaulting npm to version 5.x.x"
 		version="5.x.x"
 	fi
 
 	if [[ "${version}" == "" ]]; then
-		echo "Using default npm version: ${npm_version}"
+		output::info "Using default npm version: ${npm_version}"
 	elif [[ "${npm_version}" == "${version}" ]]; then
-		echo "npm ${npm_version} already installed with node"
+		output::info "npm ${npm_version} already installed with node"
 	else
-		echo "Bootstrapping npm ${version} (replacing ${npm_version})..."
+		output::info "Bootstrapping npm ${version} (replacing ${npm_version})..."
 		local install_npm_start
 		install_npm_start=$(build_data::current_unix_realtime)
 		package_managers::npm::_install_binary "${version}"
@@ -664,7 +662,7 @@ function package_managers::npm::install_binary() {
 		utils::command::suppress_output npm --version
 		local installed_npm_version
 		installed_npm_version="$(npm --version)"
-		echo "npm ${installed_npm_version} installed"
+		output::info "npm ${installed_npm_version} installed"
 	fi
 }
 
@@ -700,7 +698,7 @@ function package_managers::npm::_install_binary() {
 			return
 		fi
 		if [[ "${major}" == "11" ]] && [[ "${minor}" -ge 11 ]]; then
-			echo "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
+			output::info "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
 			if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
 				build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
 				output::error <<-EOF
@@ -734,23 +732,23 @@ function package_managers::npm::prune_devdependencies() {
 	# lib/environment.sh).
 	# shellcheck disable=SC2154 # set by the caller (bin/compile)
 	if [[ "${NODE_ENV}" == "test" ]]; then
-		echo "Skipping because NODE_ENV is 'test'"
+		output::info "Skipping because NODE_ENV is 'test'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ "${NODE_ENV}" != "production" ]]; then
-		echo "Skipping because NODE_ENV is not 'production'"
+		output::info "Skipping because NODE_ENV is not 'production'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ -n "${NPM_CONFIG_PRODUCTION}" ]]; then
-		echo "Skipping because NPM_CONFIG_PRODUCTION is '${NPM_CONFIG_PRODUCTION}'"
+		output::info "Skipping because NPM_CONFIG_PRODUCTION is '${NPM_CONFIG_PRODUCTION}'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ "${npm_version}" == "5.3.0" ]]; then
-		echo "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
-		echo "https://github.com/npm/npm/issues/17781"
-		echo ""
-		echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
-		echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+		output::info "Skipping because npm 5.3.0 fails when running 'npm prune' due to a known issue"
+		output::info "https://github.com/npm/npm/issues/17781"
+		output::info ""
+		output::info "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
+		output::info "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ "${npm_version}" == "5.6.0" ]] \
@@ -760,11 +758,11 @@ function package_managers::npm::prune_devdependencies() {
 		|| [[ "${npm_version}" == "5.4.1" ]] \
 		|| [[ "${npm_version}" == "5.2.0" ]] \
 		|| [[ "${npm_version}" == "5.1.0" ]]; then
-		echo "Skipping because npm ${npm_version} sometimes fails when running 'npm prune' due to a known issue"
-		echo "https://github.com/npm/npm/issues/19356"
-		echo ""
-		echo "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
-		echo "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
+		output::info "Skipping because npm ${npm_version} sometimes fails when running 'npm prune' due to a known issue"
+		output::info "https://github.com/npm/npm/issues/19356"
+		output::info ""
+		output::info "You can silence this warning by updating to at least npm 5.7.1 in your package.json"
+		output::info "https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	else
@@ -778,9 +776,9 @@ function package_managers::npm::prune_devdependencies() {
 
 		# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
 		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-		if ! { npm prune --userconfig "${build_dir}/.npmrc" 2>&1 | tee "${log_file}"; }; then
+		if ! { npm prune --userconfig "${build_dir}/.npmrc" 2>&1 | tee "${log_file}" | output::indent; }; then
 			# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-			# The pipeline is `npm 2>&1 | tee`, so [0] is npm's exit code and [1] is tee's.
+			# The pipeline is `npm 2>&1 | tee | output::indent`, so [0] is npm's exit code (tee is [1], output::indent [2]).
 			local pipe_status=("${PIPESTATUS[@]}")
 			local npm_exit="${pipe_status[0]}"
 			build_data::set_duration "prune_dev_dependencies_time" "${start}"
@@ -791,10 +789,10 @@ function package_managers::npm::prune_devdependencies() {
 				package_managers::npm::_handle_prune_pipefail "${pipe_status[*]}"
 			fi
 
-			# No known failure mode recognised. Bubble up by returning npm's exit code: the pipeline
-			# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
-			# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-			# failure=internal-error — there is no migrated npm-prune tool-error classifier to add here yet.
+			# No known failure mode recognised. Bubble up by returning npm's exit code: the bare
+			# `prune_devdependencies` call in bin/compile then fails under errexit and the generic
+			# failure::handle_uncaught ERR trap records it as failure=internal-error — there is no
+			# migrated npm-prune tool-error classifier to add here yet.
 			return "${npm_exit}"
 		fi
 
@@ -829,11 +827,11 @@ function package_managers::npm::run_script() {
 	local script_name=${1}
 	local build_flags=${2:-}
 
-	echo "Running ${script_name}"
+	output::info "Running ${script_name}"
 
 	local command=(npm run "${script_name}" --if-present)
 	if [[ -n "${build_flags}" ]]; then
-		echo "Running with ${build_flags} flags"
+		output::info "Running with ${build_flags} flags"
 		command+=(-- "${build_flags}")
 	fi
 

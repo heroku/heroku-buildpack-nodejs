@@ -15,7 +15,7 @@ package_managers::pnpm::install_dependencies() {
 	local build_dir=${1:-}
 	local cache_dir=${2:-}
 
-	echo "Running 'pnpm install' with pnpm-lock.yaml"
+	output::info "Running 'pnpm install' with pnpm-lock.yaml"
 	cd "${build_dir}" || return
 
 	pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
@@ -26,8 +26,8 @@ package_managers::pnpm::install_dependencies() {
 				pnpm_install_args+=("--reporter=${PNPM_INSTALL_REPORTER}")
 				;;
 			*)
-				echo "Warning: Invalid PNPM_INSTALL_REPORTER value '${PNPM_INSTALL_REPORTER}'. Valid values: default, ndjson, append-only, silent"
-				echo "Proceeding with default reporter"
+				output::info "Warning: Invalid PNPM_INSTALL_REPORTER value '${PNPM_INSTALL_REPORTER}'. Valid values: default, ndjson, append-only, silent"
+				output::info "Proceeding with default reporter"
 				;;
 		esac
 	fi
@@ -39,14 +39,12 @@ package_managers::pnpm::install_dependencies() {
 	start=$(build_data::current_unix_realtime)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
-	# pnpm writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
-	# merged stream through `tee` for classification. Indentation is applied by the enclosing
-	# `build_dependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
-	# every pnpm line would be indented twice.
+	# pnpm writes progress and errors across stdout+stderr; merge them with `2>&1`, pass the
+	# merged stream through `tee` for classification, and indent it with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { pnpm "${pnpm_install_args[@]}" 2>&1 | tee "${log_file}"; }; then
+	if ! { pnpm "${pnpm_install_args[@]}" 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `pnpm 2>&1 | tee`, so [0] is pnpm's exit code and [1] is tee's.
+		# The pipeline is `pnpm 2>&1 | tee | output::indent`, so [0] is pnpm's exit code (tee is [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local pnpm_exit="${pipe_status[0]}"
 		build_data::set_duration "install_dependencies_time" "${start}"
@@ -79,10 +77,10 @@ package_managers::pnpm::install_dependencies() {
 			failure::emit failure
 		fi
 
-		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
-		# that runs this install (`build_dependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — covering the pnpm codes not yet migrated here.
+		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the bare
+		# `build_dependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — covering the
+		# pnpm codes not yet migrated here.
 		return "${pnpm_exit}"
 	fi
 
@@ -91,7 +89,7 @@ package_managers::pnpm::install_dependencies() {
 	# prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
 	counter=$(load_pnpm_prune_store_counter "${cache_dir}")
 	if ((counter == 0)); then
-		echo "Cleaning up pnpm store"
+		output::info "Cleaning up pnpm store"
 		# pnpm <9.12.0 errors with `ENOENT: ... scandir '<store>/v*/files'`
 		# when the store has no fetched package files (e.g. an install with
 		# no external dependencies), because pnpm only creates that
@@ -106,7 +104,7 @@ package_managers::pnpm::install_dependencies() {
 		trap "rm -f '${prune_output}' >/dev/null" RETURN
 		pnpm store prune >"${prune_output}" 2>&1 || prune_exit=$?
 		if ((prune_exit != 0)) && ! grep -qE "ENOENT.*scandir" "${prune_output}"; then
-			cat "${prune_output}"
+			output::indent <"${prune_output}"
 			return "${prune_exit}"
 		fi
 	fi
@@ -168,14 +166,12 @@ function package_managers::pnpm::_run_prune() {
 	start=$(build_data::current_unix_realtime)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
-	# pnpm writes progress and errors across stdout+stderr; merge them with `2>&1` and pass the
-	# merged stream through `tee` for classification. Indentation is applied by the enclosing
-	# `prune_devdependencies | output "$LOG_FILE"` pipe in bin/compile — do not re-indent here or
-	# every pnpm line would be indented twice.
+	# pnpm writes progress and errors across stdout+stderr; merge them with `2>&1`, pass the
+	# merged stream through `tee` for classification, and indent it with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { "${prune_command[@]}" 2>&1 | tee "${log_file}"; }; then
+	if ! { "${prune_command[@]}" 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `pnpm 2>&1 | tee`, so [0] is pnpm's exit code and [1] is tee's.
+		# The pipeline is `pnpm 2>&1 | tee | output::indent`, so [0] is pnpm's exit code (tee is [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local pnpm_exit="${pipe_status[0]}"
 		build_data::set_duration "prune_dev_dependencies_time" "${start}"
@@ -204,10 +200,10 @@ function package_managers::pnpm::_run_prune() {
 			failure::emit failure
 		fi
 
-		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the pipeline
-		# that runs this prune (`prune_devdependencies | output "$LOG_FILE"`) then fails under
-		# errexit/pipefail and the generic failure::handle_uncaught ERR trap records it as
-		# failure=internal-error — there is no migrated pnpm-prune tool-error classifier to add here yet.
+		# No known failure mode recognised. Bubble up by returning pnpm's exit code: the bare
+		# `prune_devdependencies` call in bin/compile then fails under errexit and the generic
+		# failure::handle_uncaught ERR trap records it as failure=internal-error — there is no
+		# migrated pnpm-prune tool-error classifier to add here yet.
 		return "${pnpm_exit}"
 	fi
 
@@ -284,15 +280,15 @@ function package_managers::pnpm::prune_devdependencies() {
 	# lib/environment.sh / the app's config vars).
 	# shellcheck disable=SC2154 # set by the caller (bin/compile)
 	if [[ "${NODE_ENV}" == "test" ]]; then
-		echo "Skipping because NODE_ENV is 'test'"
+		output::info "Skipping because NODE_ENV is 'test'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ "${NODE_ENV}" != "production" ]]; then
-		echo "Skipping because NODE_ENV is not 'production'"
+		output::info "Skipping because NODE_ENV is not 'production'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	elif [[ "${PNPM_SKIP_PRUNING}" == "true" ]]; then
-		echo "Skipping because PNPM_SKIP_PRUNING is '${PNPM_SKIP_PRUNING}'"
+		output::info "Skipping because PNPM_SKIP_PRUNING is '${PNPM_SKIP_PRUNING}'"
 		build_data::set_raw "skipped_prune" "true"
 		return 0
 	fi
@@ -413,7 +409,7 @@ function package_managers::pnpm::_list_workspace_projects() {
 
 function package_managers::pnpm::install_binary() {
 	local version="$1"
-	echo "Downloading and installing pnpm (${version})"
+	output::info "Downloading and installing pnpm (${version})"
 	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
 	# to the currently-active npm when that npm still accepts it.
 	local unsafe_perm=()
@@ -434,7 +430,7 @@ function package_managers::pnpm::install_binary() {
 	# Verify pnpm works before capturing and ensure its stderr is inspectable later
 	utils::command::suppress_output pnpm --version
 	# shellcheck disable=SC2312 # the preceding utils::command::suppress_output already verified pnpm works, so masking its exit here is intentional (matches pre-migration behavior)
-	echo "Using pnpm $(pnpm --version)"
+	output::info "Using pnpm $(pnpm --version)"
 }
 
 # Runs a named lifecycle script with pnpm. Spells the pnpm-specific command (`pnpm run
@@ -445,11 +441,11 @@ function package_managers::pnpm::run_script() {
 	local script_name=${1}
 	local build_flags=${2:-}
 
-	echo "Running ${script_name}"
+	output::info "Running ${script_name}"
 
 	local command=(pnpm run --if-present "${script_name}")
 	if [[ -n "${build_flags}" ]]; then
-		echo "Running with ${build_flags} flags"
+		output::info "Running with ${build_flags} flags"
 		command+=(-- "${build_flags}")
 	fi
 

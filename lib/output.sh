@@ -41,6 +41,13 @@ output::indent() {
 	sed --unbuffered 's/^/       /'
 }
 
+# Prints a single informational line, indented to sit under the current `output::step` header.
+# The counterpart to `output::indent` for one-off lines that aren't part of a piped command's
+# output (replaces the legacy bare-`echo`-through-the-`output`-pipe idiom).
+output::info() {
+	echo "       $*"
+}
+
 output::warning() {
 	echo >&2
 	sed --unbuffered "s/^/${ANSI_YELLOW} !     /" | sed --unbuffered "s/$/${ANSI_RESET}/" >&2

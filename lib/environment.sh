@@ -30,18 +30,22 @@ create_build_env() {
 }
 
 list_node_config() {
-  echo ""
-  printenv | grep ^NPM_CONFIG_ || true
-  printenv | grep ^YARN_ || true
-  printenv | grep ^USE_NPM_ || true
-  printenv | grep ^USE_YARN_ || true
-  printenv | grep ^NODE_ || true
-
-  if [ "$NPM_CONFIG_PRODUCTION" = "true" ] && [ "$NODE_ENV" != "production" ]; then
+  # Pure informational output (env dump + notes); indent the whole body under the caller's
+  # `output::step` so the call site can invoke this bare, like the other migrated steps.
+  {
     echo ""
-    echo "npm scripts will see NODE_ENV=production (not '${NODE_ENV}')"
-    echo "https://docs.npmjs.com/misc/config#production"
-  fi
+    printenv | grep ^NPM_CONFIG_ || true
+    printenv | grep ^YARN_ || true
+    printenv | grep ^USE_NPM_ || true
+    printenv | grep ^USE_YARN_ || true
+    printenv | grep ^NODE_ || true
+
+    if [ "$NPM_CONFIG_PRODUCTION" = "true" ] && [ "$NODE_ENV" != "production" ]; then
+      echo ""
+      echo "npm scripts will see NODE_ENV=production (not '${NODE_ENV}')"
+      echo "https://docs.npmjs.com/misc/config#production"
+    fi
+  } | output::indent
 }
 
 export_env_dir() {
