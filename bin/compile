@@ -368,9 +368,6 @@ install_bins() {
 		EOF
   fi
 
-  if [[ $YARN_2 == true ]]; then
-    YARN=false
-  fi
 }
 
 output::step "Installing binaries"
