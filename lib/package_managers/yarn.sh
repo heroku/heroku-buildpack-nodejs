@@ -782,8 +782,9 @@ function package_managers::yarn::detect_berry() {
 
 	yml_metadata=$(utils::yaml::read "${build_dir}/yarn.lock" '.__metadata' 2>/dev/null)
 
-	# grep for version in case the output is a parsing error
-	version=$(echo "${yml_metadata}" | grep version)
+	# grep for version in case the output is a parsing error; tolerate no-match (`|| true`) so a
+	# non-Berry build (empty/absent yarn.lock) doesn't abort under inherit_errexit.
+	version=$(echo "${yml_metadata}" | grep version || true)
 
 	if [[ "${uses_yarn}" == "true" && "${version}" != "" ]]; then
 		echo "true"

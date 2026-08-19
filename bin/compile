@@ -5,6 +5,8 @@
 
 set -o errexit    # always exit on error
 set -o pipefail   # don't ignore exit codes when piping output
+set -o errtrace   # fire the ERR trap inside functions, subshells, and command substitutions
+shopt -s inherit_errexit # propagate errexit into command substitutions
 unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 
 [ "$BUILDPACK_XTRACE" ] && set -o xtrace
@@ -20,8 +22,6 @@ BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
 
 # shellcheck source=lib/output.sh
 source "$BP_DIR/lib/output.sh"
-# shellcheck source=lib/_output.sh
-source "$BP_DIR/lib/_output.sh"
 # shellcheck source=lib/environment.sh
 source "$BP_DIR/lib/environment.sh"
 # shellcheck source=lib/failures.sh
@@ -51,20 +51,30 @@ source "$BP_DIR/lib/build_data.sh"
 
 export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
 
-LOG_FILE=$(mktemp -t node-build-log.XXXXX)
-echo "" > "$LOG_FILE"
-
 # Marker written by `failure::emit` (lib/failures.sh) when a migrated code path has already
 # classified, rendered, and recorded a failure. The generic `failure::handle_uncaught` ERR trap
-# checks for it and stays quiet so the same failure isn't reported twice. It is a file (not a
-# shell variable) because `failure::emit` runs inside the `build_dependencies | output` pipe's
-# subshell, where a variable assignment would be invisible to the trap in the parent.
-export FAILURE_EMITTED_MARKER="${LOG_FILE}.emitted"
+# checks for it and stays quiet so the same failure isn't reported twice. It must be a file (not a
+# shell variable) because, with `errtrace`, `failure::emit` can fire inside a command-substitution
+# subshell where a variable assignment would be invisible to the trap in the parent shell. The
+# marker lives inside a private temp dir; the dir exists immediately but the marker file does not,
+# so the trap's `[[ -e ]]` check reads "no failure emitted yet" until emit creates it.
+_build_tmp_dir=$(mktemp -d -t node-build.XXXXX)
+export FAILURE_EMITTED_MARKER="${_build_tmp_dir}/failure-emitted"
 
 build_start_time=$(build_data::current_unix_realtime)
 
 ### Initialize metrics
 build_data::setup
+
+### Handle errors
+
+# Any non-zero exit that no migrated code path classified bubbles up to this generic handler,
+# which prints an "internal error" message with a stack trace and records failure=internal-error
+# for observability. It stays quiet when FAILURE_EMITTED_MARKER exists so a failure already
+# reported by `failure::emit` isn't reported twice. Armed immediately after `build_data::setup`
+# (the handler records build data, so setup must run first) and before "Save build info" so the
+# package.json/Procfile probes in that section are covered too.
+trap 'failure::handle_uncaught' ERR
 
 ### Save build info
 
@@ -80,14 +90,6 @@ for script in heroku-prebuild heroku-postbuild build heroku-cleanup start postin
     build_data::set_string "${script//[^[:alnum:]]/_}_script" "$(utils::json::read "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
   fi
 done
-
-### Handle errors
-
-# Any non-zero exit that no migrated code path classified bubbles up to this generic handler,
-# which prints an "internal error" message with a stack trace and records failure=internal-error
-# for observability. It stays quiet when FAILURE_EMITTED_MARKER exists so a failure already
-# reported by `failure::emit` isn't reported twice.
-trap 'failure::handle_uncaught' ERR
 
 ### Check initial state
 
@@ -346,16 +348,16 @@ install_bins() {
 
   if $YARN; then
     build_data::set_string "package_manager" "yarn"
-    build_data::set_string "package_manager_version" "$(yarn --version)"
-    build_data::set_string "yarn_version" "$(yarn --version)"
+    build_data::set_string "package_manager_version" "$(yarn --version || true)"
+    build_data::set_string "yarn_version" "$(yarn --version || true)"
   elif $PNPM; then
     build_data::set_string "package_manager" "pnpm"
-    build_data::set_string "package_manager_version" "$(pnpm --version)"
-    build_data::set_string "pnpm_version" "$(pnpm --version)"
+    build_data::set_string "package_manager_version" "$(pnpm --version || true)"
+    build_data::set_string "pnpm_version" "$(pnpm --version || true)"
   else
     build_data::set_string "package_manager" "npm"
-    build_data::set_string "package_manager_version" "$(npm --version)"
-    build_data::set_string "npm_version" "$(npm --version)"
+    build_data::set_string "package_manager_version" "$(npm --version || true)"
+    build_data::set_string "npm_version" "$(npm --version || true)"
   fi
 
   npm_version="$(npm --version)"
@@ -391,7 +393,11 @@ if $PNPM; then
     echo "export ${pnpm_store_dir_config_name}=\"$PNPM_CONFIG_CACHE\"" >> "$BP_DIR/export"
   fi
 
-  actual_store_path=$(pnpm config get store-dir 2>/dev/null)
+  # `|| true`: `pnpm config get store-dir` normally exits 0 (printing the store path, or `undefined`
+  # if the key is unset), so this guard only bites if the pnpm binary itself is broken/crashes. Kept
+  # so a broken probe degrades to an empty `actual_store_path` (handled below) instead of hard-aborting
+  # this assignment under inherit_errexit.
+  actual_store_path=$(pnpm config get store-dir 2>/dev/null || true)
   if [[ -z "$actual_store_path" || "$actual_store_path" != "$PNPM_CONFIG_CACHE" ]]; then
     output::warning <<-EOF
 			The pnpm store is at '${actual_store_path:-undefined}' instead of the expected

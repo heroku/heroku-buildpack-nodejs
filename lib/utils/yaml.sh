@@ -13,11 +13,18 @@ set -euo pipefail
 # shellcheck disable=SC2154
 YQ="${BP_DIR}/lib/vendor/yq-4.52.4-$(get_os)"
 
-# Reads a yq expression from a YAML file.
+# Reads a yq expression from a YAML file, emitting an empty string for a missing file or an
+# unreadable/unparseable one (mirrors utils::json::read's missing-file contract so callers that
+# capture its output via `$(...)` under `inherit_errexit` can't be aborted by yq's non-zero exit).
 function utils::yaml::read() {
 	local file="$1"
 	local key="$2"
-	"${YQ}" "${key}" "${file}"
+
+	if test -f "${file}"; then
+		"${YQ}" "${key}" "${file}" || echo ""
+	else
+		echo ""
+	fi
 }
 
 # Restore the sourcing shell's original options (see preamble). errexit/nounset come from the

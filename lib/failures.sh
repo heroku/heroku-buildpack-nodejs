@@ -40,15 +40,20 @@ function fail() {
 # failure::emit failure
 # ```
 function failure::emit() {
+	# Disarm the ERR trap on entry. emit's whole job is to record this failure and exit, so the trap
+	# is no longer wanted; leaving it armed lets a hiccup mid-emit — after `build_data::set_string
+	# "failure"` below but before the marker write — re-enter `failure::handle_uncaught` and overwrite
+	# the real classification with a generic internal-error. (handle_uncaught also disarms before
+	# calling us, so this only bites on the direct classifier -> emit path.)
+	trap - ERR
+
 	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
 	local -n __failure="${1}"
 
-	# This function may run inside a pipe whose stdout is styled by `output`
-	# (e.g. `build_dependencies | output "$LOG_FILE"`), which indents every non-header line and
-	# copies it to the build log. To avoid double styling, anything emitted here must either:
-	#   - Be a header, which `output` passes through untouched via its `^----->` check, or
-	#   - Be piped through `output::error`, which writes to stderr and bypasses `output` entirely.
-	header "Build failed"
+	# `output::step` writes the "Build failed" header to stdout; the message is piped through
+	# `output::error`, which styles it and writes to stderr. Every step in `bin/compile` now runs
+	# bare (no enclosing `output` pipe), so nothing emitted here is re-indented or double-styled.
+	output::step "Build failed"
 	echo "${__failure[message]}" | output::error
 
 	build_data::set_string "failure" "${__failure[id]}"
@@ -56,9 +61,9 @@ function failure::emit() {
 	[[ -n "${__failure[classification]:-}" ]] && build_data::set_string "failure_classification" "${__failure[classification]}"
 
 	# Signal that this failure is fully handled so the generic ERR-trap fallback (failure::handle_uncaught)
-	# ignores it and doesn't re-report it. A file (not a variable) because emit may run inside a
-	# subshell (e.g. the left side of `build_dependencies | output`) where the trap, running in
-	# the parent shell, would never see a variable assignment.
+	# ignores it and doesn't re-report it. A file (not a variable) because, with `errtrace`, emit may
+	# fire inside a command-substitution subshell where the trap, running in the parent shell, would
+	# never see a variable assignment.
 	[[ -n "${FAILURE_EMITTED_MARKER:-}" ]] && : >"${FAILURE_EMITTED_MARKER}"
 
 	fail
@@ -69,23 +74,53 @@ function failure::emit() {
 # Python buildpack's `utils::err_trap`: it renders a neutral "internal error" message, records a
 # generic failure reason for observability, and terminates the build.
 function failure::handle_uncaught() {
+	# Capture the failing command FIRST, before any other command runs. Inside an ERR trap
+	# BASH_COMMAND holds the command that triggered the trap — a best-effort breadcrumb, not an exact
+	# pointer: for a failed pipeline it names the whole pipeline rather than the stage that failed, and
+	# once a failure has crossed a subshell/`$(...)` boundary it may name the boundary rather than the
+	# leaf command. Good enough for an observability detail; don't treat it as authoritative.
+	local failing_command="${BASH_COMMAND}"
+
+	# We enable `errtrace`, so this ERR trap fires inside functions, subshells, and command
+	# substitutions and can fire more than once as a single failure unwinds. Disarm it on entry so
+	# a failure inside this handler — e.g. while `failure::emit` records build data, before it
+	# writes the marker — can't re-enter and double-report.
+	trap - ERR
+
 	# A migrated code path may have already classified, rendered, and recorded this failure via
 	# `failure::emit` (which writes this marker). If so, stay quiet so it isn't reported twice.
 	[[ -e "${FAILURE_EMITTED_MARKER:-}" ]] && return
 
-	# No [detail] or [classification]: this handler fires for any unclassified failure. And
-	# because this repo does not yet enable `errtrace`, the ERR trap fires at the top-level
-	# pipeline *after* it unwinds, so BASH_COMMAND and the `caller` stack would point at the
-	# buildpack's log formatter (`output "$LOG_FILE"`) / bin/compile's top frame — not the real
-	# failure. Rather than present that misleading data as fact, we omit it. When errtrace is
-	# adopted, reinstate an accurate "Failing command"/"Stack
-	# trace" block here, and disarm the trap on entry (`trap - ERR`) so a failure inside this
-	# handler can't re-enter it.
+	# With `errtrace` the trap fires closer to the real failure site than bin/compile's top frame, so
+	# record a best-effort `caller` stack for observability. It won't always name the leaf command: a
+	# failure that unwound through a subshell/`$(...)` boundary is re-raised in the parent, so the
+	# stack can point at the boundary rather than the command that actually failed.
+	local stack_trace
+	stack_trace=$(
+		local frame=0
+		# HAZARD: `while read ... < <(caller ...)` is safe here ONLY because the ERR trap was disarmed
+		# on entry (`trap - ERR` above) and `caller` is guarded with `|| true`. Under an *active*,
+		# stdout-writing ERR trap a failing command in the process substitution would feed the trap's
+		# own output back into this FIFO to be re-read as loop input — an infinite loop that hangs the
+		# build. Keep both guards, and don't replicate this pattern anywhere the ERR trap is still armed.
+		while read -r line_number function_name source_file < <(caller "${frame}" || true); do
+			echo "${function_name} @ ${source_file}:${line_number}"
+			((++frame))
+		done
+	)
+
 	local -A failure=(
 		[id]="internal-error"
+		[detail]="${failing_command}"
 		[message]=$(
 			cat <<-EOF
 				An unexpected error occurred while building your app.
+
+				Failing command:
+				${failing_command}
+
+				Stack trace:
+				${stack_trace}
 
 				Review the build log above for the cause. If this looks like a bug in the
 				buildpack rather than your app, open a support ticket:
