@@ -378,6 +378,9 @@ install_bins
 if $PNPM; then
   # pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
   # older versions use npm_config_*
+  # Deliberately unguarded (no `|| true`, unlike the version probes in install_bins and the store
+  # probe below): pnpm was just installed and verified, so a failure reading its version here is a
+  # genuine internal error that should abort via the ERR trap rather than silently degrade.
   pnpm_major=$(pnpm --version | cut -d "." -f 1)
   pnpm_store_dir_config_name="npm_config_store_dir"
   if (( pnpm_major >= 11 )); then
