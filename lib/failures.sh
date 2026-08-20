@@ -50,10 +50,13 @@ function failure::emit() {
 	# shellcheck disable=SC2178 # nameref alias to the caller's associative array, not a string
 	local -n __failure="${1}"
 
-	# `output::step` writes the "Build failed" header to stdout; the message is piped through
-	# `output::error`, which styles it and writes to stderr. Every step in `bin/compile` now runs
-	# bare (no enclosing `output` pipe), so nothing emitted here is re-indented or double-styled.
-	output::step "Build failed"
+	# Write the whole failure block to stderr: the "Build failed" header via `output::step "..." >&2`,
+	# the message piped through `output::error` (already stderr). Routing the header to stderr too
+	# keeps it visible when emit fires inside a `$(...)`: with `errtrace` the ERR trap can fire inside
+	# a command substitution whose stdout the caller captures and discards, which would swallow a
+	# stdout header while the stderr message still reached the user. Every step in `bin/compile` now
+	# runs bare (no enclosing `output` pipe), so nothing emitted here is re-indented or double-styled.
+	output::step "Build failed" >&2
 	echo "${__failure[message]}" | output::error
 
 	build_data::set_string "failure" "${__failure[id]}"
@@ -74,17 +77,19 @@ function failure::emit() {
 # Python buildpack's `utils::err_trap`: it renders a neutral "internal error" message, records a
 # generic failure reason for observability, and terminates the build.
 function failure::handle_uncaught() {
-	# Capture the failing command FIRST, before any other command runs. Inside an ERR trap
-	# BASH_COMMAND holds the command that triggered the trap — a best-effort breadcrumb, not an exact
-	# pointer: for a failed pipeline it names the whole pipeline rather than the stage that failed, and
+	# Capture the failing command for the message and detail below. Inside an ERR trap BASH_COMMAND
+	# stays pinned to the command that triggered the trap — a best-effort breadcrumb, not an exact
+	# pointer: for a failed pipeline it names the pipeline's last stage (with pipefail, usually not the
+	# stage that actually failed), and
 	# once a failure has crossed a subshell/`$(...)` boundary it may name the boundary rather than the
 	# leaf command. Good enough for an observability detail; don't treat it as authoritative.
 	local failing_command="${BASH_COMMAND}"
 
 	# We enable `errtrace`, so this ERR trap fires inside functions, subshells, and command
-	# substitutions and can fire more than once as a single failure unwinds. Disarm it on entry so
-	# a failure inside this handler — e.g. while `failure::emit` records build data, before it
-	# writes the marker — can't re-enter and double-report.
+	# substitutions. Disarm it on entry so the `caller` stack-trace loop below can't feed the trap's
+	# own stdout back into its FIFO (see the HAZARD note there). Bash already suppresses synchronous
+	# re-entry of a running ERR trap and fires ERR once at the leaf, not per unwound frame, so this
+	# disarm is defence-in-depth, not a fix for a mid-handler double-report.
 	trap - ERR
 
 	# A migrated code path may have already classified, rendered, and recorded this failure via
@@ -98,8 +103,9 @@ function failure::handle_uncaught() {
 	local stack_trace
 	stack_trace=$(
 		local frame=0
-		# HAZARD: `while read ... < <(caller ...)` is safe here ONLY because the ERR trap was disarmed
-		# on entry (`trap - ERR` above) and `caller` is guarded with `|| true`. Under an *active*,
+		# HAZARD: `while read ... < <(caller ...)` is safe because either guard alone would prevent the
+		# hang described below; both are kept as defence in depth. The ERR trap is disarmed on entry
+		# (`trap - ERR` above) and `caller` is guarded with `|| true`. Under an *active*,
 		# stdout-writing ERR trap a failing command in the process substitution would feed the trap's
 		# own output back into this FIFO to be re-read as loop input — an infinite loop that hangs the
 		# build. Keep both guards, and don't replicate this pattern anywhere the ERR trap is still armed.

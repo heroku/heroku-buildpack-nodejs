@@ -19,8 +19,9 @@ function utils::json::read() {
 		# -M = strip any color
 		# --raw-output = if the filter’s result is a string then it will be written directly
 		#                to stdout rather than being formatted as a JSON string with quotes
-		# `|| echo ""`: on a jq error (e.g. the key resolves to a non-string type, which `// ""` can't
-		# coerce, or malformed JSON) degrade to an empty string rather than a hard failure. This
+		# `|| echo ""`: on a jq error (e.g. indexing into a value of the wrong type, which `// ""` does
+		# not rescue since it only substitutes null/false, or malformed JSON) degrade to an empty
+		# string rather than a hard failure. This
 		# matches the missing-file branch below and the sibling utils::yaml::read, and — critically
 		# under inherit_errexit — keeps a bad read from tripping the ERR trap and poisoning the failure
 		# marker at an unrelated call site.
