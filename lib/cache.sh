@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 create_signature() {
-  echo "v2; ${STACK}; $(node --version); $(npm --version); $(yarn --version 2>/dev/null || true); ${PREBUILD}"
+  echo "v2; ${STACK}; $(node --version || true); $(npm --version || true); $(yarn --version 2>/dev/null || true); ${PREBUILD}"
 }
 
 save_signature() {

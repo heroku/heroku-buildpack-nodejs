@@ -15,8 +15,10 @@ function utils::package_json::has_script() {
 	local key="$2"
 
 	if test -f "${file}"; then
+		# jq's has() errors on a non-object `.scripts` (and on an absent `scripts` key under
+		# jq <=1.6); fall back to "false" so a captured `$(...)` can't abort under inherit_errexit.
 		# shellcheck disable=SC2002
-		cat "${file}" | jq ".[\"scripts\"] | has(\"${key}\")"
+		cat "${file}" | jq ".[\"scripts\"] | has(\"${key}\")" || echo "false"
 	else
 		echo "false"
 	fi

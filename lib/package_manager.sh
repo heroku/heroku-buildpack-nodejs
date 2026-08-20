@@ -106,8 +106,8 @@ function package_manager::run_script_command() {
 			# No specific classifier matched. The command run here is the app's own lifecycle
 			# script, so an unrecognised non-zero exit is the app's failure — classify it `user`
 			# and emit an app-troubleshooting message rather than letting it bubble to
-			# failure::handle_uncaught, which (until errtrace is enabled) would mislabel it as an
-			# internal buildpack error with a misleading "Failing command" line.
+			# failure::handle_uncaught, which would report it as a generic internal buildpack error
+			# and bury the app-side cause.
 			package_manager::_handle_unknown_build_script_failure "${command[*]}" "${tool_exit}"
 		fi
 	fi

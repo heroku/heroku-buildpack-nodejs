@@ -404,7 +404,9 @@ function package_managers::pnpm::_has_lifecycle_script() {
 }
 
 function package_managers::pnpm::_list_workspace_projects() {
-	pnpm list --recursive --json --depth -1 2>/dev/null | jq -r '.[].path'
+	# `|| true` so a non-zero `pnpm list` (or empty workspace) can't abort the <(…) subshell under
+	# inherit_errexit — its exit is intentionally not consulted (see caller).
+	pnpm list --recursive --json --depth -1 2>/dev/null | jq -r '.[].path' || true
 }
 
 function package_managers::pnpm::install_binary() {
@@ -430,7 +432,7 @@ function package_managers::pnpm::install_binary() {
 	# Verify pnpm works before capturing and ensure its stderr is inspectable later
 	utils::command::suppress_output pnpm --version
 	# shellcheck disable=SC2312 # the preceding utils::command::suppress_output already verified pnpm works, so masking its exit here is intentional (matches pre-migration behavior)
-	output::info "Using pnpm $(pnpm --version)"
+	output::info "Using pnpm $(pnpm --version || true)"
 }
 
 # Runs a named lifecycle script with pnpm. Spells the pnpm-specific command (`pnpm run

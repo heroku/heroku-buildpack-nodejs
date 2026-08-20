@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-testOutput() {
+testOutputIndent() {
   local stdout
 
-  stdout=$(echo '    Indented line' | output /dev/null)
+  stdout=$(echo '    Indented line' | output::indent)
   assertEquals 'should preserve leading whitespace' '           Indented line' "${stdout}"
 
-  stdout=$(echo 'Foo \ bar' | output /dev/null)
+  stdout=$(echo 'Foo \ bar' | output::indent)
   assertEquals 'should preserve unescaped backslashes' '       Foo \ bar' "${stdout}"
 }
 
@@ -83,11 +83,73 @@ testHasScript() {
   assertEquals "false" "$(utils::package_json::has_script "$(pwd)/test/fixtures/does-not-exist.json" "build")"
 }
 
+testHasScriptToleratesUnusualScripts() {
+  # jq's has() errors on a non-object `.scripts` (and on an absent `scripts` key under jq <=1.6).
+  # The helper must still yield "false" and exit 0 so a captured $(...) can't abort the build
+  # under inherit_errexit.
+  local file
+  file="$(mktemp)"
+
+  printf '{"scripts": "not-an-object"}' >"$file"
+  assertEquals "non-object scripts yields false" "false" "$(utils::package_json::has_script "$file" "build" 2>/dev/null)"
+  utils::package_json::has_script "$file" "build" >/dev/null 2>&1
+  assertEquals "non-object scripts must not exit non-zero" 0 "$?"
+
+  printf '{}' >"$file"
+  assertEquals "absent scripts key yields false" "false" "$(utils::package_json::has_script "$file" "build" 2>/dev/null)"
+  utils::package_json::has_script "$file" "build" >/dev/null 2>&1
+  assertEquals "absent scripts key must not exit non-zero" 0 "$?"
+
+  rm -f "$file"
+}
+
 testReadJson() {
   local file="$(pwd)/test/fixtures/has-script-fixtures/package.json"
   assertEquals "10.x" "$(utils::json::read "$file" ".engines.node")"
   assertEquals "" "$(utils::json::read "$file" ".engines.does_not_exist")"
   assertEquals "" "$(utils::json::read "$(pwd)/test/fixtures/does-not-exist.json" ".engines.node")"
+}
+
+testReadJsonToleratesWrongType() {
+  # A key that indexes into a value of the wrong type makes jq error (e.g. `.scripts["build"]` when
+  # `.scripts` is a string, exactly as a malformed package.json could present). The reader must still
+  # yield "" and exit 0 so a captured $(...) can't trip the ERR trap and poison the failure marker
+  # under inherit_errexit — this mirrors the has_script/yaml::read tolerance contracts.
+  local file
+  file="$(mktemp)"
+  printf '{"scripts": "not-an-object"}' >"$file"
+
+  assertEquals "wrong-type index yields empty string" "" "$(utils::json::read "$file" '.scripts["build"]' 2>/dev/null)"
+  utils::json::read "$file" '.scripts["build"]' >/dev/null 2>&1
+  assertEquals "wrong-type index must not exit non-zero" 0 "$?"
+
+  rm -f "$file"
+}
+
+testReadYaml() {
+  local file
+  file="$(mktemp)"
+  printf 'yarnPath: ".yarn/releases/yarn-4.0.0.cjs"\n' >"$file"
+  assertEquals ".yarn/releases/yarn-4.0.0.cjs" "$(utils::yaml::read "$file" ".yarnPath")"
+  # yq emits the literal "null" for an absent key; callers treat that as absent.
+  assertEquals "null" "$(utils::yaml::read "$file" ".doesNotExist")"
+  rm -f "$file"
+
+  # A missing file must yield an empty string and exit 0 (not a fatal non-zero) so a captured
+  # $(...) can't abort the build under inherit_errexit.
+  assertEquals "" "$(utils::yaml::read "$(pwd)/test/fixtures/does-not-exist.yml" ".yarnPath")"
+  utils::yaml::read "$(pwd)/test/fixtures/does-not-exist.yml" ".yarnPath" >/dev/null 2>&1
+  assertEquals "missing file must not exit non-zero" 0 "$?"
+
+  # A present-but-corrupt file (unparseable YAML) must degrade the same way — empty string, exit 0 —
+  # so yq's parse error can't abort the build under inherit_errexit.
+  local corrupt
+  corrupt="$(mktemp)"
+  printf 'yarnPath: [\n' >"$corrupt" # unterminated flow sequence: yq exits non-zero
+  assertEquals "corrupt YAML yields empty string" "" "$(utils::yaml::read "$corrupt" ".yarnPath" 2>/dev/null)"
+  utils::yaml::read "$corrupt" ".yarnPath" >/dev/null 2>&1
+  assertEquals "corrupt YAML must not exit non-zero" 0 "$?"
+  rm -f "$corrupt"
 }
 
 testJsonValid() {
@@ -507,10 +569,11 @@ testFailureEmitWritesMarkerWhenSet() {
 
 testFailureHandleUncaughtRendersAndRecords() {
   # After an unclassified command fails, the generic ERR-trap handler renders the internal-error
-  # message and records failure=internal-error. Because this repo does not enable errtrace,
-  # BASH_COMMAND/caller can't identify the real failure site, so the handler must NOT print a
-  # (misleading) "Failing command"/"Stack trace" block or record a failure_detail. Run in a
-  # subshell with stubs so `fail` doesn't kill the test runner and build_data writes are captured.
+  # message and records failure=internal-error. With errtrace enabled, BASH_COMMAND/caller point at
+  # the real failure site, so the handler includes a "Failing command"/"Stack trace" block and
+  # records the failing command as failure_detail. Run in a subshell with stubs so `fail` doesn't
+  # kill the test runner and build_data writes are captured. (Called directly rather than via a real
+  # ERR trap here, so we assert the blocks are present, not their exact contents.)
   local out capture
   capture=$(mktemp)
   out=$(
@@ -522,10 +585,10 @@ testFailureHandleUncaughtRendersAndRecords() {
   )
 
   assertContains "$out" "An unexpected error occurred"
-  assertNotContains "must not render a misleading Failing command block without errtrace" "$out" "Failing command:"
-  assertNotContains "must not render a misleading Stack trace block without errtrace" "$out" "Stack trace:"
+  assertContains "should render a Failing command block" "$out" "Failing command:"
+  assertContains "should render a Stack trace block" "$out" "Stack trace:"
   assertContains "$(cat "$capture")" "failure=internal-error"
-  assertNotContains "must not record a misleading failure_detail without errtrace" "$(cat "$capture")" "failure_detail="
+  assertContains "should record failure_detail for observability" "$(cat "$capture")" "failure_detail="
   rm -f "$capture"
 }
 
@@ -546,6 +609,64 @@ testFailureHandleUncaughtSkipsWhenMarkerPresent() {
   assertEquals "handler must print nothing when the marker exists" "" "$out"
   assertEquals "handler must record no build data when the marker exists" "" "$(cat "$capture")"
   rm -f "$capture" "$marker"
+}
+
+testErrTrapNotPoisonedByGuardedVersionSub() {
+  # Regression for the marker-poisoning hazard behind the `|| true` guards on every
+  # argument-position `$(<tool> --version)` in bin/compile/cache.sh. Under the real strict mode
+  # (`errtrace` + `inherit_errexit` + an armed `failure::handle_uncaught` trap), a failing tool
+  # inside an *unguarded* argument-position substitution fires the ERR trap inside the
+  # command-substitution subshell — creating the marker and recording failure=internal-error even
+  # though the parent shell keeps going. That poisons a later real failure (the marker makes the
+  # trap stay quiet) and records a bogus internal error. The `|| true` guard must prevent it.
+  #
+  # Both branches run the same failing tool through the same live trap; only the guard differs.
+  # Each scenario runs in a BACKGROUNDED subshell so its `set -e` stays genuinely active: guarding
+  # the subshell inline (`( … ) || true`, `if ( … )`) would instead place it in a condition context
+  # and suppress errexit throughout — making these assertions pass vacuously. `wait … || true`
+  # collects the exit code without aborting the test runner.
+  local unguarded_capture unguarded_marker guarded_capture guarded_marker
+  unguarded_capture="$(mktemp)"
+  guarded_capture="$(mktemp)"
+  unguarded_marker="$(mktemp)" && rm -f "$unguarded_marker"
+  guarded_marker="$(mktemp)" && rm -f "$guarded_marker"
+
+  # Baseline: UNGUARDED sub must poison — proves the trap machinery actually fires here, so the
+  # guarded assertion below is meaningful and not passing vacuously.
+  (
+    build_data::set_string() { echo "$1=$2" >>"$unguarded_capture"; }
+    build_data::set_duration() { :; }
+    build_start_time=0
+    broken_tool() { return 3; }
+    export FAILURE_EMITTED_MARKER="$unguarded_marker"
+    set -euo pipefail -o errtrace
+    shopt -s inherit_errexit
+    trap 'failure::handle_uncaught' ERR
+    build_data::set_string "package_manager_version" "$(broken_tool)"
+  ) >/dev/null 2>&1 &
+  wait "$!" || true
+  assertTrue "unguarded failing version sub should poison the marker (baseline)" "[ -e '$unguarded_marker' ]"
+  assertContains "unguarded failing version sub should record a bogus failure (baseline)" \
+    "$(cat "$unguarded_capture")" "failure=internal-error"
+
+  # The fix: the SAME failing tool guarded with `|| true` must not fire the trap at all.
+  (
+    build_data::set_string() { echo "$1=$2" >>"$guarded_capture"; }
+    build_data::set_duration() { :; }
+    build_start_time=0
+    broken_tool() { return 3; }
+    export FAILURE_EMITTED_MARKER="$guarded_marker"
+    set -euo pipefail -o errtrace
+    shopt -s inherit_errexit
+    trap 'failure::handle_uncaught' ERR
+    build_data::set_string "package_manager_version" "$(broken_tool || true)"
+  ) >/dev/null 2>&1 &
+  wait "$!" || true
+  assertFalse "guarded failing version sub must not create the marker" "[ -e '$guarded_marker' ]"
+  assertEquals "guarded failing version sub must not record a failure" "" \
+    "$(grep '^failure=' "$guarded_capture" || true)"
+
+  rm -f "$unguarded_capture" "$guarded_capture" "$unguarded_marker" "$guarded_marker"
 }
 
 testFailureHandlePipefail() {
@@ -2173,7 +2294,6 @@ source "$(pwd)"/lib/package_managers/pnpm.sh
 source "$(pwd)"/lib/package_managers/yarn.sh
 source "$(pwd)"/lib/runtimes/nodejs.sh
 source "$(pwd)"/lib/output.sh
-source "$(pwd)"/lib/_output.sh
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
