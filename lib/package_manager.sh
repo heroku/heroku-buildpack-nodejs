@@ -64,13 +64,13 @@ function package_manager::run_script_command() {
 	log_file=$(mktemp)
 
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves. The
-	# script's stdout+stderr are merged with `2>&1` and passed through `tee` (for later
-	# classification) to stdout; indentation is applied by the enclosing `… | output "$LOG_FILE"`
-	# pipe in bin/compile, so do not re-indent here.
+	# script's stdout+stderr are merged with `2>&1`, passed through `tee` (for later
+	# classification) to stdout, and indented with `output::indent`.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { "${command[@]}" 2>&1 | tee "${log_file}"; }; then
+	if ! { "${command[@]}" 2>&1 | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status first (before any other command clobbers PIPESTATUS).
-		# The pipeline is `<tool> 2>&1 | tee`, so [0] is the tool's exit code and [1] is tee's.
+		# The pipeline is `<tool> 2>&1 | tee | output::indent`, so [0] is the tool's exit code
+		# (tee is [1], output::indent [2]).
 		local pipe_status=("${PIPESTATUS[@]}")
 		local tool_exit="${pipe_status[0]}"
 
@@ -297,7 +297,7 @@ function package_manager::run_prebuild_script() {
 	has_heroku_prebuild_script=$(utils::package_json::has_script "${build_dir}/package.json" "heroku-prebuild")
 
 	if [[ "${has_heroku_prebuild_script}" == "true" ]]; then
-		header "Prebuild"
+		output::step "Prebuild"
 		package_manager::_run_if_present "${build_dir}" 'heroku-prebuild'
 	fi
 }
@@ -309,7 +309,7 @@ function package_manager::run_build_script() {
 	has_build_script=$(utils::package_json::has_script "${build_dir}/package.json" "build")
 	has_heroku_build_script=$(utils::package_json::has_script "${build_dir}/package.json" "heroku-postbuild")
 	if [[ "${has_heroku_build_script}" == "true" ]] && [[ "${has_build_script}" == "true" ]]; then
-		echo "Detected both \"build\" and \"heroku-postbuild\" scripts"
+		output::info "Detected both \"build\" and \"heroku-postbuild\" scripts"
 		package_manager::_run_if_present "${build_dir}" 'heroku-postbuild'
 	elif [[ "${has_heroku_build_script}" == "true" ]]; then
 		package_manager::_run_if_present "${build_dir}" 'heroku-postbuild'
@@ -325,7 +325,7 @@ function package_manager::run_cleanup_script() {
 	has_heroku_cleanup_script=$(utils::package_json::has_script "${build_dir}/package.json" "heroku-cleanup")
 
 	if [[ "${has_heroku_cleanup_script}" == "true" ]]; then
-		header "Cleanup"
+		output::step "Cleanup"
 		package_manager::_run_if_present "${build_dir}" 'heroku-cleanup'
 	fi
 }

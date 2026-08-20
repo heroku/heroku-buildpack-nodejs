@@ -34,11 +34,13 @@ function runtimes::nodejs::install() {
 	# Run inside `if !` so errexit is suppressed and we can inspect the failure ourselves.
 	# `_install` handles every failure it anticipates at the site (each `_fail_*` helper emits via
 	# `failure::emit` and exits the process), so control only reaches this branch on a genuinely
-	# unexpected, non-emitting failure. `tee` passes stdout through, so normal install output still
-	# reaches the caller's pipe; user-facing warnings/errors go to stderr and pass straight through.
+	# unexpected, non-emitting failure. `tee` captures the merged output for inspection and
+	# `output::indent` indents it under the caller's `output::step`; warnings/errors go to stderr
+	# and pass straight through.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { runtimes::nodejs::_install "${requested_version}" "${dir}" | tee "${log_file}"; }; then
+	if ! { runtimes::nodejs::_install "${requested_version}" "${dir}" | tee "${log_file}" | output::indent; }; then
 		# Capture the full pipe status before any other command clobbers PIPESTATUS.
+		# The pipeline is `_install | tee | output::indent`, so [0] is _install's exit code.
 		local install_exit="${PIPESTATUS[0]}"
 		build_data::set_duration "install_node_binary_time" "${start}"
 

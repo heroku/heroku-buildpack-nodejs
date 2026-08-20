@@ -53,7 +53,7 @@ restore_default_cache_directories() {
 
   if [[ "$YARN" == "true" ]]; then
     if [[ "$YARN_ZERO_INSTALL" == "true" ]]; then
-      echo "- yarn cache is checked into source control and cannot be cached"
+      output::info "- yarn cache is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/yarn" ]]; then
       rm -rf "$yarn_cache_dir"
       mkdir -p "$(dirname "$yarn_cache_dir")"
@@ -64,44 +64,44 @@ restore_default_cache_directories() {
         # the near future.
         rm -rf "$yarn_cache_dir/yarn"
       fi
-      echo "- yarn cache"
+      output::info "- yarn cache"
     else
-      echo "- yarn cache (not cached - skipping)"
+      output::info "- yarn cache (not cached - skipping)"
     fi
   elif [[ "$PNPM" == "true" ]]; then
     if [[ -d "$cache_dir/node/cache/pnpm" ]]; then
       rm -rf "$pnpm_cache_dir"
       mv "$cache_dir/node/cache/pnpm" "$pnpm_cache_dir"
-      echo "- pnpm cache"
+      output::info "- pnpm cache"
       build_data::set_raw "pnpm_cache" "true"
     else
-      echo "- pnpm cache (not cached - skipping)"
+      output::info "- pnpm cache (not cached - skipping)"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$cache_dir/node/cache/npm" ]]; then
       rm -rf "$npm_cache"
       mv "$cache_dir/node/cache/npm" "$npm_cache"
-      echo "- npm cache"
+      output::info "- npm cache"
       build_data::set_raw "npm_cache" "true"
     else
-      echo "- npm cache (not cached - skipping)"
+      output::info "- npm cache (not cached - skipping)"
     fi
   else
     # node_modules
     if [[ -e "$build_dir/node_modules" ]]; then
-      echo "- node_modules is checked into source control and cannot be cached"
+      output::info "- node_modules is checked into source control and cannot be cached"
     elif [[ -e "$cache_dir/node/cache/node_modules" ]]; then
-      echo "- node_modules"
+      output::info "- node_modules"
       mkdir -p "$(dirname "$build_dir/node_modules")"
       mv "$cache_dir/node/cache/node_modules" "$build_dir/node_modules"
     else
-      echo "- node_modules (not cached - skipping)"
+      output::info "- node_modules (not cached - skipping)"
     fi
   fi
 
   # bower_components, should be silent if it is not in the cache
   if [[ -e "$cache_dir/node/cache/bower_components" ]]; then
-    echo "- bower_components"
+    output::info "- bower_components"
   fi
 }
 
@@ -113,26 +113,26 @@ restore_custom_cache_directories() {
   # Parse the input string with multiple lines: "a\nb\nc" into an array
   mapfile -t cache_directories <<< "$4"
 
-  echo "Loading from cacheDirectories (package.json):"
+  output::info "Loading from cacheDirectories (package.json):"
 
   for cachepath in "${cache_directories[@]}"; do
     if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules(/|$) ]]; then
-      echo "- $cachepath (skipping because pnpm is used)"
+      output::info "- $cachepath (skipping because pnpm is used)"
     elif [ -e "$build_dir/$cachepath" ]; then
-      echo "- $cachepath (exists - skipping)"
+      output::info "- $cachepath (exists - skipping)"
     else
       if [ -e "$cache_dir/node/cache/$cachepath" ]; then
-        echo "- $cachepath"
+        output::info "- $cachepath"
         mkdir -p "$(dirname "$build_dir/$cachepath")"
         mv "$cache_dir/node/cache/$cachepath" "$build_dir/$cachepath"
       else
-        echo "- $cachepath (not cached - skipping)"
+        output::info "- $cachepath (not cached - skipping)"
       fi
     fi
   done
 
   if [[ "$PNPM" == "true" ]] && [ -e "$cache_dir/node/cache/pnpm/store" ]; then
-    echo "- pnpm store (included because pnpm is used)"
+    output::info "- pnpm store (included because pnpm is used)"
     # the $pnpm_cache_dir is created at the start of the build so, now, if we want to
     # rename the cache directory to $pnpm_cache_dir, we have to remove it or we'll
     # end up with a $pnpm_cache_dir/store directory instead of $pnpm_cache_dir.
@@ -158,7 +158,7 @@ save_default_cache_directories() {
   if [[ "$YARN" == "true" ]]; then
     if [[ -d "$yarn_cache_dir" ]]; then
       if [[ "$YARN_ZERO_INSTALL" == "true" ]]; then
-        echo "- yarn cache is checked into source control and cannot be cached"
+        output::info "- yarn cache is checked into source control and cannot be cached"
       elif [[ "$YARN_2" == "true" ]]; then
         # For improved performance, we copy using hard links if possible. This
         # requires that the yarn cache and build cache directories are on the
@@ -172,40 +172,40 @@ save_default_cache_directories() {
         else
           cp -RTf "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
         fi
-        echo "- yarn cache"
+        output::info "- yarn cache"
       else
         mv "$yarn_cache_dir" "$cache_dir/node/cache/yarn"
-        echo "- yarn cache"
+        output::info "- yarn cache"
       fi
     fi
   elif [[ "$PNPM" == "true" ]]; then
     if [[ -d "$pnpm_cache_dir" ]]; then
       mv "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm"
-      echo "- pnpm cache"
+      output::info "- pnpm cache"
     fi
   elif [[ "$USE_NPM_INSTALL" == "false" ]]; then
     if [[ -d "$npm_cache" ]]; then
       mv "$npm_cache" "$cache_dir/node/cache/npm"
-      echo "- npm cache"
+      output::info "- npm cache"
     else
-      echo "- npm cache (nothing to cache)"
+      output::info "- npm cache (nothing to cache)"
     fi
   else
     # node_modules
     if [[ -e "$build_dir/node_modules" ]]; then
-      echo "- node_modules"
+      output::info "- node_modules"
       mkdir -p "$cache_dir/node/cache/node_modules"
       cp -a "$build_dir/node_modules" "$(dirname "$cache_dir/node/cache/node_modules")"
     else
       # this can happen if there are no dependencies
-      echo "- node_modules (nothing to cache)"
+      output::info "- node_modules (nothing to cache)"
     fi
   fi
 
   # bower_components
   if [[ -e "$build_dir/bower_components" ]]; then
     build_data::set_raw "has_cached_bower_components" "true"
-    echo "- bower_components"
+    output::info "- bower_components"
     mkdir -p "$cache_dir/node/cache/bower_components"
     cp -a "$build_dir/bower_components" "$(dirname "$cache_dir/node/cache/bower_components")"
   else
@@ -223,22 +223,22 @@ save_custom_cache_directories() {
   # Parse the input string with multiple lines: "a\nb\nc" into an array
   mapfile -t cache_directories <<< "$4"
 
-  echo "Saving cacheDirectories (package.json):"
+  output::info "Saving cacheDirectories (package.json):"
 
   for cachepath in "${cache_directories[@]}"; do
     if [[ "$PNPM" == "true" ]] && [[ "$cachepath" =~ ^node_modules(/|$) ]]; then
-      echo "- $cachepath (skipping because pnpm is used)"
+      output::info "- $cachepath (skipping because pnpm is used)"
     elif [ -e "$build_dir/$cachepath" ]; then
-      echo "- $cachepath"
+      output::info "- $cachepath"
       mkdir -p "$cache_dir/node/cache/$cachepath"
       cp -a "$build_dir/$cachepath" "$(dirname "$cache_dir/node/cache/$cachepath")"
     else
-      echo "- $cachepath (nothing to cache)"
+      output::info "- $cachepath (nothing to cache)"
     fi
   done
 
   if [[ "$PNPM" == "true" ]] && [ -e "$pnpm_cache_dir" ]; then
-    echo "- pnpm store (included because pnpm is used)"
+    output::info "- pnpm store (included because pnpm is used)"
     mkdir -p "$cache_dir/node/cache/pnpm"
     cp -a "$pnpm_cache_dir" "$cache_dir/node/cache/pnpm/store"
   fi

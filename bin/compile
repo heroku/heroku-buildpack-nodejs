@@ -114,12 +114,12 @@ create_env() {
   write_export "$BP_DIR" "$BUILD_DIR"
 }
 
-header "Creating runtime environment" | output "$LOG_FILE"
+output::step "Creating runtime environment"
 
 mkdir -p "$BUILD_DIR/.heroku/node/"
 cd "$BUILD_DIR"
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
-list_node_config | output "$LOG_FILE"
+list_node_config
 create_build_env
 
 
@@ -214,19 +214,19 @@ install_bins() {
   [ -n "$pnpm_engine" ] && build_data::set_string "pnpm_version_request" "$pnpm_engine"
   [ -n "$package_manager" ] && build_data::set_string "package_manager_request" "$package_manager"
 
-  echo "engines.node (package.json):   ${node_engine:-unspecified}"
-  echo "engines.npm (package.json):    ${npm_engine:-unspecified (use default)}"
+  output::info "engines.node (package.json):   ${node_engine:-unspecified}"
+  output::info "engines.npm (package.json):    ${npm_engine:-unspecified (use default)}"
 
   if $YARN || [ -n "$yarn_engine" ]; then
-    echo "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
+    output::info "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
   fi
 
   if $PNPM || [ -n "$pnpm_engine" ]; then
-    echo "engines.pnpm (package.json):   ${pnpm_engine:-unspecified (use default)}"
+    output::info "engines.pnpm (package.json):   ${pnpm_engine:-unspecified (use default)}"
   fi
 
   if [ -n "$package_manager" ]; then
-    echo "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
+    output::info "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
   fi
 
   local showed_warning=false
@@ -368,13 +368,10 @@ install_bins() {
 		EOF
   fi
 
-  if [[ $YARN_2 == true ]]; then
-    YARN=false
-  fi
 }
 
 output::step "Installing binaries"
-install_bins | output::indent | tee -a "$LOG_FILE"
+install_bins
 
 if $PNPM; then
   # pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
@@ -441,7 +438,7 @@ restore_cache() {
 
   if $YARN; then
     if $PREBUILD && [[ "$SKIP_NODE_MODULES_CHECK" == "true" ]]; then
-      echo "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
+      output::info "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
     elif $PREBUILD; then
       output::warning <<-EOF
 			node_modules checked into source control
@@ -453,26 +450,26 @@ restore_cache() {
   fi
 
   if [[ "$cache_status" == "disabled" ]]; then
-    header "Restoring cache"
-    echo "Caching has been disabled because NODE_MODULES_CACHE=${NODE_MODULES_CACHE}"
+    output::step "Restoring cache"
+    output::info "Caching has been disabled because NODE_MODULES_CACHE=${NODE_MODULES_CACHE}"
   elif [[ "$cache_status" == "valid" ]]; then
-    header "Restoring cache"
+    output::step "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
       restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
     else
       restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
     fi
   elif [[ "$cache_status" == "new-signature" ]]; then
-    header "Restoring cache"
+    output::step "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      echo "Cached directories were not restored due to a change in version of node, npm, yarn or stack"
-      echo "Module installation may take longer for this build"
+      output::info "Cached directories were not restored due to a change in version of node, npm, yarn or stack"
+      output::info "Module installation may take longer for this build"
     else
       # If the user has specified custom cache directories, be more explicit
-      echo "Invalidating cache due to a change in version of node, npm, yarn or stack"
-      echo "Will not restore the following directories for this build:"
+      output::info "Invalidating cache due to a change in version of node, npm, yarn or stack"
+      output::info "Will not restore the following directories for this build:"
       for directory in $cache_directories; do
-        echo "  $directory"
+        output::info "  $directory"
       done
     fi
   else
@@ -488,7 +485,7 @@ restore_cache() {
 }
 
 build_data::set_string "build_step" "restore-cache"
-restore_cache | output "$LOG_FILE"
+restore_cache
 
 build_dependencies() {
   local cache_status start
@@ -502,23 +499,23 @@ build_dependencies() {
   elif $PNPM; then
     package_managers::pnpm::install_dependencies "$BUILD_DIR" "$CACHE_DIR"
   elif $PREBUILD; then
-    echo "Prebuild detected (node_modules already exists)"
+    output::info "Prebuild detected (node_modules already exists)"
     package_managers::npm::rebuild_dependencies "$BUILD_DIR"
   else
     package_managers::npm::install_dependencies "$BUILD_DIR"
   fi
 
   build_data::set_string "build_step" "build-script"
-  header "Build"
+  output::step "Build"
   package_manager::run_build_script "$BUILD_DIR"
 }
 
 build_data::set_string "build_step" "prebuild-script"
-package_manager::run_prebuild_script "$BUILD_DIR" | output "$LOG_FILE"
+package_manager::run_prebuild_script "$BUILD_DIR"
 
-header "Installing dependencies" | output "$LOG_FILE"
+output::step "Installing dependencies"
 build_data::set_string "build_step" "install-dependencies"
-build_dependencies | output "$LOG_FILE"
+build_dependencies
 
 cache_build() {
   local cache_directories cache_build_start_time
@@ -531,10 +528,10 @@ cache_build() {
     # so be silent here
     :
   elif [[ "$cache_directories" == "" ]]; then
-    header "Caching build"
+    output::step "Caching build"
     save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
   else
-    header "Caching build"
+    output::step "Caching build"
     save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
   fi
   save_signature "$CACHE_DIR"
@@ -553,30 +550,30 @@ prune_devdependencies() {
 
 if $YARN_2; then
   build_data::set_string "build_step" "save-cache"
-  cache_build | output "$LOG_FILE"
+  cache_build
   build_data::set_string "build_step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
+  output::step "Pruning devDependencies"
+  prune_devdependencies
 elif "$YARN" && "$USE_YARN_CACHE" && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
   build_data::set_string "build_step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
+  output::step "Pruning devDependencies"
+  prune_devdependencies
   build_data::set_string "build_step" "save-cache"
-  cache_build | output "$LOG_FILE"
+  cache_build
 else
   build_data::set_string "build_step" "save-cache"
-  cache_build | output "$LOG_FILE"
+  cache_build
   build_data::set_string "build_step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
+  output::step "Pruning devDependencies"
+  prune_devdependencies
 fi
 
 build_data::set_string "build_step" "cleanup-script"
-package_manager::run_cleanup_script "$BUILD_DIR" | output "$LOG_FILE"
+package_manager::run_cleanup_script "$BUILD_DIR"
 
 summarize_build() {
   if $NODE_VERBOSE; then
-    package_manager::list_dependencies "$BUILD_DIR"
+    package_manager::list_dependencies "$BUILD_DIR" | output::indent
   fi
 }
 
@@ -584,7 +581,7 @@ build_data::set_string "build_step" "install-metrics-plugin"
 runtimes::nodejs::install_metrics_plugin "$BP_DIR" "$BUILD_DIR"
 
 build_data::set_string "build_step" "summarize"
-summarize_build | output "$LOG_FILE"
+summarize_build
 build_data::set_duration "build_time" "$build_start_time"
 
 if ! [ -e "$BUILD_DIR/Procfile" ]; then
