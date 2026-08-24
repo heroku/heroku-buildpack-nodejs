@@ -11,7 +11,7 @@ set -euo pipefail
 # BP_DIR is a global set by the caller; it is distinct from the bp_dir locals in the
 # metrics-plugin helpers below (SC2153 flags the case difference as a possible misspelling).
 # shellcheck disable=SC2154,SC2153
-RESOLVE="${BP_DIR}/lib/vendor/resolve-version-$(get_os)"
+RESOLVE="${BP_DIR}/lib/vendor/resolve-version-$(environment::get_os)"
 
 function runtimes::nodejs::_major_version() {
 	node --version | cut -d "." -f 1 | sed 's/^v//'

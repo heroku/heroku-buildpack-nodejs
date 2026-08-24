@@ -37,7 +37,7 @@ compileTest() {
   "$bp_dir/bin/test-compile" "$build_dir" "$cache_dir"
 
   export HOME=${build_dir}
-  export_env_dir $env_dir
+  environment::export_env_dir $env_dir
   for f in ${build_dir}/.profile.d/*; do source $f > /dev/null 2> /dev/null ; done
 
   "$bp_dir/bin/test" "$build_dir"
