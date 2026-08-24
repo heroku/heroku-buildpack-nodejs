@@ -442,8 +442,8 @@ restore_cache() {
   local cache_status cache_directories restore_cache_start_time
   restore_cache_start_time=$(build_data::current_unix_realtime)
 
-  cache_status="$(get_cache_status "$CACHE_DIR")"
-  cache_directories="$(get_cache_directories "$BUILD_DIR")"
+  cache_status="$(cache::get_cache_status "$CACHE_DIR")"
+  cache_directories="$(cache::get_cache_directories "$BUILD_DIR")"
 
   if $YARN; then
     if $PREBUILD && [[ "$SKIP_NODE_MODULES_CHECK" == "true" ]]; then
@@ -464,9 +464,9 @@ restore_cache() {
   elif [[ "$cache_status" == "valid" ]]; then
     output::step "Restoring cache"
     if [[ "$cache_directories" == "" ]]; then
-      restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
+      cache::restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
     else
-      restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
+      cache::restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
     fi
   elif [[ "$cache_status" == "new-signature" ]]; then
     output::step "Restoring cache"
@@ -499,7 +499,7 @@ restore_cache
 build_dependencies() {
   local cache_status start
 
-  cache_status="$(get_cache_status "$CACHE_DIR")"
+  cache_status="$(cache::get_cache_status "$CACHE_DIR")"
   start=$(build_data::current_unix_realtime)
   if [[ "$YARN_2" == "true" ]]; then
     package_managers::yarn::yarn2_install_dependencies "$BUILD_DIR"
@@ -529,21 +529,21 @@ build_dependencies
 cache_build() {
   local cache_directories cache_build_start_time
   cache_build_start_time=$(build_data::current_unix_realtime)
-  cache_directories="$(get_cache_directories "$BUILD_DIR")"
+  cache_directories="$(cache::get_cache_directories "$BUILD_DIR")"
 
-  clear_cache "$CACHE_DIR"
+  cache::clear_cache "$CACHE_DIR"
   if ! ${NODE_MODULES_CACHE:-true}; then
     # we've already warned that caching is disabled in the restore step
     # so be silent here
     :
   elif [[ "$cache_directories" == "" ]]; then
     output::step "Caching build"
-    save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
+    cache::save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
   else
     output::step "Caching build"
-    save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
+    cache::save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
   fi
-  save_signature "$CACHE_DIR"
+  cache::save_signature "$CACHE_DIR"
   build_data::set_duration "save_cache_time" "$cache_build_start_time"
 }
 
@@ -563,7 +563,7 @@ if $YARN_2; then
   build_data::set_string "build_step" "prune-dependencies"
   output::step "Pruning devDependencies"
   prune_devdependencies
-elif "$YARN" && "$USE_YARN_CACHE" && [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
+elif "$YARN" && "$USE_YARN_CACHE" && [[ "$(cache::get_cache_directories "$BUILD_DIR")" == "" ]]; then
   build_data::set_string "build_step" "prune-dependencies"
   output::step "Pruning devDependencies"
   prune_devdependencies
