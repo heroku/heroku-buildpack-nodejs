@@ -3,6 +3,10 @@
 # source of truth for what gets linted/formatted (CI invokes these targets, it does
 # not maintain its own list).
 MIGRATED_FILES = \
+	bin/detect \
+	bin/release \
+	bin/test \
+	bin/test-compile \
 	lib/build_data.sh \
 	lib/cache.sh \
 	lib/environment.sh \
