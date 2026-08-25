@@ -669,6 +669,104 @@ testErrTrapNotPoisonedByGuardedVersionSub() {
   rm -f "$unguarded_capture" "$guarded_capture" "$unguarded_marker" "$guarded_marker"
 }
 
+testErrTrapReportsAndTerminatesOnUncaughtParentFailure() {
+  # A genuinely-uncaught failure at the top level of the build must fire the armed ERR trap,
+  # render the internal-error message, record failure=internal-error (plus the failing command as
+  # failure_detail), write the marker, and TERMINATE — the shell must not run past the failure.
+  # This is the run-past-failure / build-hang guard for the handler; it complements
+  # testErrTrapNotPoisonedByGuardedVersionSub (a *guarded* sub that must NOT fire the trap).
+  # Runs in a BACKGROUNDED subshell so `set -e` stays genuinely active (an inline `( … ) || true`
+  # or `if ( … )` would put it in a condition context and suppress errexit vacuously); `wait …
+  # || true` collects the exit code without aborting the runner. A regression that broke
+  # termination (or the caller stack-trace loop) would surface as "UNREACHABLE" in the output.
+  local out capture out_file marker
+  capture="$(mktemp)"
+  out_file="$(mktemp)"
+  marker="$(mktemp)" && rm -f "$marker"
+  (
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    build_data::set_duration() { :; }
+    build_start_time=0
+    export FAILURE_EMITTED_MARKER="$marker"
+    set -euo pipefail -o errtrace
+    shopt -s inherit_errexit
+    trap 'failure::handle_uncaught' ERR
+    heroku_broken_tool_zzz # bare, top-level, unclassified: must fire the trap and terminate
+    echo "UNREACHABLE"     # the handler must exit the build before this line runs
+  ) >"$out_file" 2>&1 &
+  wait "$!" || true
+  out="$(cat "$out_file")"
+
+  assertContains "should render the internal-error message" "$out" "An unexpected error occurred"
+  assertContains "should name the failing command in the output" "$out" "heroku_broken_tool_zzz"
+  assertNotContains "must terminate the build before running past the failure" "$out" "UNREACHABLE"
+  assertContains "should record failure=internal-error" "$(cat "$capture")" "failure=internal-error"
+  assertContains "should record the failing command as failure_detail" \
+    "$(cat "$capture")" "failure_detail=heroku_broken_tool_zzz"
+  assertTrue "should write the marker so a re-fire would be deduped" "[ -e '$marker' ]"
+  rm -f "$capture" "$out_file" "$marker"
+}
+
+testFailureEmitDisarmsTrapOnEntry() {
+  # emit disarms the ERR trap on its first line so a hiccup *inside* emit (here: the build_data
+  # write fails) can't re-enter failure::handle_uncaught and overwrite the real classification with
+  # a generic internal-error. Runs under the real strict mode with the live trap armed, in a
+  # BACKGROUNDED subshell so `set -e` stays active (see testErrTrapNotPoisonedByGuardedVersionSub).
+  # If the disarm regressed, set_string's failure would fire the trap and the capture would also
+  # contain failure=internal-error.
+  local capture marker
+  capture="$(mktemp)"
+  marker="$(mktemp)" && rm -f "$marker"
+  (
+    # set_string fails on every call, simulating a hiccup mid-emit.
+    build_data::set_string() {
+      echo "$1=$2" >>"$capture"
+      return 1
+    }
+    build_data::set_duration() { :; }
+    build_start_time=0
+    export FAILURE_EMITTED_MARKER="$marker"
+    declare -A failure
+    failure[id]="install-dependencies::npm"
+    failure[message]="Error: Unable to install dependencies using npm."
+    set -euo pipefail -o errtrace
+    shopt -s inherit_errexit
+    trap 'failure::handle_uncaught' ERR
+    failure::emit failure
+  ) >/dev/null 2>&1 &
+  wait "$!" || true
+
+  assertContains "should record the classified failure id" \
+    "$(cat "$capture")" "failure=install-dependencies::npm"
+  assertEquals "disarm must keep the trap from overwriting the classification with internal-error" "" \
+    "$(grep '^failure=internal-error' "$capture" || true)"
+  rm -f "$capture" "$marker"
+}
+
+testFailureHandleUncaughtRendersStackFrames() {
+  # The handler records a `caller` stack for observability. Drive it through a nested call chain so
+  # the trace has multiple frames, and assert each named frame appears — this exercises the
+  # `while read … < <(caller …)` loop past its first iteration and proves it terminates (a
+  # regression that broke the loop guards would hang instead of returning this output). Called
+  # directly (not via a real trap) so we can assert the exact frame names.
+  local out capture
+  capture=$(mktemp)
+  out=$(
+    fail() { exit 1; }
+    build_data::set_string() { echo "$1=$2" >>"$capture"; }
+    unset FAILURE_EMITTED_MARKER
+    _uncaught_frame_c() { failure::handle_uncaught; }
+    _uncaught_frame_b() { _uncaught_frame_c; }
+    _uncaught_frame_a() { _uncaught_frame_b; }
+    _uncaught_frame_a 2>&1 || true
+  )
+
+  assertContains "stack trace should name the innermost frame" "$out" "_uncaught_frame_c @"
+  assertContains "stack trace should name the middle frame" "$out" "_uncaught_frame_b @"
+  assertContains "stack trace should name the outermost frame" "$out" "_uncaught_frame_a @"
+  rm -f "$capture"
+}
+
 testFailureHandlePipefail() {
   # The generic pipefail helper hard-codes classification=buildpack and encodes the
   # PIPESTATUS array into failure_detail for observability. Callers pass the id and message.
