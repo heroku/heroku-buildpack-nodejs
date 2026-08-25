@@ -5,6 +5,7 @@
 MIGRATED_FILES = \
 	bin/detect \
 	bin/release \
+	bin/report \
 	bin/test \
 	bin/test-compile \
 	lib/build_data.sh \

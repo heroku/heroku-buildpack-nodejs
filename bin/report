@@ -14,16 +14,16 @@
 #
 # Note: The build system doesn't source the `export` script before running this script.
 
-# TODO: set -u after linting errors are addressed
-set -eo pipefail
-#shopt -s inherit_errexit
+set -euo pipefail
+shopt -s inherit_errexit
 
-# shellcheck disable=SC2034
-CACHE_DIR="${2}"
+# Consumed by lib/build_data.sh (sourced below) via "${CACHE_DIR:?}".
+CACHE_DIR="${2:-}"
 
 # The absolute path to the root of the buildpack.
 BUILDPACK_DIR=$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" && pwd)
 
+# shellcheck source=lib/build_data.sh
 source "${BUILDPACK_DIR}/lib/build_data.sh"
 
 build_data::print_bin_report_json
