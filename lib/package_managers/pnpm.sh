@@ -419,6 +419,7 @@ function package_managers::pnpm::install_binary() {
 	if package_managers::npm::supports_unsafe_perm; then
 		unsafe_perm=(--unsafe-perm)
 	fi
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 	if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "pnpm@${version}"; then
 		build_data::set_string "failure" "pnpm-install-failed"
 		output::error <<-EOF

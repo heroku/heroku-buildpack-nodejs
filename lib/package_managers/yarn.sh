@@ -37,6 +37,7 @@ function package_managers::yarn::install_binary() {
 			EOF
 			false
 		fi
+		# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 		if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "${package_name}@${version}"; then
 			build_data::set_string "failure" "yarn-install-failed"
 			output::error <<-EOF
