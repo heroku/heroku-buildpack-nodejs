@@ -1,7 +1,9 @@
-# Files migrated to tabs + shellcheck enable=all + namespace::function naming.
-# Add a file here only once it passes `make lint` cleanly. This list is the single
-# source of truth for what gets linted/formatted (CI invokes these targets, it does
-# not maintain its own list).
+# Files migrated to tabs + shellcheck enable=all. Build-time bin/lib scripts also adopt
+# namespace::function naming and the error-handling framework; runtime profile scripts
+# (sourced into the dyno boot shell, not the build) are lint/format-only — no namespace
+# renaming or strict-mode flags. Add a file here only once it passes `make lint` cleanly.
+# This list is the single source of truth for what gets linted/formatted (CI invokes these
+# targets, it does not maintain its own list).
 MIGRATED_FILES = \
 	bin/compile \
 	bin/detect \
@@ -22,7 +24,9 @@ MIGRATED_FILES = \
 	lib/utils/command.sh \
 	lib/utils/json.sh \
 	lib/utils/package_json.sh \
-	lib/utils/yaml.sh
+	lib/utils/yaml.sh \
+	profile/WEB_CONCURRENCY.sh \
+	profile/nodejs.sh
 
 .PHONY: lint lint-scripts check-format format
 
