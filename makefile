@@ -1,57 +1,23 @@
-# Files migrated to tabs + shellcheck enable=all. Build-time bin/lib scripts also adopt
-# namespace::function naming and the error-handling framework; runtime profile scripts
-# (sourced into the dyno boot shell, not the build) are lint/format-only — no namespace
-# renaming or strict-mode flags. Add a file here only once it passes `make lint` cleanly.
-# This list is the single source of truth for what gets linted/formatted (CI invokes these
-# targets, it does not maintain its own list).
-MIGRATED_FILES = \
-	bin/compile \
-	bin/detect \
-	bin/release \
-	bin/report \
-	bin/test \
-	bin/test-compile \
-	lib/build_data.sh \
-	lib/cache.sh \
-	lib/environment.sh \
-	lib/failures.sh \
-	lib/output.sh \
-	lib/package_manager.sh \
-	lib/package_managers/npm.sh \
-	lib/package_managers/pnpm.sh \
-	lib/package_managers/yarn.sh \
-	lib/runtimes/nodejs.sh \
-	lib/utils/command.sh \
-	lib/utils/json.sh \
-	lib/utils/package_json.sh \
-	lib/utils/yaml.sh \
-	profile/WEB_CONCURRENCY.sh \
-	profile/nodejs.sh
+# The migration is complete: every tracked shell script is linted (shellcheck enable=all) and
+# formatted (tabs). There is no longer an allowlist. Build-time bin/lib scripts adopt
+# namespace::function naming and the strict-mode/error-handling framework; runtime profile and
+# support/test scripts are lint/format-only. shfmt -f discovers shell scripts by extension and
+# shebang (so it catches the extensionless bin/ and test/ runners). test/shunit2 is vendored
+# (upstream shUnit2) and is the sole exclusion.
+SHELL_FILES = $(shell shfmt -f bin ci-profile etc lib profile test | grep -v '^test/shunit2$$')
 
 .PHONY: lint lint-scripts check-format format
 
 lint: lint-scripts check-format
 
 lint-scripts:
-	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
-		shellcheck --check-sourced $(MIGRATED_FILES); \
-	else \
-		echo "lint-scripts: no migrated files yet"; \
-	fi
+	shellcheck --check-sourced $(SHELL_FILES)
 
 check-format:
-	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
-		shfmt --diff $(MIGRATED_FILES); \
-	else \
-		echo "check-format: no migrated files yet"; \
-	fi
+	shfmt --diff $(SHELL_FILES)
 
 format:
-	@if [ -n "$(strip $(MIGRATED_FILES))" ]; then \
-		shfmt --write --list $(MIGRATED_FILES); \
-	else \
-		echo "format: no migrated files yet"; \
-	fi
+	shfmt --write --list $(SHELL_FILES)
 
 build-resolvers: build-resolver-linux
 

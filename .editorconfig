@@ -9,10 +9,16 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-# Migrated shell files (kept in sync with the makefile's MIGRATED_FILES list). Tabs are used
-# so here-documents can be indented:
+# Shell scripts. Tabs are used so here-documents can be indented:
 # https://www.gnu.org/software/bash/manual/html_node/Redirections.html#Here-Documents
-[{bin/compile,bin/detect,bin/release,bin/report,bin/test,bin/test-compile,lib/build_data.sh,lib/cache.sh,lib/environment.sh,lib/failures.sh,lib/output.sh,lib/package_manager.sh,lib/package_managers/*.sh,lib/utils/*.sh,profile/*.sh}]
+# Two non-obvious bits in this glob:
+#   - `**.sh`, not `*.sh`: EditorConfig anchors a whole {...} group to this directory as soon as
+#     any alternative contains a slash (bin/*, test/...), which would pin a plain `*.sh` to the
+#     repo root and silently skip lib/**/*.sh. `**.sh` matches *.sh at any depth.
+#   - the bin/ and test/ runners are extensionless (no .sh), so no glob can match them by
+#     extension; they must be listed by path. test/shunit2 is vendored (upstream shUnit2) and is
+#     intentionally the only shell script left out.
+[{**.sh,bin/*,test/quick,test/run-*,test/unit,test/utils}]
 binary_next_line = true
 indent_style = tab
 shell_variant = bash

@@ -1,237 +1,214 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck disable=SC2312 # test harness: masked command-substitution exits are inherent to a non-error-propagating test runner
+# shellcheck disable=SC2034,SC2076,SC2124,SC2154,SC2181,SC2199,SC2249,SC2310,SC2335 # deferred: style/test-fixture nits (incl. command-existence checks in conditions) triaged out of the mechanical migration
 
 # taken from
 # https://github.com/ryanbrainard/heroku-buildpack-testrunner/blob/master/lib/test_utils.sh
 
-oneTimeSetUp()
-{
-   TEST_SUITE_CACHE="$(mktemp -d ${SHUNIT_TMPDIR}/test_suite_cache.XXXX)"
+oneTimeSetUp() {
+	TEST_SUITE_CACHE="$(mktemp -d "${SHUNIT_TMPDIR}"/test_suite_cache.XXXX)"
 }
 
-oneTimeTearDown()
-{
-  rm -rf ${TEST_SUITE_CACHE}
+oneTimeTearDown() {
+	rm -rf "${TEST_SUITE_CACHE}"
 }
 
-setUp()
-{
-  OUTPUT_DIR="$(mktemp -d ${SHUNIT_TMPDIR}/output.XXXX)"
-  STD_OUT="${OUTPUT_DIR}/stdout"
-  STD_ERR="${OUTPUT_DIR}/stderr"
-  BUILD_DIR="${OUTPUT_DIR}/build"
-  CACHE_DIR="${OUTPUT_DIR}/cache"
-  mkdir -p ${OUTPUT_DIR}
-  mkdir -p ${BUILD_DIR}
-  mkdir -p ${CACHE_DIR}
+setUp() {
+	OUTPUT_DIR="$(mktemp -d "${SHUNIT_TMPDIR}"/output.XXXX)"
+	STD_OUT="${OUTPUT_DIR}/stdout"
+	STD_ERR="${OUTPUT_DIR}/stderr"
+	BUILD_DIR="${OUTPUT_DIR}/build"
+	CACHE_DIR="${OUTPUT_DIR}/cache"
+	mkdir -p "${OUTPUT_DIR}"
+	mkdir -p "${BUILD_DIR}"
+	mkdir -p "${CACHE_DIR}"
 }
 
-tearDown()
-{
-  rm -rf ${OUTPUT_DIR}
+tearDown() {
+	rm -rf "${OUTPUT_DIR}"
 }
 
-capture()
-{
-  resetCapture
+capture() {
+	resetCapture
 
-  LAST_COMMAND="$@"
+	LAST_COMMAND="$@"
 
-  "$@" >${STD_OUT} 2>${STD_ERR}
-  RETURN=$?
-  rtrn=${RETURN} # deprecated
+	"$@" >"${STD_OUT}" 2>"${STD_ERR}"
+	RETURN=$?
+	rtrn=${RETURN} # deprecated
 }
 
-resetCapture()
-{
-  if [ -f ${STD_OUT} ]; then
-    rm ${STD_OUT}
-  fi
+resetCapture() {
+	if [[ -f "${STD_OUT}" ]]; then
+		rm "${STD_OUT}"
+	fi
 
-  if [ -f ${STD_ERR} ]; then
-    rm ${STD_ERR}
-  fi
+	if [[ -f "${STD_ERR}" ]]; then
+		rm "${STD_ERR}"
+	fi
 
-  unset LAST_COMMAND
-  unset RETURN
-  unset rtrn # deprecated
+	unset LAST_COMMAND
+	unset RETURN
+	unset rtrn # deprecated
 }
 
-detect()
-{
-  capture ${BUILDPACK_HOME}/bin/detect ${BUILD_DIR}
+detect() {
+	capture "${BUILDPACK_HOME}"/bin/detect "${BUILD_DIR}"
 }
 
-compile()
-{
-  capture ${BUILDPACK_HOME}/bin/compile ${BUILD_DIR} ${CACHE_DIR}
+compile() {
+	capture "${BUILDPACK_HOME}"/bin/compile "${BUILD_DIR}" "${CACHE_DIR}"
 }
 
-release()
-{
-  capture ${BUILDPACK_HOME}/bin/release ${BUILD_DIR}
+release() {
+	capture "${BUILDPACK_HOME}"/bin/release "${BUILD_DIR}"
 }
 
-assertCapturedEquals()
-{
-  assertEquals "$@" "$(cat ${STD_OUT})"
+assertCapturedEquals() {
+	assertEquals "$@" "$(cat "${STD_OUT}")"
 }
 
-assertCapturedNotEquals()
-{
-  assertNotEquals "$@" "$(cat ${STD_OUT})"
+assertCapturedNotEquals() {
+	assertNotEquals "$@" "$(cat "${STD_OUT}")"
 }
 
-assertCaptured()
-{
-  assertFileContains "$@" "${STD_OUT}"
+assertCaptured() {
+	assertFileContains "$@" "${STD_OUT}"
 }
 
-assertNotCaptured()
-{
-  assertFileNotContains "$@" "${STD_OUT}"
+assertNotCaptured() {
+	assertFileNotContains "$@" "${STD_OUT}"
 }
 
-assertCapturedSuccess()
-{
-  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
-  assertEquals "Expected STD_ERR to be empty; was <$(cat ${STD_ERR})>" "" "$(cat ${STD_ERR})"
+assertCapturedSuccess() {
+	assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+	assertEquals "Expected STD_ERR to be empty; was <$(cat "${STD_ERR}")>" "" "$(cat "${STD_ERR}")"
 }
 
-assertCapturedSuccessWithWarnings()
-{
-  assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
-  assertNotEquals "Expected STD_ERR to be non-empty (warnings should have been emitted)" "" "$(cat ${STD_ERR})"
+assertCapturedSuccessWithWarnings() {
+	assertEquals "Expected captured exit code to be 0; was <${RETURN}>" "0" "${RETURN}"
+	assertNotEquals "Expected STD_ERR to be non-empty (warnings should have been emitted)" "" "$(cat "${STD_ERR}")"
 }
 
-assertCapturedStderr()
-{
-  assertFileContains "$@" "${STD_ERR}"
+assertCapturedStderr() {
+	assertFileContains "$@" "${STD_ERR}"
 }
 
-assertNotCapturedStderr()
-{
-  assertFileNotContains "$@" "${STD_ERR}"
+assertNotCapturedStderr() {
+	assertFileNotContains "$@" "${STD_ERR}"
 }
 
 # assertCapturedError [[expectedErrorCode] expectedErrorMsg]
-assertCapturedError()
-{
-  if [ $# -gt 1 ]; then
-    local expectedErrorCode=${1}
-    shift
-  fi
+assertCapturedError() {
+	if [[ $# -gt 1 ]]; then
+		local expectedErrorCode=${1}
+		shift
+	fi
 
-  local expectedErrorMsg=${1:-""}
+	local expectedErrorMsg=${1:-""}
 
-  if [ -z ${expectedErrorCode} ]; then
-    assertTrue "Expected captured exit code to be greater than 0; was <${RETURN}>" "[ ${RETURN} -gt 0 ]"
-  else
-    assertTrue "Expected captured exit code to be <${expectedErrorCode}>; was <${RETURN}>" "[ ${RETURN} -eq ${expectedErrorCode} ]"
-  fi
+	if [[ -z "${expectedErrorCode}" ]]; then
+		assertTrue "Expected captured exit code to be greater than 0; was <${RETURN}>" "[ ${RETURN} -gt 0 ]"
+	else
+		assertTrue "Expected captured exit code to be <${expectedErrorCode}>; was <${RETURN}>" "[ ${RETURN} -eq ${expectedErrorCode} ]"
+	fi
 
-  if [ "${expectedErrorMsg}" != "" ]; then
-    assertFileContains "Expected STD_ERR to contain error <${expectedErrorMsg}>" "${expectedErrorMsg}" "${STD_ERR}"
-  fi
+	if [[ "${expectedErrorMsg}" != "" ]]; then
+		assertFileContains "Expected STD_ERR to contain error <${expectedErrorMsg}>" "${expectedErrorMsg}" "${STD_ERR}"
+	fi
 }
 
-_assertContains()
-{
-  if [ 5 -eq $# ]; then
-    local msg=$1
-    shift
-  elif [ ! 4 -eq $# ]; then
-    fail "Expected 4 or 5 parameters; Receieved $# parameters"
-  fi
+_assertContains() {
+	if [[ 5 -eq $# ]]; then
+		local msg=$1
+		shift
+	elif [[ ! 4 -eq $# ]]; then
+		fail "Expected 4 or 5 parameters; Receieved $# parameters"
+	fi
 
-  local needle=$1
-  local haystack=$2
-  local expectation=$3
-  local haystack_type=$4
+	local needle=$1
+	local haystack=$2
+	local expectation=$3
+	local haystack_type=$4
 
-  case "${haystack_type}" in
-    "file") grep -q -F -e "${needle}" ${haystack} ;;
-    "text") echo "${haystack}" | grep -q -F -e "${needle}" ;;
-  esac
+	case "${haystack_type}" in
+		"file") grep -q -F -e "${needle}" "${haystack}" ;;
+		"text") echo "${haystack}" | grep -q -F -e "${needle}" ;;
+	esac
 
-  if [ "${expectation}" != "$?" ]; then
-    case "${expectation}" in
-      0) default_msg="Expected <${haystack}> to contain <${needle}>" ;;
-      1) default_msg="Did not expect <${haystack}> to contain <${needle}>" ;;
-    esac
+	if [[ "${expectation}" != "$?" ]]; then
+		case "${expectation}" in
+			0) default_msg="Expected <${haystack}> to contain <${needle}>" ;;
+			1) default_msg="Did not expect <${haystack}> to contain <${needle}>" ;;
+		esac
 
-    fail "${msg:-${default_msg}}"
-  fi
+		fail "${msg:-${default_msg}}"
+	fi
 }
 
-assertFileContains()
-{
-  _assertContains "$@" 0 "file"
+assertFileContains() {
+	_assertContains "$@" 0 "file"
 }
 
-assertFileNotContains()
-{
-  _assertContains "$@" 1 "file"
+assertFileNotContains() {
+	_assertContains "$@" 1 "file"
 }
 
-assertFileContainsMatch()
-{
-  local needle=$1
-  local haystack=$2
+assertFileContainsMatch() {
+	local needle=$1
+	local haystack=$2
 
-  grep -q -E -e "${needle}" ${haystack}
-  if [ "$?" != 0 ]; then
-    fail "Expected <${haystack}> to contain <${needle}>"
-  fi
+	grep -q -E -e "${needle}" "${haystack}"
+	if [[ "$?" != 0 ]]; then
+		fail "Expected <${haystack}> to contain <${needle}>"
+	fi
 }
 
-command_exists () {
-    type "$1" > /dev/null 2>&1 ;
+command_exists() {
+	type "$1" >/dev/null 2>&1
 }
 
-assertFileMD5()
-{
-  expectedHash=$1
-  filename=$2
+assertFileMD5() {
+	expectedHash=$1
+	filename=$2
 
-  if command_exists "md5sum"; then
-    md5_cmd="md5sum ${filename}"
-    expected_md5_cmd_output="${expectedHash}  ${filename}"
-  elif command_exists "md5"; then
-    md5_cmd="md5 ${filename}"
-    expected_md5_cmd_output="MD5 (${filename}) = ${expectedHash}"
-  else
-    fail "no suitable MD5 hashing command found on this system"
-  fi
+	if command_exists "md5sum"; then
+		md5_cmd="md5sum ${filename}"
+		expected_md5_cmd_output="${expectedHash}  ${filename}"
+	elif command_exists "md5"; then
+		md5_cmd="md5 ${filename}"
+		expected_md5_cmd_output="MD5 (${filename}) = ${expectedHash}"
+	else
+		fail "no suitable MD5 hashing command found on this system"
+	fi
 
-  assertEquals "${expected_md5_cmd_output}" "$(${md5_cmd})"
+	assertEquals "${expected_md5_cmd_output}" "$(${md5_cmd})"
 }
 
 assertDirectoryExists() {
-  if [[ ! -e "$1" ]]; then
-    fail "$1 does not exist"
-  fi
-  if [[ ! -d $1 ]]; then
-    fail "$1 is not a directory"
-  fi
+	if [[ ! -e "$1" ]]; then
+		fail "$1 does not exist"
+	fi
+	if [[ ! -d $1 ]]; then
+		fail "$1 is not a directory"
+	fi
 }
 
-assertFileExists()
-{
-  filename=$1
-  assertTrue "$filename doesn't exist" "[[ -e $filename ]]"
+assertFileExists() {
+	filename=$1
+	assertTrue "${filename} doesn't exist" "[[ -e ${filename} ]]"
 }
 
-assertFileDoesNotExist()
-{
-  filename=$1
-  assertTrue "$filename exists" "[[ ! -e $filename ]]"
+assertFileDoesNotExist() {
+	filename=$1
+	assertTrue "${filename} exists" "[[ ! -e ${filename} ]]"
 }
 
 assertCapturedTimes() {
-  expected_times="$1"
-  capture_text="$2"
-  actual_times=$(grep --only-matching --regexp "$capture_text" "$STD_OUT" | wc -l)
-  assertEquals "Expected '$capture_text' text to appear $expected_times times; it appeared <$actual_times> times" "$expected_times" "$actual_times"
+	expected_times="$1"
+	capture_text="$2"
+	actual_times=$(grep --only-matching --regexp "${capture_text}" "${STD_OUT}" | wc -l)
+	assertEquals "Expected '${capture_text}' text to appear ${expected_times} times; it appeared <${actual_times}> times" "${expected_times}" "${actual_times}"
 }
 
 # Asserts that the metrics JSON file contains the expected values using jq queries
@@ -242,92 +219,95 @@ assertCapturedTimes() {
 #     select(.cache_status == "not-found")
 #   EOF
 assertMetrics() {
-  local cache_dir="$1"
-  local metrics_file="${cache_dir}/build-data/nodejs.json"
-  local expected_metrics=""
-  local checked_keys=()
-  
-  # Check if cache_dir is provided
-  if [ -z "$cache_dir" ]; then
-    fail "assertMetrics: cache_dir argument is required"
-  fi
-  
-  # Check if metrics file exists
-  if [ ! -f "$metrics_file" ]; then
-    fail "Metrics file not found: $metrics_file"
-  fi
-  
-  # Read expected_metrics from stdin (HEREDOC style)
-  if [ -t 0 ]; then
-    fail "assertMetrics: expected metrics must be provided via stdin (HEREDOC)"
-  fi
-  
-  expected_metrics=$(cat)
-  
-  # Process each line of expected_metrics
-  while IFS= read -r line; do
-    # Skip empty lines and lines with only whitespace
-    if [[ -z "$line" || "$line" =~ ^[[:space:]]*$ ]]; then
-      continue
-    fi
-    
-    # Execute the jq query
-    local query_result
-    query_result=$(jq -r "$line" "$metrics_file" 2>/dev/null)
-    
-    if [ $? -ne 0 ] || [ "$query_result" = "null" ] || [ "$query_result" = "" ]; then
-      fail "jq query failed: '$line' on file $metrics_file. File contents: $(jq --sort-keys '.' "${metrics_file}")"
-    fi
-    
-    # Extract the key from the jq query
-    local key=""
-    if [[ "$line" =~ select\(\.([a-zA-Z_][a-zA-Z0-9_]*)\s* ]]; then
-      key="${BASH_REMATCH[1]}"
-    else
-      fail "Unable to extract key from jq query: '$line'. Expected format: 'select(.field_name ...)'"
-    fi
-    
-    # Add key to checked_keys array if it's not already there
-    if [[ ! " ${checked_keys[@]} " =~ " ${key} " ]]; then
-      checked_keys+=("$key")
-    fi
-  done <<< "$expected_metrics"
-  
-  # Get all keys from the JSON file
-  local all_keys
-  all_keys=$(jq -r 'keys[]' "$metrics_file" 2>/dev/null | sort)
-  
-  if [ $? -ne 0 ]; then
-    fail "Failed to extract keys from metrics file: $metrics_file"
-  fi
-  
-  # Find keys that weren't checked
-  local unchecked_keys=()
-  while IFS= read -r key; do
-    if [[ ! " ${checked_keys[@]} " =~ " ${key} " ]]; then
-      unchecked_keys+=("$key")
-    fi
-  done <<< "$all_keys"
-  
-  # If there are unchecked keys, fail with details
-  if [ ${#unchecked_keys[@]} -gt 0 ]; then
-    local unchecked_list
-    mapfile -t unchecked_list < <(printf '%s\n' "${unchecked_keys[@]}" | sort)
-    fail "The following keys in the metrics file were not checked: [$(IFS=,; echo "${unchecked_list[*]}")]. File contents: $(jq --sort-keys '.' "${metrics_file}")"
-  fi
+	local cache_dir="$1"
+	local metrics_file="${cache_dir}/build-data/nodejs.json"
+	local expected_metrics=""
+	local checked_keys=()
+
+	# Check if cache_dir is provided
+	if [[ -z "${cache_dir}" ]]; then
+		fail "assertMetrics: cache_dir argument is required"
+	fi
+
+	# Check if metrics file exists
+	if [[ ! -f "${metrics_file}" ]]; then
+		fail "Metrics file not found: ${metrics_file}"
+	fi
+
+	# Read expected_metrics from stdin (HEREDOC style)
+	if [[ -t 0 ]]; then
+		fail "assertMetrics: expected metrics must be provided via stdin (HEREDOC)"
+	fi
+
+	expected_metrics=$(cat)
+
+	# Process each line of expected_metrics
+	while IFS= read -r line; do
+		# Skip empty lines and lines with only whitespace
+		if [[ -z "${line}" || "${line}" =~ ^[[:space:]]*$ ]]; then
+			continue
+		fi
+
+		# Execute the jq query
+		local query_result
+		query_result=$(jq -r "${line}" "${metrics_file}" 2>/dev/null)
+
+		if [[ $? -ne 0 ]] || [[ "${query_result}" = "null" ]] || [[ "${query_result}" = "" ]]; then
+			fail "jq query failed: '${line}' on file ${metrics_file}. File contents: $(jq --sort-keys '.' "${metrics_file}")"
+		fi
+
+		# Extract the key from the jq query
+		local key=""
+		if [[ "${line}" =~ select\(\.([a-zA-Z_][a-zA-Z0-9_]*)\s* ]]; then
+			key="${BASH_REMATCH[1]}"
+		else
+			fail "Unable to extract key from jq query: '${line}'. Expected format: 'select(.field_name ...)'"
+		fi
+
+		# Add key to checked_keys array if it's not already there
+		if [[ ! " ${checked_keys[@]} " =~ " ${key} " ]]; then
+			checked_keys+=("${key}")
+		fi
+	done <<<"${expected_metrics}"
+
+	# Get all keys from the JSON file
+	local all_keys
+	all_keys=$(jq -r 'keys[]' "${metrics_file}" 2>/dev/null | sort)
+
+	if [[ $? -ne 0 ]]; then
+		fail "Failed to extract keys from metrics file: ${metrics_file}"
+	fi
+
+	# Find keys that weren't checked
+	local unchecked_keys=()
+	while IFS= read -r key; do
+		if [[ ! " ${checked_keys[@]} " =~ " ${key} " ]]; then
+			unchecked_keys+=("${key}")
+		fi
+	done <<<"${all_keys}"
+
+	# If there are unchecked keys, fail with details
+	if [[ ${#unchecked_keys[@]} -gt 0 ]]; then
+		local unchecked_list
+		mapfile -t unchecked_list < <(printf '%s\n' "${unchecked_keys[@]}" | sort)
+		fail "The following keys in the metrics file were not checked: [$(
+			IFS=,
+			echo "${unchecked_list[*]}"
+		)]. File contents: $(jq --sort-keys '.' "${metrics_file}")"
+	fi
 }
 
 assertMetricEqualsString() {
-  assertMetricEqualsRaw "$1" "$2" "\"$3\""
+	assertMetricEqualsRaw "$1" "$2" "\"$3\""
 }
 
 assertMetricEqualsRaw() {
-  local cache_dir="$1"
-  local field="$2"
-  local value="$3"
-  local metrics_file="${cache_dir}/build-data/nodejs.json"
-  query_result=$(jq -r "select(.${field} == ${value})" "$metrics_file" 2>/dev/null)
-  if [ $? -ne 0 ] || [ "$query_result" = "null" ] || [ "$query_result" = "" ]; then
-    fail "expected metric '${field}' to equal '${value}' but was '$(jq -r ".${field}" "$metrics_file" 2>/dev/null)'"
-  fi
+	local cache_dir="$1"
+	local field="$2"
+	local value="$3"
+	local metrics_file="${cache_dir}/build-data/nodejs.json"
+	query_result=$(jq -r "select(.${field} == ${value})" "${metrics_file}" 2>/dev/null)
+	if [[ $? -ne 0 ]] || [[ "${query_result}" = "null" ]] || [[ "${query_result}" = "" ]]; then
+		fail "expected metric '${field}' to equal '${value}' but was '$(jq -r ".${field}" "${metrics_file}" 2>/dev/null)'"
+	fi
 }
