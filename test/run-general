@@ -1,573 +1,527 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091,SC2312 # test harness: dynamically-sourced fixtures resolve at runtime; masked command-substitution exits are inherent to a non-error-propagating test runner
+# shellcheck disable=SC2010,SC2154,SC2155 # deferred: style/test-fixture nits (ls|grep, globals, split declare/assign) triaged out of the mechanical migration
 
 source "$(pwd)"/test/run-helpers
 
 testFlatmapStream() {
-  compile "flatmap-stream"
-  # The migrated npm-install path renders this via failure::emit, which writes to stderr.
-  assertCapturedStderr "flatmap-stream module has been removed from the npm registry"
-  assertCapturedError
+	compile "flatmap-stream"
+	# The migrated npm-install path renders this via failure::emit, which writes to stderr.
+	assertCapturedStderr "flatmap-stream module has been removed from the npm registry"
+	assertCapturedError
 }
-
 
 testBuildScriptBehavior() {
-  # The 'build' script is run by default
-  compile "build-script"
-  assertCaptured "Running build"
-  assertCapturedSuccessWithWarnings
+	# The 'build' script is run by default
+	compile "build-script"
+	assertCaptured "Running build"
+	assertCapturedSuccessWithWarnings
 
-  # the 'heroku-postbuild' script takes precedence over the 'build' script
-  compile "build-script-override"
-  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
-  assertCaptured "Running heroku-postbuild"
-  assertCapturedSuccessWithWarnings
+	# the 'heroku-postbuild' script takes precedence over the 'build' script
+	compile "build-script-override"
+	assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
+	assertCaptured "Running heroku-postbuild"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testNgBuildScriptWarning() {
-  compile "ng-build-script"
-  assertCapturedStderr "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
+	compile "ng-build-script"
+	assertCapturedStderr "\"ng build\" detected as build script. We recommend you use \`ng build --prod\` or add \`--prod\` to your build flags."
 }
-
 
 testBuildFlags() {
-  cache=$(mktmpdir)
-  env_dir=$(mktmpdir)
+	cache=$(mktmpdir)
+	env_dir=$(mktmpdir)
 
-  echo "--prod --optimize" > $env_dir/NODE_BUILD_FLAGS
-  compile "build-script" $cache $env_dir
-  assertCaptured "Running build"
-  assertCaptured "Running with --prod --optimize flags"
-  assertCaptured 'echo build hook message "--prod --optimize"'
-  assertCapturedSuccessWithWarnings
+	echo "--prod --optimize" >"${env_dir}"/NODE_BUILD_FLAGS
+	compile "build-script" "${cache}" "${env_dir}"
+	assertCaptured "Running build"
+	assertCaptured "Running with --prod --optimize flags"
+	assertCaptured 'echo build hook message "--prod --optimize"'
+	assertCapturedSuccessWithWarnings
 }
-
 
 testPreferEmptyHerokuPostbuildOverBuild() {
-  compile "empty-heroku-postbuild"
-  assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
-  assertCaptured "Running heroku-postbuild"
-  assertNotCaptured "build hook message"
-  assertCapturedSuccessWithWarnings
+	compile "empty-heroku-postbuild"
+	assertCaptured "Detected both \"build\" and \"heroku-postbuild\" scripts"
+	assertCaptured "Running heroku-postbuild"
+	assertNotCaptured "build hook message"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testPrePostBuildScripts() {
-  compile "pre-post-build-scripts"
-  assertCaptured "Running heroku-prebuild"
-  assertCaptured "echo heroku-prebuild hook message"
-  assertCaptured "Running heroku-postbuild"
-  assertCaptured "echo heroku-postbuild hook message"
-  assertCapturedSuccessWithWarnings
+	compile "pre-post-build-scripts"
+	assertCaptured "Running heroku-prebuild"
+	assertCaptured "echo heroku-prebuild hook message"
+	assertCaptured "Running heroku-postbuild"
+	assertCaptured "echo heroku-postbuild hook message"
+	assertCapturedSuccessWithWarnings
 
-  compile "stable-node"
-  assertNotCaptured "Running heroku-prebuild"
-  assertNotCaptured "Running heroku-postbuild"
-  assertCapturedSuccessWithWarnings
+	compile "stable-node"
+	assertNotCaptured "Running heroku-prebuild"
+	assertNotCaptured "Running heroku-postbuild"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testCleanupScript() {
-  compile "cleanup-scripts"
-  assertCaptured "Running heroku-cleanup"
-  assertCaptured "echo heroku-cleanup hook message"
-  assertCapturedSuccessWithWarnings
+	compile "cleanup-scripts"
+	assertCaptured "Running heroku-cleanup"
+	assertCaptured "echo heroku-cleanup hook message"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testNoVersion() {
-  compile "no-version"
-  assertCaptured "engines.node (package.json):   unspecified"
-  assertCaptured "No Node.js version specified, resolving current LTS version..."
-  assertCaptured "Downloading and installing node"
-  assertCapturedSuccess
+	compile "no-version"
+	assertCaptured "engines.node (package.json):   unspecified"
+	assertCaptured "No Node.js version specified, resolving current LTS version..."
+	assertCaptured "Downloading and installing node"
+	assertCapturedSuccess
 }
-
 
 testCustomNodeBinaryURL() {
-  cache=$(mktmpdir)
-  env_dir=$(mktmpdir)
+	cache=$(mktmpdir)
+	env_dir=$(mktmpdir)
 
-  echo "https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz" > $env_dir/NODE_BINARY_URL
-  compile "node-14" $cache $env_dir
-  assertCaptured "from https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz"
-  assertNotCaptured "Validating checksum"
-  # NODE_BINARY_URL bypasses version resolution entirely, so no EOL check runs.
-  assertCapturedSuccess
+	echo "https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz" >"${env_dir}"/NODE_BINARY_URL
+	compile "node-14" "${cache}" "${env_dir}"
+	assertCaptured "from https://nodejs.org/download/release/v14.21.3/node-v14.21.3-linux-x64.tar.gz"
+	assertNotCaptured "Validating checksum"
+	# NODE_BINARY_URL bypasses version resolution entirely, so no EOL check runs.
+	assertCapturedSuccess
 }
 
-
 testNodeDownloadFailure() {
-  env_dir=$(mktmpdir)
-  echo "https://registry.invalid/node.tar.gz" > "$env_dir/NODE_BINARY_URL"
-  compile "no-version" "$(mktmpdir)" "$env_dir"
-  assertCapturedStderr "Unable to download Node.js"
-  assertCapturedStderr "https://registry.invalid/node.tar.gz"
-  assertCapturedStderr "https://status.nodejs.org/"
-  assertCapturedError
+	env_dir=$(mktmpdir)
+	echo "https://registry.invalid/node.tar.gz" >"${env_dir}/NODE_BINARY_URL"
+	compile "no-version" "$(mktmpdir)" "${env_dir}"
+	assertCapturedStderr "Unable to download Node.js"
+	assertCapturedStderr "https://registry.invalid/node.tar.gz"
+	assertCapturedStderr "https://status.nodejs.org/"
+	assertCapturedError
 }
 
 testDisableCache() {
-  cache=$(mktmpdir)
-  env_dir=$(mktmpdir)
+	cache=$(mktmpdir)
+	env_dir=$(mktmpdir)
 
-  echo "true" > $env_dir/NODE_VERBOSE
-  compile "node-modules-cache-1" $cache $env_dir
-  assertCaptured "lodash@1.0.0"
-  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c lodash | tr -d ' ')"
-  assertCapturedSuccessWithWarnings
+	echo "true" >"${env_dir}"/NODE_VERBOSE
+	compile "node-modules-cache-1" "${cache}" "${env_dir}"
+	assertCaptured "lodash@1.0.0"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache/node_modules | grep -c lodash | tr -d ' ')"
+	assertCapturedSuccessWithWarnings
 
-  compile "node-modules-cache-2" $cache $env_dir
-  assertCaptured "lodash@1.0.0"
-  assertCapturedSuccessWithWarnings
+	compile "node-modules-cache-2" "${cache}" "${env_dir}"
+	assertCaptured "lodash@1.0.0"
+	assertCapturedSuccessWithWarnings
 
-  echo "false" > $env_dir/NODE_MODULES_CACHE
-  compile "node-modules-cache-2" $cache $env_dir
-  assertCaptured "lodash@1.3.1"
-  assertCapturedSuccessWithWarnings
+	echo "false" >"${env_dir}"/NODE_MODULES_CACHE
+	compile "node-modules-cache-2" "${cache}" "${env_dir}"
+	assertCaptured "lodash@1.3.1"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testNodeModulesCached() {
-  cache=$(mktmpdir)
+	cache=$(mktmpdir)
 
-  compile "caching" $cache
-  assertCaptured "- node_modules"
-  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c express | tr -d ' ')"
-  assertCapturedSuccessWithWarnings
+	compile "caching" "${cache}"
+	assertCaptured "- node_modules"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache/node_modules | grep -c express | tr -d ' ')"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testSetBuildEnv() {
-  cache=$(mktmpdir)
-  env_dir=$(mktmpdir)
+	cache=$(mktmpdir)
+	env_dir=$(mktmpdir)
 
-  compile "print-node-options"
-  assertCaptured "NODE_OPTIONS=--max_old_space_size=2560"
+	compile "print-node-options"
+	assertCaptured "NODE_OPTIONS=--max_old_space_size=2560"
 
-  echo "--max_old_space_size=1234" > $env_dir/NODE_OPTIONS
-  compile "print-node-options" $cache $env_dir
-  assertCaptured "NODE_OPTIONS=--max_old_space_size=1234"
+	echo "--max_old_space_size=1234" >"${env_dir}"/NODE_OPTIONS
+	compile "print-node-options" "${cache}" "${env_dir}"
+	assertCaptured "NODE_OPTIONS=--max_old_space_size=1234"
 }
-
 
 testBuildWithCache() {
-  cache=$(mktmpdir)
+	cache=$(mktmpdir)
 
-  compile "stable-node" $cache
-  assertNotCaptured "Restoring cache"
-  assertEquals "1" "$(ls -1 $cache/node/cache/node_modules | grep -c @heroku | tr -d ' ')"
-  assertCapturedSuccessWithWarnings
+	compile "stable-node" "${cache}"
+	assertNotCaptured "Restoring cache"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache/node_modules | grep -c @heroku | tr -d ' ')"
+	assertCapturedSuccessWithWarnings
 
-  compile "stable-node" $cache
-  assertCaptured "- node_modules"
-  assertFileContains "${STACK}" "${cache}/node/signature"
-  assertCapturedSuccessWithWarnings
+	compile "stable-node" "${cache}"
+	assertCaptured "- node_modules"
+	assertFileContains "${STACK}" "${cache}/node/signature"
+	assertCapturedSuccessWithWarnings
 
-  rm -rf "$cache/node/cache/node_modules"
-  compile "stable-node" $cache
-  assertCaptured "- node_modules (not cached - skipping)"
-  assertCapturedSuccessWithWarnings
+	rm -rf "${cache}/node/cache/node_modules"
+	compile "stable-node" "${cache}"
+	assertCaptured "- node_modules (not cached - skipping)"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testCacheWithPrebuild() {
-  local cache=$(mktmpdir)
-  local env_dir=$(mktmpdir)
-  echo 'true' > "$env_dir"/PREBUILD
+	local cache=$(mktmpdir)
+	local env_dir=$(mktmpdir)
+	echo 'true' >"${env_dir}"/PREBUILD
 
-  compile "cache-prebuild" $cache
-  assertCapturedSuccess
+	compile "cache-prebuild" "${cache}"
+	assertCapturedSuccess
 
-  compile "cache-prebuild" $cache $env_dir
-  assertCaptured "Cached directories were not restored due to a change in version of node"
-  assertCapturedSuccess
+	compile "cache-prebuild" "${cache}" "${env_dir}"
+	assertCaptured "Cached directories were not restored due to a change in version of node"
+	assertCapturedSuccess
 }
-
 
 testErrorYarnAndNpmLockfiles() {
-  compile "yarn-and-npm-lockfiles"
-  assertNotCaptured "Creating runtime environment"
-  assertCapturedStderr "Multiple lockfiles found"
-  assertCapturedStderr "Multiple package managers (npm,Yarn) have created lockfiles for this application"
-  assertCapturedStderr "If you use npm:"
-  assertCapturedStderr "git rm yarn.lock"
-  assertCapturedStderr "If you use Yarn:"
-  assertCapturedStderr "git rm package-lock.json"
-  assertCapturedError
+	compile "yarn-and-npm-lockfiles"
+	assertNotCaptured "Creating runtime environment"
+	assertCapturedStderr "Multiple lockfiles found"
+	assertCapturedStderr "Multiple package managers (npm,Yarn) have created lockfiles for this application"
+	assertCapturedStderr "If you use npm:"
+	assertCapturedStderr "git rm yarn.lock"
+	assertCapturedStderr "If you use Yarn:"
+	assertCapturedStderr "git rm package-lock.json"
+	assertCapturedError
 }
-
 
 testErrorYarnAndNpmShrinkwrap() {
-  compile "yarn-and-shrinkwrap-lockfiles"
-  assertNotCaptured "Creating runtime environment"
-  assertCapturedStderr "Multiple lockfiles conflicting with npm-shrinkwrap.json"
-  assertCapturedError
+	compile "yarn-and-shrinkwrap-lockfiles"
+	assertNotCaptured "Creating runtime environment"
+	assertCapturedStderr "Multiple lockfiles conflicting with npm-shrinkwrap.json"
+	assertCapturedError
 }
-
 
 testErrorYarnAndPnpmAndNpmLockfiles() {
-  compile "yarn-pnpm-and-npm-lockfiles"
-  assertNotCaptured "Creating runtime environment"
-  assertCapturedStderr "Multiple lockfiles found"
-  assertCapturedStderr "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
-  assertCapturedStderr "If you use pnpm:"
-  assertCapturedStderr "git rm package-lock.json yarn.lock"
-  assertCapturedError
+	compile "yarn-pnpm-and-npm-lockfiles"
+	assertNotCaptured "Creating runtime environment"
+	assertCapturedStderr "Multiple lockfiles found"
+	assertCapturedStderr "Multiple package managers (npm,pnpm,Yarn) have created lockfiles for this application"
+	assertCapturedStderr "If you use pnpm:"
+	assertCapturedStderr "git rm package-lock.json yarn.lock"
+	assertCapturedError
 }
-
 
 testWarnNoStart() {
-  compile "no-start"
-  assertCapturedStderr "may not specify any way to start"
-  assertCapturedSuccessWithWarnings
-  compile "no-version"
-  assertNotCaptured "may not specify any way to start"
-  assertCapturedSuccess
+	compile "no-start"
+	assertCapturedStderr "may not specify any way to start"
+	assertCapturedSuccessWithWarnings
+	compile "no-version"
+	assertNotCaptured "may not specify any way to start"
+	assertCapturedSuccess
 }
-
 
 testEnvBlacklist() {
-  local cache=$(mktmpdir)
-  local env_dir=$(mktmpdir)
-  echo 'tr_TR.UTF-8' > "$env_dir"/LANG
-  echo 'safeVar' > "$env_dir"/SAFE
-  compile "echo-lang" $cache $env_dir
-  assertCaptured "safeVar"
-  assertNotCaptured "tr_TR.UTF-8"
-  assertCapturedSuccessWithWarnings
+	local cache=$(mktmpdir)
+	local env_dir=$(mktmpdir)
+	echo 'tr_TR.UTF-8' >"${env_dir}"/LANG
+	echo 'safeVar' >"${env_dir}"/SAFE
+	compile "echo-lang" "${cache}" "${env_dir}"
+	assertCaptured "safeVar"
+	assertNotCaptured "tr_TR.UTF-8"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testWarningsOnFailure() {
-  compile "many-warnings"
-  # The npm 404 install failure is now classified by failure::emit, which renders a specific
-  # message to stderr; no generic troubleshooting footer is printed. The old-npm warning is
-  # emitted at detection via output::warning (also stderr).
-  assertCapturedStderr "A package could not be found in the npm registry"
-  assertCapturedStderr "has several known issues"
-  assertNotCaptured "troubleshooting-node-deploys"
-  assertNotCaptured "please submit a ticket"
-  assertCapturedError
+	compile "many-warnings"
+	# The npm 404 install failure is now classified by failure::emit, which renders a specific
+	# message to stderr; no generic troubleshooting footer is printed. The old-npm warning is
+	# emitted at detection via output::warning (also stderr).
+	assertCapturedStderr "A package could not be found in the npm registry"
+	assertCapturedStderr "has several known issues"
+	assertNotCaptured "troubleshooting-node-deploys"
+	assertNotCaptured "please submit a ticket"
+	assertCapturedError
 }
-
 
 testDotHerokuCollision() {
-  compile "dot-heroku-collision"
-  assertCapturedStderr "The directory .heroku could not be created"
-  assertCapturedStderr ".heroku file is checked into this project"
-  assertNotCaptured "please submit a ticket"
-  assertCapturedError
+	compile "dot-heroku-collision"
+	assertCapturedStderr "The directory .heroku could not be created"
+	assertCapturedStderr ".heroku file is checked into this project"
+	assertNotCaptured "please submit a ticket"
+	assertCapturedError
 
-  compile "dot-heroku-collision-2"
-  assertNotCapturedStderr ".heroku file is checked into this project"
-  assertCapturedSuccessWithWarnings
+	compile "dot-heroku-collision-2"
+	assertNotCapturedStderr ".heroku file is checked into this project"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testDotHerokuNodeCollision() {
-  compile "dot-heroku-node-collision"
-  assertCapturedStderr "The directory .heroku/node could not be created"
-  assertCapturedStderr ".heroku file is checked into this project"
-  assertNotCaptured "please submit a ticket"
-  assertCapturedError
+	compile "dot-heroku-node-collision"
+	assertCapturedStderr "The directory .heroku/node could not be created"
+	assertCapturedStderr ".heroku file is checked into this project"
+	assertNotCaptured "please submit a ticket"
+	assertCapturedError
 }
-
 
 testMultipleRuns() {
-  local compileDir=$(mktmpdir)
-  local cacheDir=$(mktmpdir)
+	local compileDir=$(mktmpdir)
+	local cacheDir=$(mktmpdir)
 
-  cp -a test/fixtures/stable-node/. ${compileDir}
-  compileDir "$compileDir" "$cacheDir"
-  assertCapturedSuccessWithWarnings
-  compileDir "$compileDir" "$cacheDir"
-  assertCapturedSuccessWithWarnings
+	cp -a test/fixtures/stable-node/. "${compileDir}"
+	compileDir "${compileDir}" "${cacheDir}"
+	assertCapturedSuccessWithWarnings
+	compileDir "${compileDir}" "${cacheDir}"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testBadJson() {
-  compile "bad-json"
-  assertNotCaptured "Installing binaries"
-  # The migrated invalid-package-json path renders the failure via failure::emit, which writes
-  # the "Build failed" header and the message to stderr; no generic failure footer is printed.
-  assertCapturedStderr "Build failed"
-  assertCapturedError 1 "Unable to parse"
+	compile "bad-json"
+	assertNotCaptured "Installing binaries"
+	# The migrated invalid-package-json path renders the failure via failure::emit, which writes
+	# the "Build failed" header and the message to stderr; no generic failure footer is printed.
+	assertCapturedStderr "Build failed"
+	assertCapturedError 1 "Unable to parse"
 }
-
 
 testBuildWithUserCacheDirectoriesCamel() {
-  cache=$(mktmpdir)
+	cache=$(mktmpdir)
 
-  compile "cache-directories-camel" $cache
-  assertCaptured "- non/existent (nothing to cache)"
-  assertEquals "1" "$(ls -1 $cache/node/cache/server | grep -c node_modules | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node/cache/client | grep -c node_modules | tr -d ' ')"
-  assertCapturedSuccessWithWarnings
+	compile "cache-directories-camel" "${cache}"
+	assertCaptured "- non/existent (nothing to cache)"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache/server | grep -c node_modules | tr -d ' ')"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache/client | grep -c node_modules | tr -d ' ')"
+	assertCapturedSuccessWithWarnings
 
-  compile "cache-directories-camel" $cache
-  assertCaptured "Loading from cacheDirectories"
-  assertCaptured "- server/node_modules"
-  assertCaptured "- client/node_modules"
-  assertCaptured "- non/existent (not cached - skipping)"
-  assertCapturedSuccessWithWarnings
+	compile "cache-directories-camel" "${cache}"
+	assertCaptured "Loading from cacheDirectories"
+	assertCaptured "- server/node_modules"
+	assertCaptured "- client/node_modules"
+	assertCaptured "- non/existent (not cached - skipping)"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testConcurrency1X() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-  assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=1"
-  assertCapturedSuccess
+	LOG_CONCURRENCY=true MEMORY_AVAILABLE=512 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+	assertCaptured "Detected 512 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+	assertCaptured "Recommending WEB_CONCURRENCY=1"
+	assertCapturedSuccess
 }
-
 
 testConcurrency2X() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-  assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=2"
-  assertCapturedSuccess
+	LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+	assertCaptured "Detected 1024 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+	assertCaptured "Recommending WEB_CONCURRENCY=2"
+	assertCapturedSuccess
 }
-
 
 testConcurrencyPerformanceM() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-  assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=5"
-  assertCapturedSuccess
+	LOG_CONCURRENCY=true MEMORY_AVAILABLE=2560 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+	assertCaptured "Detected 2560 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+	assertCaptured "Recommending WEB_CONCURRENCY=5"
+	assertCapturedSuccess
 }
-
 
 testConcurrencyPerformanceL() {
-   LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-   assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
-   assertCaptured "Recommending WEB_CONCURRENCY=28"
-   assertCapturedSuccess
+	LOG_CONCURRENCY=true MEMORY_AVAILABLE=14336 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+	assertCaptured "Detected 14336 MB available memory, 512 MB limit per process (WEB_MEMORY)"
+	assertCaptured "Recommending WEB_CONCURRENCY=28"
+	assertCapturedSuccess
 }
 
-
 testConcurrencyCustomLimit() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-  assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
-  assertCaptured "Recommending WEB_CONCURRENCY=4"
-  assertCapturedSuccess
+	LOG_CONCURRENCY=true MEMORY_AVAILABLE=1024 WEB_MEMORY=256 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+	assertCaptured "Detected 1024 MB available memory, 256 MB limit per process (WEB_MEMORY)"
+	assertCaptured "Recommending WEB_CONCURRENCY=4"
+	assertCapturedSuccess
 }
 
 # When /sys/fs/cgroup/memory/memory.limit_in_bytes lies and gives a ridiculous value
 # This happens on Dokku for example
 
 testConcurrencyTooHigh() {
-  LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
-  assertCaptured "Could not determine a reasonable value for WEB_CONCURRENCY"
-  assertCaptured "Recommending WEB_CONCURRENCY=1"
-  assertCapturedSuccess
+	LOG_CONCURRENCY=true MEMORY_AVAILABLE=10000000000 capture "$(pwd)"/profile/WEB_CONCURRENCY.sh
+	assertCaptured "Could not determine a reasonable value for WEB_CONCURRENCY"
+	assertCaptured "Recommending WEB_CONCURRENCY=1"
+	assertCapturedSuccess
 }
-
 
 testInvalidNode() {
-  cache_dir=$(mktmpdir)
-  compile "invalid-node" "${cache_dir}"
-  assertCaptured "Resolving node version 0.11.333"
-  assertCapturedStderr "Error: No published Node.js version matches the requested range."
-  assertCapturedStderr "package.json (0.11.333)"
-  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
-  assertCapturedError
-  assertMetricEqualsString "${cache_dir}" "failure" "invalid-node-version"
+	cache_dir=$(mktmpdir)
+	compile "invalid-node" "${cache_dir}"
+	assertCaptured "Resolving node version 0.11.333"
+	assertCapturedStderr "Error: No published Node.js version matches the requested range."
+	assertCapturedStderr "package.json (0.11.333)"
+	assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+	assertCapturedError
+	assertMetricEqualsString "${cache_dir}" "failure" "invalid-node-version"
 }
-
 
 testInvalidNodeSemver() {
-  cache_dir=$(mktmpdir)
-  compile "invalid-node-semver" "${cache_dir}"
-  assertCaptured "Resolving node version stable"
-  assertCapturedStderr "Error: Invalid Node.js version requirement."
-  assertCapturedStderr "package.json (stable)"
-  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
-  assertCapturedError
-  assertMetricEqualsString "${cache_dir}" "failure" "invalid-semver-requirement"
+	cache_dir=$(mktmpdir)
+	compile "invalid-node-semver" "${cache_dir}"
+	assertCaptured "Resolving node version stable"
+	assertCapturedStderr "Error: Invalid Node.js version requirement."
+	assertCapturedStderr "package.json (stable)"
+	assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support#specifying-a-node-js-version"
+	assertCapturedError
+	assertMetricEqualsString "${cache_dir}" "failure" "invalid-semver-requirement"
 }
-
 
 testSignatureInvalidation() {
-  cache=$(mktmpdir)
-  env_dir=$(mktmpdir)
+	cache=$(mktmpdir)
+	env_dir=$(mktmpdir)
 
-  compile "node-0.12.6" $cache
-  assertCaptured "Downloading and installing node 0.12.6"
-  assertCapturedSuccessWithWarnings
+	compile "node-0.12.6" "${cache}"
+	assertCaptured "Downloading and installing node 0.12.6"
+	assertCapturedSuccessWithWarnings
 
-  compile "node-0.12.7" $cache
-  assertCaptured "Downloading and installing node 0.12.7"
-  assertCaptured "Cached directories were not restored due to a change in version of node"
-  assertCapturedSuccessWithWarnings
+	compile "node-0.12.7" "${cache}"
+	assertCaptured "Downloading and installing node 0.12.7"
+	assertCaptured "Cached directories were not restored due to a change in version of node"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testModulesCheckedIn() {
-  cache=$(mktmpdir)
-  compile "modules-checked-in" $cache
-  assertCapturedSuccessWithWarnings
+	cache=$(mktmpdir)
+	compile "modules-checked-in" "${cache}"
+	assertCapturedSuccessWithWarnings
 
-  compile "modules-checked-in" $cache
-  assertCaptured "Prebuild detected"
-  assertCaptured "Rebuilding any native modules"
-  assertCaptured "(preinstall script)"
-  assertCaptured "Installing any new modules"
-  assertCaptured "(postinstall script)"
-  assertCapturedSuccessWithWarnings
+	compile "modules-checked-in" "${cache}"
+	assertCaptured "Prebuild detected"
+	assertCaptured "Rebuilding any native modules"
+	assertCaptured "(preinstall script)"
+	assertCaptured "Installing any new modules"
+	assertCaptured "(postinstall script)"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testSkipModulesCheckedIn() {
-  env_dir=$(mktmpdir)
-  echo "true" > $env_dir/SKIP_NODE_MODULES_CHECK
+	env_dir=$(mktmpdir)
+	echo "true" >"${env_dir}"/SKIP_NODE_MODULES_CHECK
 
-  compile "skip-modules-checked-in" "$(mktmpdir)" $env_dir
+	compile "skip-modules-checked-in" "$(mktmpdir)" "${env_dir}"
 
-  assertCaptured "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=true"
-  assertNotCaptured "node_modules checked into source"
-  assertCapturedSuccessWithWarnings
+	assertCaptured "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=true"
+	assertNotCaptured "node_modules checked into source"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testDetectWithPackageJson() {
-  detect "stable-node"
-  assertCaptured "Node.js"
-  assertCapturedSuccess
+	detect "stable-node"
+	assertCaptured "Node.js"
+	assertCapturedSuccess
 }
-
 
 testDetectWithoutPackageJson() {
-  detect "no-package-json"
-  assertCapturedError 1 ""
+	detect "no-package-json"
+	assertCapturedError 1 ""
 }
 
-
 testIoJs() {
-  compile "iojs"
-  assertCapturedError 1 "io.js is no longer supported"
+	compile "iojs"
+	assertCapturedError 1 "io.js is no longer supported"
 }
 
 ###
 # Yarn 2
 
 testSpecificVersion() {
-  compile "specific-version"
-  assertCaptured "Resolving node version"
-  assertCaptured "Downloading and installing node 14.15.3"
-  assertCaptured "Using default npm version: 6.14.9"
-  assertCapturedSuccessWithWarnings
+	compile "specific-version"
+	assertCaptured "Resolving node version"
+	assertCaptured "Downloading and installing node 14.15.3"
+	assertCaptured "Using default npm version: 6.14.9"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testStableVersion() {
-  compile "stable-node"
-  assertCaptured "Downloading and installing node 0.10."
-  assertNotCaptured "We're sorry this build is failing"
-  assertCapturedSuccessWithWarnings
+	compile "stable-node"
+	assertCaptured "Downloading and installing node 0.10."
+	assertNotCaptured "We're sorry this build is failing"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testUnstableVersion() {
-  compile "unstable-version"
-  assertCaptured "Resolving node version 0.11.x"
-  assertCaptured "Downloading and installing node 0.11."
-  assertCapturedSuccessWithWarnings
+	compile "unstable-version"
+	assertCaptured "Resolving node version 0.11.x"
+	assertCaptured "Downloading and installing node 0.11."
+	assertCapturedSuccessWithWarnings
 }
-
 
 testFailingBuild() {
-  compile "failing-build"
-  # The failing heroku-postbuild script matches no specific classifier, so run_script_command's
-  # build-script catch-all classifies it as unknown-build-script-error (classification=user).
-  # failure::emit writes both the "Build failed" header and the message to stderr via output::error.
-  assertNotCaptured "Checking startup method"
-  assertCapturedStderr "Build failed"
-  assertCapturedError 1 "A build script exited with a non-zero exit code"
+	compile "failing-build"
+	# The failing heroku-postbuild script matches no specific classifier, so run_script_command's
+	# build-script catch-all classifies it as unknown-build-script-error (classification=user).
+	# failure::emit writes both the "Build failed" header and the message to stderr via output::error.
+	assertNotCaptured "Checking startup method"
+	assertCapturedStderr "Build failed"
+	assertCapturedError 1 "A build script exited with a non-zero exit code"
 }
-
 
 testInfoEmpty() {
-  compile "info-empty"
-  assertCaptured "engines.node (package.json):   unspecified"
-  assertCaptured "engines.npm (package.json):    unspecified"
-  assertCaptured "Installing node modules (package.json)"
-  assertCapturedSuccessWithWarnings
+	compile "info-empty"
+	assertCaptured "engines.node (package.json):   unspecified"
+	assertCaptured "engines.npm (package.json):    unspecified"
+	assertCaptured "Installing node modules (package.json)"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testRangeWithSpace() {
-  compile "range-with-space"
-  assertCaptured "Resolving node version = 0.8.x"
-  assertCaptured "Downloading and installing node"
-  assertCapturedSuccessWithWarnings
+	compile "range-with-space"
+	assertCaptured "Resolving node version = 0.8.x"
+	assertCaptured "Downloading and installing node"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testInvalidDependency() {
-  compile "invalid-dependency"
-  # The 404 is now classified by failure::emit: the specific message goes to stderr and the
-  # legacy troubleshooting footer is skipped. The raw npm output still appears on stdout.
-  assertCaptured "npm ERR! 404"
-  assertCapturedStderr "A package could not be found in the npm registry"
-  assertNotCaptured "troubleshooting-node-deploys"
-  assertNotCaptured "please submit a ticket"
-  assertNotCaptured "possible problems"
-  assertCapturedError 1 ""
+	compile "invalid-dependency"
+	# The 404 is now classified by failure::emit: the specific message goes to stderr and the
+	# legacy troubleshooting footer is skipped. The raw npm output still appears on stdout.
+	assertCaptured "npm ERR! 404"
+	assertCapturedStderr "A package could not be found in the npm registry"
+	assertNotCaptured "troubleshooting-node-deploys"
+	assertNotCaptured "please submit a ticket"
+	assertNotCaptured "possible problems"
+	assertCapturedError 1 ""
 }
-
 
 testBuildWithUserCacheDirectories() {
-  cache=$(mktmpdir)
+	cache=$(mktmpdir)
 
-  compile "cache-directories" $cache
-  assertCaptured "Saving cacheDirectories"
-  assertEquals "1" "$(ls -1 $cache/node/cache | grep -c bower_components | tr -d ' ')"
-  assertEquals "1" "$(ls -1 $cache/node/cache | grep -c node_modules | tr -d ' ')"
-  assertCapturedSuccessWithWarnings
+	compile "cache-directories" "${cache}"
+	assertCaptured "Saving cacheDirectories"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache | grep -c bower_components | tr -d ' ')"
+	assertEquals "1" "$(ls -1 "${cache}"/node/cache | grep -c node_modules | tr -d ' ')"
+	assertCapturedSuccessWithWarnings
 
-  compile "cache-directories" $cache
-  assertCaptured "Loading from cacheDirectories"
-  assertCaptured "- node_modules"
-  assertCaptured "- bower_components"
-  assertCapturedSuccessWithWarnings
+	compile "cache-directories" "${cache}"
+	assertCaptured "Loading from cacheDirectories"
+	assertCaptured "- node_modules"
+	assertCaptured "- bower_components"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testDefaultProcType() {
-  release "stable-node"
-  assertCaptured "web: npm start"
-  assertCapturedSuccess
+	release "stable-node"
+	assertCaptured "web: npm start"
+	assertCapturedSuccess
 }
-
 
 testDynamicProcfile() {
-  compile "dynamic-procfile"
-  assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"
-  assertCapturedSuccessWithWarnings
+	compile "dynamic-procfile"
+	assertFileContains "web: node index.js customArg" "${compile_dir}/Procfile"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testEnvVars() {
-  env_dir=$(mktmpdir)
-  echo "false" > $env_dir/NPM_CONFIG_PRODUCTION
-  echo "true" > $env_dir/USE_NPM_INSTALL
-  compile "stable-node" "$(mktmpdir)" $env_dir
-  assertCaptured "NPM_CONFIG_PRODUCTION=false"
-  assertCaptured "USE_NPM_INSTALL=true"
-  assertCapturedSuccessWithWarnings
+	env_dir=$(mktmpdir)
+	echo "false" >"${env_dir}"/NPM_CONFIG_PRODUCTION
+	echo "true" >"${env_dir}"/USE_NPM_INSTALL
+	compile "stable-node" "$(mktmpdir)" "${env_dir}"
+	assertCaptured "NPM_CONFIG_PRODUCTION=false"
+	assertCaptured "USE_NPM_INSTALL=true"
+	assertCapturedSuccessWithWarnings
 }
 
-
 testNonFileEnvVars() {
-  export NPM_CONFIG_FOO=bar
-  export NPM_CONFIG_PRODUCTION=false
-  compile "stable-node"
-  assertCaptured "NPM_CONFIG_FOO=bar"
-  assertCaptured "NPM_CONFIG_PRODUCTION=false"
-  assertCapturedSuccessWithWarnings
-  unset NPM_CONFIG_FOO
-  unset NPM_CONFIG_PRODUCTION
+	export NPM_CONFIG_FOO=bar
+	export NPM_CONFIG_PRODUCTION=false
+	compile "stable-node"
+	assertCaptured "NPM_CONFIG_FOO=bar"
+	assertCaptured "NPM_CONFIG_PRODUCTION=false"
+	assertCapturedSuccessWithWarnings
+	unset NPM_CONFIG_FOO
+	unset NPM_CONFIG_PRODUCTION
 }
 
 # In the following tests "lodash" is defined as a devDependency
@@ -577,460 +531,430 @@ testNonFileEnvVars() {
 # Default behavior: install devDependencies then prunes them away
 
 testModulesCheckedInWithDevDependencies() {
-  compile "dependencies-modules-checked-in-with-devdependencies"
-  assertCaptured "Rebuilding any native modules"
-  assertCaptured "lodash"
-  assertCaptured "removed 1 package"
-  assertCapturedSuccessWithWarnings
+	compile "dependencies-modules-checked-in-with-devdependencies"
+	assertCaptured "Rebuilding any native modules"
+	assertCaptured "lodash"
+	assertCaptured "removed 1 package"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testModulesCheckedInWithoutDevDependencies() {
-  compile "dependencies-modules-checked-in-without-devdependencies"
-  assertCaptured "Rebuilding any native modules"
-  assertCaptured "added 1 package"
-  assertCaptured "lodash"
-  assertCaptured "removed 1 package"
-  assertCapturedSuccessWithWarnings
+	compile "dependencies-modules-checked-in-without-devdependencies"
+	assertCaptured "Rebuilding any native modules"
+	assertCaptured "added 1 package"
+	assertCaptured "lodash"
+	assertCaptured "removed 1 package"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testProfileExport() {
-  compile "stable-node"
-  assertCaptured "Creating runtime environment"
-  assertFileContains "export PATH=\"\${HOME}/.heroku/node/bin:\${HOME}/.heroku/yarn/bin:\${PATH}:\${HOME}/bin:\${HOME}/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
-  assertFileContains "export NODE_HOME=\"\${HOME}/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
-  assertCapturedSuccessWithWarnings
+	compile "stable-node"
+	assertCaptured "Creating runtime environment"
+	assertFileContains "export PATH=\"\${HOME}/.heroku/node/bin:\${HOME}/.heroku/yarn/bin:\${PATH}:\${HOME}/bin:\${HOME}/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
+	assertFileContains "export NODE_HOME=\"\${HOME}/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testMultiExport() {
-  compile "stable-node"
-  assertFileContains "export PATH=" "${bp_dir}/export"
-  assertFileContains "/.heroku/node/bin" "${bp_dir}/export"
-  assertFileContains "/.heroku/yarn/bin" "${bp_dir}/export"
-  assertFileContains "/node_modules/.bin" "${bp_dir}/export"
-  assertFileContains "export NODE_HOME=" "${bp_dir}/export"
-  assertFileContains "/.heroku/node\"" "${bp_dir}/export"
-  # shellcheck disable=SC2016
-  assertFileContains 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' "${bp_dir}/export"
-  assertCapturedSuccessWithWarnings
+	compile "stable-node"
+	assertFileContains "export PATH=" "${bp_dir}/export"
+	assertFileContains "/.heroku/node/bin" "${bp_dir}/export"
+	assertFileContains "/.heroku/yarn/bin" "${bp_dir}/export"
+	assertFileContains "/node_modules/.bin" "${bp_dir}/export"
+	assertFileContains "export NODE_HOME=" "${bp_dir}/export"
+	assertFileContains "/.heroku/node\"" "${bp_dir}/export"
+	# shellcheck disable=SC2016
+	assertFileContains 'export NODE_OPTIONS=${NODE_OPTIONS:-"--max_old_space_size=2560"}' "${bp_dir}/export"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testCIEnvVars() {
-  compileTest "ci-env-test"
-  assertCaptured "NODE_ENV: test"
-  assertCapturedSuccess
+	compileTest "ci-env-test"
+	assertCaptured "NODE_ENV: test"
+	assertCapturedSuccess
 }
-
 
 testCIEnvVarsOverride() {
-  env_dir=$(mktmpdir)
-  echo "banana" > $env_dir/NODE_ENV
+	env_dir=$(mktmpdir)
+	echo "banana" >"${env_dir}"/NODE_ENV
 
-  compileTest "ci-env-test" "$(mktmpdir)" $env_dir
+	compileTest "ci-env-test" "$(mktmpdir)" "${env_dir}"
 
-  assertCaptured "NODE_ENV: banana"
-  assertCapturedSuccess
+	assertCaptured "NODE_ENV: banana"
+	assertCapturedSuccess
 }
-
 
 testNodeEnv() {
-  compile "node-env-consistency"
-  assertCaptured "heroku-prebuild: production"
-  assertCaptured "preinstall: production"
-  assertCaptured "postinstall: production"
-  assertCaptured "heroku-postbuild: production"
-  assertCapturedSuccessWithWarnings
+	compile "node-env-consistency"
+	assertCaptured "heroku-prebuild: production"
+	assertCaptured "preinstall: production"
+	assertCaptured "postinstall: production"
+	assertCaptured "heroku-postbuild: production"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testAvoidHttpProxyVersionResolutionIssue() {
-  env_dir=$(mktmpdir)
-  # Set a non-sense http proxy address. This will cause version resolution to fail
-  echo "http://localhost:5001" > $env_dir/HTTP_PROXY
-  # Set the NO_PROXY value, as described in documentation. This will exclude the domain
-  #  from the proxy
-  echo "amazonaws.com" > $env_dir/NO_PROXY
-  compile "node-14" "$(mktmpdir)" $env_dir
-  assertCapturedSuccessWithWarnings
+	env_dir=$(mktmpdir)
+	# Set a non-sense http proxy address. This will cause version resolution to fail
+	echo "http://localhost:5001" >"${env_dir}"/HTTP_PROXY
+	# Set the NO_PROXY value, as described in documentation. This will exclude the domain
+	#  from the proxy
+	echo "amazonaws.com" >"${env_dir}"/NO_PROXY
+	compile "node-14" "$(mktmpdir)" "${env_dir}"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testPluginInstallationBuildTime() {
-  # The plugin should be installed for Node 8, 9, 10
-  compile "node-8"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	# The plugin should be installed for Node 8, 9, 10
+	compile "node-8"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-9"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	compile "node-9"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-10"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	compile "node-10"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-11"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	compile "node-11"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-12"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	compile "node-12"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-13"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	compile "node-13"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-14.9"
-  assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	compile "node-14.9"
+	assertFileExists "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 
-  compile "node-14"
-  assertFileExists "${compile_dir}/.heroku/metrics/metrics_collector.cjs"
+	compile "node-14"
+	assertFileExists "${compile_dir}/.heroku/metrics/metrics_collector.cjs"
 
-  compile "node-21"
-  assertFileExists "${compile_dir}/.heroku/metrics/metrics_collector.cjs"
+	compile "node-21"
+	assertFileExists "${compile_dir}/.heroku/metrics/metrics_collector.cjs"
 
-  # but not for earlier versions
-  compile "node-6"
-  assertFileDoesNotExist "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
+	# but not for earlier versions
+	compile "node-6"
+	assertFileDoesNotExist "${compile_dir}/.heroku/heroku-nodejs-plugin/heroku-nodejs-plugin.node"
 }
-
 
 testPluginInstallationRunTimeNodeAddon() {
-  local env_dir=$(mktmpdir)
-  compile "node-14.9" "$(mktmpdir)" $env_dir
+	local env_dir=$(mktmpdir)
+	compile "node-14.9" "$(mktmpdir)" "${env_dir}"
 
-  # by default $NODE_OPTIONS is unmodified
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# by default $NODE_OPTIONS is unmodified
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # If $HEROKU_METRICS_URL is defined at run time, the script
-  # should add a require statement to $NODE_OPTIONS
-  export HEROKU_METRICS_URL=https://localhost:5000
-  executeStartup $env_dir
-  assertEquals "--require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
-  cleanupStartup
+	# If $HEROKU_METRICS_URL is defined at run time, the script
+	# should add a require statement to $NODE_OPTIONS
+	export HEROKU_METRICS_URL=https://localhost:5000
+	executeStartup "${env_dir}"
+	assertEquals "--require ${compile_dir}/.heroku/heroku-nodejs-plugin" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # unless $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# unless $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # if $NODE_OPTIONS already exists, it will append the require command
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
-  cleanupStartup
+	# if $NODE_OPTIONS already exists, it will append the require command
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128 --require ${compile_dir}/.heroku/heroku-nodejs-plugin" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128" "$NODE_OPTIONS"
-  cleanupStartup
+	# and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128" "${NODE_OPTIONS}"
+	cleanupStartup
 }
-
 
 testPluginInstallationRunTimeNodeScript() {
-  local env_dir=$(mktmpdir)
-  compile "node-14" "$(mktmpdir)" $env_dir
-  assertNotCaptured "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+	local env_dir=$(mktmpdir)
+	compile "node-14" "$(mktmpdir)" "${env_dir}"
+	assertNotCaptured "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
 
-  # by default $NODE_OPTIONS is unmodified
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# by default $NODE_OPTIONS is unmodified
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # If $HEROKU_METRICS_URL is defined at run time, the script
-  # should add a require statement to $NODE_OPTIONS
-  export HEROKU_METRICS_URL=https://localhost:5000
-  executeStartup $env_dir
-  assertEquals "--require $compile_dir/.heroku/metrics/metrics_collector.cjs" "$NODE_OPTIONS"
-  cleanupStartup
+	# If $HEROKU_METRICS_URL is defined at run time, the script
+	# should add a require statement to $NODE_OPTIONS
+	export HEROKU_METRICS_URL=https://localhost:5000
+	executeStartup "${env_dir}"
+	assertEquals "--require ${compile_dir}/.heroku/metrics/metrics_collector.cjs" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # unless $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# unless $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # if $NODE_OPTIONS already exists, it will append the require command
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/metrics/metrics_collector.cjs" "$NODE_OPTIONS"
-  cleanupStartup
+	# if $NODE_OPTIONS already exists, it will append the require command
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128 --require ${compile_dir}/.heroku/metrics/metrics_collector.cjs" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128" "$NODE_OPTIONS"
-  cleanupStartup
+	# and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128" "${NODE_OPTIONS}"
+	cleanupStartup
 }
-
 
 testPluginInstallationRunTimeNodeScriptWhenLegacyPluginIsRequested() {
-  local env_dir=$(mktmpdir)
-  echo "true" > $env_dir/HEROKU_LEGACY_NODE_PLUGIN
-  compile "node-14" "$(mktmpdir)" $env_dir
-  assertCapturedStderr "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+	local env_dir=$(mktmpdir)
+	echo "true" >"${env_dir}"/HEROKU_LEGACY_NODE_PLUGIN
+	compile "node-14" "$(mktmpdir)" "${env_dir}"
+	assertCapturedStderr "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
 
-  # by default $NODE_OPTIONS is unmodified
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# by default $NODE_OPTIONS is unmodified
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # Since $HEROKU_LEGACY_NODE_PLUGIN was defined at build time, the script
-  # should add a require statement to $NODE_OPTIONS for the legacy plugin
-  export HEROKU_METRICS_URL=https://localhost:5000
-  executeStartup $env_dir
-  assertEquals "--require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
-  cleanupStartup
+	# Since $HEROKU_LEGACY_NODE_PLUGIN was defined at build time, the script
+	# should add a require statement to $NODE_OPTIONS for the legacy plugin
+	export HEROKU_METRICS_URL=https://localhost:5000
+	executeStartup "${env_dir}"
+	assertEquals "--require ${compile_dir}/.heroku/heroku-nodejs-plugin" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # unless $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# unless $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # Since $HEROKU_LEGACY_NODE_PLUGIN was defined at build time,
-  # if $NODE_OPTIONS already exists, it will append the legacy plugin to the require command
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/heroku-nodejs-plugin" "$NODE_OPTIONS"
-  cleanupStartup
+	# Since $HEROKU_LEGACY_NODE_PLUGIN was defined at build time,
+	# if $NODE_OPTIONS already exists, it will append the legacy plugin to the require command
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128 --require ${compile_dir}/.heroku/heroku-nodejs-plugin" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128" "$NODE_OPTIONS"
-  cleanupStartup
+	# and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128" "${NODE_OPTIONS}"
+	cleanupStartup
 }
-
 
 testPluginInstallationRunTimeNodeScriptWithNoLegacyFallback() {
-  local env_dir=$(mktmpdir)
-  echo "true" > $env_dir/HEROKU_LEGACY_NODE_PLUGIN
-  compile "node-21" "$(mktmpdir)" $env_dir
-  assertNotCaptured "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
+	local env_dir=$(mktmpdir)
+	echo "true" >"${env_dir}"/HEROKU_LEGACY_NODE_PLUGIN
+	compile "node-21" "$(mktmpdir)" "${env_dir}"
+	assertNotCaptured "The native addon for Node.js language metrics is no longer supported. Unset the HEROKU_LEGACY_NODE_PLUGIN environment variable to migrate to the new metrics collector."
 
-  # by default $NODE_OPTIONS is unmodified
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# by default $NODE_OPTIONS is unmodified
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # If $HEROKU_METRICS_URL is defined at run time, the script
-  # should add a require statement to $NODE_OPTIONS
-  export HEROKU_METRICS_URL=https://localhost:5000
-  executeStartup $env_dir
-  assertEquals "--require $compile_dir/.heroku/metrics/metrics_collector.cjs" "$NODE_OPTIONS"
-  cleanupStartup
+	# If $HEROKU_METRICS_URL is defined at run time, the script
+	# should add a require statement to $NODE_OPTIONS
+	export HEROKU_METRICS_URL=https://localhost:5000
+	executeStartup "${env_dir}"
+	assertEquals "--require ${compile_dir}/.heroku/metrics/metrics_collector.cjs" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # unless $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# unless $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # if $NODE_OPTIONS already exists, it will append the require command
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128 --require $compile_dir/.heroku/metrics/metrics_collector.cjs" "$NODE_OPTIONS"
-  cleanupStartup
+	# if $NODE_OPTIONS already exists, it will append the require command
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128 --require ${compile_dir}/.heroku/metrics/metrics_collector.cjs" "${NODE_OPTIONS}"
+	cleanupStartup
 
-  # and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
-  export HEROKU_METRICS_URL=https://localhost:5000
-  export NODE_OPTIONS="--max-old-space-size=128"
-  export HEROKU_SKIP_NODE_PLUGIN=true
-  executeStartup $env_dir
-  assertEquals "--max-old-space-size=128" "$NODE_OPTIONS"
-  cleanupStartup
+	# and it will leave it unchanged if $HEROKU_SKIP_NODE_PLUGIN is defined
+	export HEROKU_METRICS_URL=https://localhost:5000
+	export NODE_OPTIONS="--max-old-space-size=128"
+	export HEROKU_SKIP_NODE_PLUGIN=true
+	executeStartup "${env_dir}"
+	assertEquals "--max-old-space-size=128" "${NODE_OPTIONS}"
+	cleanupStartup
 }
-
 
 testPluginInstallationUnsupportedNodeRunTime() {
-  local env_dir=$(mktmpdir)
-  compile "node-6" "$(mktmpdir)" $env_dir
+	local env_dir=$(mktmpdir)
+	compile "node-6" "$(mktmpdir)" "${env_dir}"
 
-  # This can happen if a user opts-in to the feature but is not using a supported node version
-  export HEROKU_METRICS_URL=https://localhost:5000
-  executeStartup $env_dir
-  assertEquals "" "$NODE_OPTIONS"
-  cleanupStartup
+	# This can happen if a user opts-in to the feature but is not using a supported node version
+	export HEROKU_METRICS_URL=https://localhost:5000
+	executeStartup "${env_dir}"
+	assertEquals "" "${NODE_OPTIONS}"
+	cleanupStartup
 }
-
 
 testFailingBuildMetaData() {
-  cache_dir=$(mktmpdir)
+	cache_dir=$(mktmpdir)
 
-  compile "bad-json" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "invalid-package-json"
-  assertCapturedError
+	compile "bad-json" "${cache_dir}"
+	assertMetricEqualsString "${cache_dir}" "failure" "invalid-package-json"
+	assertCapturedError
 
-  compile "yarn-lockfile-out-of-date" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "outdated-yarn-lockfile"
-  assertCapturedError
+	compile "yarn-lockfile-out-of-date" "${cache_dir}"
+	assertMetricEqualsString "${cache_dir}" "failure" "outdated-yarn-lockfile"
+	assertCapturedError
 }
-
 
 testBinDetectWarnings() {
-  detect "slugignore-package-json"
-  assertCapturedError "'package.json' listed in '.slugignore' file"
-  assertCapturedError "https://devcenter.heroku.com/articles/slug-compiler#ignoring-files-with-slugignore"
+	detect "slugignore-package-json"
+	assertCapturedError "'package.json' listed in '.slugignore' file"
+	assertCapturedError "https://devcenter.heroku.com/articles/slug-compiler#ignoring-files-with-slugignore"
 
-  detect "gitignore-package-json"
-  assertCapturedError "'package.json' listed in '.gitignore' file"
-  assertCapturedError "https://devcenter.heroku.com/articles/gitignore"
+	detect "gitignore-package-json"
+	assertCapturedError "'package.json' listed in '.gitignore' file"
+	assertCapturedError "https://devcenter.heroku.com/articles/gitignore"
 
-  detect "node-project-missing-package-json"
-  assertCapturedError "Application not supported by 'heroku/nodejs' buildpack"
-  assertCapturedError "https://devcenter.heroku.com/articles/nodejs-support#activation"
-  assertCapturedError "index.js"
-  assertCapturedError "src/"
+	detect "node-project-missing-package-json"
+	assertCapturedError "Application not supported by 'heroku/nodejs' buildpack"
+	assertCapturedError "https://devcenter.heroku.com/articles/nodejs-support#activation"
+	assertCapturedError "index.js"
+	assertCapturedError "src/"
 }
-
 
 testBinReportSuccess() {
-  cache_dir=$(mktmpdir)
-  compile_and_report "node-14" "$cache_dir"
-  assertCaptured "$(jq --sort-keys '.' "$cache_dir/build-data/nodejs.json")"
-  assertCapturedSuccess
+	cache_dir=$(mktmpdir)
+	compile_and_report "node-14" "${cache_dir}"
+	assertCaptured "$(jq --sort-keys '.' "${cache_dir}/build-data/nodejs.json")"
+	assertCapturedSuccess
 }
-
 
 testBinReportScriptsWithQuotes() {
-  cache_dir=$(mktmpdir)
-  compile_and_report "complex-scripts" "$cache_dir"
-  assertCaptured "$(jq --sort-keys '.' "$cache_dir/build-data/nodejs.json")"
-  assertCapturedSuccess
+	cache_dir=$(mktmpdir)
+	compile_and_report "complex-scripts" "${cache_dir}"
+	assertCaptured "$(jq --sort-keys '.' "${cache_dir}/build-data/nodejs.json")"
+	assertCapturedSuccess
 }
-
 
 testWarningNode_22_5_0() {
-  compile "node-22.5.0-warning"
-  assertCapturedStderr "Issues with Node.js v22.5.0"
-  assertCapturedSuccessWithWarnings
+	compile "node-22.5.0-warning"
+	assertCapturedStderr "Issues with Node.js v22.5.0"
+	assertCapturedSuccessWithWarnings
 }
 
-
 testConflictingPackageManagerMetadata() {
-  compile "conflicting-package-manager-metadata"
-  # The migrated conflicting-metadata guard renders the failure via failure::emit, which writes
-  # the message and every detected-field line to stderr through output::error.
-  assertCapturedStderr "Multiple package managers declared in package.json"
-  assertCapturedStderr "- npm version detected in engines.npm (10.x)"
-  assertCapturedStderr "- yarn version declared in engines.yarn (4.x)"
-  assertCapturedStderr "- pnpm version declared in engines.pnpm (9.x)"
-  assertCapturedStderr "- pnpm version declared in packageManager (pnpm@9.9.0)"
-  assertCapturedError
+	compile "conflicting-package-manager-metadata"
+	# The migrated conflicting-metadata guard renders the failure via failure::emit, which writes
+	# the message and every detected-field line to stderr through output::error.
+	assertCapturedStderr "Multiple package managers declared in package.json"
+	assertCapturedStderr "- npm version detected in engines.npm (10.x)"
+	assertCapturedStderr "- yarn version declared in engines.yarn (4.x)"
+	assertCapturedStderr "- pnpm version declared in engines.pnpm (9.x)"
+	assertCapturedStderr "- pnpm version declared in packageManager (pnpm@9.9.0)"
+	assertCapturedError
 }
 
 # Error classifications
 
-
 testErrorPrebuildScript() {
-  cache_dir=$(mktmpdir)
-  compile "error-prebuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
-  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
+	cache_dir=$(mktmpdir)
+	compile "error-prebuild-script" "${cache_dir}"
+	assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+	assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
-
 
 testErrorBuildScript() {
-  cache_dir=$(mktmpdir)
-  compile "error-build-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
-  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
+	cache_dir=$(mktmpdir)
+	compile "error-build-script" "${cache_dir}"
+	assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+	assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
-
 
 testErrorPostbuildScript() {
-  cache_dir=$(mktmpdir)
-  compile "error-postbuild-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
-  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
+	cache_dir=$(mktmpdir)
+	compile "error-postbuild-script" "${cache_dir}"
+	assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+	assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
-
 
 testErrorCleanupScript() {
-  cache_dir=$(mktmpdir)
-  compile "error-cleanup-script" "${cache_dir}"
-  assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
-  assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
+	cache_dir=$(mktmpdir)
+	compile "error-cleanup-script" "${cache_dir}"
+	assertMetricEqualsString "${cache_dir}" "failure" "unknown-build-script-error"
+	assertMetricEqualsString "${cache_dir}" "failure_classification" "user"
 }
-
 
 testErrorOpensslUnsupportedAlgorithm() {
-  cache_dir=$(mktmpdir)
-  compile 'error-openssl-unsupported-algorithm' "${cache_dir}"
-  assertCapturedStderr "Unsupported cryptographic algorithm used"
-  assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support"
-  assertCapturedError
-  assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm"
+	cache_dir=$(mktmpdir)
+	compile 'error-openssl-unsupported-algorithm' "${cache_dir}"
+	assertCapturedStderr "Unsupported cryptographic algorithm used"
+	assertCapturedStderr "https://devcenter.heroku.com/articles/nodejs-support"
+	assertCapturedError
+	assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm"
 }
-
 
 testErrorOpensslUnsupportedAlgorithmInWebpack() {
-  cache_dir=$(mktmpdir)
-  compile 'error-openssl-unsupported-algorithm-in-webpack' "${cache_dir}"
-  assertCapturedStderr "Unsupported cryptographic algorithm used"
-  assertCapturedStderr "https://webpack.js.org/configuration/output/#outputhashfunction"
-  assertCapturedError
-  assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm-webpack"
+	cache_dir=$(mktmpdir)
+	compile 'error-openssl-unsupported-algorithm-in-webpack' "${cache_dir}"
+	assertCapturedStderr "Unsupported cryptographic algorithm used"
+	assertCapturedStderr "https://webpack.js.org/configuration/output/#outputhashfunction"
+	assertCapturedError
+	assertMetricEqualsString "${cache_dir}" "failure" "openssl-unsupported-algorithm-webpack"
 }
-
 
 testErrorOOM() {
-  cache_dir=$(mktmpdir)
-  compile "error-oom" "${cache_dir}"
-  assertCapturedStderr "Node.js Out-Of-Memory (OOM)"
-  assertCapturedError
-  assertMetricEqualsString "${cache_dir}" "failure" "node-out-of-memory"
+	cache_dir=$(mktmpdir)
+	compile "error-oom" "${cache_dir}"
+	assertCapturedStderr "Node.js Out-Of-Memory (OOM)"
+	assertCapturedError
+	assertMetricEqualsString "${cache_dir}" "failure" "node-out-of-memory"
 }
-
 
 testOptOutOfWideVersionDowngrade() {
-  env_dir=$(mktmpdir)
-  echo "true" > "$env_dir/NODEJS_ALLOW_WIDE_RANGE"
-  compile "version-bounds-wide" "$(mktmpdir)" "$env_dir"
-  assertCapturedStderr "The requested Node.js version is using a wide range"
-  assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccessWithWarnings
+	env_dir=$(mktmpdir)
+	echo "true" >"${env_dir}/NODEJS_ALLOW_WIDE_RANGE"
+	compile "version-bounds-wide" "$(mktmpdir)" "${env_dir}"
+	assertCapturedStderr "The requested Node.js version is using a wide range"
+	assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testVersionBoundsWide() {
-  compile "version-bounds-wide"
-  assertCapturedStderr "The requested Node.js version is using a wide range"
-  assertCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccessWithWarnings
+	compile "version-bounds-wide"
+	assertCapturedStderr "The requested Node.js version is using a wide range"
+	assertCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	assertCapturedSuccessWithWarnings
 }
-
 
 testVersionBoundsNarrow() {
-  compile "version-bounds-narrow"
-  assertNotCapturedStderr "The requested Node.js version is using a wide range"
-  assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccessWithWarnings
+	compile "version-bounds-narrow"
+	assertNotCapturedStderr "The requested Node.js version is using a wide range"
+	assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	assertCapturedSuccessWithWarnings
 }
 
-
 testVersionBoundsExplicitlyGreaterThanLTS() {
-  compile "version-bounds-explicitly-greater-than-lts"
-  assertCapturedStderr "The requested Node.js version is using a wide range"
-  assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
-  assertCapturedSuccessWithWarnings
+	compile "version-bounds-explicitly-greater-than-lts"
+	assertCapturedStderr "The requested Node.js version is using a wide range"
+	assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	assertCapturedSuccessWithWarnings
 }
 
 source "$(pwd)"/test/shunit2

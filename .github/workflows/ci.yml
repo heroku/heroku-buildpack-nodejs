@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v7
       - name: Install shfmt
         run: |
-          SHFMT_VERSION=v3.10.0
+          SHFMT_VERSION=v3.13.0
           curl -fsSL -o /usr/local/bin/shfmt \
             "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64"
           chmod +x /usr/local/bin/shfmt

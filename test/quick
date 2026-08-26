@@ -1,53 +1,54 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1090,SC1091,SC2312 # test harness: dynamically-sourced fixtures resolve at runtime; masked command-substitution exits are inherent to a non-error-propagating test runner
+# shellcheck disable=SC2155,SC2231 # deferred: style nits (split declare/assign, quote-to-avoid-glob) triaged out of the mechanical migration
 
 source "$(pwd)"/lib/environment.sh
 
 mktmpdir() {
-  local dir=$(mktemp -t testXXXXX)
-  rm -rf $dir
-  mkdir $dir
-  echo $dir
+	local dir=$(mktemp -t testXXXXX)
+	rm -rf "${dir}"
+	mkdir "${dir}"
+	echo "${dir}"
 }
 
 compile() {
-  local fixture=$1
-  local bp_dir=$(mktmpdir)
-  local build_dir=$(mktmpdir)
-  local cache_dir=$(mktmpdir)
-  local env_dir=$(mktmpdir)
-  echo "Compiling $fixture"
-  echo "in $build_dir"
-  echo "(caching in $cache_dir)"
-  cp -a "$(pwd)"/* ${bp_dir}
-  cp -a ${bp_dir}/test/fixtures/$fixture/. ${build_dir}
-  "$bp_dir/bin/compile" "$build_dir" "$cache_dir"
+	local fixture=$1
+	local bp_dir=$(mktmpdir)
+	local build_dir=$(mktmpdir)
+	local cache_dir=$(mktmpdir)
+	local env_dir=$(mktmpdir)
+	echo "Compiling ${fixture}"
+	echo "in ${build_dir}"
+	echo "(caching in ${cache_dir})"
+	cp -a "$(pwd)"/* "${bp_dir}"
+	cp -a "${bp_dir}"/test/fixtures/"${fixture}"/. "${build_dir}"
+	"${bp_dir}/bin/compile" "${build_dir}" "${cache_dir}"
 }
 
 compileTest() {
-  local fixture=$1
-  local bp_dir=$(mktmpdir)
-  local build_dir=$(mktmpdir)
-  local cache_dir=$(mktmpdir)
-  local env_dir=$(mktmpdir)
-  echo "Compiling $fixture"
-  echo "in $build_dir"
-  echo "(caching in $cache_dir)"
-  cp -a "$(pwd)"/* ${bp_dir}
-  cp -a ${bp_dir}/test/fixtures/$fixture/. ${build_dir}
-  "$bp_dir/bin/test-compile" "$build_dir" "$cache_dir"
+	local fixture=$1
+	local bp_dir=$(mktmpdir)
+	local build_dir=$(mktmpdir)
+	local cache_dir=$(mktmpdir)
+	local env_dir=$(mktmpdir)
+	echo "Compiling ${fixture}"
+	echo "in ${build_dir}"
+	echo "(caching in ${cache_dir})"
+	cp -a "$(pwd)"/* "${bp_dir}"
+	cp -a "${bp_dir}"/test/fixtures/"${fixture}"/. "${build_dir}"
+	"${bp_dir}/bin/test-compile" "${build_dir}" "${cache_dir}"
 
-  export HOME=${build_dir}
-  environment::export_env_dir $env_dir
-  for f in ${build_dir}/.profile.d/*; do source $f > /dev/null 2> /dev/null ; done
+	export HOME=${build_dir}
+	environment::export_env_dir "${env_dir}"
+	for f in ${build_dir}/.profile.d/*; do source "${f}" >/dev/null 2>/dev/null; done
 
-  "$bp_dir/bin/test" "$build_dir"
+	"${bp_dir}/bin/test" "${build_dir}"
 }
 
 fixture=${1:-'stable-node'}
 
 if [[ "$2" == "test" ]]; then
-  compileTest "$fixture"
+	compileTest "${fixture}"
 else
-  compile "$fixture"
+	compile "${fixture}"
 fi
-

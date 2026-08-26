@@ -113,17 +113,17 @@ function runtimes::nodejs::_install() {
 			IFS=$'\t' read -r error lts_major <<<"${resolve_error}"
 
 			case "${resolve_status}" in
-			no-version-resolved)
-				runtimes::nodejs::_fail_no_version_resolved "${requested_version}" "${lts_major}"
-				;;
-			invalid-semver-requirement)
-				runtimes::nodejs::_fail_invalid_semver_requirement "${requested_version}" "${lts_major}"
-				;;
-			*)
-				# Catch-all for `internal-error` (inventory read/parse, unsupported OS/arch, missing
-				# recommended LTS) and any future/unknown status. Each _fail_* handler emits and exits.
-				runtimes::nodejs::_fail_resolve "${requested_version}" "${resolve_status}" "${error}"
-				;;
+				no-version-resolved)
+					runtimes::nodejs::_fail_no_version_resolved "${requested_version}" "${lts_major}"
+					;;
+				invalid-semver-requirement)
+					runtimes::nodejs::_fail_invalid_semver_requirement "${requested_version}" "${lts_major}"
+					;;
+				*)
+					# Catch-all for `internal-error` (inventory read/parse, unsupported OS/arch, missing
+					# recommended LTS) and any future/unknown status. Each _fail_* handler emits and exits.
+					runtimes::nodejs::_fail_resolve "${requested_version}" "${resolve_status}" "${error}"
+					;;
 			esac
 		fi
 
@@ -158,17 +158,17 @@ function runtimes::nodejs::_install() {
 
 	if [[ -z "${NODE_BINARY_URL}" ]]; then
 		case "${checksum_type}" in
-		"sha256")
-			echo "Validating checksum"
-			local actual_checksum
-			actual_checksum=$(sha256sum "${output_file}" | cut -d " " -f 1)
-			if [[ "${actual_checksum}" != "${checksum_value}" ]]; then
-				runtimes::nodejs::_fail_checksum_validation "${version}" "${checksum_type}" "${checksum_value}" "${actual_checksum}"
-			fi
-			;;
-		*)
-			runtimes::nodejs::_fail_unsupported_checksum "${version}" "${checksum_type}" "${checksum_value}"
-			;;
+			"sha256")
+				echo "Validating checksum"
+				local actual_checksum
+				actual_checksum=$(sha256sum "${output_file}" | cut -d " " -f 1)
+				if [[ "${actual_checksum}" != "${checksum_value}" ]]; then
+					runtimes::nodejs::_fail_checksum_validation "${version}" "${checksum_type}" "${checksum_value}" "${actual_checksum}"
+				fi
+				;;
+			*)
+				runtimes::nodejs::_fail_unsupported_checksum "${version}" "${checksum_type}" "${checksum_value}"
+				;;
 		esac
 	fi
 
