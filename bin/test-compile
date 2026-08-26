@@ -22,4 +22,4 @@ export NODE_ENV=${NODE_ENV:-test}
 ### Compile the app
 
 "$BP_DIR/bin/compile" "$1" "$2" "$3"
-write_ci_profile "$BP_DIR" "$1"
+environment::write_ci_profile "$BP_DIR" "$1"

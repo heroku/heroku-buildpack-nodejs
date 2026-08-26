@@ -110,10 +110,10 @@ runtimes::nodejs::fail_iojs_unsupported "$BUILD_DIR"
 ### Compile
 
 create_env() {
-  export_env_dir "$ENV_DIR"
-  create_default_env "$YARN"
-  write_profile "$BP_DIR" "$BUILD_DIR"
-  write_export "$BP_DIR" "$BUILD_DIR"
+  environment::export_env_dir "$ENV_DIR"
+  environment::create_default_env "$YARN"
+  environment::write_profile "$BP_DIR" "$BUILD_DIR"
+  environment::write_export "$BP_DIR" "$BUILD_DIR"
 }
 
 output::step "Creating runtime environment"
@@ -121,8 +121,8 @@ output::step "Creating runtime environment"
 mkdir -p "$BUILD_DIR/.heroku/node/"
 cd "$BUILD_DIR"
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
-list_node_config
-create_build_env
+environment::list_node_config
+environment::create_build_env
 
 
 ### Configure vendored package manager

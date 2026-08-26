@@ -4,6 +4,7 @@
 # not maintain its own list).
 MIGRATED_FILES = \
 	lib/build_data.sh \
+	lib/environment.sh \
 	lib/failures.sh \
 	lib/output.sh \
 	lib/package_manager.sh \
