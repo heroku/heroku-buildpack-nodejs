@@ -3,16 +3,20 @@
 
 ### Configure environment
 
-set -o errexit    # always exit on error
-set -o pipefail   # don't ignore exit codes when piping output
+set -euo pipefail
+shopt -s inherit_errexit
 
 ### Configure directories
 
-BP_DIR=$(cd "$(dirname "${0:-}")" || exit; cd ..; pwd)
+BP_DIR=$(
+	cd "$(dirname "${0:-}")" || exit
+	cd .. || exit
+	pwd
+)
 
 ### Load dependencies
 # shellcheck source=lib/environment.sh
-source "$BP_DIR/lib/environment.sh"
+source "${BP_DIR}/lib/environment.sh"
 
 ### Set up test Node environment
 
@@ -21,5 +25,5 @@ export NODE_ENV=${NODE_ENV:-test}
 
 ### Compile the app
 
-"$BP_DIR/bin/compile" "$1" "$2" "$3"
-environment::write_ci_profile "$BP_DIR" "$1"
+"${BP_DIR}/bin/compile" "${1:-}" "${2:-}" "${3:-}"
+environment::write_ci_profile "${BP_DIR}" "${1:-}"

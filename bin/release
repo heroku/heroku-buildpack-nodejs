@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # bin/release <build-dir>
 
+set -euo pipefail
+shopt -s inherit_errexit
+
 BUILD_DIR=${1:-}
 
-if [ -f "$BUILD_DIR/Procfile" ] && grep -q -e "^\s*mcp.*:" "$BUILD_DIR/Procfile"; then
-  cat << EOF
+if [[ -f "${BUILD_DIR}/Procfile" ]] && grep -q -e "^\s*mcp.*:" "${BUILD_DIR}/Procfile"; then
+	cat <<EOF
 addons: []
 default_process_types: {}
 EOF
 else
-  cat << EOF
+	cat <<EOF
 addons: []
 default_process_types:
   web: npm start
