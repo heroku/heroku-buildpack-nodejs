@@ -87,7 +87,7 @@ package_managers::pnpm::install_dependencies() {
 	build_data::set_duration "install_dependencies_time" "${start}"
 
 	# prune the store when the counter reaches zero to clean up errant package versions which may have been upgraded/removed
-	counter=$(load_pnpm_prune_store_counter "${cache_dir}")
+	counter=$(cache::load_pnpm_prune_store_counter "${cache_dir}")
 	if ((counter == 0)); then
 		output::info "Cleaning up pnpm store"
 		# pnpm <9.12.0 errors with `ENOENT: ... scandir '<store>/v*/files'`
@@ -108,7 +108,7 @@ package_managers::pnpm::install_dependencies() {
 			return "${prune_exit}"
 		fi
 	fi
-	save_pnpm_prune_store_counter "${cache_dir}" "$((counter - 1))"
+	cache::save_pnpm_prune_store_counter "${cache_dir}" "$((counter - 1))"
 }
 
 # Emits the pnpm-install pipefail failure for the case where pnpm exited 0 but a downstream
