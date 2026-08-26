@@ -54,7 +54,10 @@ def clean_output(output)
     # https://github.com/heroku/hatchet/issues/162
     .gsub(/ {8}(?=\R)/, '')
     # Remove ANSI colour codes used in buildpack output (e.g. error messages).
-    .gsub(/\e\[[0-9;]+m/, '')
+    # Heroku's build-output transport intermittently renders the trailing ESC
+    # reset as the literal caret notation "^[[0m" instead of a raw ESC byte, so
+    # strip both the real escape sequence and its caret-notation form.
+    .gsub(/(?:\e|\^\[)\[[0-9;]+m/, '')
     # Strip trailing whitespace from lines that are just remote prefixes
     # (e.g. "remote:       \n", "remote:  !     \n").
     .gsub(/^(remote:(?:  !)?)[ \t]+$/, '\1')
