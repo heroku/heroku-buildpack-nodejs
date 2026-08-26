@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.8.0 (linux-amd64)
+- Added Node.js 24.20.0 (linux-amd64)
 
 ## [v363] - 2026-08-18
 
