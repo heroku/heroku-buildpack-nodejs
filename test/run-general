@@ -598,8 +598,8 @@ testModulesCheckedInWithoutDevDependencies() {
 testProfileExport() {
   compile "stable-node"
   assertCaptured "Creating runtime environment"
-  assertFileContains "export PATH=\"\$HOME/.heroku/node/bin:\$HOME/.heroku/yarn/bin:\$PATH:\$HOME/bin:\$HOME/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
-  assertFileContains "export NODE_HOME=\"\$HOME/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export PATH=\"\${HOME}/.heroku/node/bin:\${HOME}/.heroku/yarn/bin:\${PATH}:\${HOME}/bin:\${HOME}/node_modules/.bin\"" "${compile_dir}/.profile.d/nodejs.sh"
+  assertFileContains "export NODE_HOME=\"\${HOME}/.heroku/node\"" "${compile_dir}/.profile.d/nodejs.sh"
   assertCapturedSuccessWithWarnings
 }
 
