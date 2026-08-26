@@ -3,53 +3,57 @@
 
 ### Configure environment
 
-set -o errexit    # always exit on error
-set -o pipefail   # don't ignore exit codes when piping output
-set -o errtrace   # fire the ERR trap inside functions, subshells, and command substitutions
+set -o errexit           # always exit on error
+set -o pipefail          # don't ignore exit codes when piping output
+set -o errtrace          # fire the ERR trap inside functions, subshells, and command substitutions
 shopt -s inherit_errexit # propagate errexit into command substitutions
-unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
+unset GIT_DIR            # Avoid GIT_DIR leak from previous build steps
 
-[ "$BUILDPACK_XTRACE" ] && set -o xtrace
+[[ -n "${BUILDPACK_XTRACE:-}" ]] && set -o xtrace
 
 ### Configure directories
 
 BUILD_DIR=${1:-}
 CACHE_DIR=${2:-}
 ENV_DIR=${3:-}
-BP_DIR=$(cd "$(dirname "${0:-}")"; cd ..; pwd)
+BP_DIR=$(
+	cd "$(dirname "${0:-}")"
+	cd ..
+	pwd
+)
 
 ### Load dependencies
 
 # shellcheck source=lib/output.sh
-source "$BP_DIR/lib/output.sh"
+source "${BP_DIR}/lib/output.sh"
 # shellcheck source=lib/environment.sh
-source "$BP_DIR/lib/environment.sh"
+source "${BP_DIR}/lib/environment.sh"
 # shellcheck source=lib/failures.sh
-source "$BP_DIR/lib/failures.sh"
+source "${BP_DIR}/lib/failures.sh"
 # shellcheck source=lib/package_managers/npm.sh
-source "$BP_DIR/lib/package_managers/npm.sh"
+source "${BP_DIR}/lib/package_managers/npm.sh"
 # shellcheck source=lib/package_managers/pnpm.sh
-source "$BP_DIR/lib/package_managers/pnpm.sh"
+source "${BP_DIR}/lib/package_managers/pnpm.sh"
 # shellcheck source=lib/package_managers/yarn.sh
-source "$BP_DIR/lib/package_managers/yarn.sh"
+source "${BP_DIR}/lib/package_managers/yarn.sh"
 # shellcheck source=lib/runtimes/nodejs.sh
-source "$BP_DIR/lib/runtimes/nodejs.sh"
+source "${BP_DIR}/lib/runtimes/nodejs.sh"
 # shellcheck source=lib/utils/command.sh
-source "$BP_DIR/lib/utils/command.sh"
+source "${BP_DIR}/lib/utils/command.sh"
 # shellcheck source=lib/utils/json.sh
-source "$BP_DIR/lib/utils/json.sh"
+source "${BP_DIR}/lib/utils/json.sh"
 # shellcheck source=lib/utils/yaml.sh
-source "$BP_DIR/lib/utils/yaml.sh"
+source "${BP_DIR}/lib/utils/yaml.sh"
 # shellcheck source=lib/utils/package_json.sh
-source "$BP_DIR/lib/utils/package_json.sh"
+source "${BP_DIR}/lib/utils/package_json.sh"
 # shellcheck source=lib/cache.sh
-source "$BP_DIR/lib/cache.sh"
+source "${BP_DIR}/lib/cache.sh"
 # shellcheck source=lib/package_manager.sh
-source "$BP_DIR/lib/package_manager.sh"
+source "${BP_DIR}/lib/package_manager.sh"
 # shellcheck source=lib/build_data.sh
-source "$BP_DIR/lib/build_data.sh"
+source "${BP_DIR}/lib/build_data.sh"
 
-export PATH="$BUILD_DIR/.heroku/node/bin:$BUILD_DIR/.heroku/yarn/bin":$PATH
+export PATH="${BUILD_DIR}/.heroku/node/bin:${BUILD_DIR}/.heroku/yarn/bin":${PATH}
 
 # Marker written by `failure::emit` (lib/failures.sh) when a migrated code path has already
 # classified, rendered, and recorded a failure. The generic `failure::handle_uncaught` ERR trap
@@ -82,538 +86,558 @@ trap 'failure::handle_uncaught' ERR
 build_data::set_string "build_step" "init"
 
 # capture procfile usage
-build_data::set_raw "has_procfile" "$(test -f "$BUILD_DIR/Procfile" && echo "true" || echo "false")"
+# shellcheck disable=SC2312 # the test/echo chain always exits 0; masking its return value is intentional (matches pre-migration behavior)
+build_data::set_raw "has_procfile" "$(test -f "${BUILD_DIR}/Procfile" && echo "true" || echo "false")"
 
 # capture scripts from package.json
 for script in heroku-prebuild heroku-postbuild build heroku-cleanup start postinstall; do
-  if [[ "$(utils::package_json::has_script "$BUILD_DIR/package.json" "$script")" == "true" ]]; then
-    build_data::set_string "${script//[^[:alnum:]]/_}_script" "$(utils::json::read "$BUILD_DIR/package.json" ".scripts[\"$script\"]")"
-  fi
+	# shellcheck disable=SC2310,SC2312 # utils::package_json::has_script is invoked in the condition (set -e disabled inside) and its exit is masked; both intentional (matches pre-migration behavior)
+	if [[ "$(utils::package_json::has_script "${BUILD_DIR}/package.json" "${script}")" == "true" ]]; then
+		# shellcheck disable=SC2312 # utils::json::read echoes the value; masking its exit is intentional (matches pre-migration behavior)
+		build_data::set_string "${script//[^[:alnum:]]/_}_script" "$(utils::json::read "${BUILD_DIR}/package.json" ".scripts[\"${script}\"]")"
+	fi
 done
 
 ### Check initial state
 
-[ -e "$BUILD_DIR/node_modules" ] && PREBUILD=true || PREBUILD=false
-[ -f "$BUILD_DIR/yarn.lock" ] && YARN=true || YARN=false
-[ -f "$BUILD_DIR/package-lock.json" ] && NPM_LOCK=true || NPM_LOCK=false
-[ -f "$BUILD_DIR/pnpm-lock.yaml" ] && PNPM=true || PNPM=false
-YARN_2=$(package_managers::yarn::detect_berry "$YARN" "$BUILD_DIR")
+[[ -e "${BUILD_DIR}/node_modules" ]] && PREBUILD=true || PREBUILD=false
+[[ -f "${BUILD_DIR}/yarn.lock" ]] && YARN=true || YARN=false
+[[ -f "${BUILD_DIR}/package-lock.json" ]] && NPM_LOCK=true || NPM_LOCK=false
+[[ -f "${BUILD_DIR}/pnpm-lock.yaml" ]] && PNPM=true || PNPM=false
+YARN_2=$(package_managers::yarn::detect_berry "${YARN}" "${BUILD_DIR}")
 
 ### Failures that should be caught immediately
 
-runtimes::nodejs::fail_dot_heroku "$BUILD_DIR"
-utils::package_json::fail_invalid "$BUILD_DIR"
-package_manager::fail_multiple_lockfiles "$BUILD_DIR"
-package_manager::fail_conflicting_metadata "$BUILD_DIR"
-runtimes::nodejs::fail_iojs_unsupported "$BUILD_DIR"
+runtimes::nodejs::fail_dot_heroku "${BUILD_DIR}"
+utils::package_json::fail_invalid "${BUILD_DIR}"
+package_manager::fail_multiple_lockfiles "${BUILD_DIR}"
+package_manager::fail_conflicting_metadata "${BUILD_DIR}"
+runtimes::nodejs::fail_iojs_unsupported "${BUILD_DIR}"
 
 ### Compile
 
 create_env() {
-  environment::export_env_dir "$ENV_DIR"
-  environment::create_default_env "$YARN"
-  environment::write_profile "$BP_DIR" "$BUILD_DIR"
-  environment::write_export "$BP_DIR" "$BUILD_DIR"
+	environment::export_env_dir "${ENV_DIR}"
+	environment::create_default_env "${YARN}"
+	environment::write_profile "${BP_DIR}" "${BUILD_DIR}"
+	environment::write_export "${BP_DIR}" "${BUILD_DIR}"
 }
 
 output::step "Creating runtime environment"
 
-mkdir -p "$BUILD_DIR/.heroku/node/"
-cd "$BUILD_DIR"
+mkdir -p "${BUILD_DIR}/.heroku/node/"
+cd "${BUILD_DIR}"
 create_env # can't pipe the whole thing because piping causes subshells, preventing exports
 environment::list_node_config
 environment::create_build_env
 
-
 ### Configure vendored package manager
 export VENDOR_PATH
 
-if [[ "$YARN_2" == "true" ]]; then
-  # Fail fast before any yarn command runs: YARN_PRODUCTION aborts Berry's config load, so
-  # whichever yarn invocation runs first (install, prune, or a `yarn run` script hook) would
-  # otherwise blow up mid-build with an opaque clipanion error.
-  package_managers::yarn::fail_if_yarn_production_env_set_on_berry "${YARN_PRODUCTION:-}"
+if [[ "${YARN_2}" == "true" ]]; then
+	# Fail fast before any yarn command runs: YARN_PRODUCTION aborts Berry's config load, so
+	# whichever yarn invocation runs first (install, prune, or a `yarn run` script hook) would
+	# otherwise blow up mid-build with an opaque clipanion error.
+	package_managers::yarn::fail_if_yarn_production_env_set_on_berry "${YARN_PRODUCTION:-}"
 
-  if [[ -f "$BUILD_DIR/.npmrc" ]]; then
-    output::warning <<-EOF
+	if [[ -f "${BUILD_DIR}/.npmrc" ]]; then
+		output::warning <<-EOF
 			There is an existing .npmrc file that will not be used. All configurations are read from the .yarnrc.yml file.
 
 			https://devcenter.heroku.com/articles/migrating-to-yarn-2
 		EOF
-  fi
+	fi
 
-  if [[ -f "$BUILD_DIR/.yarnrc" ]]; then
-    output::warning <<-EOF
+	if [[ -f "${BUILD_DIR}/.yarnrc" ]]; then
+		output::warning <<-EOF
 			There is an existing .yarnrc file that will not be used. All configurations are read from the .yarnrc.yml file.
 
 			https://devcenter.heroku.com/articles/migrating-to-yarn-2
 		EOF
-  fi
+	fi
 
-  # When in Plug'n'Play mode the yarn cache will include dependencies needed at
-  # runtime; the cache must live in /app (not /tmp) so that dependencies are
-  # persisted. When using zero-install, /app/.yarn/cache will include all
-  # dependencies which yarn should reuse.
-  if package_managers::yarn::berry_use_app_cache "$BUILD_DIR"; then
-    YARN_CACHE_FOLDER=${YARN_CACHE_FOLDER:-"$BUILD_DIR/.yarn/cache"}
-  fi
+	# When in Plug'n'Play mode the yarn cache will include dependencies needed at
+	# runtime; the cache must live in /app (not /tmp) so that dependencies are
+	# persisted. When using zero-install, /app/.yarn/cache will include all
+	# dependencies which yarn should reuse.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if package_managers::yarn::berry_use_app_cache "${BUILD_DIR}"; then
+		YARN_CACHE_FOLDER=${YARN_CACHE_FOLDER:-"${BUILD_DIR}/.yarn/cache"}
+	fi
 
-  # When in zero-install mode, use --immutable-cache to verify that the cache
-  # is pristine. Cache mutation is expected in nonzero installs.
-  if package_managers::yarn::berry_has_cache "$BUILD_DIR"; then
-    YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
-    YARN_ZERO_INSTALL=true
-  fi
+	# When in zero-install mode, use --immutable-cache to verify that the cache
+	# is pristine. Cache mutation is expected in nonzero installs.
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if package_managers::yarn::berry_has_cache "${BUILD_DIR}"; then
+		YARN_ENABLE_IMMUTABLE_CACHE=${YARN_ENABLE_IMMUTABLE_CACHE:-true}
+		# shellcheck disable=SC2034 # global consumed by lib/cache.sh (berry cache save/restore)
+		YARN_ZERO_INSTALL=true
+	fi
 
-  ### Configure Yarn 2+
-  YARN_MAJOR_VERSION=$(package_managers::yarn::get_major_version "$BUILD_DIR")
+	### Configure Yarn 2+
+	YARN_MAJOR_VERSION=$(package_managers::yarn::get_major_version "${BUILD_DIR}")
 
-  # if we're installing yarn via packageManager or engines.yarn we don't need to fail
-  # on the yarn path configuration or vendored script
-  case "$YARN_MAJOR_VERSION" in
-    # You may be wondering why 1 and "" are in this list when the check above ensures that
-    # YARN_2 is true. This is because, when no yarn version is specified, we default
-    # to Yarn 1 which is then used to bootstrap Yarn 2+ and some existing setups specify
-    # Yarn 1 in engines.yarn or packageManager to use a specific version for bootstrapping.
-    1|"")
-      # This ensures we check for a vendored Yarn if we're using Yarn 1 to bootstrap
-      package_managers::yarn::fail_missing_yarnrc_yml "$BUILD_DIR"
-      VENDOR_PATH=$(package_managers::yarn::berry_get_path "$BUILD_DIR")
-      package_managers::yarn::fail_missing_yarn_path "$BUILD_DIR" "$VENDOR_PATH"
-      ;;
-    *)
-      # no need to require a vendored yarnPath (though one may still be configured)
-      if [[ -f "$BUILD_DIR/.yarnrc.yml" ]]; then
-        VENDOR_PATH=$(package_managers::yarn::berry_get_path "$BUILD_DIR")
-      fi
-      ;;
-  esac
+	# if we're installing yarn via packageManager or engines.yarn we don't need to fail
+	# on the yarn path configuration or vendored script
+	case "${YARN_MAJOR_VERSION}" in
+		# You may be wondering why 1 and "" are in this list when the check above ensures that
+		# YARN_2 is true. This is because, when no yarn version is specified, we default
+		# to Yarn 1 which is then used to bootstrap Yarn 2+ and some existing setups specify
+		# Yarn 1 in engines.yarn or packageManager to use a specific version for bootstrapping.
+		1 | "")
+			# This ensures we check for a vendored Yarn if we're using Yarn 1 to bootstrap
+			package_managers::yarn::fail_missing_yarnrc_yml "${BUILD_DIR}"
+			VENDOR_PATH=$(package_managers::yarn::berry_get_path "${BUILD_DIR}")
+			package_managers::yarn::fail_missing_yarn_path "${BUILD_DIR}" "${VENDOR_PATH}"
+			;;
+		*)
+			# no need to require a vendored yarnPath (though one may still be configured)
+			if [[ -f "${BUILD_DIR}/.yarnrc.yml" ]]; then
+				VENDOR_PATH=$(package_managers::yarn::berry_get_path "${BUILD_DIR}")
+			fi
+			;;
+	esac
 
-  # Always validate vendored script exists if yarnPath is defined
-  if [[ -n "$VENDOR_PATH" ]]; then
-    package_managers::yarn::fail_missing_yarn_vendor "$BUILD_DIR" "$VENDOR_PATH"
-  fi
+	# Always validate vendored script exists if yarnPath is defined
+	if [[ -n "${VENDOR_PATH}" ]]; then
+		package_managers::yarn::fail_missing_yarn_vendor "${BUILD_DIR}" "${VENDOR_PATH}"
+	fi
 fi
 
 ### Configure package manager cache directories
-[ ! "$YARN_CACHE_FOLDER" ] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
-[ ! "$NPM_CONFIG_CACHE" ] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
-[ ! "$PNPM_CONFIG_CACHE" ] && PNPM_CONFIG_CACHE=$(mktemp -d -t pnpmcache.XXXXX)
+[[ -z "${YARN_CACHE_FOLDER}" ]] && YARN_CACHE_FOLDER=$(mktemp -d -t yarncache.XXXXX)
+[[ -z "${NPM_CONFIG_CACHE}" ]] && NPM_CONFIG_CACHE=$(mktemp -d -t npmcache.XXXXX)
+[[ -z "${PNPM_CONFIG_CACHE}" ]] && PNPM_CONFIG_CACHE=$(mktemp -d -t pnpmcache.XXXXX)
 export YARN_CACHE_FOLDER NPM_CONFIG_CACHE PNPM_CONFIG_CACHE
 
 install_bins() {
-  local node_engine npm_engine yarn_engine node_version package_manager pnpm_engine npm_version
+	local node_engine npm_engine yarn_engine package_manager pnpm_engine npm_version
 
-  node_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.node")
-  npm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.npm")
-  yarn_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.yarn")
-  pnpm_engine=$(utils::json::read "$BUILD_DIR/package.json" ".engines.pnpm")
-  package_manager=$(utils::json::read "$BUILD_DIR/package.json" ".packageManager")
+	node_engine=$(utils::json::read "${BUILD_DIR}/package.json" ".engines.node")
+	npm_engine=$(utils::json::read "${BUILD_DIR}/package.json" ".engines.npm")
+	yarn_engine=$(utils::json::read "${BUILD_DIR}/package.json" ".engines.yarn")
+	pnpm_engine=$(utils::json::read "${BUILD_DIR}/package.json" ".engines.pnpm")
+	package_manager=$(utils::json::read "${BUILD_DIR}/package.json" ".packageManager")
 
-  [ -n "$node_engine" ] && build_data::set_string "node_version_request" "$node_engine"
-  [ -n "$npm_engine" ] && build_data::set_string "npm_version_request" "$npm_engine"
-  [ -n "$yarn_engine" ] && build_data::set_string "yarn_version_request" "$yarn_engine"
-  [ -n "$pnpm_engine" ] && build_data::set_string "pnpm_version_request" "$pnpm_engine"
-  [ -n "$package_manager" ] && build_data::set_string "package_manager_request" "$package_manager"
+	[[ -n "${node_engine}" ]] && build_data::set_string "node_version_request" "${node_engine}"
+	[[ -n "${npm_engine}" ]] && build_data::set_string "npm_version_request" "${npm_engine}"
+	[[ -n "${yarn_engine}" ]] && build_data::set_string "yarn_version_request" "${yarn_engine}"
+	[[ -n "${pnpm_engine}" ]] && build_data::set_string "pnpm_version_request" "${pnpm_engine}"
+	[[ -n "${package_manager}" ]] && build_data::set_string "package_manager_request" "${package_manager}"
 
-  output::info "engines.node (package.json):   ${node_engine:-unspecified}"
-  output::info "engines.npm (package.json):    ${npm_engine:-unspecified (use default)}"
+	output::info "engines.node (package.json):   ${node_engine:-unspecified}"
+	output::info "engines.npm (package.json):    ${npm_engine:-unspecified (use default)}"
 
-  if $YARN || [ -n "$yarn_engine" ]; then
-    output::info "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
-  fi
+	if ${YARN} || [[ -n "${yarn_engine}" ]]; then
+		output::info "engines.yarn (package.json):   ${yarn_engine:-unspecified (use default)}"
+	fi
 
-  if $PNPM || [ -n "$pnpm_engine" ]; then
-    output::info "engines.pnpm (package.json):   ${pnpm_engine:-unspecified (use default)}"
-  fi
+	if ${PNPM} || [[ -n "${pnpm_engine}" ]]; then
+		output::info "engines.pnpm (package.json):   ${pnpm_engine:-unspecified (use default)}"
+	fi
 
-  if [ -n "$package_manager" ]; then
-    output::info "packageManager (package.json): $(echo "$package_manager" | cut -d "+" -f 1)"
-  fi
+	if [[ -n "${package_manager}" ]]; then
+		# shellcheck disable=SC2312 # echo|cut extracts the version prefix; masking its exit is intentional (matches pre-migration behavior)
+		output::info "packageManager (package.json): $(echo "${package_manager}" | cut -d "+" -f 1)"
+	fi
 
-  local showed_warning=false
+	local showed_warning=false
 
-  if [ -n "$pnpm_engine" ] && [[ "$package_manager" == pnpm* ]]; then
-    showed_warning=true
-    output::warning <<-EOF
+	if [[ -n "${pnpm_engine}" ]] && [[ "${package_manager}" == pnpm* ]]; then
+		showed_warning=true
+		output::warning <<-EOF
 			Multiple pnpm versions declared
 
 			The package.json file indicates the target version of pnpm to install in two fields:
-			- "packageManager": "$package_manager"
-			- "engines.pnpm": "$pnpm_engine"
+			- "packageManager": "${package_manager}"
+			- "engines.pnpm": "${pnpm_engine}"
 
-			If both fields are present, then "packageManager" will take precedence and "$package_manager" will be installed.
+			If both fields are present, then "packageManager" will take precedence and "${package_manager}" will be installed.
 
 			To ensure we install the version of pnpm you want, remove one of these fields.
 		EOF
-  fi
+	fi
 
-  if [ -n "$yarn_engine" ] && [[ "$package_manager" == yarn* ]]; then
-    showed_warning=true
-    output::warning <<-EOF
+	if [[ -n "${yarn_engine}" ]] && [[ "${package_manager}" == yarn* ]]; then
+		showed_warning=true
+		output::warning <<-EOF
 			Multiple Yarn versions declared
 
 			The package.json file indicates the target version of Yarn to install in two fields:
-			- "packageManager": "$package_manager"
-			- "engines.yarn": "$yarn_engine"
+			- "packageManager": "${package_manager}"
+			- "engines.yarn": "${yarn_engine}"
 
-			If both fields are present, then "packageManager" will take precedence and "$package_manager" will be installed.
+			If both fields are present, then "packageManager" will take precedence and "${package_manager}" will be installed.
 
 			To ensure we install the version of Yarn you want, remove one of these fields.
 		EOF
-  fi
+	fi
 
-  if package_managers::yarn::berry_has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
-    showed_warning=true
-    local release_script
-    release_script="$(package_managers::yarn::berry_get_path "$BUILD_DIR")"
-    output::warning <<-EOF
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if package_managers::yarn::berry_has_release_script "${BUILD_DIR}" && [[ "${package_manager}" == yarn* ]]; then
+		showed_warning=true
+		local release_script
+		release_script="$(package_managers::yarn::berry_get_path "${BUILD_DIR}")"
+		output::warning <<-EOF
 			Yarn release script may conflict with "packageManager"
 
 			The package.json file indicates the target version of Yarn to install with:
-			- "packageManager": "$package_manager"
+			- "packageManager": "${package_manager}"
 
 			But the .yarnrc.yml configuration indicates a vendored release of Yarn should be used with:
-			- yarnPath: "$release_script"
+			- yarnPath: "${release_script}"
 
-			This will cause the buildpack to install $package_manager but, when running Yarn commands, the vendored release
-			at "$release_script" will be executed instead.
+			This will cause the buildpack to install ${package_manager} but, when running Yarn commands, the vendored release
+			at "${release_script}" will be executed instead.
 
 			To ensure we install the version of Yarn you want, choose only one of the following actions:
 			- Remove the "packageManager" field from package.json
-			- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at "$release_script"
+			- Remove the "yarnPath" configuration from .yarnrc.yml and delete the vendored release at "${release_script}"
 		EOF
-  fi
+	fi
 
-  if [ "$showed_warning" = false ]; then
-    echo ""
-  fi
+	if [[ "${showed_warning}" = false ]]; then
+		echo ""
+	fi
 
-  local install_start
+	local install_start
 
-  build_data::set_string "build_step" "install-nodejs"
-  runtimes::nodejs::install "$node_engine" "$BUILD_DIR/.heroku/node"
+	build_data::set_string "build_step" "install-nodejs"
+	runtimes::nodejs::install "${node_engine}" "${BUILD_DIR}/.heroku/node"
 
-  build_data::set_string "build_step" "install-npm"
-  package_managers::npm::install_binary "$npm_engine" "$BUILD_DIR/.heroku/node" "$NPM_LOCK"
+	build_data::set_string "build_step" "install-npm"
+	package_managers::npm::install_binary "${npm_engine}" "${BUILD_DIR}/.heroku/node" "${NPM_LOCK}"
 
-  if ! package_managers::yarn::berry_has_release_script "$BUILD_DIR" && [[ "$package_manager" == yarn* ]]; then
-    build_data::set_string "build_step" "install-yarn"
-    yarn_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "#" -f 1)"
-    install_start=$(build_data::current_unix_realtime)
-    package_managers::yarn::install_binary "$BUILD_DIR/.heroku/yarn" "$yarn_version"
-    build_data::set_duration "install_yarn_binary_time" "$install_start"
-  else
-    # Download yarn if there is a yarn.lock file or if the user
-    # has specified a version of yarn under "engines". We'll still
-    # only install using yarn if there is a yarn.lock file
-    if $YARN || [ -n "$yarn_engine" ]; then
-      build_data::set_string "build_step" "install-yarn"
-      install_start=$(build_data::current_unix_realtime)
-      package_managers::yarn::install_binary "$BUILD_DIR/.heroku/yarn" "$yarn_engine"
-      build_data::set_duration "install_yarn_binary_time" "$install_start"
-    fi
-  fi
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! package_managers::yarn::berry_has_release_script "${BUILD_DIR}" && [[ "${package_manager}" == yarn* ]]; then
+		build_data::set_string "build_step" "install-yarn"
+		yarn_version="$(echo "${package_manager}" | cut -d '@' -f 2 | cut -d "#" -f 1)"
+		install_start=$(build_data::current_unix_realtime)
+		package_managers::yarn::install_binary "${BUILD_DIR}/.heroku/yarn" "${yarn_version}"
+		build_data::set_duration "install_yarn_binary_time" "${install_start}"
+	else
+		# Download yarn if there is a yarn.lock file or if the user
+		# has specified a version of yarn under "engines". We'll still
+		# only install using yarn if there is a yarn.lock file
+		if ${YARN} || [[ -n "${yarn_engine}" ]]; then
+			build_data::set_string "build_step" "install-yarn"
+			install_start=$(build_data::current_unix_realtime)
+			package_managers::yarn::install_binary "${BUILD_DIR}/.heroku/yarn" "${yarn_engine}"
+			build_data::set_duration "install_yarn_binary_time" "${install_start}"
+		fi
+	fi
 
-  if $PNPM; then
-    build_data::set_string "build_step" "install-pnpm"
+	if ${PNPM}; then
+		build_data::set_string "build_step" "install-pnpm"
 
-    default_pnpm_version="pnpm@latest"
-    using_default_pnpm=false
-    pnpm_version="latest"
-    if [[ "$package_manager" == pnpm* ]]; then
-      pnpm_version="$(echo "$package_manager" | cut -d '@' -f 2 | cut -d "+" -f 1)"
-    elif [ -n "$pnpm_engine" ]; then
-      pnpm_version="${pnpm_engine}"
-    else
-      using_default_pnpm=true
-    fi
+		default_pnpm_version="pnpm@latest"
+		using_default_pnpm=false
+		pnpm_version="latest"
+		if [[ "${package_manager}" == pnpm* ]]; then
+			pnpm_version="$(echo "${package_manager}" | cut -d '@' -f 2 | cut -d "+" -f 1)"
+		elif [[ -n "${pnpm_engine}" ]]; then
+			pnpm_version="${pnpm_engine}"
+		else
+			using_default_pnpm=true
+		fi
 
-    install_start=$(build_data::current_unix_realtime)
-    package_managers::pnpm::install_binary "$pnpm_version"
-    build_data::set_duration "install_pnpm_binary_time" "$install_start"
-    if [ "$using_default_pnpm" == true ]; then
-      output::warning <<-EOF
+		install_start=$(build_data::current_unix_realtime)
+		package_managers::pnpm::install_binary "${pnpm_version}"
+		build_data::set_duration "install_pnpm_binary_time" "${install_start}"
+		if [[ "${using_default_pnpm}" == true ]]; then
+			output::warning <<-EOF
 				Default pnpm version used
 
 				A pnpm lockfile (pnpm-lock.yaml) was detected but no specific version of pnpm was defined in package.json in either of the following fields:
 				- "packageManager"
 				- "engines.pnpm"
 
-				Without a specific version defined, this build will use "$default_pnpm_version" by default. We highly recommend setting an explicit version
+				Without a specific version defined, this build will use "${default_pnpm_version}" by default. We highly recommend setting an explicit version
 				of pnpm to improve the reliability of your builds.
 			EOF
-    fi
-  fi
+		fi
+	fi
 
-  if $YARN; then
-    build_data::set_string "package_manager" "yarn"
-    build_data::set_string "package_manager_version" "$(yarn --version || true)"
-    build_data::set_string "yarn_version" "$(yarn --version || true)"
-  elif $PNPM; then
-    build_data::set_string "package_manager" "pnpm"
-    build_data::set_string "package_manager_version" "$(pnpm --version || true)"
-    build_data::set_string "pnpm_version" "$(pnpm --version || true)"
-  else
-    build_data::set_string "package_manager" "npm"
-    build_data::set_string "package_manager_version" "$(npm --version || true)"
-    build_data::set_string "npm_version" "$(npm --version || true)"
-  fi
+	if ${YARN}; then
+		build_data::set_string "package_manager" "yarn"
+		build_data::set_string "package_manager_version" "$(yarn --version || true)"
+		build_data::set_string "yarn_version" "$(yarn --version || true)"
+	elif ${PNPM}; then
+		build_data::set_string "package_manager" "pnpm"
+		build_data::set_string "package_manager_version" "$(pnpm --version || true)"
+		build_data::set_string "pnpm_version" "$(pnpm --version || true)"
+	else
+		build_data::set_string "package_manager" "npm"
+		build_data::set_string "package_manager_version" "$(npm --version || true)"
+		build_data::set_string "npm_version" "$(npm --version || true)"
+	fi
 
-  npm_version="$(npm --version)"
-  if [ "$(package_managers::npm::version_major)" -lt "2" ]; then
-    # Emit immediately via output::warning so this surfaces during the build.
-    output::warning <<-EOF
-			This version of npm ($npm_version) has several known issues. Please update your npm version in package.json.
+	npm_version="$(npm --version)"
+	# shellcheck disable=SC2310,SC2312 # package_managers::npm::version_major is invoked in the condition (set -e disabled inside) and its exit is masked; both intentional (matches pre-migration behavior)
+	if [[ "$(package_managers::npm::version_major)" -lt "2" ]]; then
+		# Emit immediately via output::warning so this surfaces during the build.
+		output::warning <<-EOF
+			This version of npm (${npm_version}) has several known issues. Please update your npm version in package.json.
 
 			https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
 		EOF
-  fi
+	fi
 
 }
 
 output::step "Installing binaries"
 install_bins
 
-if $PNPM; then
-  # pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
-  # older versions use npm_config_*
-  # Deliberately unguarded (no `|| true`, unlike the version probes in install_bins and the store
-  # probe below): pnpm was just installed and verified, so a failure reading its version here is a
-  # genuine internal error that should abort via the ERR trap rather than silently degrade.
-  pnpm_major=$(pnpm --version | cut -d "." -f 1)
-  pnpm_store_dir_config_name="npm_config_store_dir"
-  if (( pnpm_major >= 11 )); then
-    pnpm_store_dir_config_name="pnpm_config_store_dir"
-  fi
+if ${PNPM}; then
+	# pnpm 11+ reads config from pnpm_config_* env vars (https://pnpm.io/blog/releases/11.0#highlights),
+	# older versions use npm_config_*
+	# Deliberately unguarded (no `|| true`, unlike the version probes in install_bins and the store
+	# probe below): pnpm was just installed and verified, so a failure reading its version here is a
+	# genuine internal error that should abort via the ERR trap rather than silently degrade.
+	pnpm_major=$(pnpm --version | cut -d "." -f 1)
+	pnpm_store_dir_config_name="npm_config_store_dir"
+	if ((pnpm_major >= 11)); then
+		pnpm_store_dir_config_name="pnpm_config_store_dir"
+	fi
 
-  export "${pnpm_store_dir_config_name}=${PNPM_CONFIG_CACHE}"
+	export "${pnpm_store_dir_config_name}=${PNPM_CONFIG_CACHE}"
 
-  # only write the export script if the buildpack directory is writable.
-  # this may occur in situations outside of Heroku, such as running the
-  # buildpacks locally.
-  if [ -w "$BP_DIR" ]; then
-    echo "export ${pnpm_store_dir_config_name}=\"$PNPM_CONFIG_CACHE\"" >> "$BP_DIR/export"
-  fi
+	# only write the export script if the buildpack directory is writable.
+	# this may occur in situations outside of Heroku, such as running the
+	# buildpacks locally.
+	if [[ -w "${BP_DIR}" ]]; then
+		echo "export ${pnpm_store_dir_config_name}=\"${PNPM_CONFIG_CACHE}\"" >>"${BP_DIR}/export"
+	fi
 
-  # `|| true`: `pnpm config get store-dir` normally exits 0 (printing the store path, or `undefined`
-  # if the key is unset), so this guard only bites if the pnpm binary itself is broken/crashes. Kept
-  # so a broken probe degrades to an empty `actual_store_path` (handled below) instead of hard-aborting
-  # this assignment under inherit_errexit.
-  actual_store_path=$(pnpm config get store-dir 2>/dev/null || true)
-  if [[ -z "$actual_store_path" || "$actual_store_path" != "$PNPM_CONFIG_CACHE" ]]; then
-    output::warning <<-EOF
+	# `|| true`: `pnpm config get store-dir` normally exits 0 (printing the store path, or `undefined`
+	# if the key is unset), so this guard only bites if the pnpm binary itself is broken/crashes. Kept
+	# so a broken probe degrades to an empty `actual_store_path` (handled below) instead of hard-aborting
+	# this assignment under inherit_errexit.
+	actual_store_path=$(pnpm config get store-dir 2>/dev/null || true)
+	if [[ -z "${actual_store_path}" || "${actual_store_path}" != "${PNPM_CONFIG_CACHE}" ]]; then
+		output::warning <<-EOF
 			The pnpm store is at '${actual_store_path:-undefined}' instead of the expected
-			location '$PNPM_CONFIG_CACHE'. The pnpm store cache may not work
+			location '${PNPM_CONFIG_CACHE}'. The pnpm store cache may not work
 			correctly between builds.
 		EOF
-  fi
+	fi
 
-  # pnpm 11 added `verify-deps-before-run` (defaulting to `install`), so any
-  # `pnpm run`/`pnpm start`/`pnpm exec` re-checks that node_modules is in sync
-  # before running. That check keys on the absolute project paths recorded in
-  # `node_modules/.pnpm-workspace-state-v1.json` at install time. We install in
-  # the build directory (e.g. /tmp/build_<hash>) but the dyno runs from /app,
-  # so the recorded paths never match at runtime and pnpm shells out to a
-  # nested `pnpm install` that aborts in the non-TTY dyno with
-  # ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY, crashing the process.
-  #
-  # Downgrade the check's action from `install` to `warn` at runtime so a path
-  # mismatch logs a warning instead of crashing, while still surfacing genuine
-  # out-of-sync state. Scoped to pnpm 11+ (older versions lack the feature and
-  # use the npm_config_* prefix). Respect any value the user has already set.
-  if (( pnpm_major >= 11 )); then
-    mkdir -p "$BUILD_DIR/.profile.d"
-    cat > "$BUILD_DIR/.profile.d/pnpm.sh" <<-'EOF'
+	# pnpm 11 added `verify-deps-before-run` (defaulting to `install`), so any
+	# `pnpm run`/`pnpm start`/`pnpm exec` re-checks that node_modules is in sync
+	# before running. That check keys on the absolute project paths recorded in
+	# `node_modules/.pnpm-workspace-state-v1.json` at install time. We install in
+	# the build directory (e.g. /tmp/build_<hash>) but the dyno runs from /app,
+	# so the recorded paths never match at runtime and pnpm shells out to a
+	# nested `pnpm install` that aborts in the non-TTY dyno with
+	# ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY, crashing the process.
+	#
+	# Downgrade the check's action from `install` to `warn` at runtime so a path
+	# mismatch logs a warning instead of crashing, while still surfacing genuine
+	# out-of-sync state. Scoped to pnpm 11+ (older versions lack the feature and
+	# use the npm_config_* prefix). Respect any value the user has already set.
+	if ((pnpm_major >= 11)); then
+		mkdir -p "${BUILD_DIR}/.profile.d"
+		cat >"${BUILD_DIR}/.profile.d/pnpm.sh" <<-'EOF'
 			export pnpm_config_verify_deps_before_run="${pnpm_config_verify_deps_before_run:-warn}"
 		EOF
-  fi
+	fi
 fi
 
-if [[ -z "$USE_NPM_INSTALL" ]]; then
-  if [[ "$(package_managers::npm::should_use_npm_ci "$BUILD_DIR")" == "true" ]]; then
-    USE_NPM_INSTALL=false
-  else
-    USE_NPM_INSTALL=true
-  fi
+if [[ -z "${USE_NPM_INSTALL}" ]]; then
+	# shellcheck disable=SC2310,SC2312 # package_managers::npm::should_use_npm_ci is invoked in the condition (set -e disabled inside) and its exit is masked; both intentional (matches pre-migration behavior)
+	if [[ "$(package_managers::npm::should_use_npm_ci "${BUILD_DIR}")" == "true" ]]; then
+		USE_NPM_INSTALL=false
+	else
+		USE_NPM_INSTALL=true
+	fi
 fi
 
 restore_cache() {
-  local cache_status cache_directories restore_cache_start_time
-  restore_cache_start_time=$(build_data::current_unix_realtime)
+	local cache_status cache_directories restore_cache_start_time
+	restore_cache_start_time=$(build_data::current_unix_realtime)
 
-  cache_status="$(cache::get_cache_status "$CACHE_DIR")"
-  cache_directories="$(cache::get_cache_directories "$BUILD_DIR")"
+	cache_status="$(cache::get_cache_status "${CACHE_DIR}")"
+	cache_directories="$(cache::get_cache_directories "${BUILD_DIR}")"
 
-  if $YARN; then
-    if $PREBUILD && [[ "$SKIP_NODE_MODULES_CHECK" == "true" ]]; then
-      output::info "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
-    elif $PREBUILD; then
-      output::warning <<-EOF
-			node_modules checked into source control
+	if ${YARN}; then
+		# shellcheck disable=SC2154 # set via the env-dir (environment::export_env_dir)
+		if ${PREBUILD} && [[ "${SKIP_NODE_MODULES_CHECK}" == "true" ]]; then
+			output::info "Keeping existing node_modules because SKIP_NODE_MODULES_CHECK=${SKIP_NODE_MODULES_CHECK}"
+		elif ${PREBUILD}; then
+			output::warning <<-EOF
+				node_modules checked into source control
 
-			https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
-		EOF
-      rm -rf "$BUILD_DIR/node_modules"
-    fi
-  fi
+				https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
+			EOF
+			rm -rf "${BUILD_DIR}/node_modules"
+		fi
+	fi
 
-  if [[ "$cache_status" == "disabled" ]]; then
-    output::step "Restoring cache"
-    output::info "Caching has been disabled because NODE_MODULES_CACHE=${NODE_MODULES_CACHE}"
-  elif [[ "$cache_status" == "valid" ]]; then
-    output::step "Restoring cache"
-    if [[ "$cache_directories" == "" ]]; then
-      cache::restore_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
-    else
-      cache::restore_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
-    fi
-  elif [[ "$cache_status" == "new-signature" ]]; then
-    output::step "Restoring cache"
-    if [[ "$cache_directories" == "" ]]; then
-      output::info "Cached directories were not restored due to a change in version of node, npm, yarn or stack"
-      output::info "Module installation may take longer for this build"
-    else
-      # If the user has specified custom cache directories, be more explicit
-      output::info "Invalidating cache due to a change in version of node, npm, yarn or stack"
-      output::info "Will not restore the following directories for this build:"
-      for directory in $cache_directories; do
-        output::info "  $directory"
-      done
-    fi
-  else
-    # No cache exists, be silent
-    :
-  fi
+	if [[ "${cache_status}" == "disabled" ]]; then
+		output::step "Restoring cache"
+		# shellcheck disable=SC2154 # set by environment::create_default_env
+		output::info "Caching has been disabled because NODE_MODULES_CACHE=${NODE_MODULES_CACHE}"
+	elif [[ "${cache_status}" == "valid" ]]; then
+		output::step "Restoring cache"
+		if [[ "${cache_directories}" == "" ]]; then
+			cache::restore_default_cache_directories "${BUILD_DIR}" "${CACHE_DIR}" "${YARN_CACHE_FOLDER}" "${NPM_CONFIG_CACHE}" "${PNPM_CONFIG_CACHE}"
+		else
+			cache::restore_custom_cache_directories "${BUILD_DIR}" "${CACHE_DIR}" "${PNPM_CONFIG_CACHE}" "${cache_directories}"
+		fi
+	elif [[ "${cache_status}" == "new-signature" ]]; then
+		output::step "Restoring cache"
+		if [[ "${cache_directories}" == "" ]]; then
+			output::info "Cached directories were not restored due to a change in version of node, npm, yarn or stack"
+			output::info "Module installation may take longer for this build"
+		else
+			# If the user has specified custom cache directories, be more explicit
+			output::info "Invalidating cache due to a change in version of node, npm, yarn or stack"
+			output::info "Will not restore the following directories for this build:"
+			for directory in ${cache_directories}; do
+				output::info "  ${directory}"
+			done
+		fi
+	else
+		# No cache exists, be silent
+		:
+	fi
 
-  # Remove any legacy cache contents written by older buildpack versions.
-  rm -rf "${CACHE_DIR}/build-data/nodejs" "${CACHE_DIR}/build-data/nodejs-prev"
+	# Remove any legacy cache contents written by older buildpack versions.
+	rm -rf "${CACHE_DIR}/build-data/nodejs" "${CACHE_DIR}/build-data/nodejs-prev"
 
-  build_data::set_string "cache_status" "${cache_status}"
-  build_data::set_duration "restore_cache_time" "${restore_cache_start_time}"
+	build_data::set_string "cache_status" "${cache_status}"
+	build_data::set_duration "restore_cache_time" "${restore_cache_start_time}"
 }
 
 build_data::set_string "build_step" "restore-cache"
 restore_cache
 
 build_dependencies() {
-  local cache_status start
+	local cache_status start
 
-  cache_status="$(cache::get_cache_status "$CACHE_DIR")"
-  start=$(build_data::current_unix_realtime)
-  if [[ "$YARN_2" == "true" ]]; then
-    package_managers::yarn::yarn2_install_dependencies "$BUILD_DIR"
-  elif $YARN; then
-    package_managers::yarn::install_dependencies "$BUILD_DIR"
-  elif $PNPM; then
-    package_managers::pnpm::install_dependencies "$BUILD_DIR" "$CACHE_DIR"
-  elif $PREBUILD; then
-    output::info "Prebuild detected (node_modules already exists)"
-    package_managers::npm::rebuild_dependencies "$BUILD_DIR"
-  else
-    package_managers::npm::install_dependencies "$BUILD_DIR"
-  fi
+	cache_status="$(cache::get_cache_status "${CACHE_DIR}")"
+	# shellcheck disable=SC2034 # start time captured but never recorded via build_data::set_duration (pre-existing)
+	start=$(build_data::current_unix_realtime)
+	if [[ "${YARN_2}" == "true" ]]; then
+		package_managers::yarn::yarn2_install_dependencies "${BUILD_DIR}"
+	elif ${YARN}; then
+		package_managers::yarn::install_dependencies "${BUILD_DIR}"
+	elif ${PNPM}; then
+		package_managers::pnpm::install_dependencies "${BUILD_DIR}" "${CACHE_DIR}"
+	elif ${PREBUILD}; then
+		output::info "Prebuild detected (node_modules already exists)"
+		package_managers::npm::rebuild_dependencies "${BUILD_DIR}"
+	else
+		package_managers::npm::install_dependencies "${BUILD_DIR}"
+	fi
 
-  build_data::set_string "build_step" "build-script"
-  output::step "Build"
-  package_manager::run_build_script "$BUILD_DIR"
+	build_data::set_string "build_step" "build-script"
+	output::step "Build"
+	package_manager::run_build_script "${BUILD_DIR}"
 }
 
 build_data::set_string "build_step" "prebuild-script"
-package_manager::run_prebuild_script "$BUILD_DIR"
+package_manager::run_prebuild_script "${BUILD_DIR}"
 
 output::step "Installing dependencies"
 build_data::set_string "build_step" "install-dependencies"
 build_dependencies
 
 cache_build() {
-  local cache_directories cache_build_start_time
-  cache_build_start_time=$(build_data::current_unix_realtime)
-  cache_directories="$(cache::get_cache_directories "$BUILD_DIR")"
+	local cache_directories cache_build_start_time
+	cache_build_start_time=$(build_data::current_unix_realtime)
+	cache_directories="$(cache::get_cache_directories "${BUILD_DIR}")"
 
-  cache::clear_cache "$CACHE_DIR"
-  if ! ${NODE_MODULES_CACHE:-true}; then
-    # we've already warned that caching is disabled in the restore step
-    # so be silent here
-    :
-  elif [[ "$cache_directories" == "" ]]; then
-    output::step "Caching build"
-    cache::save_default_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$YARN_CACHE_FOLDER" "$NPM_CONFIG_CACHE" "$PNPM_CONFIG_CACHE"
-  else
-    output::step "Caching build"
-    cache::save_custom_cache_directories "$BUILD_DIR" "$CACHE_DIR" "$PNPM_CONFIG_CACHE" "$cache_directories"
-  fi
-  cache::save_signature "$CACHE_DIR"
-  build_data::set_duration "save_cache_time" "$cache_build_start_time"
+	cache::clear_cache "${CACHE_DIR}"
+	if ! ${NODE_MODULES_CACHE:-true}; then
+		# we've already warned that caching is disabled in the restore step
+		# so be silent here
+		:
+	elif [[ "${cache_directories}" == "" ]]; then
+		output::step "Caching build"
+		cache::save_default_cache_directories "${BUILD_DIR}" "${CACHE_DIR}" "${YARN_CACHE_FOLDER}" "${NPM_CONFIG_CACHE}" "${PNPM_CONFIG_CACHE}"
+	else
+		output::step "Caching build"
+		cache::save_custom_cache_directories "${BUILD_DIR}" "${CACHE_DIR}" "${PNPM_CONFIG_CACHE}" "${cache_directories}"
+	fi
+	cache::save_signature "${CACHE_DIR}"
+	build_data::set_duration "save_cache_time" "${cache_build_start_time}"
 }
 
 prune_devdependencies() {
-  if $YARN || $YARN_2; then
-    package_managers::yarn::prune_devdependencies "$BUILD_DIR" "$BP_DIR"
-  elif $PNPM; then
-    package_managers::pnpm::prune_devdependencies "$BUILD_DIR"
-  else
-    package_managers::npm::prune_devdependencies "$BUILD_DIR"
-  fi
+	if ${YARN} || ${YARN_2}; then
+		package_managers::yarn::prune_devdependencies "${BUILD_DIR}" "${BP_DIR}"
+	elif ${PNPM}; then
+		package_managers::pnpm::prune_devdependencies "${BUILD_DIR}"
+	else
+		package_managers::npm::prune_devdependencies "${BUILD_DIR}"
+	fi
 }
 
-if $YARN_2; then
-  build_data::set_string "build_step" "save-cache"
-  cache_build
-  build_data::set_string "build_step" "prune-dependencies"
-  output::step "Pruning devDependencies"
-  prune_devdependencies
-elif "$YARN" && "$USE_YARN_CACHE" && [[ "$(cache::get_cache_directories "$BUILD_DIR")" == "" ]]; then
-  build_data::set_string "build_step" "prune-dependencies"
-  output::step "Pruning devDependencies"
-  prune_devdependencies
-  build_data::set_string "build_step" "save-cache"
-  cache_build
+# The elif below references USE_YARN_CACHE (set by environment::create_default_env) and calls
+# cache::get_cache_directories in the condition — so set -e is disabled inside it and its exit is
+# masked — all intentional and matching pre-migration behavior. The directive must sit before the
+# whole `if` because ShellCheck rejects directives in front of individual `elif` branches (SC1123).
+# shellcheck disable=SC2154,SC2310,SC2312
+if ${YARN_2}; then
+	build_data::set_string "build_step" "save-cache"
+	cache_build
+	build_data::set_string "build_step" "prune-dependencies"
+	output::step "Pruning devDependencies"
+	prune_devdependencies
+elif "${YARN}" && "${USE_YARN_CACHE}" && [[ "$(cache::get_cache_directories "${BUILD_DIR}")" == "" ]]; then
+	build_data::set_string "build_step" "prune-dependencies"
+	output::step "Pruning devDependencies"
+	prune_devdependencies
+	build_data::set_string "build_step" "save-cache"
+	cache_build
 else
-  build_data::set_string "build_step" "save-cache"
-  cache_build
-  build_data::set_string "build_step" "prune-dependencies"
-  output::step "Pruning devDependencies"
-  prune_devdependencies
+	build_data::set_string "build_step" "save-cache"
+	cache_build
+	build_data::set_string "build_step" "prune-dependencies"
+	output::step "Pruning devDependencies"
+	prune_devdependencies
 fi
 
 build_data::set_string "build_step" "cleanup-script"
-package_manager::run_cleanup_script "$BUILD_DIR"
+package_manager::run_cleanup_script "${BUILD_DIR}"
 
 summarize_build() {
-  if $NODE_VERBOSE; then
-    package_manager::list_dependencies "$BUILD_DIR" | output::indent
-  fi
+	# shellcheck disable=SC2154 # set by environment::create_default_env
+	if ${NODE_VERBOSE}; then
+		package_manager::list_dependencies "${BUILD_DIR}" | output::indent
+	fi
 }
 
 build_data::set_string "build_step" "install-metrics-plugin"
-runtimes::nodejs::install_metrics_plugin "$BP_DIR" "$BUILD_DIR"
+runtimes::nodejs::install_metrics_plugin "${BP_DIR}" "${BUILD_DIR}"
 
 build_data::set_string "build_step" "summarize"
 summarize_build
-build_data::set_duration "build_time" "$build_start_time"
+build_data::set_duration "build_time" "${build_start_time}"
 
-if ! [ -e "$BUILD_DIR/Procfile" ]; then
-  start_script=$(utils::json::read "$BUILD_DIR/package.json" ".scripts.start")
-  if [ "$start_script" == "" ]; then
-    if ! [ -e "$BUILD_DIR/server.js" ]; then
-      output::warning <<-EOF
-			This app may not specify any way to start a node process
+if ! [[ -e "${BUILD_DIR}/Procfile" ]]; then
+	start_script=$(utils::json::read "${BUILD_DIR}/package.json" ".scripts.start")
+	if [[ "${start_script}" == "" ]]; then
+		if ! [[ -e "${BUILD_DIR}/server.js" ]]; then
+			output::warning <<-EOF
+				This app may not specify any way to start a node process
 
-			https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type
-		EOF
-    fi
-  fi
+				https://devcenter.heroku.com/articles/nodejs-support#default-web-process-type
+			EOF
+		fi
+	fi
 fi
 
 npm_version="$(npm --version)"
-if $NPM_LOCK && [ "$(package_managers::npm::version_major)" -lt "5" ]; then
-  output::warning <<-EOF
-			This version of npm ($npm_version) does not support package-lock.json. Please
-			update your npm version in package.json.
+# shellcheck disable=SC2310,SC2312 # package_managers::npm::version_major is invoked in the condition (set -e disabled inside) and its exit is masked; both intentional (matches pre-migration behavior)
+if ${NPM_LOCK} && [[ "$(package_managers::npm::version_major)" -lt "5" ]]; then
+	output::warning <<-EOF
+		This version of npm (${npm_version}) does not support package-lock.json. Please
+		update your npm version in package.json.
 
-			https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
-		EOF
+		https://devcenter.heroku.com/articles/nodejs-support#specifying-an-npm-version
+	EOF
 fi
 
 build_data::set_string "build_step" "finished"

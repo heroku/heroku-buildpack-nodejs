@@ -3,6 +3,7 @@
 # source of truth for what gets linted/formatted (CI invokes these targets, it does
 # not maintain its own list).
 MIGRATED_FILES = \
+	bin/compile \
 	bin/detect \
 	bin/release \
 	bin/report \

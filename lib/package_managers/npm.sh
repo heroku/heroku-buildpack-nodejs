@@ -699,6 +699,7 @@ function package_managers::npm::_install_binary() {
 		fi
 		if [[ "${major}" == "11" ]] && [[ "${minor}" -ge 11 ]]; then
 			output::info "Installing npm@~11.10.0 to workaround Node.js 22.22.2 regression (https://github.com/npm/cli/issues/9151)"
+			# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 			if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@~11.10.0"; then
 				build_data::set_string "failure" "npm-node-22.22.2-workaround-failed"
 				output::error <<-EOF
@@ -711,6 +712,7 @@ function package_managers::npm::_install_binary() {
 		fi
 	fi
 
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 	if ! utils::command::suppress_output npm install "${unsafe_perm[@]}" --quiet --no-audit --no-progress -g "npm@${version}"; then
 		build_data::set_string "failure" "npm-install-failed"
 		output::error <<-EOF
