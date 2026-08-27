@@ -628,7 +628,7 @@ function package_managers::npm::_extract_error_detail() {
 function package_managers::npm::install_binary() {
 	local npm_version
 	local version="$1"
-	local npm_lock="$3"
+	local npm_lock="$2"
 	# Verify npm works before capturing and ensure its stderr is inspectable later
 	utils::command::suppress_output npm --version
 	npm_version="$(npm --version)"

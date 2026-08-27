@@ -6,7 +6,7 @@
 set -euo pipefail
 
 function package_managers::yarn::install_binary() {
-	local version=${2:-1.22.x}
+	local version=${1:-1.22.x}
 	local package_name url installed_version
 
 	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
