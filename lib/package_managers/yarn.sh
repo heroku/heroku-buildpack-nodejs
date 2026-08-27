@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
 
-# Enable strict mode for ShellCheck but restore the caller's options at the end of the file
-# (see epilogue) so they don't bleed into un-migrated scripts that source this lib. The
-# caller's flags are read from `$-` (the current shell); a `$(set +o)` capture runs in a
-# command-substitution subshell where bash always forces errexit off, so it would later
-# restore errexit as disabled even when the caller had it on. pipefail has no `$-` letter, so
-# it is captured separately (it is reported correctly inside command substitution).
-# shellcheck disable=SC2034 # both are consumed by the epilogue
-__yarn_saved_flags="$-"
-__yarn_saved_pipefail="$(set +o | grep pipefail)"
+# Strict mode. The bin/* entry points that source this lib run under the same options; the
+# test runners disable errexit after sourcing (see test/unit and test/run-helpers) so this
+# no longer needs an epilogue to restore the caller's options.
 set -euo pipefail
 
 function package_managers::yarn::install_binary() {
-	local dir="${1}"
-	local version=${2:-1.22.x}
+	local version=${1:-1.22.x}
 	local package_name url installed_version
 
 	# npm 12 removed the --unsafe-perm flag and rejects it with EUNKNOWNCONFIG, so only pass it
@@ -901,6 +894,7 @@ function package_managers::yarn::fail_missing_yarn_vendor() {
 		failure["id"]="missing-yarn-vendor"
 		failure["classification"]="user"
 		failure["detail"]="${yarn_path}"
+		# shellcheck disable=SC2034 # array consumed by nameref in failure::emit
 		failure["message"]=$(
 			cat <<-EOF
 				Yarn was not found
@@ -1006,10 +1000,3 @@ function package_managers::yarn::list_dependencies() {
 	cd "${build_dir}" || return
 	(yarn list --depth=0 || true) 2>/dev/null
 }
-
-# Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
-# saved `$-`; pipefail from its own saved `set +o` line.
-case "${__yarn_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
-case "${__yarn_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
-eval "${__yarn_saved_pipefail}"
-unset __yarn_saved_flags __yarn_saved_pipefail
