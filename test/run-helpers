@@ -10,6 +10,12 @@ popd >/dev/null || exit
 source "$(pwd)"/test/utils
 source "$(pwd)"/lib/environment.sh
 
+# environment.sh enables strict mode when sourced. The functional runners that source this
+# file also source shunit2, which needs errexit off to inspect non-zero return codes; relax
+# back to the runner's options here. (bin/compile is exec'd as a subprocess by `capture`, so it
+# keeps its own strict options regardless of this.)
+set +euo pipefail
+
 mktmpdir() {
 	dir=$(mktemp -t testXXXXX)
 	rm -rf "${dir}"

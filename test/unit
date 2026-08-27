@@ -2400,6 +2400,13 @@ source "$(pwd)"/lib/package_managers/pnpm.sh
 source "$(pwd)"/lib/package_managers/yarn.sh
 source "$(pwd)"/lib/runtimes/nodejs.sh
 source "$(pwd)"/lib/output.sh
+
+# The libs above enable strict mode when sourced. shUnit2 needs errexit off so it can inspect
+# the non-zero return codes of failing assertions; relax back to the runner's options here.
+# (When the unit suite is made nounset-clean, narrow this to `set +e` to keep nounset+pipefail
+# coverage active during tests.)
+set +euo pipefail
+
 source "$(pwd)"/profile/WEB_CONCURRENCY.sh
 
 # testing utils
