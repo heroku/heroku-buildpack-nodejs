@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added support for pnpm 12. ([#1784](https://github.com/heroku/heroku-buildpack-nodejs/pull/1784))
 
 ## [v365] - 2026-08-27
 
