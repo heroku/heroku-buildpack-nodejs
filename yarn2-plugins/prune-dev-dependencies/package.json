@@ -9,12 +9,12 @@
     "clipanion": "^3.2.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.6",
+    "@biomejs/biome": "^2.5.11",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.4.0",
     "fs-extra": "^11.4.0",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "scripts": {
     "build": "npm run lint && npm run format && builder build plugin --no-minify",
