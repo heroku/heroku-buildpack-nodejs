@@ -62,6 +62,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "autocfg"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
+
+[[package]]
 name = "block-buffer"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -171,10 +177,11 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "fun_run"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3e351e36d8e11312b5afb4f03e5d2199cf9a79e7e1b5b0477bfbdc99d4c6364"
+checksum = "c39db9abfa5a1c84d92da994a33084308b3254566a3c0565e0533c5e71d4b45c"
 dependencies = [
+ "autocfg",
  "regex",
 ]
 
@@ -296,7 +303,7 @@ dependencies = [
 [[package]]
 name = "nodejs-data"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#808c2c4bf4e5fc2b1866a57afae6e8026607fddd"
+source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#f82b03dc7fe25d3c1e38ebe92792d8d871df6d19"
 dependencies = [
  "fun_run",
  "libherokubuildpack",
