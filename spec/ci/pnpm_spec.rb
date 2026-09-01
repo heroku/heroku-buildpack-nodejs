@@ -173,6 +173,73 @@ describe "pnpm support" do
     end
   end
 
+  it "should successfully deploy a pnpm 12 app" do
+    app = Hatchet::Runner.new("spec/fixtures/repos/pnpm-12")
+    app.deploy do |app|
+      expect(clean_output(app.output)).to match(Regexp.new(<<~'REGEX'))
+        remote: -----> Installing binaries
+        remote:        engines\.node \(package\.json\):   22\.x
+        remote:        engines\.npm \(package\.json\):    unspecified \(use default\)
+        remote:        engines\.pnpm \(package\.json\):   unspecified \(use default\)
+        remote:        packageManager \(package\.json\): pnpm@12\.1\.0
+        remote:
+        remote:        Resolving node version 22\.x\.\.\.
+        remote:        Downloading and installing node .+\.\.\.
+        remote:        Validating checksum
+        remote:        Using default npm version: .+
+        remote:        Downloading and installing pnpm \(12\.1\.0\)
+        remote:        Using pnpm 12\..+
+      REGEX
+      expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
+      expect(app.output).to include("Pruning devDependencies")
+      expect(successful_body(app).strip).to eq("Hello from pnpm 12")
+
+      # Rebuild to test cache restoration and pruning still works
+      run!('git commit --allow-empty -m "rebuild to test caching"')
+      app.push!
+
+      expect(app.output).to include("Restoring cache")
+      expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
+      expect(app.output).to include("Pruning devDependencies")
+      expect(successful_body(app).strip).to eq("Hello from pnpm 12")
+    end
+  end
+
+  it "should successfully deploy a pnpm 12 workspace" do
+    app = Hatchet::Runner.new("spec/fixtures/repos/pnpm-12-workspace")
+    app.deploy do |app|
+      expect(clean_output(app.output)).to match(Regexp.new(<<~'REGEX'))
+        remote: -----> Installing binaries
+        remote:        engines\.node \(package\.json\):   22\.x
+        remote:        engines\.npm \(package\.json\):    unspecified \(use default\)
+        remote:        engines\.pnpm \(package\.json\):   unspecified \(use default\)
+        remote:        packageManager \(package\.json\): pnpm@12\.1\.0
+        remote:
+        remote:        Resolving node version 22\.x\.\.\.
+        remote:        Downloading and installing node .+\.\.\.
+        remote:        Validating checksum
+        remote:        Using default npm version: .+
+        remote:        Downloading and installing pnpm \(12\.1\.0\)
+        remote:        Using pnpm 12\..+
+      REGEX
+      expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
+      expect(app.output).to include("Pruning devDependencies")
+      expect(successful_body(app).strip).to eq("Hello from pnpm 12 workspace")
+
+      # Rebuild to test cache restoration
+      run!('git commit --allow-empty -m "rebuild to test caching"')
+      app.push!
+
+      expect(app.output).to include("Restoring cache")
+      expect(app.output).to include("Running 'pnpm install' with pnpm-lock.yaml")
+      expect(app.output).not_to include("pnpm store cache may not work")
+      expect(successful_body(app).strip).to eq("Hello from pnpm 12 workspace")
+    end
+  end
+
   # Regression test for W-22952473.
   #
   # pnpm 11 defaults `verify-deps-before-run` to `install`, so any `pnpm run`
