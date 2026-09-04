@@ -4,6 +4,9 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    allow:
+      # Update transitive dependencies too.
+      - dependency-type: "all"
     labels:
       - "dependencies"
       - "ruby"
@@ -30,6 +33,9 @@ updates:
     directory: "/resolve-version"
     schedule:
       interval: "monthly"
+    allow:
+      # Update transitive dependencies too.
+      - dependency-type: "all"
     labels:
       - "dependencies"
       - "rust"
