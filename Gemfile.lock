@@ -21,7 +21,7 @@ GEM
       threaded (~> 0)
     logger (1.7.0)
     moneta (1.0.0)
-    multi_json (1.17.0)
+    multi_json (1.21.1)
     parallel (1.21.0)
     parallel_split_test (0.10.0)
       parallel (>= 0.5.13)
