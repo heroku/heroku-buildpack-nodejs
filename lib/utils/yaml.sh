@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
-# Enable strict mode for ShellCheck but restore the caller's options at the end of the file
-# (see epilogue) so they don't bleed into un-migrated scripts that source this lib. See
-# lib/package_managers/npm.sh for the full rationale on reading $- vs $(set +o).
-# shellcheck disable=SC2034 # both are consumed by the epilogue
-__yaml_saved_flags="$-"
-__yaml_saved_pipefail="$(set +o | grep pipefail)"
+# Strict mode. The bin/* entry points that source this lib run under the same options; the
+# test runners disable errexit after sourcing (see test/unit and test/run-helpers) so this
+# no longer needs an epilogue to restore the caller's options.
 set -euo pipefail
 
 # BP_DIR is a global set by the caller (bin/compile) and environment::get_os comes from lib/environment.sh,
@@ -26,10 +23,3 @@ function utils::yaml::read() {
 		echo ""
 	fi
 }
-
-# Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
-# saved `$-`; pipefail from its own saved `set +o` line.
-case "${__yaml_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
-case "${__yaml_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
-eval "${__yaml_saved_pipefail}"
-unset __yaml_saved_flags __yaml_saved_pipefail

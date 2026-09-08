@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
 
-# Enable strict mode for ShellCheck but restore the caller's options at the end of the file
-# (see epilogue) so they don't bleed into un-migrated scripts that source this lib. The
-# caller's flags are read from `$-` (the current shell); a `$(set +o)` capture runs in a
-# command-substitution subshell where bash always forces errexit off, so it would later
-# restore errexit as disabled even when the caller had it on. pipefail has no `$-` letter, so
-# it is captured separately (it is reported correctly inside command substitution).
-# shellcheck disable=SC2034 # both are consumed by the epilogue
-__npm_saved_flags="$-"
-__npm_saved_pipefail="$(set +o | grep pipefail)"
+# Strict mode. The bin/* entry points that source this lib run under the same options; the
+# test runners disable errexit after sourcing (see test/unit and test/run-helpers) so this
+# no longer needs an epilogue to restore the caller's options.
 set -euo pipefail
 
 # Installs app dependencies with npm (fresh install path).
@@ -202,6 +196,7 @@ function package_managers::npm::rebuild_dependencies() {
 		local npm_exit="${pipe_status[0]}"
 		build_data::set_duration "npm_rebuild_time" "${start}"
 
+		# shellcheck disable=SC2034 # filled below, consumed by nameref in failure::emit
 		local -A failure
 		# shellcheck disable=SC2310 # the elif calls a function in a condition, so set -e is disabled inside
 		if [[ "${npm_exit}" -eq 0 ]]; then
@@ -633,8 +628,7 @@ function package_managers::npm::_extract_error_detail() {
 function package_managers::npm::install_binary() {
 	local npm_version
 	local version="$1"
-	local dir="$2"
-	local npm_lock="$3"
+	local npm_lock="$2"
 	# Verify npm works before capturing and ensure its stderr is inspectable later
 	utils::command::suppress_output npm --version
 	npm_version="$(npm --version)"
@@ -848,10 +842,3 @@ function package_managers::npm::list_dependencies() {
 	cd "${build_dir}" || return
 	(npm ls --depth=0 || true) 2>/dev/null
 }
-
-# Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
-# saved `$-`; pipefail from its own saved `set +o` line.
-case "${__npm_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
-case "${__npm_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
-eval "${__npm_saved_pipefail}"
-unset __npm_saved_flags __npm_saved_pipefail
