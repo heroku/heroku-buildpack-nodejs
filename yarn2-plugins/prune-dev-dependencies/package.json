@@ -14,7 +14,7 @@
     "@types/node": "^26.1.2",
     "fs-extra": "^11.4.0",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   },
   "scripts": {
     "build": "npm run lint && npm run format && builder build plugin --no-minify",
