@@ -18,7 +18,7 @@ package_managers::pnpm::install_dependencies() {
 	output::info "Running 'pnpm install' with pnpm-lock.yaml"
 	cd "${build_dir}" || return
 
-	pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
+	pnpm_install_args=("install" "--no-prod" "--frozen-lockfile")
 
 	if [[ -n "${PNPM_INSTALL_REPORTER}" ]]; then
 		case "${PNPM_INSTALL_REPORTER}" in

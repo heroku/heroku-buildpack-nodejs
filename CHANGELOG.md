@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Fixed `pnpm install` failing under pnpm 12 by replacing the legacy `--prod=false` flag with `--no-prod`. ([#1796](https://github.com/heroku/heroku-buildpack-nodejs/pull/1796))
+
 
 ## [v365] - 2026-08-27
 
