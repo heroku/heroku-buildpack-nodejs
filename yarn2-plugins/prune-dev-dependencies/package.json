@@ -9,9 +9,9 @@
     "clipanion": "^3.2.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.6",
+    "@biomejs/biome": "^2.5.12",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.4.1",
     "fs-extra": "^11.4.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
