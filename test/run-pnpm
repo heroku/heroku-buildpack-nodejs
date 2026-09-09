@@ -260,7 +260,11 @@ testPnpm11StoreDirExport() {
 	assertCapturedSuccessWithWarnings
 }
 
-testPnpmWithNoPackageManagerEntry() {
+# Disabled while pnpm@latest is broken. pnpm 12 (currently `latest`) errors on
+# `pnpm install --prod=false`. Upstream fix at
+# https://github.com/pnpm/pnpm/issues/14553 has been merged but not released.
+# Rename back to the original once a fixed pnpm 12 ships.
+disabled_testPnpmWithNoPackageManagerEntry() {
 	compile "pnpm-unknown-version"
 	assertCaptured "Downloading and installing pnpm (latest)"
 	assertCaptured "Using pnpm"
