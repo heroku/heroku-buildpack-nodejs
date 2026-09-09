@@ -20,7 +20,7 @@ GEM
     json (3.0.2)
     logger (1.7.0)
     moneta (1.0.0)
-    parallel (1.21.0)
+    parallel (2.2.0)
     parallel_split_test (0.10.0)
       parallel (>= 0.5.13)
       rspec-core (>= 3.9.0)
@@ -63,7 +63,7 @@ CHECKSUMS
   json (3.0.2) sha256=8e6d7e7b11384c21230430cef90b71f14849a34a1f4452796670f7c981bd19df
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   moneta (1.0.0) sha256=2224e5a68156e8eceb525fb0582c8c4e0f29f67cae86507cdcfb406abbb1fc5d
-  parallel (1.21.0) sha256=e4a92d75cf9d0e3d50f396f5180f827dcb985f98436d4b170e7a0b864ebd6ec2
+  parallel (2.2.0) sha256=e1059c5fd7b649558a0aec38a769f06a42942bdb40503d005a59c352fe011cd8
   parallel_split_test (0.10.0) sha256=4abd6bedc6a1b169ecb93a1bf982fa7fbd437b66c360594d56d107c25f53b05f
   platform-api (3.9.1) sha256=771f8a2dd19136e9f2715c5fad6b5b2c628398216091f3e8bd5fe86b5f094a75
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
