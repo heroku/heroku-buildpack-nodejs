@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v366] - 2026-09-09
+
 - Added Node.js 24.21.0 (linux-amd64)
 
 ## [v365] - 2026-08-27
@@ -1415,7 +1418,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v365...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v366...main
+[v366]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v365...v366
 [v365]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v364...v365
 [v364]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v363...v364
 [v363]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v362...v363
