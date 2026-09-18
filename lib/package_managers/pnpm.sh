@@ -18,7 +18,19 @@ package_managers::pnpm::install_dependencies() {
 	output::info "Running 'pnpm install' with pnpm-lock.yaml"
 	cd "${build_dir}" || return
 
-	pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
+	# `--prod=false` forces devDependencies to install even though NODE_ENV=production is
+	# exported during the build (see lib/environment.sh): pnpm < 10 honors NODE_ENV and would
+	# otherwise skip them, and the build needs devDependencies for compile-time tooling. pnpm 12
+	# rewrote its CLI and rejects `--prod=false` (`unexpected value 'false'`); it also — like
+	# pnpm 10 and 11 — ignores NODE_ENV and installs devDependencies on a plain install, so the
+	# flag is unnecessary there. Omit it on pnpm 12+.
+	local pnpm_major_version
+	pnpm_major_version=$(pnpm --version | cut -d "." -f 1)
+	if ((pnpm_major_version >= 12)); then
+		pnpm_install_args=("install" "--frozen-lockfile")
+	else
+		pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
+	fi
 
 	if [[ -n "${PNPM_INSTALL_REPORTER}" ]]; then
 		case "${PNPM_INSTALL_REPORTER}" in
