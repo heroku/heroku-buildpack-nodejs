@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 22.23.3 (linux-amd64)
 
 ## [v369] - 2026-09-22
 
