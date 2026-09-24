@@ -6,7 +6,7 @@ on:
 
 jobs:
   update-nodejs-inventory:
-    name: Update Node.js Engine Inventory
+    name: Update Node.js Inventory
     runs-on: pub-hk-ubuntu-24.04-ip
     steps:
       - name: Checkout Repo
@@ -34,10 +34,10 @@ jobs:
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          title: "Update Node.js Engine Inventory"
-          commit-message: "Update Inventory for heroku/nodejs-engine\n\n${{ steps.rebuild-inventory.outputs.msg }}"
+          title: "Update Node.js Inventory"
+          commit-message: "Update Node.js inventory\n\n${{ steps.rebuild-inventory.outputs.msg }}"
           branch: update-nodejs-inventory
-          body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.rebuild-inventory.outputs.msg }}"
+          body: "Automated pull request to update the Node.js runtime inventory:\n\n${{ steps.rebuild-inventory.outputs.msg }}"
           committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
           author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
       - name: Configure PR
