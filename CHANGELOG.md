@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Added support for pnpm 12. ([#1784](https://github.com/heroku/heroku-buildpack-nodejs/pull/1784))
+- Fixed the pnpm 12 flags used to allow installing dev dependencies with `NODE_ENV=production`. ([#1784](https://github.com/heroku/heroku-buildpack-nodejs/pull/1784))
 
 ## [v370] - 2026-09-24
 
