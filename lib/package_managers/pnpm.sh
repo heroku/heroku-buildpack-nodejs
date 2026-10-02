@@ -18,7 +18,9 @@ package_managers::pnpm::install_dependencies() {
 	output::info "Running 'pnpm install' with pnpm-lock.yaml"
 	cd "${build_dir}" || return
 
-	pnpm_install_args=("install" "--prod=false" "--frozen-lockfile")
+	# `--no-prod` installs devDependencies despite NODE_ENV=production (pnpm < 10 honors it).
+	# Not `--prod=false`: pnpm 12.0–12.3 reject an explicit value on boolean flags.
+	pnpm_install_args=("install" "--no-prod" "--frozen-lockfile")
 
 	if [[ -n "${PNPM_INSTALL_REPORTER}" ]]; then
 		case "${PNPM_INSTALL_REPORTER}" in
