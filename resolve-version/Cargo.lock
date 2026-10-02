@@ -242,9 +242,9 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.31.0"
+version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6dff1b98739a1c06dbd1240f5dc8312af8976ff25ade19b441bf387cadb102f2"
+checksum = "d901522104822d8b137fcdb193efae9830759f7f9dcfd4feebd17d39d4b0f826"
 dependencies = [
  "hex",
  "serde",
@@ -303,7 +303,7 @@ dependencies = [
 [[package]]
 name = "nodejs-data"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#f82b03dc7fe25d3c1e38ebe92792d8d871df6d19"
+source = "git+https://github.com/heroku/buildpacks-nodejs?branch=main#b8a3b152d929f19a23ce1c4924958758ac7de328"
 dependencies = [
  "fun_run",
  "libherokubuildpack",
