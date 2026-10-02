@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v371] - 2026-10-02
+
 - Fixed the pnpm 12 flags used to allow installing dev dependencies with `NODE_ENV=production`. ([#1784](https://github.com/heroku/heroku-buildpack-nodejs/pull/1784))
 
 ## [v370] - 2026-09-24
@@ -1435,7 +1438,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v370...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v371...main
+[v371]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v370...v371
 [v370]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v369...v370
 [v369]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v368...v369
 [v368]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v367...v368
