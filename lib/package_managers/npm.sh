@@ -664,6 +664,12 @@ function package_managers::npm::install_binary() {
 		installed_npm_version="$(npm --version)"
 		output::info "npm ${installed_npm_version} installed"
 	fi
+
+	# Disable npm audit and funding notices via the global npmrc, the lowest-precedence npm
+	# config source. Apps can re-enable them with a project .npmrc or the NPM_CONFIG_AUDIT /
+	# NPM_CONFIG_FUND config vars.
+	utils::command::suppress_output npm config set audit false --global
+	utils::command::suppress_output npm config set fund false --global
 }
 
 function package_managers::npm::_install_binary() {

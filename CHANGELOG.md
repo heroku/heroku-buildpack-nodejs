@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Disabled npm audit and funding notices during builds using npm's global config. These can still be overridden via a project `.npmrc` or by setting the `npm_config_audit`/`npm_config_fund` config vars. ([#1819](https://github.com/heroku/heroku-buildpack-nodejs/pull/1819))
 
 ## [v371] - 2026-10-02
 
