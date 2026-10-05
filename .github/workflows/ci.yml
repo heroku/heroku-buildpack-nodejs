@@ -76,6 +76,7 @@ jobs:
       - name: Stop download cache
         if: always()
         run: |
+          docker logs heroku-buildpack-nodejs-download-cache 2>/dev/null | awk '{print $1}' | sort | uniq -c
           make download-cache-stop
           sudo chown -R "$(id -u):$(id -g)" "${DOWNLOAD_CACHE_DIR}"
       - name: Save download cache
