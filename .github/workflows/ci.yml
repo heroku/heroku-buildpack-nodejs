@@ -62,6 +62,8 @@ jobs:
           path: ${{ env.DOWNLOAD_CACHE_DIR }}
           key: download-cache-${{ hashFiles('inventory/node.toml', 'test/fixtures/**/package.json') }}
           restore-keys: download-cache-
+      - name: Pull heroku:${{ matrix.stack_number }}-build image
+        run: docker pull "heroku/heroku:${STACK_NUMBER}-build"
       # nginx (uid 101) must be able to read cache files restored by the runner user.
       - name: Start download cache
         run: |
