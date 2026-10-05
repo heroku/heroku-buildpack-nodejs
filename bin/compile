@@ -330,9 +330,8 @@ install_bins() {
 	if ${PNPM}; then
 		build_data::set_string "build_step" "install-pnpm"
 
-		default_pnpm_version="pnpm@latest"
 		using_default_pnpm=false
-		pnpm_version="latest"
+		pnpm_version="${PNPM_DEFAULT_VERSION}"
 		if [[ "${package_manager}" == pnpm* ]]; then
 			pnpm_version="$(echo "${package_manager}" | cut -d '@' -f 2 | cut -d "+" -f 1)"
 		elif [[ -n "${pnpm_engine}" ]]; then
@@ -352,7 +351,7 @@ install_bins() {
 				- "packageManager"
 				- "engines.pnpm"
 
-				Without a specific version defined, this build will use "${default_pnpm_version}" by default. We highly recommend setting an explicit version
+				Without a specific version defined, this build will use "pnpm@${PNPM_DEFAULT_VERSION}" by default. We highly recommend setting an explicit version
 				of pnpm to improve the reliability of your builds.
 			EOF
 		fi
