@@ -152,7 +152,7 @@ function runtimes::nodejs::_install() {
 	fi
 
 	output_file="/tmp/node.tar.gz"
-	if ! curl "${download_url}" --no-progress-meter --location --fail --max-time 30 --retry 5 --retry-connrefused --connect-timeout 5 -o "${output_file}"; then
+	if ! curl "${download_url}" --no-progress-meter --location --fail --max-time "${BUILDPACK_TEST_CURL_MAX_TIME:-30}" --retry 5 --retry-connrefused --connect-timeout "${BUILDPACK_TEST_CURL_CONNECT_TIMEOUT:-5}" -o "${output_file}"; then
 		runtimes::nodejs::_fail_node_download "${download_url}"
 	fi
 

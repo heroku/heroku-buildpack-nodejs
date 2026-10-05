@@ -45,21 +45,43 @@ jobs:
 
   functional-test:
     runs-on: ubuntu-24.04
-    container:
-      image: heroku/heroku:${{ matrix.stack_number }}-build
-      options: --user root
     strategy:
       fail-fast: false
       matrix:
         stack_number: ["22", "24", "26"]
-        test_suite: ["npm", "yarn", "pnpm", "general"]
     env:
-      STACK: heroku-${{ matrix.stack_number }}
+      DOWNLOAD_CACHE_DIR: /home/runner/download-cache
+      STACK_NUMBER: ${{ matrix.stack_number }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Functional tests (${{ matrix.test_suite }}) on heroku:${{ matrix.stack_number }}-build
-        run: test/run-${{ matrix.test_suite }}
+      - name: Restore download cache
+        id: restore-download-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.DOWNLOAD_CACHE_DIR }}
+          key: download-cache-${{ hashFiles('inventory/node.toml', 'test/fixtures/**/package.json') }}
+          restore-keys: download-cache-
+      # nginx (uid 101) must be able to read cache files restored by the runner user.
+      - name: Start download cache
+        run: |
+          mkdir -p "${DOWNLOAD_CACHE_DIR}"
+          sudo chmod -R a+rwX "${DOWNLOAD_CACHE_DIR}"
+          make download-cache-start
+      - name: Functional tests on heroku:${{ matrix.stack_number }}-build
+        run: make -k -j4 DOWNLOAD_CACHE=1 "heroku-${STACK_NUMBER}-build"
+      # nginx writes cache files as 0600 owned by its own user; the runner user must own them to save.
+      - name: Stop download cache
+        if: always()
+        run: |
+          make download-cache-stop
+          sudo chown -R "$(id -u):$(id -g)" "${DOWNLOAD_CACHE_DIR}"
+      - name: Save download cache
+        if: always() && steps.restore-download-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.DOWNLOAD_CACHE_DIR }}
+          key: ${{ steps.restore-download-cache.outputs.cache-primary-key }}
 
   hatchet-test:
     runs-on: ubuntu-24.04
