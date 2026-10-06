@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v372] - 2026-10-06
+
 - Apps with a `pnpm-lock.yaml` that don't declare a pnpm version now install pnpm `12.x` instead of `latest`. ([#1820](https://github.com/heroku/heroku-buildpack-nodejs/pull/1820))
 - Disabled npm audit and funding notices during builds using npm's global config. These can still be overridden via a project `.npmrc` or by setting the `npm_config_audit`/`npm_config_fund` config vars. ([#1819](https://github.com/heroku/heroku-buildpack-nodejs/pull/1819))
 
@@ -1440,7 +1443,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v371...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v372...main
+[v372]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v371...v372
 [v371]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v370...v371
 [v370]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v369...v370
 [v369]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v368...v369
