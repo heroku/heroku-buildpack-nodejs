@@ -11,6 +11,10 @@ __pnpm_saved_flags="$-"
 __pnpm_saved_pipefail="$(set +o | grep pipefail)"
 set -euo pipefail
 
+# The pnpm version installed when a pnpm-lock.yaml is present but no version is declared in
+# package.json via "packageManager" or "engines.pnpm".
+PNPM_DEFAULT_VERSION="12.x"
+
 package_managers::pnpm::install_dependencies() {
 	local build_dir=${1:-}
 	local cache_dir=${2:-}

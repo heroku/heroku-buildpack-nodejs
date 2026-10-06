@@ -262,7 +262,7 @@ testPnpm11StoreDirExport() {
 
 testPnpmWithNoPackageManagerEntry() {
 	compile "pnpm-unknown-version"
-	assertCaptured "Downloading and installing pnpm (latest)"
+	assertCaptured "Downloading and installing pnpm (12.x)"
 	assertCaptured "Using pnpm"
 	assertCaptured "Running 'pnpm install' with pnpm-lock.yaml"
 	assertCapturedStderr "Default pnpm version used"
