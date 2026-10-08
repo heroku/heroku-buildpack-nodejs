@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.11.1 (linux-amd64)
+- Added Node.js 26.11.0 (linux-amd64)
 
 ## [v372] - 2026-10-06
 
