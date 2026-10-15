@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v374] - 2026-10-15
+
 - Added Node.js 26.12.0 (linux-amd64)
 - Added Node.js 24.22.0 (linux-amd64)
 - Increased the Node.js download timeout from 30 to 120 seconds to avoid failing builds on slow connections. ([#1824](https://github.com/heroku/heroku-buildpack-nodejs/pull/1824))
@@ -1451,7 +1454,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v373...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v374...main
+[v374]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v373...v374
 [v373]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v372...v373
 [v372]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v371...v372
 [v371]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v370...v371
