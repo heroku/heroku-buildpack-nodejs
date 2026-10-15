@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.12.0 (linux-amd64)
+- Added Node.js 24.22.0 (linux-amd64)
 - Increased the Node.js download timeout from 30 to 120 seconds to avoid failing builds on slow connections. ([#1824](https://github.com/heroku/heroku-buildpack-nodejs/pull/1824))
 
 ## [v373] - 2026-10-08
