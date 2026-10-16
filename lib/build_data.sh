@@ -1,15 +1,8 @@
 #!/usr/bin/env bash
 
-# Enable strict mode for ShellCheck's benefit, but restore the caller's options at the end of
-# the file (see epilogue) so these don't bleed into the un-migrated scripts that source this
-# lib. The caller's flags are read from `$-`, which reflects the *current* shell — a
-# `$(set +o)` capture runs in a command-substitution subshell where bash always forces errexit
-# off, so it would record (and later restore) errexit as disabled even when the caller had it
-# enabled. `$-` has no letter for pipefail, so that one option is captured separately (it is
-# reported correctly inside command substitution).
-# shellcheck disable=SC2034 # both are consumed by the epilogue
-__build_data_saved_flags="$-"
-__build_data_saved_pipefail="$(set +o | grep pipefail)"
+# Strict mode. The bin/* entry points that source this lib run under the same options; the
+# test runners disable errexit after sourcing (see test/unit and test/run-helpers) so this
+# no longer needs an epilogue to restore the caller's options.
 set -euo pipefail
 
 BUILD_DATA_FILE="${CACHE_DIR:?}/build-data/nodejs.json"
@@ -184,11 +177,3 @@ function build_data::current_unix_realtime() {
 function build_data::print_bin_report_json() {
 	jq --sort-keys '.' "${BUILD_DATA_FILE}"
 }
-
-# Restore the sourcing shell's original options (see preamble) so strict mode doesn't leak
-# into un-migrated callers. errexit/nounset come from the saved `$-`; pipefail from its own
-# saved `set +o` line.
-case "${__build_data_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
-case "${__build_data_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
-eval "${__build_data_saved_pipefail}"
-unset __build_data_saved_flags __build_data_saved_pipefail

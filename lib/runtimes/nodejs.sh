@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 
-# Enable strict mode for ShellCheck but restore the caller's options at the end of the file
-# (see epilogue) so they don't bleed into un-migrated scripts that source this lib. See
-# lib/package_managers/npm.sh for the full rationale on reading $- vs $(set +o).
-# shellcheck disable=SC2034 # both are consumed by the epilogue
-__nodejs_saved_flags="$-"
-__nodejs_saved_pipefail="$(set +o | grep pipefail)"
+# Strict mode. The bin/* entry points that source this lib run under the same options; the
+# test runners disable errexit after sourcing (see test/unit and test/run-helpers) so this
+# no longer needs an epilogue to restore the caller's options.
 set -euo pipefail
 
 # BP_DIR is a global set by the caller; it is distinct from the bp_dir locals in the
@@ -429,6 +426,7 @@ function runtimes::nodejs::_fail_iojs_unsupported() {
 	failure["id"]="iojs-unsupported"
 	failure["classification"]="user"
 	failure["detail"]="${iojs_engine}"
+	# shellcheck disable=SC2034 # array consumed by nameref in failure::emit
 	failure["message"]=$(
 		cat <<-EOF
 			Error: io.js is no longer supported.
@@ -496,9 +494,3 @@ function runtimes::nodejs::_install_script_metrics_plugin() {
 		cp "${pluginScript}" "${build_dir}/.heroku/metrics/"
 	fi
 }
-
-# Restore the sourcing shell's original options (see preamble).
-case "${__nodejs_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
-case "${__nodejs_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
-eval "${__nodejs_saved_pipefail}"
-unset __nodejs_saved_flags __nodejs_saved_pipefail

@@ -53,6 +53,13 @@ source "${BP_DIR}/lib/package_manager.sh"
 # shellcheck source=lib/build_data.sh
 source "${BP_DIR}/lib/build_data.sh"
 
+# Sourcing the libs above enables strict mode (`set -euo pipefail`), which turns nounset on and
+# leaves it on. This entry point deliberately runs everything strict EXCEPT nounset — it is not yet
+# unset-variable clean — so relax nounset back off here to preserve current behavior. (The libs' own
+# `set -u` still gives ShellCheck its nounset coverage at lint time.) Remove this once bin/compile is
+# made nounset-safe.
+set +u
+
 export PATH="${BUILD_DIR}/.heroku/node/bin:${BUILD_DIR}/.heroku/yarn/bin":${PATH}
 
 # Marker written by `failure::emit` (lib/failures.sh) when a migrated code path has already
@@ -306,14 +313,14 @@ install_bins() {
 	runtimes::nodejs::install "${node_engine}" "${BUILD_DIR}/.heroku/node"
 
 	build_data::set_string "build_step" "install-npm"
-	package_managers::npm::install_binary "${npm_engine}" "${BUILD_DIR}/.heroku/node" "${NPM_LOCK}"
+	package_managers::npm::install_binary "${npm_engine}" "${NPM_LOCK}"
 
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 	if ! package_managers::yarn::berry_has_release_script "${BUILD_DIR}" && [[ "${package_manager}" == yarn* ]]; then
 		build_data::set_string "build_step" "install-yarn"
 		yarn_version="$(echo "${package_manager}" | cut -d '@' -f 2 | cut -d "#" -f 1)"
 		install_start=$(build_data::current_unix_realtime)
-		package_managers::yarn::install_binary "${BUILD_DIR}/.heroku/yarn" "${yarn_version}"
+		package_managers::yarn::install_binary "${yarn_version}"
 		build_data::set_duration "install_yarn_binary_time" "${install_start}"
 	else
 		# Download yarn if there is a yarn.lock file or if the user
@@ -322,7 +329,7 @@ install_bins() {
 		if ${YARN} || [[ -n "${yarn_engine}" ]]; then
 			build_data::set_string "build_step" "install-yarn"
 			install_start=$(build_data::current_unix_realtime)
-			package_managers::yarn::install_binary "${BUILD_DIR}/.heroku/yarn" "${yarn_engine}"
+			package_managers::yarn::install_binary "${yarn_engine}"
 			build_data::set_duration "install_yarn_binary_time" "${install_start}"
 		fi
 	fi
