@@ -13,8 +13,14 @@ jobs:
         uses: actions/checkout@v7
       - name: Update Rust toolchain
         run: rustup update
+      - name: Clone buildpacks-nodejs
+        run: git clone --depth 1 https://github.com/heroku/buildpacks-nodejs "$RUNNER_TEMP/buildpacks-nodejs"
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: ${{ runner.temp }}/buildpacks-nodejs
       - name: Install Rust Inventory Binaries
-        run: cargo install xtask-update-nodejs-inventory --locked --bin xtask-update-nodejs-inventory --git https://github.com/heroku/buildpacks-nodejs
+        run: cargo install --locked --path "$RUNNER_TEMP/buildpacks-nodejs/crates/xtask-update-nodejs-inventory" --target-dir "$RUNNER_TEMP/buildpacks-nodejs/target"
       - name: Rebuild Inventory
         id: rebuild-inventory
         run: |
