@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Increased the Node.js download timeout from 120 to 300 seconds to tolerate degraded upstream connectivity.
 
 ## [v375] - 2026-10-21
 
