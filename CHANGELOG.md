@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
-- Increased the Node.js download timeout from 120 to 300 seconds to tolerate degraded upstream connectivity.
+
+## [v376] - 2026-10-28
+
+- Increased the Node.js download timeout from 120 to 300 seconds to tolerate degraded upstream connectivity. ([#1838](https://github.com/heroku/heroku-buildpack-nodejs/pull/1838))
 
 ## [v375] - 2026-10-21
 
@@ -1461,7 +1464,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v375...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v376...main
+[v376]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v375...v376
 [v375]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v374...v375
 [v374]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v373...v374
 [v373]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v372...v373
