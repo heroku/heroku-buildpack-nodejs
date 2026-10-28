@@ -5,7 +5,7 @@
 
 ## [v376] - 2026-10-28
 
-- Increased the Node.js download timeout from 120 to 300 seconds to tolerate degraded upstream connectivity.
+- Increased the Node.js download timeout from 120 to 300 seconds to tolerate degraded upstream connectivity. ([#1838](https://github.com/heroku/heroku-buildpack-nodejs/pull/1838))
 
 ## [v375] - 2026-10-21
 
