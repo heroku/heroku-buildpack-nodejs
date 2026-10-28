@@ -1846,7 +1846,39 @@ testFailNodeDownloadEmitsDetailedMessage() {
 	assertContains "$(cat "${capture}")" "failure=node-download-failed"
 	assertContains "$(cat "${capture}")" "failure_classification=upstream"
 	assertContains "$(cat "${capture}")" "failure_detail=https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz"
+	# Without a response there are no Cloudflare diagnostics to print.
+	assertNotContains "${out}" "Cloudflare diagnostics"
 	rm -f "${capture}"
+}
+
+testFailNodeDownloadIncludesCloudflareDiagnostics() {
+	local out capture headers
+	capture=$(mktemp)
+	headers=$(mktemp)
+	printf 'HTTP/2 200\r\ncf-ray: first-IAD\r\n\r\nHTTP/2 503\r\nCF-Ray: second-IAD\r\ncf-cache-status: MISS\r\n\r\n' >"${headers}"
+	_capture_node_fail out "${capture}" \
+		runtimes::nodejs::_fail_node_download "https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz" "upstream" "${headers}"
+
+	assertContains "${out}" "Cloudflare diagnostics from the last download attempt:"
+	assertContains "${out}" "CF-Ray: second-IAD"
+	assertContains "${out}" "cf-cache-status: MISS"
+	# Only the last attempt is shown.
+	assertNotContains "${out}" "first-IAD"
+	rm -f "${capture}" "${headers}"
+}
+
+testFailNodeDownloadOmitsCloudflareDiagnosticsForOtherHosts() {
+	local out capture headers
+	capture=$(mktemp)
+	headers=$(mktemp)
+	# Only an earlier attempt was served by Cloudflare; the last response wasn't.
+	printf 'HTTP/2 200\r\ncf-ray: first-IAD\r\n\r\nHTTP/1.1 503 Service Unavailable\r\nserver: nginx\r\n\r\n' >"${headers}"
+	_capture_node_fail out "${capture}" \
+		runtimes::nodejs::_fail_node_download "https://example.com/node.tar.gz" "user" "${headers}"
+
+	assertContains "${out}" "Error: Unable to download Node.js."
+	assertNotContains "${out}" "Cloudflare diagnostics"
+	rm -f "${capture}" "${headers}"
 }
 
 testClassifyDownloadFailure() {
@@ -1879,22 +1911,20 @@ testLastResponseHeaderReadsFinalBlock() {
 }
 
 testRecordDownloadData() {
-	local capture headers stderr write_out
+	local capture headers stderr
 	capture=$(mktemp)
 	headers=$(mktemp)
 	stderr=$(mktemp)
-	write_out=$(mktemp)
 	printf 'HTTP/2 200\r\ncf-ray: a51a61f08d5bab27-IAD\r\ncf-cache-status: HIT\r\nage: 282094\r\n\r\n' >"${headers}"
 	printf '%s\n' \
 		"curl: (28) Operation timed out after 300000 milliseconds with 2932736 out of 58290700 bytes received" \
 		"Warning: Problem : timeout. Will retry in 1 seconds. 5 retries left." \
 		"curl: (28) Operation timed out after 300000 milliseconds with 1998848 out of 58290700 bytes received" \
 		"Warning: Problem : timeout. Will retry in 2 seconds. 4 retries left." >"${stderr}"
-	printf '200\t2\t104.16.213.131\t1998848\t6662\t0.031813\n' >"${write_out}"
 	(
 		build_data::set_string() { echo "$1=$2" >>"${capture}"; }
 		build_data::set_raw() { echo "$1=$2" >>"${capture}"; }
-		runtimes::nodejs::_record_download_data 28 "${headers}" "${stderr}" "${write_out}"
+		runtimes::nodejs::_record_download_data 28 "200" "${headers}" "${stderr}"
 	)
 
 	local recorded
@@ -1902,29 +1932,22 @@ testRecordDownloadData() {
 	assertContains "${recorded}" "node_download_exit_code=28"
 	assertContains "${recorded}" "node_download_retries=2"
 	assertContains "${recorded}" "node_download_http_status=200"
-	assertContains "${recorded}" "node_download_http_version=2"
-	assertContains "${recorded}" "node_download_remote_ip=104.16.213.131"
-	assertContains "${recorded}" "node_download_size=1998848"
-	assertContains "${recorded}" "node_download_speed=6662"
-	assertContains "${recorded}" "node_download_time_to_first_byte=0.031813"
-	assertContains "${recorded}" "node_download_cf_ray=a51a61f08d5bab27-IAD"
 	assertContains "${recorded}" "node_download_cf_colocation=IAD"
 	assertContains "${recorded}" "node_download_cf_cache_status=HIT"
-	assertContains "${recorded}" "node_download_age=282094"
-	rm -f "${capture}" "${headers}" "${stderr}" "${write_out}"
+	rm -f "${capture}" "${headers}" "${stderr}"
 }
 
 testRecordDownloadDataWithoutResponse() {
-	local capture empty write_out
+	local capture empty
 	capture=$(mktemp)
 	empty=$(mktemp)
-	write_out=$(mktemp)
-	# curl reports a `000` status when it never received a response (e.g. DNS failure).
-	printf '000\t0\t\t0\t0\t0.000000\n' >"${write_out}"
 	(
 		build_data::set_string() { echo "$1=$2" >>"${capture}"; }
 		build_data::set_raw() { echo "$1=$2" >>"${capture}"; }
-		runtimes::nodejs::_record_download_data 6 "${empty}" "${empty}" "${write_out}"
+		# curl reports a `000` status when it never received a response (e.g. DNS failure).
+		runtimes::nodejs::_record_download_data 6 "000" "${empty}" "${empty}"
+		# And writes no status at all if it fails before starting (e.g. a malformed URL).
+		runtimes::nodejs::_record_download_data 3 "" "${empty}" "${empty}"
 	)
 
 	local recorded
@@ -1932,9 +1955,11 @@ testRecordDownloadDataWithoutResponse() {
 	assertContains "${recorded}" "node_download_exit_code=6"
 	assertContains "${recorded}" "node_download_retries=0"
 	assertContains "${recorded}" "node_download_http_status=0"
-	assertNotContains "${recorded}" "node_download_cf_ray"
-	assertNotContains "${recorded}" "node_download_age"
-	rm -f "${capture}" "${empty}" "${write_out}"
+	assertContains "${recorded}" "node_download_exit_code=3"
+	assertEquals "1" "$(grep -c "node_download_http_status" "${capture}")"
+	assertNotContains "${recorded}" "node_download_cf_colocation"
+	assertNotContains "${recorded}" "node_download_cf_cache_status"
+	rm -f "${capture}" "${empty}"
 }
 
 testInstallRecordsAndClassifiesDownloadFailure() {
@@ -1949,7 +1974,7 @@ testInstallRecordsAndClassifiesDownloadFailure() {
 		done
 		printf 'HTTP/2 200\r\ncf-ray: abc123-IAD\r\n\r\nHTTP/2 200\r\ncf-ray: def456-IAD\r\n\r\n' >"${headers}"
 		echo "Warning: Problem : timeout. Will retry in 1 seconds. 5 retries left." >&2
-		printf '200\t2\t104.16.213.131\t1024\t10\t0.5\n'
+		printf '200\n'
 		return 28
 	}
 	NODE_BINARY_URL="" _capture_node_install out "${capture}" rc \
@@ -1962,7 +1987,10 @@ testInstallRecordsAndClassifiesDownloadFailure() {
 	local recorded
 	recorded=$(cat "${capture}")
 	assertContains "${recorded}" "node_download_retries=1"
-	assertContains "${recorded}" "node_download_cf_ray=def456-IAD"
+	assertContains "${recorded}" "node_download_cf_colocation=IAD"
+	# The last attempt's cf-ray is printed for reporting upstream.
+	assertContains "${out}" "cf-ray: def456-IAD"
+	assertNotContains "${out}" "abc123-IAD"
 	assertContains "${recorded}" "failure=node-download-failed"
 	assertContains "${recorded}" "failure_classification=upstream"
 	rm -f "${capture}"

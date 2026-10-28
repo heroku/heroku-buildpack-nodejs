@@ -163,7 +163,7 @@ function runtimes::nodejs::_install() {
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
 	if ! { curl "${download_url}" --no-progress-meter --location --fail --max-time 300 --retry 5 --retry-connrefused --connect-timeout 5 -o "${output_file}" \
 		--dump-header "${curl_headers}" \
-		--write-out '%{http_code}\t%{http_version}\t%{remote_ip}\t%{size_download}\t%{speed_download}\t%{time_starttransfer}\n' \
+		--write-out '%{http_code}\n' \
 		2>&1 >"${curl_write_out}" | tee "${curl_stderr}" >&2; }; then
 		# Capture the full pipe status before any other command clobbers PIPESTATUS. [0] is curl's
 		# exit code; a `tee` failure alone doesn't affect the download.
@@ -171,13 +171,14 @@ function runtimes::nodejs::_install() {
 		curl_exit="${pipe_status[0]}"
 	fi
 
-	runtimes::nodejs::_record_download_data "${curl_exit}" "${curl_headers}" "${curl_stderr}" "${curl_write_out}"
+	local http_status
+	http_status=$(<"${curl_write_out}")
+	runtimes::nodejs::_record_download_data "${curl_exit}" "${http_status}" "${curl_headers}" "${curl_stderr}"
 
 	if [[ "${curl_exit}" -ne 0 ]]; then
-		local http_status classification
-		http_status=$(cut -f 1 "${curl_write_out}")
+		local classification
 		classification=$(runtimes::nodejs::_classify_download_failure "${curl_exit}" "${http_status}")
-		runtimes::nodejs::_fail_node_download "${download_url}" "${classification}"
+		runtimes::nodejs::_fail_node_download "${download_url}" "${classification}" "${curl_headers}"
 	fi
 
 	if [[ -z "${NODE_BINARY_URL}" ]]; then
@@ -247,40 +248,38 @@ function runtimes::nodejs::_warn_known_bad_release() {
 	EOF
 }
 
-# Records observability data for the Node.js download on both success and failure. Response details
-# come from the last attempt so a failure can be traced upstream (via `cf-ray`) and attributed to a
-# Cloudflare data center (the `cf-ray` suffix) and cache status.
+# Records observability data for the Node.js download on both success and failure, so failures can
+# be broken down by Cloudflare data center (the `cf-ray` suffix) and cache status of the last attempt.
+# The full `cf-ray` is printed in the failure message instead (see _fail_node_download).
 function runtimes::nodejs::_record_download_data() {
 	local curl_exit="${1}"
-	local headers_file="${2}"
-	local stderr_file="${3}"
-	local write_out_file="${4}"
+	local http_status="${2}"
+	local headers_file="${3}"
+	local stderr_file="${4}"
 
 	build_data::set_raw "node_download_exit_code" "${curl_exit}"
 	build_data::set_raw "node_download_retries" "$(grep -c 'Will retry in' "${stderr_file}" || true)"
+	# curl reports `000` when no response was received, which isn't a valid JSON number.
+	[[ "${http_status}" =~ ^[0-9]+$ ]] && build_data::set_raw "node_download_http_status" "$((10#${http_status}))"
 
-	local http_status http_version remote_ip size_download speed_download time_starttransfer
-	if IFS=$'\t' read -r http_status http_version remote_ip size_download speed_download time_starttransfer <"${write_out_file}"; then
-		# curl reports `000` when no response was received, which isn't a valid JSON number.
-		build_data::set_raw "node_download_http_status" "$((10#${http_status}))"
-		build_data::set_string "node_download_http_version" "${http_version}"
-		build_data::set_string "node_download_remote_ip" "${remote_ip}"
-		build_data::set_raw "node_download_size" "${size_download}"
-		build_data::set_raw "node_download_speed" "${speed_download}"
-		build_data::set_raw "node_download_time_to_first_byte" "${time_starttransfer}"
-	fi
-
-	local cf_ray cf_cache_status age
+	local cf_ray cf_cache_status
 	cf_ray=$(runtimes::nodejs::_last_response_header "${headers_file}" "cf-ray")
 	cf_cache_status=$(runtimes::nodejs::_last_response_header "${headers_file}" "cf-cache-status")
-	age=$(runtimes::nodejs::_last_response_header "${headers_file}" "age")
-	if [[ -n "${cf_ray}" ]]; then
-		build_data::set_string "node_download_cf_ray" "${cf_ray}"
-		build_data::set_string "node_download_cf_colocation" "${cf_ray##*-}"
-	fi
+	[[ -n "${cf_ray}" ]] && build_data::set_string "node_download_cf_colocation" "${cf_ray##*-}"
 	[[ -n "${cf_cache_status}" ]] && build_data::set_string "node_download_cf_cache_status" "${cf_cache_status}"
-	[[ "${age}" =~ ^[0-9]+$ ]] && build_data::set_raw "node_download_age" "${age}"
 	return 0
+}
+
+# Prints the Cloudflare headers useful for reporting a download issue upstream (`cf-ray`,
+# `cf-cache-status`) from the last response in a `curl --dump-header` file. Prints nothing if the
+# last response has none (no response was received, or it wasn't served by Cloudflare).
+function runtimes::nodejs::_cloudflare_diagnostics() {
+	local headers_file="${1}"
+	tr -d '\r' <"${headers_file}" | awk '
+		/^HTTP\// { details = ""; next }
+		tolower($0) ~ /^(cf-ray|cf-cache-status):/ { details = details (details == "" ? "" : "\n") $0 }
+		END { if (details != "") print details }
+	'
 }
 
 # Prints the value of a header from the last response in a `curl --dump-header` file, which holds
@@ -325,6 +324,9 @@ function runtimes::nodejs::_classify_download_failure() {
 function runtimes::nodejs::_fail_node_download() {
 	local download_url="${1}"
 	local classification="${2}"
+	local headers_file="${3:-/dev/null}"
+	local cloudflare_diagnostics
+	cloudflare_diagnostics=$(runtimes::nodejs::_cloudflare_diagnostics "${headers_file}")
 	local -A failure
 	failure["id"]="node-download-failed"
 	failure["classification"]="${classification}"
@@ -345,6 +347,9 @@ function runtimes::nodejs::_fail_node_download() {
 			If that doesn't help, check the Node.js status page:
 			https://status.nodejs.org/
 		EOF
+		if [[ -n "${cloudflare_diagnostics}" ]]; then
+			printf '\nCloudflare diagnostics from the last download attempt:\n%s\n' "${cloudflare_diagnostics}"
+		fi
 	)
 	failure::emit failure
 }
