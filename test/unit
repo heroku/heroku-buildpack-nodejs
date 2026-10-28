@@ -1759,6 +1759,9 @@ _capture_node_install() {
 	# code without tripping the runner's errexit (a bare assignment from a failing subshell would
 	# abort this function before the code is read). Capture stdout+stderr together.
 	if _ci_out=$(
+		# The download detects curl's failure from its `curl | tee` pipeline status, which only
+		# survives under pipefail; enable it here to match bin/compile, which sets it globally.
+		set -o pipefail
 		fail() { exit 1; }
 		build_data::set_string() { echo "$1=$2" >>"${capture}"; }
 		build_data::set_raw() { echo "$1=$2" >>"${capture}"; }
@@ -1833,7 +1836,7 @@ testFailNodeDownloadEmitsDetailedMessage() {
 	local out capture
 	capture=$(mktemp)
 	_capture_node_fail out "${capture}" \
-		runtimes::nodejs::_fail_node_download "https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz"
+		runtimes::nodejs::_fail_node_download "https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz" "upstream"
 
 	# The detailed, verbatim message reaches the user via failure::emit.
 	assertContains "${out}" "Error: Unable to download Node.js."
@@ -1841,8 +1844,127 @@ testFailNodeDownloadEmitsDetailedMessage() {
 	assertContains "${out}" "https://status.nodejs.org/"
 	# Classification + detail are recorded as build data.
 	assertContains "$(cat "${capture}")" "failure=node-download-failed"
-	assertContains "$(cat "${capture}")" "failure_classification=buildpack"
+	assertContains "$(cat "${capture}")" "failure_classification=upstream"
 	assertContains "$(cat "${capture}")" "failure_detail=https://nodejs.org/dist/v20.0.0/node-v20.0.0-linux-x64.tar.gz"
+	rm -f "${capture}"
+}
+
+testClassifyDownloadFailure() {
+	local NODE_BINARY_URL=""
+	assertEquals "timeout" "upstream" "$(runtimes::nodejs::_classify_download_failure 28 200)"
+	assertEquals "http/2 stream error" "upstream" "$(runtimes::nodejs::_classify_download_failure 92 200)"
+	assertEquals "dns failure" "upstream" "$(runtimes::nodejs::_classify_download_failure 6 000)"
+	assertEquals "server error" "upstream" "$(runtimes::nodejs::_classify_download_failure 22 503)"
+	assertEquals "rate limited" "upstream" "$(runtimes::nodejs::_classify_download_failure 22 429)"
+	assertEquals "missing release" "buildpack" "$(runtimes::nodejs::_classify_download_failure 22 404)"
+	assertEquals "removed release" "buildpack" "$(runtimes::nodejs::_classify_download_failure 22 410)"
+	assertEquals "write error" "buildpack" "$(runtimes::nodejs::_classify_download_failure 23 200)"
+	assertEquals "malformed url" "buildpack" "$(runtimes::nodejs::_classify_download_failure 3 000)"
+
+	NODE_BINARY_URL="https://example.com/node.tar.gz"
+	assertEquals "custom url timeout" "user" "$(runtimes::nodejs::_classify_download_failure 28 200)"
+	assertEquals "custom url missing" "user" "$(runtimes::nodejs::_classify_download_failure 22 404)"
+}
+
+testLastResponseHeaderReadsFinalBlock() {
+	local headers
+	headers=$(mktemp)
+	printf 'HTTP/2 200\r\ncf-ray: first-IAD\r\ncf-cache-status: MISS\r\n\r\nHTTP/2 200\r\nCF-Ray: second-EWR\r\n\r\n' >"${headers}"
+
+	assertEquals "second-EWR" "$(runtimes::nodejs::_last_response_header "${headers}" "cf-ray")"
+	# A header only present in an earlier attempt isn't reported for the last one.
+	assertEquals "" "$(runtimes::nodejs::_last_response_header "${headers}" "cf-cache-status")"
+	assertEquals "" "$(runtimes::nodejs::_last_response_header /dev/null "cf-ray")"
+	rm -f "${headers}"
+}
+
+testRecordDownloadData() {
+	local capture headers stderr write_out
+	capture=$(mktemp)
+	headers=$(mktemp)
+	stderr=$(mktemp)
+	write_out=$(mktemp)
+	printf 'HTTP/2 200\r\ncf-ray: a51a61f08d5bab27-IAD\r\ncf-cache-status: HIT\r\nage: 282094\r\n\r\n' >"${headers}"
+	printf '%s\n' \
+		"curl: (28) Operation timed out after 300000 milliseconds with 2932736 out of 58290700 bytes received" \
+		"Warning: Problem : timeout. Will retry in 1 seconds. 5 retries left." \
+		"curl: (28) Operation timed out after 300000 milliseconds with 1998848 out of 58290700 bytes received" \
+		"Warning: Problem : timeout. Will retry in 2 seconds. 4 retries left." >"${stderr}"
+	printf '200\t2\t104.16.213.131\t1998848\t6662\t0.031813\n' >"${write_out}"
+	(
+		build_data::set_string() { echo "$1=$2" >>"${capture}"; }
+		build_data::set_raw() { echo "$1=$2" >>"${capture}"; }
+		runtimes::nodejs::_record_download_data 28 "${headers}" "${stderr}" "${write_out}"
+	)
+
+	local recorded
+	recorded=$(cat "${capture}")
+	assertContains "${recorded}" "node_download_exit_code=28"
+	assertContains "${recorded}" "node_download_retries=2"
+	assertContains "${recorded}" "node_download_http_status=200"
+	assertContains "${recorded}" "node_download_http_version=2"
+	assertContains "${recorded}" "node_download_remote_ip=104.16.213.131"
+	assertContains "${recorded}" "node_download_size=1998848"
+	assertContains "${recorded}" "node_download_speed=6662"
+	assertContains "${recorded}" "node_download_time_to_first_byte=0.031813"
+	assertContains "${recorded}" "node_download_cf_ray=a51a61f08d5bab27-IAD"
+	assertContains "${recorded}" "node_download_cf_colocation=IAD"
+	assertContains "${recorded}" "node_download_cf_cache_status=HIT"
+	assertContains "${recorded}" "node_download_age=282094"
+	rm -f "${capture}" "${headers}" "${stderr}" "${write_out}"
+}
+
+testRecordDownloadDataWithoutResponse() {
+	local capture empty write_out
+	capture=$(mktemp)
+	empty=$(mktemp)
+	write_out=$(mktemp)
+	# curl reports a `000` status when it never received a response (e.g. DNS failure).
+	printf '000\t0\t\t0\t0\t0.000000\n' >"${write_out}"
+	(
+		build_data::set_string() { echo "$1=$2" >>"${capture}"; }
+		build_data::set_raw() { echo "$1=$2" >>"${capture}"; }
+		runtimes::nodejs::_record_download_data 6 "${empty}" "${empty}" "${write_out}"
+	)
+
+	local recorded
+	recorded=$(cat "${capture}")
+	assertContains "${recorded}" "node_download_exit_code=6"
+	assertContains "${recorded}" "node_download_retries=0"
+	assertContains "${recorded}" "node_download_http_status=0"
+	assertNotContains "${recorded}" "node_download_cf_ray"
+	assertNotContains "${recorded}" "node_download_age"
+	rm -f "${capture}" "${empty}" "${write_out}"
+}
+
+testInstallRecordsAndClassifiesDownloadFailure() {
+	local out capture rc
+	capture=$(mktemp)
+	# Stub curl to fail like a CDN timeout after one retry, writing the files it was pointed at.
+	curl() {
+		local headers=""
+		while [[ $# -gt 0 ]]; do
+			[[ "$1" == "--dump-header" ]] && headers="$2"
+			shift
+		done
+		printf 'HTTP/2 200\r\ncf-ray: abc123-IAD\r\n\r\nHTTP/2 200\r\ncf-ray: def456-IAD\r\n\r\n' >"${headers}"
+		echo "Warning: Problem : timeout. Will retry in 1 seconds. 5 retries left." >&2
+		printf '200\t2\t104.16.213.131\t1024\t10\t0.5\n'
+		return 28
+	}
+	NODE_BINARY_URL="" _capture_node_install out "${capture}" rc \
+		'{"status":"resolved","version":"24.11.0","url":"https://nodejs.org/download/release/v24.11.0/node-v24.11.0-linux-x64.tar.gz","checksum_type":"sha256","checksum_value":"abc","uses_wide_range":false,"lts_upper_bound_enforced":false,"lts_version":"24.x","eol":false}'
+	unset -f curl
+
+	# The retry warning still reaches the build log.
+	assertContains "${out}" "Will retry in 1 seconds"
+	assertContains "${out}" "Error: Unable to download Node.js."
+	local recorded
+	recorded=$(cat "${capture}")
+	assertContains "${recorded}" "node_download_retries=1"
+	assertContains "${recorded}" "node_download_cf_ray=def456-IAD"
+	assertContains "${recorded}" "failure=node-download-failed"
+	assertContains "${recorded}" "failure_classification=upstream"
 	rm -f "${capture}"
 }
 

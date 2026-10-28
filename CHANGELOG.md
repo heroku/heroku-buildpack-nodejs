@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Improving Node.js download observability. ([#1840](https://github.com/heroku/heroku-buildpack-nodejs/pull/1840))
 
 ## [v376] - 2026-10-28
 
