@@ -152,8 +152,33 @@ function runtimes::nodejs::_install() {
 	fi
 
 	output_file="/tmp/node.tar.gz"
-	if ! curl "${download_url}" --no-progress-meter --location --fail --max-time 300 --retry 5 --retry-connrefused --connect-timeout 5 -o "${output_file}"; then
-		runtimes::nodejs::_fail_node_download "${download_url}"
+	local curl_exit=0 curl_headers curl_stderr curl_write_out
+	curl_headers=$(mktemp)
+	curl_stderr=$(mktemp)
+	curl_write_out=$(mktemp)
+	# `--dump-header` appends one block per attempt while `--write-out` only reports on the last
+	# attempt. curl's stderr is piped through `tee` (and its stdout, the write-out, to a file) so
+	# retry warnings still stream to the build log while being kept for counting retries (curl's
+	# `%{num_retries}` needs curl 8.9+, newer than our stacks).
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { curl "${download_url}" --no-progress-meter --location --fail --max-time 300 --retry 5 --retry-connrefused --connect-timeout 5 -o "${output_file}" \
+		--dump-header "${curl_headers}" \
+		--write-out '%{http_code}\n' \
+		2>&1 >"${curl_write_out}" | tee "${curl_stderr}" >&2; }; then
+		# Capture the full pipe status before any other command clobbers PIPESTATUS. [0] is curl's
+		# exit code; a `tee` failure alone doesn't affect the download.
+		local pipe_status=("${PIPESTATUS[@]}")
+		curl_exit="${pipe_status[0]}"
+	fi
+
+	local http_status
+	http_status=$(<"${curl_write_out}")
+	runtimes::nodejs::_record_download_data "${curl_exit}" "${http_status}" "${curl_headers}" "${curl_stderr}"
+
+	if [[ "${curl_exit}" -ne 0 ]]; then
+		local classification
+		classification=$(runtimes::nodejs::_classify_download_failure "${curl_exit}" "${http_status}")
+		runtimes::nodejs::_fail_node_download "${download_url}" "${classification}" "${curl_headers}"
 	fi
 
 	if [[ -z "${NODE_BINARY_URL}" ]]; then
@@ -223,14 +248,88 @@ function runtimes::nodejs::_warn_known_bad_release() {
 	EOF
 }
 
+# Records observability data for the Node.js download on both success and failure, so failures can
+# be broken down by Cloudflare data center (the `cf-ray` suffix) and cache status of the last attempt.
+# The full `cf-ray` is printed in the failure message instead (see _fail_node_download).
+function runtimes::nodejs::_record_download_data() {
+	local curl_exit="${1}"
+	local http_status="${2}"
+	local headers_file="${3}"
+	local stderr_file="${4}"
+
+	build_data::set_raw "node_download_exit_code" "${curl_exit}"
+	build_data::set_raw "node_download_retries" "$(grep -c 'Will retry in' "${stderr_file}" || true)"
+	# curl reports `000` when no response was received, which isn't a valid JSON number.
+	[[ "${http_status}" =~ ^[0-9]+$ ]] && build_data::set_raw "node_download_http_status" "$((10#${http_status}))"
+
+	local cf_ray cf_cache_status
+	cf_ray=$(runtimes::nodejs::_last_response_header "${headers_file}" "cf-ray")
+	cf_cache_status=$(runtimes::nodejs::_last_response_header "${headers_file}" "cf-cache-status")
+	[[ -n "${cf_ray}" ]] && build_data::set_string "node_download_cf_colocation" "${cf_ray##*-}"
+	[[ -n "${cf_cache_status}" ]] && build_data::set_string "node_download_cf_cache_status" "${cf_cache_status}"
+	return 0
+}
+
+# Prints the Cloudflare headers useful for reporting a download issue upstream (`cf-ray`,
+# `cf-cache-status`) from the last response in a `curl --dump-header` file. Prints nothing if the
+# last response has none (no response was received, or it wasn't served by Cloudflare).
+function runtimes::nodejs::_cloudflare_diagnostics() {
+	local headers_file="${1}"
+	tr -d '\r' <"${headers_file}" | awk '
+		/^HTTP\// { details = ""; next }
+		tolower($0) ~ /^(cf-ray|cf-cache-status):/ { details = details (details == "" ? "" : "\n") $0 }
+		END { if (details != "") print details }
+	'
+}
+
+# Prints the value of a header from the last response in a `curl --dump-header` file, which holds
+# one block per attempt (and redirect). Prints an empty string if the header is absent.
+function runtimes::nodejs::_last_response_header() {
+	local headers_file="${1}"
+	local name="${2}"
+	tr -d '\r' <"${headers_file}" | awk -v name="${name}" '
+		/^HTTP\// { value = "" }
+		tolower($0) ~ "^" name ":" { sub(/^[^:]*:[ \t]*/, ""); value = $0 }
+		END { print value }
+	'
+}
+
+# Prints the failure classification for a Node.js download from curl's exit code and the last HTTP
+# status. A custom NODE_BINARY_URL is always the app's responsibility since it chose the host.
+function runtimes::nodejs::_classify_download_failure() {
+	local curl_exit="${1}"
+	local http_status="${2}"
+	if [[ -n "${NODE_BINARY_URL:-}" ]]; then
+		echo "user"
+		return
+	fi
+	case "${curl_exit}" in
+		22)
+			# HTTP error status. A missing file means our inventory points at a nonexistent release.
+			case "${http_status}" in
+				404 | 410) echo "buildpack" ;;
+				*) echo "upstream" ;;
+			esac
+			;;
+		# Failed to initialize, malformed URL, or failed writing the download (e.g. out of disk).
+		2 | 3 | 23) echo "buildpack" ;;
+		# Everything else is a transport failure (DNS, connect, TLS, timeout, reset, HTTP/2 stream).
+		*) echo "upstream" ;;
+	esac
+}
+
 # Emits the classified failure for a Node.js download error and exits. Called directly at the
 # failure site because the cause is known locally — the buildpack knows exactly what failed here,
 # so it can render a specific message and exit without any further inspection.
 function runtimes::nodejs::_fail_node_download() {
 	local download_url="${1}"
+	local classification="${2}"
+	local headers_file="${3:-/dev/null}"
+	local cloudflare_diagnostics
+	cloudflare_diagnostics=$(runtimes::nodejs::_cloudflare_diagnostics "${headers_file}")
 	local -A failure
 	failure["id"]="node-download-failed"
-	failure["classification"]="buildpack"
+	failure["classification"]="${classification}"
 	failure["detail"]="${download_url}"
 	failure["message"]=$(
 		cat <<-EOF
@@ -248,6 +347,9 @@ function runtimes::nodejs::_fail_node_download() {
 			If that doesn't help, check the Node.js status page:
 			https://status.nodejs.org/
 		EOF
+		if [[ -n "${cloudflare_diagnostics}" ]]; then
+			printf '\nCloudflare diagnostics from the last download attempt:\n%s\n' "${cloudflare_diagnostics}"
+		fi
 	)
 	failure::emit failure
 }
