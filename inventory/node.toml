@@ -1,4 +1,11 @@
 [[artifacts]]
+version = "27.0.0-alpha.0.0.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v27.0.0-alpha.0.0.0/node-v27.0.0-alpha.0.0.0-linux-x64.tar.gz"
+checksum = "sha256:e5c5182f3205bb36b887643e2dfcaa545e1ee8bcec05e6c3f719fe338da70e1f"
+
+[[artifacts]]
 version = "26.13.0"
 os = "linux"
 arch = "amd64"
