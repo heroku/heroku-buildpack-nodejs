@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added Node.js 27.0.0-alpha.0.0.0 (linux-amd64)
 
 ## [v377] - 2026-10-29
 
