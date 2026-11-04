@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- The default Node.js version is now 26.x, the current Active LTS release line. ([#1851](https://github.com/heroku/heroku-buildpack-nodejs/pull/1851))
 
 ## [v377] - 2026-10-29
 
