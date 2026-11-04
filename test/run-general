@@ -937,9 +937,20 @@ testOptOutOfWideVersionDowngrade() {
 }
 
 testVersionBoundsWide() {
+	# The wide range is only limited to the Active LTS when the inventory contains a newer
+	# release line than the LTS (e.g., a Current release). Right after an LTS bump the LTS
+	# may be the newest line, in which case there is nothing to limit.
+	local lts_major highest_major
+	lts_major=$("$(pwd)"/lib/vendor/resolve-version-linux "$(pwd)"/inventory/node.toml "" | jq -r '.version | split(".")[0]')
+	highest_major=$(grep -oE '^version = "[0-9]+' "$(pwd)"/inventory/node.toml | grep -oE '[0-9]+$' | sort -n | tail -1)
+
 	compile "version-bounds-wide"
 	assertCapturedStderr "The requested Node.js version is using a wide range"
-	assertCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	if [[ "${highest_major}" -gt "${lts_major}" ]]; then
+		assertCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	else
+		assertNotCapturedStderr "The resolved Node.js version has been limited to the Active LTS"
+	fi
 	assertCapturedSuccessWithWarnings
 }
 
