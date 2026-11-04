@@ -3,8 +3,7 @@ GEM
   specs:
     base64 (0.3.0)
     diff-lcs (1.6.2)
-    excon (1.8.0)
-      logger
+    excon (1.10.0)
     heroics (0.1.4)
       base64
       excon
@@ -17,10 +16,10 @@ GEM
       rrrretry (~> 1)
       thor (~> 1)
       threaded (~> 0)
-    json (3.0.2)
+    json (3.1.0)
     logger (1.7.0)
     moneta (1.0.0)
-    parallel (2.2.0)
+    parallel (2.3.0)
     parallel_split_test (0.10.0)
       parallel (>= 0.5.13)
       rspec-core (>= 3.9.0)
@@ -48,6 +47,7 @@ PLATFORMS
 
 DEPENDENCIES
   heroku_hatchet
+  logger
   parallel_split_test
   rake
   rspec-expectations
@@ -57,13 +57,13 @@ CHECKSUMS
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   bundler (4.0.20) sha256=7978a8ac648767f5e635bc522445b79e80a52b907a39a36c2d8085ed6bc762ae
   diff-lcs (1.6.2) sha256=9ae0d2cba7d4df3075fe8cd8602a8604993efc0dfa934cff568969efb1909962
-  excon (1.8.0) sha256=56d414519bff28bf95dd800ad4690a2fc0b8a49caf00367b70ecdbac71f91c93
+  excon (1.10.0) sha256=868d456c6db29f965d7cc6c5eddbb4d77df08e2a2b2dca7ca3547f2a55afc4b4
   heroics (0.1.4) sha256=8d843fb0a2cb55f36d1754d1f684e2e2685573ab90ff23dad122d30c66b7021c
   heroku_hatchet (8.0.6) sha256=886a7d7d686859db9fac19df1194a35c5349285956ca4d134054c5c376accea3
-  json (3.0.2) sha256=8e6d7e7b11384c21230430cef90b71f14849a34a1f4452796670f7c981bd19df
+  json (3.1.0) sha256=3ce7ccf8fde58960177a3a756c31f292a4c1e1dedee884547096a5b0604e3bd8
   logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   moneta (1.0.0) sha256=2224e5a68156e8eceb525fb0582c8c4e0f29f67cae86507cdcfb406abbb1fc5d
-  parallel (2.2.0) sha256=e1059c5fd7b649558a0aec38a769f06a42942bdb40503d005a59c352fe011cd8
+  parallel (2.3.0) sha256=f75a3e904101ce6a1ccb6b8dc800cbafd42166d83330192438dcf29395167a6f
   parallel_split_test (0.10.0) sha256=4abd6bedc6a1b169ecb93a1bf982fa7fbd437b66c360594d56d107c25f53b05f
   platform-api (3.9.1) sha256=771f8a2dd19136e9f2715c5fad6b5b2c628398216091f3e8bd5fe86b5f094a75
   rake (13.4.2) sha256=cb825b2bd5f1f8e91ca37bddb4b9aaf345551b4731da62949be002fa89283701
