@@ -291,7 +291,7 @@ fn resolve_node_artifact<'a>(
 mod tests {
     use super::*;
 
-    const TEST_LTS_MAJOR_VERSION: u64 = 24;
+    const TEST_LTS_MAJOR_VERSION: u64 = 26;
     const ALLOW_WIDE_RANGE: bool = true;
     const DISALLOW_WIDE_RANGE: bool = false;
 
@@ -403,47 +403,47 @@ mod tests {
 
     #[test]
     fn lts_ceiling_found_when_range_starts_at_lts_and_resolves_above() {
-        assert_lts_ceiling(">= 24", true);
+        assert_lts_ceiling(">= 26", true);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_narrow_lts_range() {
-        assert_lts_ceiling("24.x", false);
+        assert_lts_ceiling("26.x", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_exact_lts_version() {
-        assert_lts_ceiling("24.10.0", false);
+        assert_lts_ceiling("26.0.0", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_when_range_starts_above_lts() {
-        assert_lts_ceiling(">=25.x", false);
+        assert_lts_ceiling(">=27.x", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_narrow_range_above_lts() {
-        assert_lts_ceiling("25.x", false);
+        assert_lts_ceiling("27.x", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_exact_version_above_lts() {
-        assert_lts_ceiling("25.0.0", false);
+        assert_lts_ceiling("27.0.0", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_complex_range_with_upper_bound_within_lts() {
-        assert_lts_ceiling(">=22.x <25.x", false);
+        assert_lts_ceiling(">=22.x <27.x", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_complex_range_above_lts() {
-        assert_lts_ceiling(">=25.x <27.x", false);
+        assert_lts_ceiling(">=27.x <29.x", false);
     }
 
     #[test]
     fn lts_ceiling_not_found_for_complex_range_within_single_lts_major() {
-        assert_lts_ceiling(">=24.x <25.x", false);
+        assert_lts_ceiling(">=26.x <27.x", false);
     }
 
     // --- End-to-end resolution tests ---
@@ -483,12 +483,12 @@ mod tests {
 
     #[test]
     fn e2e_wide_range_downgraded_to_lts() {
-        assert_resolution(">= 22", DISALLOW_WIDE_RANGE, 24, true, true);
+        assert_resolution(">= 22", DISALLOW_WIDE_RANGE, 26, true, true);
     }
 
     #[test]
     fn e2e_wide_range_not_downgraded_when_allowed() {
-        assert_resolution(">=22.x", ALLOW_WIDE_RANGE, 25, true, false);
+        assert_resolution(">=22.x", ALLOW_WIDE_RANGE, 27, true, false);
     }
 
     #[test]
@@ -498,32 +498,32 @@ mod tests {
 
     #[test]
     fn e2e_exact_version_above_lts_not_downgraded() {
-        assert_resolution("25.0.0", DISALLOW_WIDE_RANGE, 25, false, false);
+        assert_resolution("27.0.0", DISALLOW_WIDE_RANGE, 27, false, false);
     }
 
     #[test]
     fn e2e_wide_range_starting_at_lts_downgraded() {
-        assert_resolution(">= 24", DISALLOW_WIDE_RANGE, 24, true, true);
+        assert_resolution(">= 26", DISALLOW_WIDE_RANGE, 26, true, true);
     }
 
     #[test]
     fn e2e_star_range_downgraded_to_lts() {
-        assert_resolution("*", DISALLOW_WIDE_RANGE, 24, true, true);
+        assert_resolution("*", DISALLOW_WIDE_RANGE, 26, true, true);
     }
 
     #[test]
     fn e2e_complex_range_within_lts() {
-        assert_resolution(">=22.x <25.x", DISALLOW_WIDE_RANGE, 24, true, false);
+        assert_resolution(">=22.x <27.x", DISALLOW_WIDE_RANGE, 26, true, false);
     }
 
     #[test]
     fn e2e_complex_range_beyond_lts() {
-        assert_resolution(">=25.x <27.x", DISALLOW_WIDE_RANGE, 25, true, false);
+        assert_resolution(">=27.x <29.x", DISALLOW_WIDE_RANGE, 27, true, false);
     }
 
     #[test]
     fn e2e_complex_range_within_single_lts_major() {
-        assert_resolution(">=24.x <25.x", DISALLOW_WIDE_RANGE, 24, false, false);
+        assert_resolution(">=26.x <27.x", DISALLOW_WIDE_RANGE, 26, false, false);
     }
 
     #[test]
@@ -540,7 +540,7 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .expect("expected resolution to succeed");
-        assert_eq!(resolution.artifact.version.major(), 25);
+        assert_eq!(resolution.artifact.version.major(), 27);
         assert!(resolution.uses_wide_range);
         assert!(!resolution.lts_upper_bound_enforced);
     }
@@ -599,7 +599,7 @@ mod tests {
     #[test]
     fn eol_false_for_supported_version() {
         let inventory = create_inventory();
-        let requirement = VersionRange::parse("24.x").unwrap();
+        let requirement = VersionRange::parse("26.x").unwrap();
         let resolution = resolve_node_artifact(
             &inventory,
             Os::Linux,
@@ -609,7 +609,7 @@ mod tests {
             DISALLOW_WIDE_RANGE,
         )
         .expect("expected resolution to succeed");
-        assert_eq!(resolution.artifact.version.major(), 24);
+        assert_eq!(resolution.artifact.version.major(), 26);
         assert!(!resolution.eol);
     }
 
@@ -690,12 +690,12 @@ mod tests {
             "node.toml",
             Os::Linux,
             Arch::Amd64,
-            "24.x",
+            "26.x",
             DISALLOW_WIDE_RANGE,
         );
         let value = serde_json::to_value(&output).unwrap();
         assert_eq!(value["status"], "resolved");
-        assert_eq!(value["version"], "24.10.0");
+        assert_eq!(value["version"], "26.0.0");
         assert_eq!(value["lts_version"], RECOMMENDED_LTS_VERSION.to_string());
         assert!(output.is_success());
     }
@@ -790,13 +790,23 @@ mod tests {
     // `NodejsInventory`) and the `resolve` branch tests (passed as raw TOML). Must contain a
     // version matching `RECOMMENDED_LTS_VERSION` so the recommended-LTS lookup succeeds.
     const INVENTORY_TOML: &str = r#"
+        # Current
         [[artifacts]]
-        version = "25.0.0"
+        version = "27.0.0"
         os = "linux"
         arch = "amd64"
-        url = "https://nodejs.org/download/release/v25.0.0/node-v25.0.0-linux-x64.tar.gz"
-        checksum = "sha256:28dd46a6733192647d7c8267343f5a3f1c616f773c448e2c0d2539ae70724b40"
+        url = "https://nodejs.org/download/release/v27.0.0/node-v27.0.0-linux-x64.tar.gz"
+        checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
 
+        # Active LTS
+        [[artifacts]]
+        version = "26.0.0"
+        os = "linux"
+        arch = "amd64"
+        url = "https://nodejs.org/download/release/v26.0.0/node-v26.0.0-linux-x64.tar.gz"
+        checksum = "sha256:42cee4d7ec80b7f7c89281cf00726b14840ac674462404dd4fd36f03964dc0af"
+
+        # Maintenance LTS
         [[artifacts]]
         version = "24.10.0"
         os = "linux"
@@ -804,6 +814,7 @@ mod tests {
         url = "https://nodejs.org/download/release/v24.10.0/node-v24.10.0-linux-x64.tar.gz"
         checksum = "sha256:2b03c5417ce0b1076780df00e01da373bead3b4b80d1c78c1ad10ee7b918d90c"
 
+        # Maintenance LTS
         [[artifacts]]
         version = "22.21.0"
         os = "linux"
@@ -811,6 +822,7 @@ mod tests {
         url = "https://nodejs.org/download/release/v22.21.0/node-v22.21.0-linux-x64.tar.gz"
         checksum = "sha256:262b84b02f7e2bc017d4bdb81fec85ca0d6190a5cd0781d2d6e84317c08871f8"
 
+        # EOL
         [[artifacts]]
         version = "18.20.8"
         os = "linux"
