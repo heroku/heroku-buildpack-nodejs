@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Added `HEROKU_NODEJS_RECOMMENDED_CONCURRENCY` and `HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE` environment variables, set at dyno boot from the dyno's memory and CPU limits and intended for use with `node --max-old-space-size`. Values set by the user are not overwritten. `WEB_CONCURRENCY` behavior is unchanged. ([#0000](https://github.com/heroku/heroku-buildpack-nodejs/pull/0000))
 
 ## [v378] - 2026-11-05
 

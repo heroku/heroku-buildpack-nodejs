@@ -2385,6 +2385,114 @@ testFailConflictingMetadataGuardDoesNotEmitWhenSameManagerDeclaredTwice() {
 	rm -f "${capture}"
 }
 
+# Sources profile/HEROKU_NODEJS_RECOMMENDED.sh in a subshell against a fake cgroup root and a
+# fake nproc, then prints "<concurrency> <max_old_space>". Fake cgroup files are given as
+# "relative/path=contents" arguments after the nproc value.
+_recommended_vars() {
+	local nproc_count=$1
+	shift
+	local root
+	root=$(mktemp -d)
+	local spec
+	for spec in "$@"; do
+		mkdir -p "${root}/$(dirname "${spec%%=*}")"
+		printf '%s\n' "${spec#*=}" >"${root}/${spec%%=*}"
+	done
+	(
+		# shellcheck disable=SC2329 # invoked by the sourced script
+		nproc() { echo "${nproc_count}"; }
+		export HEROKU_NODEJS_RECOMMENDED_CGROUP_ROOT=${root}
+		source "$(pwd)"/profile/HEROKU_NODEJS_RECOMMENDED.sh
+		echo "${HEROKU_NODEJS_RECOMMENDED_CONCURRENCY} ${HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE}"
+	)
+	rm -rf "${root}"
+}
+
+_recommended_vars_for_memory_mb() {
+	_recommended_vars "$2" "memory.max=$(($1 * 1048576))"
+}
+
+testRecommendedVarsPerDynoTable() {
+	unset HEROKU_NODEJS_RECOMMENDED_CONCURRENCY HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE
+
+	assertEquals "512 MB, 8 cpus" "1 256" "$(_recommended_vars_for_memory_mb 512 8)"
+	assertEquals "1024 MB, 8 cpus (Std-2X)" "1 512" "$(_recommended_vars_for_memory_mb 1024 8)"
+	assertEquals "1024 MB, 2 cpus (Private-S)" "1 512" "$(_recommended_vars_for_memory_mb 1024 2)"
+	assertEquals "2560 MB, 2 cpus" "2 640" "$(_recommended_vars_for_memory_mb 2560 2)"
+	assertEquals "14336 MB, 8 cpus" "8 896" "$(_recommended_vars_for_memory_mb 14336 8)"
+	assertEquals "30720 MB, 4 cpus" "4 3840" "$(_recommended_vars_for_memory_mb 30720 4)"
+	assertEquals "63488 MB, 8 cpus" "8 3968" "$(_recommended_vars_for_memory_mb 63488 8)"
+	assertEquals "129024 MB, 16 cpus" "16 4032" "$(_recommended_vars_for_memory_mb 129024 16)"
+	assertEquals "16384 MB, 2 cpus (capped)" "2 4096" "$(_recommended_vars_for_memory_mb 16384 2)"
+	assertEquals "8192 MB, 1 cpu (capped)" "1 4096" "$(_recommended_vars_for_memory_mb 8192 1)"
+}
+
+testRecommendedVarsCgroupV2MemoryUsesSmallerNumericValue() {
+	assertEquals "max/high" "1 256" "$(_recommended_vars 8 memory.max=max memory.high=536870912)"
+	assertEquals "max/high swapped" "1 512" "$(_recommended_vars 8 memory.max=1073741824 memory.high=max)"
+	assertEquals "both numeric" "1 256" "$(_recommended_vars 8 memory.max=1073741824 memory.high=536870912)"
+	assertEquals "both max falls back to 512" "1 256" "$(_recommended_vars 8 memory.max=max memory.high=max)"
+}
+
+testRecommendedVarsCgroupV1Memory() {
+	assertEquals "v1 limit" "2 1024" "$(_recommended_vars 2 memory/memory.limit_in_bytes=4294967296)"
+	assertEquals "v1 unlimited sentinel falls back to 512" "1 256" "$(_recommended_vars 8 memory/memory.limit_in_bytes=9223372036854771712)"
+	assertEquals "v2 wins over v1" "1 256" "$(_recommended_vars 8 memory.max=536870912 memory/memory.limit_in_bytes=4294967296)"
+}
+
+testRecommendedVarsFallsBackTo512WithoutCgroupFiles() {
+	assertEquals "no cgroup files" "1 256" "$(_recommended_vars 8)"
+}
+
+testRecommendedVarsCpuMax() {
+	assertEquals "quota rounds up to 2 cpus" "2 1024" "$(_recommended_vars 8 memory.max=4294967296 'cpu.max=180000 100000')"
+	assertEquals "unlimited quota uses nproc" "4 512" "$(_recommended_vars 4 memory.max=4294967296 'cpu.max=max 100000')"
+	assertEquals "quota clamped to nproc" "2 1024" "$(_recommended_vars 2 memory.max=4294967296 'cpu.max=800000 100000')"
+	assertEquals "tiny quota clamped to 1" "1 2048" "$(_recommended_vars 8 memory.max=4294967296 'cpu.max=10000 100000')"
+	assertEquals "cpu.max ignored on <= 1 GB" "1 256" "$(_recommended_vars 8 memory.max=536870912 'cpu.max=400000 100000')"
+}
+
+testRecommendedVarsDoesNotOverwriteUserValues() {
+	local out
+	out=$(
+		# shellcheck disable=SC2329 # invoked by the sourced script
+		nproc() { echo 4; }
+		HEROKU_NODEJS_RECOMMENDED_CONCURRENCY=7
+		HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE=99
+		export HEROKU_NODEJS_RECOMMENDED_CGROUP_ROOT=/nonexistent
+		source "$(pwd)"/profile/HEROKU_NODEJS_RECOMMENDED.sh
+		echo "${HEROKU_NODEJS_RECOMMENDED_CONCURRENCY} ${HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE}"
+	)
+	assertEquals "both preset" "7 99" "${out}"
+
+	# max_old_space is computed from our concurrency, not the user's
+	out=$(
+		# shellcheck disable=SC2329 # invoked by the sourced script
+		nproc() { echo 4; }
+		HEROKU_NODEJS_RECOMMENDED_CONCURRENCY=7
+		unset HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE
+		export HEROKU_NODEJS_RECOMMENDED_CGROUP_ROOT=/nonexistent
+		source "$(pwd)"/profile/HEROKU_NODEJS_RECOMMENDED.sh
+		echo "${HEROKU_NODEJS_RECOMMENDED_CONCURRENCY} ${HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE}"
+	)
+	assertEquals "only concurrency preset" "7 256" "${out}"
+}
+
+testRecommendedVarsLeaksNothingElse() {
+	local out
+	out=$(
+		# shellcheck disable=SC2329 # invoked by the sourced script
+		nproc() { echo 4; }
+		unset HEROKU_NODEJS_RECOMMENDED_CONCURRENCY HEROKU_NODEJS_RECOMMENDED_MAX_OLD_SPACE_SIZE
+		export HEROKU_NODEJS_RECOMMENDED_CGROUP_ROOT=/nonexistent
+		source "$(pwd)"/profile/HEROKU_NODEJS_RECOMMENDED.sh 2>&1
+		compgen -A function | grep '^heroku_nodejs_recommended::' || true
+		compgen -v | grep -E '^(_heroku_nodejs_recommended_|HEROKU_NODEJS_RECOMMENDED_CGROUP_ROOT)' || true
+		echo end
+	)
+	assertEquals "no output, helper functions or variables remain" "end" "${out}"
+}
+
 BP_DIR="$(pwd)"
 
 # the modules to be tested
