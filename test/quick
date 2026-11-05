@@ -4,6 +4,11 @@
 
 source "$(pwd)"/lib/environment.sh
 
+# environment.sh enables strict mode when sourced. This is a manual compile helper that runs
+# non-strict; it invokes bin/compile / bin/test-compile as subprocesses, which keep their own
+# strict options. Relax back here so sourcing the lib doesn't change this script's behavior.
+set +euo pipefail
+
 mktmpdir() {
 	local dir=$(mktemp -t testXXXXX)
 	rm -rf "${dir}"

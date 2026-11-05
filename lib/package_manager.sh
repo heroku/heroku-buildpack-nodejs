@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
 
-# Enable strict mode for ShellCheck but restore the caller's options at the end of the file
-# (see epilogue) so they don't bleed into un-migrated scripts that source this lib. The
-# caller's flags are read from `$-` (the current shell); a `$(set +o)` capture runs in a
-# command-substitution subshell where bash always forces errexit off, so it would later
-# restore errexit as disabled even when the caller had it on. pipefail has no `$-` letter, so
-# it is captured separately (it is reported correctly inside command substitution).
-# shellcheck disable=SC2034 # both are consumed by the epilogue
-__package_manager_saved_flags="$-"
-__package_manager_saved_pipefail="$(set +o | grep pipefail)"
+# Strict mode. The bin/* entry points that source this lib run under the same options; the
+# test runners disable errexit after sourcing (see test/unit and test/run-helpers) so this
+# no longer needs an epilogue to restore the caller's options.
 set -euo pipefail
 
 # Dispatches a named lifecycle script to the active package manager's module, which spells and
@@ -524,6 +518,7 @@ function package_manager::_fail_shrinkwrap_conflict() {
 	failure["id"]="shrinkwrap-lock-file-conflict"
 	failure["classification"]="user"
 	failure["detail"]="${pm_list}"
+	# shellcheck disable=SC2034 # array consumed by nameref in failure::emit
 	failure["message"]=$(
 		cat <<-EOF
 			Error: Multiple lockfiles conflicting with npm-shrinkwrap.json.
@@ -577,10 +572,3 @@ function package_manager::_multiple_lockfiles_fix_steps() {
 		echo ""
 	done
 }
-
-# Restore the sourcing shell's original options (see preamble). errexit/nounset come from the
-# saved `$-`; pipefail from its own saved `set +o` line.
-case "${__package_manager_saved_flags}" in *e*) set -e ;; *) set +e ;; esac
-case "${__package_manager_saved_flags}" in *u*) set -u ;; *) set +u ;; esac
-eval "${__package_manager_saved_pipefail}"
-unset __package_manager_saved_flags __package_manager_saved_pipefail
