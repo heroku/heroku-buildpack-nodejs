@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v378] - 2026-11-05
+
 - The default Node.js version is now 26.x, the current Active LTS release line. ([#1851](https://github.com/heroku/heroku-buildpack-nodejs/pull/1851))
 
 ## [v377] - 2026-10-29
@@ -1470,7 +1473,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v377...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v378...main
+[v378]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v377...v378
 [v377]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v376...v377
 [v376]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v375...v376
 [v375]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v374...v375
