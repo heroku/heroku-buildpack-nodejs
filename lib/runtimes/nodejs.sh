@@ -152,8 +152,24 @@ function runtimes::nodejs::_install() {
 	fi
 
 	output_file="/tmp/node.tar.gz"
-	if ! curl "${download_url}" --no-progress-meter --location --fail --max-time 300 --retry 5 --retry-connrefused --connect-timeout 5 -o "${output_file}"; then
-		runtimes::nodejs::_fail_node_download "${download_url}"
+	# curl appends one header block per response (redirects and retries included) to this file.
+	headers_file="/tmp/node-download-headers.txt"
+	# curl's stderr is tee'd so retry warnings and errors still stream to the build log while being
+	# kept for the failure detail. Its stdout carries only the `--write-out` HTTP status, which
+	# reports on the final attempt.
+	stderr_file="/tmp/node-download-stderr.txt"
+	http_status_file="/tmp/node-download-http-status.txt"
+	rm -f "${headers_file}" "${stderr_file}" "${http_status_file}"
+	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
+	if ! { curl "${download_url}" --no-progress-meter --location --fail --max-time 300 --retry 5 --retry-connrefused --connect-timeout 5 \
+		-D "${headers_file}" --write-out '%{http_code}' -o "${output_file}" \
+		2>&1 >"${http_status_file}" | tee "${stderr_file}" >&2; }; then
+		# Capture the full pipe status before any other command clobbers PIPESTATUS. [0] is curl's
+		# exit code; a `tee` failure alone doesn't affect the download.
+		local pipe_status=("${PIPESTATUS[@]}")
+		if [[ "${pipe_status[0]}" -ne 0 ]]; then
+			runtimes::nodejs::_fail_node_download "${download_url}" "${pipe_status[0]}" "$(<"${http_status_file}")" "${headers_file}" "${stderr_file}"
+		fi
 	fi
 
 	if [[ -z "${NODE_BINARY_URL}" ]]; then
@@ -223,15 +239,46 @@ function runtimes::nodejs::_warn_known_bad_release() {
 	EOF
 }
 
+# Prints the failure classification for a Node.js download from curl's exit code and the final
+# HTTP status. A custom NODE_BINARY_URL is always the app's responsibility since it chose the host.
+function runtimes::nodejs::_classify_download_failure() {
+	local curl_exit="${1}"
+	local http_status="${2}"
+	if [[ -n "${NODE_BINARY_URL:-}" ]]; then
+		echo "user"
+		return
+	fi
+	case "${curl_exit}" in
+		22)
+			# HTTP error status. A missing file means our inventory points at a nonexistent release.
+			case "${http_status}" in
+				404 | 410) echo "buildpack" ;;
+				*) echo "upstream" ;;
+			esac
+			;;
+		# Failed to initialize, malformed URL, or failed writing the download (e.g. out of disk).
+		2 | 3 | 23) echo "buildpack" ;;
+		# Everything else is a transport failure (DNS, connect, TLS, timeout, reset, HTTP/2 stream).
+		*) echo "upstream" ;;
+	esac
+}
+
 # Emits the classified failure for a Node.js download error and exits. Called directly at the
 # failure site because the cause is known locally — the buildpack knows exactly what failed here,
 # so it can render a specific message and exit without any further inspection.
 function runtimes::nodejs::_fail_node_download() {
 	local download_url="${1}"
+	local curl_exit="${2}"
+	local http_status="${3}"
+	local headers_file="${4}"
+	local stderr_file="${5}"
+	# The final `curl: (N) ...` line is the error that ended the last attempt.
+	local curl_error
+	curl_error=$(grep -E '^curl: \([0-9]+\)' "${stderr_file}" 2>/dev/null | tail -n 1 || true)
 	local -A failure
 	failure["id"]="node-download-failed"
-	failure["classification"]="buildpack"
-	failure["detail"]="${download_url}"
+	failure["classification"]=$(runtimes::nodejs::_classify_download_failure "${curl_exit}" "${http_status}")
+	failure["detail"]="${download_url}${curl_error:+ ${curl_error}}"
 	failure["message"]=$(
 		cat <<-EOF
 			Error: Unable to download Node.js.
@@ -245,9 +292,18 @@ function runtimes::nodejs::_fail_node_download() {
 			Confirm the download url (${download_url}) works then try building again
 			to see if the error resolves itself.
 
-			If that doesn't help, check the Node.js status page:
+			If that doesn't help, check the Node.js and Cloudflare status pages:
 			https://status.nodejs.org/
+			https://www.cloudflarestatus.com/
 		EOF
+		# The last header block is the most recent response received, which may not be from the final
+		# attempt (a retry can time out before any headers arrive). Absent when no response was
+		# received at all (e.g. DNS or connection failure).
+		if [[ -s "${headers_file}" ]]; then
+			echo
+			echo "Response headers from the most recent response received:"
+			tr -d '\r' <"${headers_file}" | awk 'BEGIN { RS = "" } { last = $0 } END { print last }'
+		fi
 	)
 	failure::emit failure
 }
