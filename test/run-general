@@ -97,6 +97,7 @@ testNodeDownloadFailure() {
 	assertCapturedStderr "Unable to download Node.js"
 	assertCapturedStderr "https://registry.invalid/node.tar.gz"
 	assertCapturedStderr "https://status.nodejs.org/"
+	assertCapturedStderr "https://www.cloudflarestatus.com/"
 	assertCapturedError
 }
 
