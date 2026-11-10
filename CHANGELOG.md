@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Node.js download failures now link to the Cloudflare status page and show the response headers from the most recent response received. ([#1840](https://github.com/heroku/heroku-buildpack-nodejs/pull/1840))
 
 ## [v378] - 2026-11-05
 
