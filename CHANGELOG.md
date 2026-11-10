@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Node.js downloads now fail fast when the download is stalled or degraded, and transient errors such as HTTP/2 stream resets are retried. ([#1853](https://github.com/heroku/heroku-buildpack-nodejs/pull/1853))
 - Node.js download failures now link to the Cloudflare status page and show the response headers from the most recent response received. ([#1840](https://github.com/heroku/heroku-buildpack-nodejs/pull/1840))
 
 ## [v378] - 2026-11-05

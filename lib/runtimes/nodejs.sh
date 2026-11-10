@@ -160,8 +160,15 @@ function runtimes::nodejs::_install() {
 	stderr_file="/tmp/node-download-stderr.txt"
 	http_status_file="/tmp/node-download-http-status.txt"
 	rm -f "${headers_file}" "${stderr_file}" "${http_status_file}"
+	# Fail fast when the download host is degraded rather than hanging the build. A healthy download
+	# takes a few seconds, so an attempt is aborted (and retried) once it stalls below 512 KB/s for
+	# 15s, with --max-time as a backstop. --retry-all-errors also retries transient failures that
+	# --retry alone skips (e.g. HTTP/2 stream resets). No new attempt starts after --retry-max-time,
+	# so the worst case is roughly --retry-max-time + --max-time.
 	# shellcheck disable=SC2310 # invoked in a condition so set -e is disabled inside
-	if ! { curl "${download_url}" --no-progress-meter --location --fail --max-time 300 --retry 5 --retry-connrefused --connect-timeout 5 \
+	if ! { curl "${download_url}" --no-progress-meter --location --fail --connect-timeout 5 \
+		--speed-limit 524288 --speed-time 15 --max-time 120 \
+		--retry 5 --retry-all-errors --retry-max-time 120 \
 		-D "${headers_file}" --write-out '%{http_code}' -o "${output_file}" \
 		2>&1 >"${http_status_file}" | tee "${stderr_file}" >&2; }; then
 		# Capture the full pipe status before any other command clobbers PIPESTATUS. [0] is curl's
