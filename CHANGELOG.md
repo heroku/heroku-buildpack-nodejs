@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- Node.js downloads now fail fast when the download is stalled or degraded, and transient errors such as HTTP/2 stream resets are retried. ([#1853](https://github.com/heroku/heroku-buildpack-nodejs/pull/1853))
 
 ## [v379] - 2026-11-11
 
