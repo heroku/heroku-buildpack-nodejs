@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- Added Node.js 26.13.1 (linux-amd64)
+- Added Node.js 24.22.3 (linux-amd64)
+- Added Node.js 22.23.5 (linux-amd64)
 - Node.js download failures now link to the Cloudflare status page and show the response headers from the most recent response received. ([#1840](https://github.com/heroku/heroku-buildpack-nodejs/pull/1840))
 
 ## [v378] - 2026-11-05
