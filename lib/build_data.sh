@@ -68,7 +68,7 @@ function build_data::set_duration() {
 	build_data::set_raw "${key}" "${duration}"
 }
 
-# Sets a build data value as raw JSON data. The value parameter must be valid JSON value, that's also
+# Sets a build data value as raw JSON data. The value parameter must be a valid JSON value that's also
 # a supported Honeycomb data type (string, integer, float, or boolean only; no arrays or objects).
 # For strings, use `build_data::set_string` instead since it will handle the escaping/quoting for you.
 # And for durations, use `build_data::set_duration`.
