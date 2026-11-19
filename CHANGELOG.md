@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+
+## [v380] - 2026-11-19
+
 - Node.js downloads now fail fast when the download is stalled or degraded, and transient errors such as HTTP/2 stream resets are retried. ([#1853](https://github.com/heroku/heroku-buildpack-nodejs/pull/1853))
 
 ## [v379] - 2026-11-11
@@ -1481,7 +1484,8 @@ Accepts `cacheDirectories` array in package.json to override default `node_modul
 
 - Documented at https://devcenter.heroku.com/articles/nodejs-support#cache-behavior
 
-[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v379...main
+[unreleased]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v380...main
+[v380]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v379...v380
 [v379]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v378...v379
 [v378]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v377...v378
 [v377]: https://github.com/heroku/heroku-buildpack-nodejs/compare/v376...v377
